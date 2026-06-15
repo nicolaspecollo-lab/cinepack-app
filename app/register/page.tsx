@@ -3,26 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-
-const DEPARTAMENTOS = [
-  "Dirección",
-  "Fotografía",
-  "Arte",
-  "Guion",
-  "Producción",
-  "Ejecutivo",
-  "Casting",
-  "Reparto",
-  "Making of",
-  "Sonido",
-  "Postproducción",
-  "RRHH",
-  "Sostenibilidad",
-];
+import { DEPARTAMENTOS } from "../constants";
+import { useTheme } from "../useTheme";
+import ThemeToggle from "../components/ThemeToggle";
+import "../cp-theme.css";
 
 export default function RegisterPage() {
+  const { theme, toggleTheme } = useTheme();
   const [fullName, setFullName] = useState("");
-  const [departamento, setDepartamento] = useState(DEPARTAMENTOS[0]);
+  const [departamento, setDepartamento] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -54,80 +43,88 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-black px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-950 p-8">
-        <h1 className="text-2xl font-semibold text-white">Crear cuenta</h1>
-        <p className="mt-1 text-sm text-zinc-400">Registrate en CINE PACK.</p>
-
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <div>
-            <label className="mb-1 block text-sm text-zinc-300">Nombre completo</label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-white outline-none focus:border-[#f37fb5]"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-zinc-300">Departamento</label>
-            <select
-              value={departamento}
-              onChange={(e) => setDepartamento(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-white outline-none focus:border-[#f37fb5]"
-            >
-              {DEPARTAMENTOS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-zinc-300">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-white outline-none focus:border-[#f37fb5]"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-zinc-300">Contraseña</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-white outline-none focus:border-[#f37fb5]"
-            />
+    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+      <div className="cp-auth-wrap">
+        <div className="hexbg"></div>
+        <div className="cp-theme-toggle-floating">
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+          <div className="cp-auth-logo">
+            <img src="/logo-cinepack.png" alt="CINE PACK" />
           </div>
 
-          {msg && (
-            <p className={msg.type === "err" ? "text-sm text-[#f37fb5]" : "text-sm text-[#c8ff5e]"}>
-              {msg.text}
-            </p>
-          )}
+          <div className="authcard">
+            <div className="atabs">
+              <Link href="/login" className="atab">Iniciar sesión</Link>
+              <span className="atab register active">Registrarse</span>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 rounded-lg bg-[#f37fb5] px-4 py-2 font-medium text-black transition-opacity disabled:opacity-50"
-          >
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} className="apanel register">
+              <h3>Crea tu cuenta</h3>
+              <p className="asub">Te damos acceso según tu departamento y rol.</p>
 
-        <p className="mt-4 text-sm text-zinc-400">
-          ¿Ya tenés cuenta?{" "}
-          <Link href="/login" className="text-[#f37fb5] hover:underline">
-            Iniciar sesión
-          </Link>
-        </p>
+              <label className="afield">
+                <span>Nombre completo</span>
+                <input
+                  type="text"
+                  placeholder="Nombre y apellidos"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </label>
+              <label className="afield">
+                <span>Email</span>
+                <input
+                  type="email"
+                  placeholder="tu@productora.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+              <label className="afield">
+                <span>Departamento</span>
+                <select
+                  required
+                  value={departamento}
+                  onChange={(e) => setDepartamento(e.target.value)}
+                >
+                  <option value="" disabled>Selecciona tu departamento</option>
+                  {DEPARTAMENTOS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="afield">
+                <span>Contraseña</span>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
+
+              {msg && (
+                <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>
+              )}
+
+              <button type="submit" disabled={loading} className="abtn">
+                {loading ? "Creando cuenta..." : "Crear cuenta"}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
+              </button>
+
+              <p className="aswitch">
+                ¿Ya tienes cuenta? <Link href="/login">Inicia sesión</Link>
+              </p>
+            </form>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

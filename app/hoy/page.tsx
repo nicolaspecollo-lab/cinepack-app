@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import LogoutButton from "./logout-button";
+import WorkspaceShell from "../components/WorkspaceShell";
+import HoyWorkspace from "./HoyWorkspace";
 
 export default async function HoyPage() {
   const supabase = await createClient();
@@ -12,38 +13,34 @@ export default async function HoyPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, departamento")
+    .select("full_name, departamento, is_admin, avatar_url, cargo")
     .eq("id", user.id)
     .single();
 
+  if (!profile) {
+    return (
+      <WorkspaceShell fullName={user.email ?? "Usuario"} departamento="—">
+        <div className="view active">
+          <div className="soon-box">
+            <span className="hex"></span>
+            <h4>Perfil sin sincronizar</h4>
+            <p>
+              Sesión iniciada como {user.email}, pero tu perfil todavía no está sincronizado
+              (tabla `profiles`).
+            </p>
+          </div>
+        </div>
+      </WorkspaceShell>
+    );
+  }
+
   return (
-    <main className="flex flex-1 flex-col bg-black px-4 py-16">
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-white">Hoy</h1>
-          <LogoutButton />
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-white/10 bg-zinc-950 p-6">
-          <p className="text-zinc-300">
-            Sesión iniciada como <span className="text-white">{user.email}</span>
-          </p>
-          {profile && (
-            <p className="mt-1 text-zinc-300">
-              {profile.full_name} · <span className="text-[#c8ff5e]">{profile.departamento}</span>
-            </p>
-          )}
-          {!profile && (
-            <p className="mt-1 text-sm text-zinc-500">
-              Tu perfil todavía no está sincronizado (tabla `profiles`).
-            </p>
-          )}
-        </div>
-
-        <p className="mt-6 text-sm text-zinc-500">
-          Esta es la primera pantalla del MVP. Próximamente: Plan de Rodaje, Registro de la Obra y Consultas.
-        </p>
-      </div>
-    </main>
+    <HoyWorkspace
+      fullName={profile.full_name}
+      departamento={profile.departamento}
+      isAdmin={!!profile.is_admin}
+      avatarUrl={profile.avatar_url}
+      cargo={profile.cargo}
+    />
   );
 }

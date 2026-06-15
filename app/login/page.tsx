@@ -4,9 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "../useTheme";
+import ThemeToggle from "../components/ThemeToggle";
+import "../cp-theme.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -20,67 +24,84 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       setMsg({ type: "err", text: error.message });
       return;
     }
 
-    router.push("/hoy");
+    const pendingToken = localStorage.getItem("cinepack-pending-invite-token");
+    if (pendingToken) {
+      const { error: errAccept } = await supabase.rpc("accept_invitation", { p_token: pendingToken });
+      if (!errAccept) {
+        localStorage.removeItem("cinepack-pending-invite-token");
+      }
+    }
+
+    setLoading(false);
+    router.push("/proyectos");
     router.refresh();
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-black px-4 py-16">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-950 p-8">
-        <h1 className="text-2xl font-semibold text-white">Iniciar sesión</h1>
-        <p className="mt-1 text-sm text-zinc-400">Accedé a tu cuenta de CINE PACK.</p>
-
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-          <div>
-            <label className="mb-1 block text-sm text-zinc-300">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-white outline-none focus:border-[#c8ff5e]"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-zinc-300">Contraseña</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-white outline-none focus:border-[#c8ff5e]"
-            />
+    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+      <div className="cp-auth-wrap">
+        <div className="hexbg"></div>
+        <div className="cp-theme-toggle-floating">
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+          <div className="cp-auth-logo">
+            <img src="/logo-cinepack.png" alt="CINE PACK" />
           </div>
 
-          {msg && (
-            <p className={msg.type === "err" ? "text-sm text-[#f37fb5]" : "text-sm text-[#c8ff5e]"}>
-              {msg.text}
-            </p>
-          )}
+          <div className="authcard">
+            <div className="atabs">
+              <span className="atab active">Iniciar sesión</span>
+              <Link href="/register" className="atab register">Registrarse</Link>
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 rounded-lg bg-[#c8ff5e] px-4 py-2 font-medium text-black transition-opacity disabled:opacity-50"
-          >
-            {loading ? "Entrando..." : "Entrar"}
-          </button>
-        </form>
+            <form onSubmit={handleSubmit} className="apanel">
+              <h3>Bienvenido/a de vuelta</h3>
+              <p className="asub">Accedé a tu panel y al de tu proyecto.</p>
 
-        <p className="mt-4 text-sm text-zinc-400">
-          ¿No tenés cuenta?{" "}
-          <Link href="/register" className="text-[#c8ff5e] hover:underline">
-            Registrate
-          </Link>
-        </p>
+              <label className="afield">
+                <span>Email</span>
+                <input
+                  type="email"
+                  placeholder="tu@productora.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </label>
+              <label className="afield">
+                <span>Contraseña</span>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
+
+              {msg && (
+                <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>
+              )}
+
+              <button type="submit" disabled={loading} className="abtn">
+                {loading ? "Entrando..." : "Entrar"}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
+              </button>
+
+              <p className="aswitch">
+                ¿No tienes cuenta? <Link href="/register">Regístrate</Link>
+              </p>
+            </form>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
