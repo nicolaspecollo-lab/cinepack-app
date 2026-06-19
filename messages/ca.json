@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "tabLogin": "Inicia sessió",
+    "tabRegister": "Registra't",
+    "welcomeBack": "Benvingut/da de nou",
+    "loginSubtitle": "Accedeix al teu tauler i al del teu projecte.",
+    "email": "Correu electrònic",
+    "password": "Contrasenya",
+    "entering": "Entrant...",
+    "enter": "Entra",
+    "noAccount": "No tens compte?",
+    "signUp": "Registra't"
+  },
+  "shell": {
+    "menu": "MENÚ",
+    "account": "Compte",
+    "myProfile": "El meu perfil",
+    "profileSub": "Foto, dades, contrasenya",
+    "changeProject": "Canvia de projecte",
+    "preferences": "Preferències",
+    "appearance": "Aparença",
+    "dark": "Fosc",
+    "light": "Clar",
+    "language": "Idioma",
+    "support": "Contacte amb suport",
+    "logout": "Tanca la sessió"
+  }
+}

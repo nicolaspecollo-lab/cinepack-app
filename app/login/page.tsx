@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
+import LocaleToggle from "../components/LocaleToggle";
 import "../cp-theme.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,6 +51,7 @@ export default function LoginPage() {
       <div className="cp-auth-wrap">
         <div className="hexbg"></div>
         <div className="cp-theme-toggle-floating">
+          <LocaleToggle />
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
@@ -57,16 +61,16 @@ export default function LoginPage() {
 
           <div className="authcard">
             <div className="atabs">
-              <span className="atab active">Iniciar sesión</span>
-              <Link href="/register" className="atab register">Registrarse</Link>
+              <span className="atab active">{t("tabLogin")}</span>
+              <Link href="/register" className="atab register">{t("tabRegister")}</Link>
             </div>
 
             <form onSubmit={handleSubmit} className="apanel">
-              <h3>Bienvenido/a de vuelta</h3>
-              <p className="asub">Accedé a tu panel y al de tu proyecto.</p>
+              <h3>{t("welcomeBack")}</h3>
+              <p className="asub">{t("loginSubtitle")}</p>
 
               <label className="afield">
-                <span>Email</span>
+                <span>{t("email")}</span>
                 <input
                   type="email"
                   placeholder="tu@productora.com"
@@ -76,7 +80,7 @@ export default function LoginPage() {
                 />
               </label>
               <label className="afield">
-                <span>Contraseña</span>
+                <span>{t("password")}</span>
                 <input
                   type="password"
                   placeholder="••••••••"
@@ -91,12 +95,12 @@ export default function LoginPage() {
               )}
 
               <button type="submit" disabled={loading} className="abtn">
-                {loading ? "Entrando..." : "Entrar"}
+                {loading ? t("entering") : t("enter")}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
               </button>
 
               <p className="aswitch">
-                ¿No tienes cuenta? <Link href="/register">Regístrate</Link>
+                {t("noAccount")} <Link href="/register">{t("signUp")}</Link>
               </p>
             </form>
           </div>

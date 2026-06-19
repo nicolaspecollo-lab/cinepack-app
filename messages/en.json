@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "tabLogin": "Log in",
+    "tabRegister": "Sign up",
+    "welcomeBack": "Welcome back",
+    "loginSubtitle": "Access your dashboard and your project's.",
+    "email": "Email",
+    "password": "Password",
+    "entering": "Signing in...",
+    "enter": "Sign in",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up"
+  },
+  "shell": {
+    "menu": "MENU",
+    "account": "Account",
+    "myProfile": "My profile",
+    "profileSub": "Photo, details, password",
+    "changeProject": "Switch project",
+    "preferences": "Preferences",
+    "appearance": "Appearance",
+    "dark": "Dark",
+    "light": "Light",
+    "language": "Language",
+    "support": "Contact support",
+    "logout": "Log out"
+  }
+}
