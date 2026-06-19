@@ -7,7 +7,7 @@ export const maxDuration = 300;
 
 const PROMPT = `Eres un asistente especializado en desglosar guiones de cine en escenas, en formato de guion estándar (Courier).
 
-Te paso el texto de un guion en PDF, con marcadores "--- PÁGINA N ---" indicando el inicio de cada página original.
+Te paso el PDF completo del guion. Leé todas las páginas y detectá cada escena según los encabezados de escena (INT./EXT.).
 
 Tu tarea: dividir el guion en escenas y devolver SOLO un array JSON (sin texto adicional, sin markdown) con esta forma exacta:
 
@@ -71,15 +71,7 @@ export async function POST(req: Request) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
-    await parser.destroy();
-
-    const fullText = result.pages
-      .map((p) => `\n\n--- PÁGINA ${p.num} ---\n\n${p.text}`)
-      .join("");
+    const base64Pdf = buffer.toString("base64");
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -90,7 +82,15 @@ export async function POST(req: Request) {
       try {
         response = await ai.models.generateContent({
           model: "gemini-2.5-flash",
-          contents: PROMPT + fullText,
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { inlineData: { mimeType: "application/pdf", data: base64Pdf } },
+                { text: PROMPT },
+              ],
+            },
+          ],
           config: {
             responseMimeType: "application/json",
             maxOutputTokens: 65000,

@@ -525,7 +525,7 @@
 
 /* Fila de detalle: registro de intervenciones + visionado */
 .cp-dash .hp-detail-row td{ background:var(--hl1); padding:0; }
-.cp-dash .hp-detail{ display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:24px; padding:16px 18px; }
+.cp-dash .hp-detail{ display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:16px 18px; }
 .cp-dash .hp-detail-col h6{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); display:flex; align-items:center; gap:7px; margin-bottom:8px; }
 .cp-dash .hp-detail-col h6 .hex{ width:9px; height:8px; background:var(--acc); }
 .cp-dash .hp-timeline{ list-style:none; display:flex; flex-direction:column; gap:5px; font-size:11.5px; color:var(--muted); border-left:1px solid var(--line); padding-left:12px; }
@@ -535,31 +535,8 @@
 .cp-dash .hp-vis-chip{ font-size:10.5px; border:1px solid rgba(159,232,112,0.4); color:var(--lime); border-radius:999px; padding:3px 10px; }
 @media (max-width:640px){ .cp-dash .hp-detail{ grid-template-columns:1fr; gap:16px; } }
 
-/* Comentarios con @mención */
 .cp-dash .hp-thread-section{ display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line); margin-top:8px; padding:0 30px; }
-.cp-dash .hp-thread-section .hp-comentarios{ margin:0; padding:0; border:none; background:none; border-radius:0; }
 .cp-dash .hp-thread-section .hp-single-foot{ padding:14px 0; }
-.cp-dash .hp-comentarios{ display:flex; flex-direction:column; }
-.cp-dash .hp-comment-list{ list-style:none; margin:0 0 10px; padding:0; display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto; }
-.cp-dash .hp-comment-list li{ font-size:12px; border-left:1px solid var(--line); padding-left:10px; }
-.cp-dash .hp-comment-head{ display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:10.5px; margin-bottom:2px; }
-.cp-dash .hp-comment-head b{ color:var(--text); font-family:'Poppins',sans-serif; font-weight:600; }
-.cp-dash .hp-comment-list p{ margin:0; line-height:1.4; }
-.cp-dash .hp-mention{ color:var(--acc); font-weight:700; }
-.cp-dash .hp-comment-input{ position:relative; display:flex; flex-direction:column; gap:8px; }
-.cp-dash .hp-comment-input textarea{ width:100%; resize:none; min-height:40px; }
-.cp-dash .hp-comment-input button{ align-self:flex-end; }
-.cp-dash .hp-mention-list{ position:absolute; bottom:100%; left:0; z-index:5; display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; max-height:160px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,0.25); }
-.cp-dash .hp-mention-list button{ text-align:left; padding:6px 12px; font-size:12px; border-radius:0; background:transparent; border:none; color:var(--text); }
-.cp-dash .hp-mention-list button:hover{ background:var(--hl1); color:var(--acc); }
-
-/* Bloque de comentarios para herramientas single-instance */
-.cp-dash > .hp-comentarios,
-.cp-dash .hp-open > .hp-comentarios{ margin:0 30px 24px; padding:14px 18px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
-@media (max-width:720px){
-  .cp-dash > .hp-comentarios,
-  .cp-dash .hp-open > .hp-comentarios{ margin:0 16px 20px; }
-}
 
 /* Firma de edición/visionado (single tools) */
 .cp-dash .hp-firma{ font-size:11px; color:var(--muted); }
@@ -900,51 +877,6 @@
     display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
     padding:0 0 12px; margin-bottom:14px; border-bottom:2px solid #0b0d10; color:#0b0d10;
   }
-}
-
-/* Asistente de IA contextual */
-.cp-dash .ia-trigger{
-  position:fixed; bottom:22px; right:160px; z-index:50; display:flex; align-items:center; gap:8px;
-  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.06em;
-  border:1px solid var(--line); background:var(--bg-2); color:var(--text); padding:9px 16px; border-radius:0;
-  cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.15); transition:border-color .15s ease, color .15s ease;
-}
-.cp-dash .ia-trigger:hover{ border-color:var(--acc); color:var(--acc); }
-.cp-dash .ia-trigger .hex{ width:10px; height:9px; background:var(--acc); flex-shrink:0; }
-
-.cp-dash .ia-panel{
-  position:fixed; bottom:80px; right:22px; z-index:60; width:min(420px, 92vw); max-height:min(600px, 75vh);
-  display:flex; flex-direction:column; background:var(--bg-2); border:1px solid var(--line); border-radius:0;
-  box-shadow:0 20px 60px rgba(0,0,0,.5); overflow:hidden;
-}
-.cp-dash .ia-head{
-  display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px;
-  border-bottom:1px solid var(--line); font-family:'Poppins',sans-serif; font-weight:700; font-size:12px;
-  text-transform:uppercase; letter-spacing:0.06em;
-}
-.cp-dash .ia-head .hex{ width:9px; height:8px; background:var(--acc); display:inline-block; margin-right:7px; }
-.cp-dash .ia-close{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 4px; }
-.cp-dash .ia-close:hover{ color:var(--text); }
-
-.cp-dash .ia-messages{ flex:1; overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
-.cp-dash .ia-empty{ font-size:12px; color:var(--muted); line-height:1.5; }
-.cp-dash .ia-msg{ font-size:12.5px; line-height:1.5; padding:8px 12px; border-radius:10px; white-space:pre-wrap; max-width:88%; }
-.cp-dash .ia-msg.ia-user{ align-self:flex-end; background:var(--hl3); color:var(--text); }
-.cp-dash .ia-msg.ia-assistant{ align-self:flex-start; background:var(--hl1); border:1px solid var(--line); color:var(--text); }
-.cp-dash .ia-msg.ia-typing{ color:var(--muted); }
-
-.cp-dash .ia-error{ margin:0 16px; }
-
-.cp-dash .ia-form{ display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line); }
-.cp-dash .ia-form input{
-  flex:1; background:var(--hl1); border:1px solid var(--line); border-radius:999px; padding:9px 14px;
-  color:var(--text); font-family:inherit; font-size:12.5px;
-}
-.cp-dash .ia-form input:focus{ outline:none; border-color:var(--acc); }
-
-@media (max-width:720px){
-  .cp-dash .ia-trigger{ right:16px; bottom:74px; }
-  .cp-dash .ia-panel{ right:10px; left:10px; width:auto; bottom:128px; }
 }
 
 /* ArchivosPanel mejorado */

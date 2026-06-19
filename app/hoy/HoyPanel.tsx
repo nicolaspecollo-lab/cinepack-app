@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DEPARTAMENTOS } from "../constants";
+import { DEPARTAMENTOS, ESTADO_COLOR } from "../constants";
 
 type Pill = "warn" | "mut" | "bad" | "info" | "ok";
 
@@ -196,6 +196,13 @@ export default function HoyPanel({
         autor_nombre: fullName,
         de_departamento: deDepartamento,
       }));
+      if (!error && tipo === "bad") {
+        fetch("/api/webhook/alerta", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId, texto, paraDepartamento: para || null, autorNombre: fullName }),
+        }).catch(() => {});
+      }
     } else {
       const payload = {
         project_id: projectId,
@@ -274,7 +281,7 @@ export default function HoyPanel({
             <ul>
               {tareas.map((t) => (
                 <li key={t.id} style={{ cursor: "pointer" }} onClick={() => completarTarea(t.id)} title="Marcar como hecha">
-                  <span>{t.titulo}</span>
+                  <span><span className="cp-estado-dot" style={{ background: ESTADO_COLOR.pendiente }}></span>{t.titulo}</span>
                   <span className={`pill p-${t.tipo}`}>{t.etiqueta}</span>
                 </li>
               ))}

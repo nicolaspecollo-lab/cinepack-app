@@ -75,19 +75,11 @@ export default function WorkspaceShell({
         <Link href="/proyectos" className="cp-logo"><img src="/logo-cinepack.png" alt="CINE PACK" /></Link>
         <span className="cp-proj">{proyecto} · {departamento}</span>
         <div className="cp-spacer"></div>
+        <div id="cp-header-controls" className="cp-header-controls"></div>
         <div className="cp-menu" ref={menuRef}>
           <button className="cp-menu-btn" onClick={() => setOpen((v) => !v)}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="cp-menu-avatar" />
-            ) : (
-              <span className="cp-menu-avatar cp-menu-avatar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
-                </svg>
-              </span>
-            )}
-            {fullName.split(" ")[0]}
+            <span className="hex"></span>
+            MENÚ
           </button>
           {open && (
             <div className="cp-menu-drop">

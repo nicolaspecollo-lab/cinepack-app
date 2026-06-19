@@ -29,6 +29,65 @@ type Asignacion = {
   visionario: boolean;
 };
 
+function WebhookSettingsPanel() {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const projectId = localStorage.getItem("cinepack-proyecto-id");
+      if (!projectId) {
+        setLoading(false);
+        return;
+      }
+      const supabase = createClient();
+      const { data } = await supabase.from("proyectos").select("webhook_url").eq("id", projectId).maybeSingle();
+      setUrl(data?.webhook_url ?? "");
+      setLoading(false);
+    })();
+  }, []);
+
+  async function guardar() {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) return;
+    setSaving(true);
+    setMsg(null);
+    const supabase = createClient();
+    const { error } = await supabase.from("proyectos").update({ webhook_url: url.trim() || null }).eq("id", projectId);
+    setSaving(false);
+    setMsg(error ? error.message : "Guardado.");
+    setTimeout(() => setMsg(null), 2500);
+  }
+
+  if (loading) return null;
+
+  return (
+    <div className="tcard" style={{ margin: "20px 30px 0" }}>
+      <h4>
+        <span className="hex"></span>Webhook de alertas críticas
+      </h4>
+      <p className="cons-text" style={{ margin: "0 0 10px" }}>
+        Cuando se cree una alerta marcada como <b>crítica</b>, se enviará un mensaje a esta URL (compatible con
+        Slack/Discord incoming webhooks). Dejá el campo vacío para desactivar.
+      </p>
+      <div className="cp-share-form">
+        <input
+          type="url"
+          placeholder="https://hooks.slack.com/services/…"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <button type="button" className="btn acc" onClick={guardar} disabled={saving}>
+          {saving ? "Guardando…" : "Guardar"}
+        </button>
+      </div>
+      {msg && <p className="hp-error" style={{ color: "var(--lime)" }}>{msg}</p>}
+    </div>
+  );
+}
+
 export default function GestionAccesosPanel({ departamento }: { departamento: string }) {
   const { miembros, loading: loadingEquipo } = useEquipo(departamento);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
@@ -112,6 +171,8 @@ export default function GestionAccesosPanel({ departamento }: { departamento: st
 
   return (
     <>
+      {departamento === "Ejecutivo" && <WebhookSettingsPanel />}
+
       <p className="cons-text" style={{ padding: "20px 30px 0", margin: 0 }}>
         Confirmá, por herramienta, quién de {departamento} puede <b>editar</b> (Editor) y quién solo{" "}
         <b>visionar</b> (Visionario). Por defecto nadie tiene acceso marcado: el equipo ve sus

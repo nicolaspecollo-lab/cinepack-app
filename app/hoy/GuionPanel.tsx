@@ -40,7 +40,7 @@ type Escena = {
 
 type ViewTab = "revision" | "guion";
 
-export default function GuionPanel({ fullName }: { fullName: string }) {
+export default function GuionPanel({ fullName, canEdit = true }: { fullName: string; canEdit?: boolean }) {
   const [guiones, setGuiones] = useState<Guion[]>([]);
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [edits, setEdits] = useState<Record<string, Escena>>({});
@@ -49,6 +49,8 @@ export default function GuionPanel({ fullName }: { fullName: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [tab, setTab] = useState<ViewTab>("revision");
+  const [generandoPlan, setGenerandoPlan] = useState(false);
+  const [msgPlan, setMsgPlan] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -111,7 +113,8 @@ export default function GuionPanel({ fullName }: { fullName: string }) {
       return;
     }
 
-    const path = `${projectId}/${Date.now()}_${file.name}`;
+    const safeName = file.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${projectId}/${Date.now()}_${safeName}`;
     const { error: uploadError } = await supabase.storage.from("guiones").upload(path, file);
     if (uploadError) {
       setUploading(false);
@@ -231,13 +234,40 @@ export default function GuionPanel({ fullName }: { fullName: string }) {
     await load();
   }
 
+  async function generarPlan() {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) { setMsgPlan({ type: "err", text: "No se encontró el proyecto activo." }); return; }
+    setGenerandoPlan(true);
+    setMsgPlan(null);
+    try {
+      const res = await fetch("/api/plan-rodaje/generar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al generar el plan");
+      setMsgPlan({ type: "ok", text: `✓ Plan generado con ${data.jornadas} jornadas. Abrí "Plan de rodaje" en la pestaña Generales para revisarlo.` });
+    } catch (err) {
+      setMsgPlan({ type: "err", text: err instanceof Error ? err.message : "Error desconocido" });
+    } finally {
+      setGenerandoPlan(false);
+    }
+  }
+
   const borradores = escenas.filter((e) => e.estado === "borrador");
   const confirmadas = escenas.filter((e) => e.estado === "confirmada").sort((a, b) => a.numero - b.numero);
   const procesando = guiones.some((g) => g.estado === "procesando");
 
   return (
     <>
-      <form onSubmit={handleUpload} className="gup">
+      {!canEdit && (
+        <div className="gen-readonly-banner">
+          <span className="hex"></span>
+          Solo visionado — solo el departamento de <strong>Guion</strong> puede subir o editar el guion. Solicitá cambios a través de Producción Ejecutiva.
+        </div>
+      )}
+      <form onSubmit={handleUpload} className="gup" style={!canEdit ? { pointerEvents: "none", opacity: 0.45 } : undefined}>
         <div className="gup-row">
           <label className="gfile">
             {file ? file.name : "Elegir guion en PDF…"}
@@ -270,9 +300,11 @@ export default function GuionPanel({ fullName }: { fullName: string }) {
       )}
 
       <div className="gtabs">
-        <button className={`gtab ${tab === "revision" ? "active" : ""}`} onClick={() => setTab("revision")}>
-          Revisión {borradores.length > 0 ? `(${borradores.length})` : ""}
-        </button>
+        {canEdit && (
+          <button className={`gtab ${tab === "revision" ? "active" : ""}`} onClick={() => setTab("revision")}>
+            Revisión {borradores.length > 0 ? `(${borradores.length})` : ""}
+          </button>
+        )}
         <button className={`gtab ${tab === "guion" ? "active" : ""}`} onClick={() => setTab("guion")}>
           Guion {confirmadas.length > 0 ? `(${confirmadas.length})` : ""}
         </button>
@@ -407,6 +439,29 @@ export default function GuionPanel({ fullName }: { fullName: string }) {
       )}
 
       {tab === "guion" && (
+        <>
+          {confirmadas.length > 0 && (
+            <div className="gup" style={{ paddingBottom: 0 }}>
+              <div className="gup-row">
+                <button
+                  type="button"
+                  className="abtn"
+                  style={{ width: "auto", display: "flex", alignItems: "center", gap: 8 }}
+                  onClick={generarPlan}
+                  disabled={generandoPlan}
+                >
+                  <span className="hex"></span>
+                  {generandoPlan ? "Generando plan con IA…" : "Generar Plan de Rodaje con IA"}
+                </button>
+                <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                  {confirmadas.length} escenas confirmadas · la IA agrupará por locación y optimizará el orden
+                </span>
+              </div>
+              {msgPlan && (
+                <p className={`amsg ${msgPlan.type === "err" ? "err" : "ok"}`}>{msgPlan.text}</p>
+              )}
+            </div>
+          )}
         <div className="script">
           {confirmadas.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--muted)" }}>
@@ -434,6 +489,7 @@ export default function GuionPanel({ fullName }: { fullName: string }) {
             </div>
           ))}
         </div>
+        </>
       )}
     </>
   );

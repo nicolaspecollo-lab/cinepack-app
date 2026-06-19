@@ -13,6 +13,7 @@ const CARGO_CUSTOM = "__custom__";
 
 type Persona = { full_name: string; email: string; cargo: string; cargoCustom: string };
 type Invite = { full_name: string; email: string; departamento: string; cargo: string | null; token: string };
+type Plantilla = { id: string; nombre: string; tipo: string | null; departamentos: string[] | null };
 
 export default function NuevoProyectoPage() {
   const router = useRouter();
@@ -24,6 +25,8 @@ export default function NuevoProyectoPage() {
   const [tipo, setTipo] = useState("");
   const [deptos, setDeptos] = useState<string[]>([]);
   const [personas, setPersonas] = useState<Record<string, Persona[]>>({});
+  const [plantillas, setPlantillas] = useState<Plantilla[]>([]);
+  const [plantillaId, setPlantillaId] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -50,8 +53,28 @@ export default function NuevoProyectoPage() {
       }
       setIsAdmin(true);
       setChecking(false);
+
+      const { data: rows } = await supabase
+        .from("project_members")
+        .select("proyectos(id, nombre, tipo, departamentos)")
+        .eq("user_id", user.id);
+      const lista = (rows ?? [])
+        .map((row) => row.proyectos as unknown as Plantilla)
+        .filter(Boolean);
+      setPlantillas(lista);
     })();
   }, [router]);
+
+  function elegirPlantilla(p: Plantilla) {
+    if (plantillaId === p.id) {
+      setPlantillaId(null);
+      return;
+    }
+    setPlantillaId(p.id);
+    setTipo(p.tipo ?? "");
+    setDeptos(p.departamentos ?? []);
+    setPersonas({});
+  }
 
   function accent(d: string) {
     return `var(--${ACCENTS[d] ?? "lime"})`;
@@ -148,6 +171,26 @@ export default function NuevoProyectoPage() {
     await supabase
       .from("project_members")
       .upsert({ project_id: proyecto.id, user_id: user.id, rol: "Ejecutivo" });
+
+    if (plantillaId) {
+      const { data: metas } = await supabase
+        .from("herramienta_filas")
+        .select("departamento, herramienta_id, datos")
+        .eq("project_id", plantillaId)
+        .eq("orden", -1);
+
+      if (metas && metas.length > 0) {
+        await supabase.from("herramienta_filas").insert(
+          metas.map((m) => ({
+            project_id: proyecto.id,
+            departamento: m.departamento,
+            herramienta_id: m.herramienta_id,
+            datos: m.datos,
+            orden: -1,
+          }))
+        );
+      }
+    }
 
     if (todasLasPersonas.length > 0) {
       const { data: insertadas, error: errInv } = await supabase
@@ -260,6 +303,40 @@ export default function NuevoProyectoPage() {
             quedarán asignadas al proyecto, departamento y cargo correspondientes.
           </p>
 
+          <div className="cp-np-block">
+            <span className="label">Próximos pasos</span>
+            <div className="cp-onboarding-list">
+              <div className="cp-onboarding-item">
+                <span className="hex"></span>
+                <div>
+                  <b>Enviá las invitaciones</b>
+                  <p>Compartí el link de invitación con cada persona del equipo para que pueda crear su cuenta.</p>
+                </div>
+              </div>
+              <div className="cp-onboarding-item">
+                <span className="hex"></span>
+                <div>
+                  <b>Completá la Jornada de hoy</b>
+                  <p>Entrá al proyecto y definí en &quot;Hoy&quot; las tareas y alertas del primer día de trabajo.</p>
+                </div>
+              </div>
+              <div className="cp-onboarding-item">
+                <span className="hex"></span>
+                <div>
+                  <b>Revisá los accesos por cargo</b>
+                  <p>En &quot;Gestión de accesos&quot; asigná quién edita y quién visiona cada herramienta clave.</p>
+                </div>
+              </div>
+              <div className="cp-onboarding-item">
+                <span className="hex"></span>
+                <div>
+                  <b>Cargá las herramientas iniciales</b>
+                  <p>Sumá la primera info en Documentos y Herramientas de cada departamento: guion, presupuesto, casting, etc.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <Link href="/proyectos" className="abtn" style={{ textDecoration: "none", alignSelf: "flex-start" }}>
             Ir a mis proyectos
           </Link>
@@ -293,6 +370,29 @@ export default function NuevoProyectoPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="cp-np-section">
+        {plantillas.length > 0 && (
+          <div className="cp-np-block">
+            <span className="label">Usar como plantilla (opcional)</span>
+            <p className="asub" style={{ margin: 0 }}>
+              Copia el tipo, los departamentos y las columnas/campos personalizados de las herramientas de un proyecto existente.
+            </p>
+            <div className="cp-deptgrid">
+              {plantillas.map((p) => (
+                <button
+                  type="button"
+                  key={p.id}
+                  className={`cp-deptcard ${plantillaId === p.id ? "active" : ""}`}
+                  onClick={() => elegirPlantilla(p)}
+                >
+                  <span className="hex"></span>
+                  <span className="name">{p.nombre}</span>
+                  <span className="check">{plantillaId === p.id ? "✓ Usando como plantilla" : "Usar"}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="cp-np-block">
           <span className="label">Nombre del proyecto</span>
           <label className="afield" style={{ maxWidth: "420px" }}>

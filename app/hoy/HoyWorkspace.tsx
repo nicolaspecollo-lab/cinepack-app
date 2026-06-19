@@ -50,7 +50,7 @@ export default function HoyWorkspace({
       onDeptChange={handleDeptChange}
       avatarUrl={avatarUrl}
     >
-      <DepartmentDashboard nombre={effectiveDept} accent={accent} fullName={fullName} cargo={cargo} />
+      <DepartmentDashboard nombre={effectiveDept} accent={accent} fullName={fullName} cargo={cargo} avatarUrl={avatarUrl} />
     </WorkspaceShell>
   );
 }

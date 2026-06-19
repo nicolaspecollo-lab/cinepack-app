@@ -3,227 +3,496 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+type GTEstado = "procesando" | "listo" | "error";
+
+type GuionTecnico = {
+  id: string;
+  nombre: string;
+  archivo_path: string;
+  estado: GTEstado;
+  error_msg: string | null;
+  created_at: string;
+};
+
+type PlanoEstado = "borrador" | "confirmado";
+
 type Plano = {
   id: string;
+  guion_tecnico_id: string | null;
   escena: string;
   plano: string;
   tipo: string | null;
+  eje: string | null;
   mov_camara: string | null;
   lente: string | null;
   descripcion: string;
+  personajes: string[];
   notas: string | null;
+  duracion_seg: number | null;
+  pagina_pdf: number | null;
+  orden: number;
+  estado: PlanoEstado;
   autor_id: string;
 };
 
-export default function GuionTecnicoPanel() {
+type ViewTab = "revision" | "guion" | "manual";
+
+const TIPO_OPCIONES = ["PG", "PA", "PE", "PM", "PMC", "PP", "PPP", "DET", "PC", "INSERT"];
+const MOV_OPCIONES = [
+  "Fijo", "Panorámica H", "Panorámica V",
+  "Travelling in", "Travelling out", "Travelling lateral",
+  "Steadicam", "Handheld", "Grúa", "Drone", "Zoom in", "Zoom out",
+];
+
+export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullName?: string; canEdit?: boolean }) {
+  const [guiones, setGuiones] = useState<GuionTecnico[]>([]);
   const [planos, setPlanos] = useState<Plano[]>([]);
+  const [edits, setEdits] = useState<Record<string, Plano>>({});
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [tab, setTab] = useState<ViewTab>("revision");
   const [userId, setUserId] = useState<string | null>(null);
 
-  const [escena, setEscena] = useState("");
-  const [plano, setPlano] = useState("");
-  const [tipo, setTipo] = useState("");
-  const [movCamara, setMovCamara] = useState("");
-  const [lente, setLente] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [notas, setNotas] = useState("");
+  // Manual entry form
+  const [showForm, setShowForm] = useState(false);
+  const [mEscena, setMEscena] = useState("");
+  const [mPlano, setMPlano] = useState("");
+  const [mTipo, setMTipo] = useState("");
+  const [mEje, setMEje] = useState("");
+  const [mMov, setMMov] = useState("");
+  const [mLente, setMLente] = useState("");
+  const [mDesc, setMDesc] = useState("");
+  const [mPersonajes, setMPersonajes] = useState("");
+  const [mNotas, setMNotas] = useState("");
+  const [mDuracion, setMDuracion] = useState("");
+  const [sending, setSending] = useState(false);
 
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) {
-      setLoading(false);
-      return;
-    }
+    if (!projectId) { setLoading(false); return; }
     const supabase = createClient();
-
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id ?? null);
 
-    const { data } = await supabase
-      .from("planos")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("orden", { ascending: true })
-      .order("created_at", { ascending: true });
-    setPlanos(data ?? []);
+    const [{ data: gts }, { data: ps }] = await Promise.all([
+      supabase.from("guiones_tecnicos").select("*").eq("project_id", projectId).order("created_at", { ascending: false }),
+      supabase.from("planos").select("*").eq("project_id", projectId).order("orden", { ascending: true }),
+    ]);
+
+    setGuiones(gts ?? []);
+    setPlanos(ps ?? []);
     setLoading(false);
   }, []);
 
+  useEffect(() => { load(); }, [load]);
+
   useEffect(() => {
-    load();
-  }, [load]);
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const p of planos) {
+        if (p.estado === "borrador" && !next[p.id]) {
+          next[p.id] = JSON.parse(JSON.stringify(p));
+        }
+      }
+      return next;
+    });
+  }, [planos]);
 
-  function resetForm() {
-    setEscena("");
-    setPlano("");
-    setTipo("");
-    setMovCamara("");
-    setLente("");
-    setDescripcion("");
-    setNotas("");
-    setMsg(null);
-  }
-
-  async function handleCreate(e: React.FormEvent) {
+  async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
+    if (!file) return;
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
-      return;
-    }
+    if (!projectId) { setMsg({ type: "err", text: "No se encontró el proyecto activo." }); return; }
 
-    setSending(true);
+    setUploading(true);
     setMsg(null);
-
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setSending(false);
+    if (!user) { setUploading(false); return; }
+
+    const safeName = file.name.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${projectId}/tecnico/${Date.now()}_${safeName}`;
+    const { error: uploadError } = await supabase.storage.from("guiones").upload(path, file);
+    if (uploadError) {
+      setUploading(false);
+      setMsg({ type: "err", text: uploadError.message });
       return;
     }
 
+    const { data: gt, error: insertError } = await supabase
+      .from("guiones_tecnicos")
+      .insert({
+        project_id: projectId,
+        nombre: file.name,
+        archivo_path: path,
+        estado: "procesando",
+        autor_id: user.id,
+        autor_nombre: fullName ?? null,
+      })
+      .select()
+      .single();
+
+    if (insertError || !gt) {
+      setUploading(false);
+      setMsg({ type: "err", text: insertError?.message ?? "No se pudo registrar el guion técnico." });
+      return;
+    }
+
+    await load();
+
+    const res = await fetch("/api/guion-tecnico/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ guionTecnicoId: gt.id }),
+    });
+    const result = await res.json();
+    setUploading(false);
+
+    if (!res.ok) {
+      setMsg({ type: "err", text: result.error ?? "Error al procesar el guion técnico con IA." });
+    } else {
+      setMsg({ type: "ok", text: `La IA detectó ${result.count} planos. Revisalos y confirmalos uno por uno.` });
+      setFile(null);
+      setTab("revision");
+    }
+    await load();
+  }
+
+  function updateField<K extends keyof Plano>(id: string, field: K, value: Plano[K]) {
+    setEdits((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  }
+
+  async function persistPlano(id: string, estado: PlanoEstado) {
+    const p = edits[id];
+    if (!p) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("planos").update({
+      escena: p.escena, plano: p.plano, tipo: p.tipo, eje: p.eje,
+      mov_camara: p.mov_camara, lente: p.lente, descripcion: p.descripcion,
+      personajes: p.personajes, notas: p.notas, duracion_seg: p.duracion_seg, estado,
+    }).eq("id", id);
+    if (error) { setMsg({ type: "err", text: error.message }); return; }
+    await load();
+  }
+
+  async function deletePlano(id: string) {
+    const supabase = createClient();
+    await supabase.from("planos").delete().eq("id", id);
+    setEdits((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    await load();
+  }
+
+  async function handleManual(e: React.FormEvent) {
+    e.preventDefault();
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) { setMsg({ type: "err", text: "No se encontró el proyecto activo." }); return; }
+    setSending(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSending(false); return; }
     const { error } = await supabase.from("planos").insert({
       project_id: projectId,
-      escena,
-      plano,
-      tipo: tipo || null,
-      mov_camara: movCamara || null,
-      lente: lente || null,
-      descripcion,
-      notas: notas || null,
-      orden: planos.length,
-      autor_id: user.id,
+      guion_tecnico_id: null,
+      escena: mEscena, plano: mPlano,
+      tipo: mTipo || null, eje: mEje || null,
+      mov_camara: mMov || null, lente: mLente || null,
+      descripcion: mDesc,
+      personajes: mPersonajes.split(",").map((s) => s.trim()).filter(Boolean),
+      notas: mNotas || null,
+      duracion_seg: mDuracion ? Number(mDuracion) : null,
+      orden: planos.length, estado: "confirmado", autor_id: user.id,
     });
-
     setSending(false);
-
-    if (error) {
-      setMsg({ type: "err", text: error.message });
-      return;
-    }
-
-    resetForm();
+    if (error) { setMsg({ type: "err", text: error.message }); return; }
+    setMEscena(""); setMPlano(""); setMTipo(""); setMEje(""); setMMov(""); setMLente("");
+    setMDesc(""); setMPersonajes(""); setMNotas(""); setMDuracion("");
     setShowForm(false);
     await load();
   }
 
-  async function handleDelete(id: string) {
-    const supabase = createClient();
-    await supabase.from("planos").delete().eq("id", id);
-    await load();
-  }
+  const borradores = planos.filter((p) => p.estado === "borrador");
+  const confirmados = planos.filter((p) => p.estado === "confirmado").sort((a, b) => {
+    if (a.escena !== b.escena) return a.escena.localeCompare(b.escena, undefined, { numeric: true });
+    return a.plano.localeCompare(b.plano, undefined, { numeric: true });
+  });
+  const procesando = guiones.some((g) => g.estado === "procesando");
 
   return (
-    <div className="tools">
-      <div className="tool">
-        <div className="tool-head">
+    <>
+      {!canEdit && (
+        <div className="gen-readonly-banner">
           <span className="hex"></span>
-          <h3>Desglose técnico</h3>
-          <span className="tag">previo al Parte de Script</span>
+          Solo visionado — solo <strong>Dirección</strong> y <strong>Guion</strong> pueden editar el guion técnico. Solicitá cambios a través de Producción Ejecutiva.
         </div>
-        <p className="tool-sub">
-          Planificación de cámara previa al rodaje. El Parte de Script registra después lo que realmente se rodó de
-          cada plano.
-        </p>
-        <div className="chips" style={{ padding: "0 18px 14px" }}>
-          <span className="chip">PG = Plano General</span>
-          <span className="chip">PM = Plano Medio</span>
-          <span className="chip">PP = Primer Plano</span>
-          <span className="chip">DET = Detalle</span>
+      )}
+      {/* Upload */}
+      <form onSubmit={handleUpload} className="gup" style={!canEdit ? { pointerEvents: "none", opacity: 0.45 } : undefined}>
+        <div className="gup-row">
+          <label className="gfile">
+            {file ? file.name : "Elegir guion técnico en PDF…"}
+            <input type="file" accept="application/pdf" style={{ display: "none" }}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          </label>
+          <button type="submit" className="abtn" disabled={!file || uploading} style={{ width: "auto" }}>
+            {uploading ? "Procesando con IA…" : "Subir y procesar"}
+          </button>
         </div>
-        <div className="twrap">
-          <table className="t">
-            <tbody>
-              <tr>
-                <th>Esc.</th>
-                <th>Plano</th>
-                <th>Tipo</th>
-                <th>Mov. cámara</th>
-                <th>Lente</th>
-                <th>Encuadre / Descripción</th>
-                <th>Notas</th>
-                <th></th>
-              </tr>
-              {loading && (
-                <tr>
-                  <td colSpan={8}>Cargando…</td>
-                </tr>
-              )}
-              {!loading && planos.length === 0 && (
-                <tr>
-                  <td colSpan={8}>Todavía no hay planos cargados para este proyecto.</td>
-                </tr>
-              )}
-              {planos.map((p) => (
-                <tr key={p.id}>
-                  <td className="mono"><b>{p.escena}</b></td>
-                  <td className="mono">{p.plano}</td>
-                  <td>{p.tipo || "—"}</td>
-                  <td>{p.mov_camara || "—"}</td>
-                  <td className="mono">{p.lente || "—"}</td>
-                  <td>{p.descripcion}</td>
-                  <td>{p.notas || "—"}</td>
-                  <td>
-                    {p.autor_id === userId && (
-                      <span className="chip" style={{ cursor: "pointer" }} onClick={() => handleDelete(p.id)}>
-                        Eliminar
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
+      </form>
 
-      <div className="cons-new" style={{ paddingTop: 0 }}>
-        <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Añadir plano"}
+      {/* Lista de guiones subidos */}
+      {guiones.length > 0 && (
+        <div className="glist">
+          {guiones.map((g) => (
+            <div className="gitem" key={g.id}>
+              <span className="name">{g.nombre}</span>
+              {g.estado === "procesando" && <span className="pill p-warn">Procesando…</span>}
+              {g.estado === "listo" && <span className="pill p-ok">Listo</span>}
+              {g.estado === "error" && <span className="pill p-bad" title={g.error_msg ?? ""}>Error</span>}
+              <span className="meta">{new Date(g.created_at).toLocaleString("es-AR")}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="gtabs">
+        <button className={`gtab ${tab === "revision" ? "active" : ""}`} onClick={() => setTab("revision")}>
+          Revisión {borradores.length > 0 ? `(${borradores.length})` : ""}
+        </button>
+        <button className={`gtab ${tab === "guion" ? "active" : ""}`} onClick={() => setTab("guion")}>
+          Desglose técnico {confirmados.length > 0 ? `(${confirmados.length})` : ""}
+        </button>
+        <button className={`gtab ${tab === "manual" ? "active" : ""}`} onClick={() => setTab("manual")}>
+          + Manual
         </button>
       </div>
 
-      {showForm && (
-        <form onSubmit={handleCreate} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
-          <label className="afield">
-            <span>Escena</span>
-            <input type="text" required value={escena} onChange={(e) => setEscena(e.target.value)} placeholder="Ej. 1" />
-          </label>
-          <label className="afield">
-            <span>Plano</span>
-            <input type="text" required value={plano} onChange={(e) => setPlano(e.target.value)} placeholder="Ej. 1A" />
-          </label>
-          <label className="afield">
-            <span>Tipo</span>
-            <input type="text" value={tipo} onChange={(e) => setTipo(e.target.value)} placeholder="PG, PM, PP, DET…" />
-          </label>
-          <label className="afield">
-            <span>Movimiento de cámara</span>
-            <input type="text" value={movCamara} onChange={(e) => setMovCamara(e.target.value)} placeholder="Fijo, Steadicam, Travelling…" />
-          </label>
-          <label className="afield">
-            <span>Lente</span>
-            <input type="text" value={lente} onChange={(e) => setLente(e.target.value)} placeholder="35mm" />
-          </label>
-          <label className="afield">
-            <span>Encuadre / Descripción</span>
-            <textarea required value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={2} placeholder="Qué se ve en el plano" />
-          </label>
-          <label className="afield">
-            <span>Notas</span>
-            <input type="text" value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas de rodaje (opcional)" />
-          </label>
+      {/* Tab: Revisión */}
+      {tab === "revision" && (
+        <div className="gcards">
+          {loading && <p style={{ fontSize: 12, color: "var(--muted)" }}>Cargando…</p>}
+          {!loading && procesando && (
+            <p style={{ fontSize: 12, color: "var(--muted)" }}>
+              La IA está analizando el guion técnico y extrayendo los planos. Puede tardar un par de minutos…
+            </p>
+          )}
+          {!loading && !procesando && borradores.length === 0 && (
+            <p style={{ fontSize: 12, color: "var(--muted)" }}>
+              No hay planos pendientes de revisión. Subí un PDF para que la IA lo desglose automáticamente.
+            </p>
+          )}
+          {borradores.map((p) => {
+            const ed = edits[p.id] ?? p;
+            return (
+              <div className="gcard" key={p.id}>
+                <div className="gcard-top">
+                  <span className="num">Esc. {ed.escena} · Plano {ed.plano}</span>
+                  {ed.pagina_pdf && <span className="pag">Pág. {ed.pagina_pdf} del PDF</span>}
+                </div>
 
-          {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
+                <div className="gfields">
+                  <label className="afield">
+                    <span>Escena</span>
+                    <input type="text" value={ed.escena}
+                      onChange={(ev) => updateField(p.id, "escena", ev.target.value)} />
+                  </label>
+                  <label className="afield">
+                    <span>Plano</span>
+                    <input type="text" value={ed.plano}
+                      onChange={(ev) => updateField(p.id, "plano", ev.target.value)} />
+                  </label>
+                  <label className="afield">
+                    <span>Tipo</span>
+                    <select value={ed.tipo ?? ""} onChange={(ev) => updateField(p.id, "tipo", ev.target.value || null)}>
+                      <option value="">—</option>
+                      {TIPO_OPCIONES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </label>
+                  <label className="afield">
+                    <span>Mov. cámara</span>
+                    <select value={ed.mov_camara ?? ""} onChange={(ev) => updateField(p.id, "mov_camara", ev.target.value || null)}>
+                      <option value="">—</option>
+                      {MOV_OPCIONES.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </label>
+                  <label className="afield">
+                    <span>Lente / Focal</span>
+                    <input type="text" value={ed.lente ?? ""}
+                      onChange={(ev) => updateField(p.id, "lente", ev.target.value || null)}
+                      placeholder="35mm, 50mm…" />
+                  </label>
+                  <label className="afield">
+                    <span>Eje / Ángulo</span>
+                    <input type="text" value={ed.eje ?? ""}
+                      onChange={(ev) => updateField(p.id, "eje", ev.target.value || null)}
+                      placeholder="frontal, picado…" />
+                  </label>
+                </div>
 
-          <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Guardando…" : "Añadir plano"}
-          </button>
-        </form>
+                <label className="afield">
+                  <span>Descripción del encuadre</span>
+                  <textarea rows={3} value={ed.descripcion}
+                    onChange={(ev) => updateField(p.id, "descripcion", ev.target.value)} />
+                </label>
+
+                <div className="gfields">
+                  <label className="afield">
+                    <span>Personajes</span>
+                    <input type="text"
+                      value={ed.personajes.join(", ")}
+                      onChange={(ev) => updateField(p.id, "personajes", ev.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                      placeholder="ELENA, MARCOS" />
+                  </label>
+                  <label className="afield">
+                    <span>Duración estimada (seg)</span>
+                    <input type="number" value={ed.duracion_seg ?? ""}
+                      onChange={(ev) => updateField(p.id, "duracion_seg", ev.target.value ? Number(ev.target.value) : null)}
+                      placeholder="ej: 8" />
+                  </label>
+                </div>
+
+                <label className="afield">
+                  <span>Notas técnicas</span>
+                  <input type="text" value={ed.notas ?? ""}
+                    onChange={(ev) => updateField(p.id, "notas", ev.target.value || null)}
+                    placeholder="Iluminación, VFX, audio especial…" />
+                </label>
+
+                <div className="gcard-actions">
+                  <button type="button" className="btn acc" onClick={() => persistPlano(p.id, "confirmado")}>
+                    Confirmar plano
+                  </button>
+                  <button type="button" className="btn" onClick={() => persistPlano(p.id, "borrador")}>
+                    Guardar cambios
+                  </button>
+                  <button type="button" className="btn" onClick={() => deletePlano(p.id)}>
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
-    </div>
+
+      {/* Tab: Desglose técnico confirmado */}
+      {tab === "guion" && (
+        <div className="gt-desglose">
+          {confirmados.length === 0 && (
+            <p style={{ fontSize: 12, color: "var(--muted)", padding: "20px 30px" }}>
+              Todavía no hay planos confirmados. Subí un PDF o añadí planos manualmente y confirmalos desde la pestaña Revisión.
+            </p>
+          )}
+          {confirmados.length > 0 && (
+            <div className="twrap" style={{ padding: "16px 30px 36px" }}>
+              <table className="t gt-tabla">
+                <thead>
+                  <tr>
+                    <th>Esc.</th>
+                    <th>Plano</th>
+                    <th>Tipo</th>
+                    <th>Mov.</th>
+                    <th>Lente</th>
+                    <th>Eje</th>
+                    <th>Descripción</th>
+                    <th>Personajes</th>
+                    <th>Dur.</th>
+                    <th>Notas</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {confirmados.map((p) => (
+                    <tr key={p.id} className="gt-row">
+                      <td className="mono"><b>{p.escena}</b></td>
+                      <td className="mono">{p.plano}</td>
+                      <td><span className="gt-tipo">{p.tipo || "—"}</span></td>
+                      <td style={{ fontSize: 11 }}>{p.mov_camara || "—"}</td>
+                      <td className="mono">{p.lente || "—"}</td>
+                      <td style={{ fontSize: 11 }}>{p.eje || "—"}</td>
+                      <td style={{ maxWidth: 260, fontSize: 12 }}>{p.descripcion}</td>
+                      <td style={{ fontSize: 11 }}>{p.personajes.join(", ") || "—"}</td>
+                      <td style={{ fontSize: 11 }}>{p.duracion_seg != null ? `${p.duracion_seg}s` : "—"}</td>
+                      <td style={{ fontSize: 11, color: "var(--muted)" }}>{p.notas || "—"}</td>
+                      <td>
+                        {p.autor_id === userId && (
+                          <button className="btn" style={{ fontSize: 10, padding: "3px 8px" }}
+                            onClick={() => deletePlano(p.id)}>
+                            ✕
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Manual */}
+      {tab === "manual" && (
+        <div className="gcards">
+          <p style={{ fontSize: 12, color: "var(--muted)" }}>
+            Añadí planos manualmente uno por uno. Se confirman directamente sin pasar por revisión.
+          </p>
+          <button className="btn acc" style={{ alignSelf: "flex-start" }} onClick={() => setShowForm((v) => !v)}>
+            {showForm ? "Cancelar" : "+ Añadir plano"}
+          </button>
+          {showForm && (
+            <form onSubmit={handleManual} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 600 }}>
+              <div className="gfields">
+                <label className="afield"><span>Escena *</span>
+                  <input required value={mEscena} onChange={(e) => setMEscena(e.target.value)} placeholder="1" />
+                </label>
+                <label className="afield"><span>Plano *</span>
+                  <input required value={mPlano} onChange={(e) => setMPlano(e.target.value)} placeholder="1A" />
+                </label>
+                <label className="afield"><span>Tipo</span>
+                  <select value={mTipo} onChange={(e) => setMTipo(e.target.value)}>
+                    <option value="">—</option>
+                    {TIPO_OPCIONES.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </label>
+                <label className="afield"><span>Mov. cámara</span>
+                  <select value={mMov} onChange={(e) => setMMov(e.target.value)}>
+                    <option value="">—</option>
+                    {MOV_OPCIONES.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </label>
+                <label className="afield"><span>Lente</span>
+                  <input value={mLente} onChange={(e) => setMLente(e.target.value)} placeholder="35mm" />
+                </label>
+                <label className="afield"><span>Eje / Ángulo</span>
+                  <input value={mEje} onChange={(e) => setMEje(e.target.value)} placeholder="frontal, picado…" />
+                </label>
+              </div>
+              <label className="afield"><span>Descripción del encuadre *</span>
+                <textarea required rows={2} value={mDesc} onChange={(e) => setMDesc(e.target.value)} />
+              </label>
+              <div className="gfields">
+                <label className="afield"><span>Personajes</span>
+                  <input value={mPersonajes} onChange={(e) => setMPersonajes(e.target.value)} placeholder="ELENA, MARCOS" />
+                </label>
+                <label className="afield"><span>Duración (seg)</span>
+                  <input type="number" value={mDuracion} onChange={(e) => setMDuracion(e.target.value)} placeholder="8" />
+                </label>
+              </div>
+              <label className="afield"><span>Notas técnicas</span>
+                <input value={mNotas} onChange={(e) => setMNotas(e.target.value)} placeholder="VFX, audio especial…" />
+              </label>
+              {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
+              <button type="submit" className="abtn" disabled={sending} style={{ alignSelf: "flex-start" }}>
+                {sending ? "Guardando…" : "Añadir plano confirmado"}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+    </>
   );
 }

@@ -33,6 +33,23 @@ export const DEPARTAMENTOS = [
   "Distribución",
 ];
 
+// Departamento virtual para invitados externos con vista de solo lectura (clientes/productoras)
+export const CLIENTE_DEPT = "Cliente / Productora";
+
+// Estados de tareas, consistentes en toda la app (Pulso, Kanban, Inbox).
+export const ESTADOS_TAREA = ["pendiente", "en_curso", "hecho"] as const;
+export type EstadoTarea = (typeof ESTADOS_TAREA)[number];
+export const ESTADO_LABEL: Record<EstadoTarea, string> = {
+  pendiente: "Pendiente",
+  en_curso: "En curso",
+  hecho: "Hecho",
+};
+export const ESTADO_COLOR: Record<EstadoTarea, string> = {
+  pendiente: "var(--muted)",
+  en_curso: "var(--cyan)",
+  hecho: "var(--lime)",
+};
+
 export const ACCENTS: Record<string, string> = {
   "Dirección": "lime",
   "Fotografía": "blue",
@@ -50,6 +67,7 @@ export const ACCENTS: Record<string, string> = {
   "Marketing": "amber",
   "Difusión": "indigo",
   "Distribución": "coral",
+  [CLIENTE_DEPT]: "white",
 };
 
 // Matriz de visionado: además de su propio departamento (que edita), cada rol puede
