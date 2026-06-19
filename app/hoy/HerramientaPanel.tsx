@@ -1919,6 +1919,7 @@ function FichaTool({
 
 // ---- Nota ----
 const NOTA_COLORS = ["#F4F4F6","#9FE870","#11C2DC","#F5A623","#FF6B6B","#C084FC","#60A5FA","#FCD34D"];
+const NOTA_HIGHLIGHT = ["#FCD34D","#86EFAC","#93C5FD","#F9A8D4","#FCA5A5","transparent"];
 
 function NotaTool({
   fila,
@@ -1956,32 +1957,64 @@ function NotaTool({
     editorRef.current?.focus();
   }
 
+  function highlight(color: string) {
+    // hiliteColor = only selected text; backColor = whole block. Try hiliteColor first (Firefox/Chrome).
+    const cmd = document.queryCommandSupported("hiliteColor") ? "hiliteColor" : "backColor";
+    exec(cmd, color === "transparent" ? "transparent" : color);
+  }
+
   const yoVi = !!fila && (fila.visionado_por ?? []).some((v) => v.usuario === fullName);
 
   return (
     <div className="hp-nota-wrap">
       {editable && (
         <div className="hp-nota-toolbar">
+          {/* Formato inline */}
           <button type="button" title="Negrita (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><b>B</b></button>
           <button type="button" title="Cursiva (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><i>I</i></button>
+          <button type="button" title="Subrayado (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><u>U</u></button>
           <button type="button" title="Tachado" onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><s>S</s></button>
+          <span className="hp-nota-sep"></span>
+          {/* Bloques */}
           <button type="button" title="Título" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}>H</button>
           <button type="button" title="Texto normal" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}>¶</button>
-          <button type="button" title="Lista" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}>•</button>
+          <button type="button" title="Lista viñetas" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}>•</button>
           <button type="button" title="Lista numerada" onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}>1.</button>
           <span className="hp-nota-sep"></span>
+          {/* Alineación */}
+          <button type="button" title="Alinear izquierda" onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}>⬅</button>
+          <button type="button" title="Centrar" onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}>≡</button>
+          <button type="button" title="Alinear derecha" onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}>➡</button>
+          <span className="hp-nota-sep"></span>
+          {/* Color de texto */}
           <span className="hp-nota-colors">
             {NOTA_COLORS.map((c) => (
               <button
                 key={c}
                 type="button"
-                title={`Color ${c}`}
+                title={`Color texto ${c}`}
                 style={{ background: c }}
                 onMouseDown={(e) => { e.preventDefault(); exec("foreColor", c); }}
               />
             ))}
           </span>
           <span className="hp-nota-sep"></span>
+          {/* Resaltado */}
+          <span className="hp-nota-colors hp-nota-highlights">
+            {NOTA_HIGHLIGHT.map((c) => (
+              <button
+                key={c}
+                type="button"
+                title={c === "transparent" ? "Quitar resaltado" : `Resaltar ${c}`}
+                style={{ background: c === "transparent" ? "var(--hl1)" : c, border: c === "transparent" ? "1px dashed var(--muted)" : "2px solid transparent" }}
+                onMouseDown={(e) => { e.preventDefault(); highlight(c); }}
+              >
+                {c === "transparent" ? "✕" : ""}
+              </button>
+            ))}
+          </span>
+          <span className="hp-nota-sep"></span>
+          {/* Tamaño */}
           <select
             title="Tamaño de letra"
             onMouseDown={(e) => e.stopPropagation()}
