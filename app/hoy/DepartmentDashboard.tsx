@@ -11,7 +11,6 @@ import EquipoMini from "./EquipoMini";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
 import CommandPalette, { type PaletteItem } from "./CommandPalette";
 import InboxPanel, { type InboxItem } from "./InboxPanel";
-import FavoritosSidebar from "./FavoritosSidebar";
 import { deptTools, cargoGroups } from "../herramientas";
 import { createClient } from "@/lib/supabase/client";
 import { CLIENTE_DEPT } from "../constants";
@@ -333,8 +332,6 @@ export default function DepartmentDashboard({
           <ArchivosPanel departamento={nombre} />
         </div>
       )}
-
-      <FavoritosSidebar departamento={nombre} onAbrirTab={(seccion) => setTab(seccion)} />
     </div>
   );
 }

@@ -15,36 +15,7 @@ const TIPO_TAG: Record<Herramienta["tipo"], string> = {
   accesos: "Accesos",
 };
 
-const favKey = (dept: string) => `cinepack-fav-tools-${dept}`;
-const recentKey = (dept: string) => `cinepack-recent-tools-${dept}`;
 const openKey = (dept: string) => `cinepack-open-tool-${dept}`;
-
-function leerIds(key: string): string[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem(key) ?? "[]");
-    return Array.isArray(raw) ? raw.filter((x) => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function esFavorito(dept: string, id: string): boolean {
-  return leerIds(favKey(dept)).includes(id);
-}
-
-function toggleFavorito(dept: string, id: string) {
-  const actuales = leerIds(favKey(dept));
-  const next = actuales.includes(id) ? actuales.filter((x) => x !== id) : [...actuales, id];
-  localStorage.setItem(favKey(dept), JSON.stringify(next));
-  window.dispatchEvent(new Event("cp-tools-changed"));
-}
-
-function registrarReciente(dept: string, id: string) {
-  const actuales = leerIds(recentKey(dept)).filter((x) => x !== id);
-  const next = [id, ...actuales].slice(0, 5);
-  localStorage.setItem(recentKey(dept), JSON.stringify(next));
-  window.dispatchEvent(new Event("cp-tools-changed"));
-}
 
 export default function HerramientasPanel({
   departamento,
@@ -86,7 +57,6 @@ export default function HerramientasPanel({
   }, [departamento]);
 
   function abrir(h: Herramienta) {
-    registrarReciente(departamento, h.id);
     setAbierta(h);
   }
 
@@ -150,7 +120,7 @@ export default function HerramientasPanel({
           <span className="hp-group-label">Herramientas de {departamento}</span>
           <div className="hp-cards">
             {tools.map((h) => (
-              <ToolCard key={h.id} h={h} departamento={departamento} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+              <ToolCard key={h.id} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
             ))}
           </div>
         </section>
@@ -182,7 +152,7 @@ export default function HerramientasPanel({
             </span>
             <div className="hp-cards">
               {g.tools.map((h) => (
-                <ToolCard key={`${g.cargo}-${h.id}`} h={h} departamento={departamento} onClick={() => abrir(h)} cargo conteo={conteos[h.id]} />
+                <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} cargo conteo={conteos[h.id]} />
               ))}
             </div>
           </section>
@@ -196,34 +166,15 @@ function ToolCard({
   h,
   onClick,
   cargo,
-  departamento,
   conteo,
 }: {
   h: Herramienta;
   onClick: () => void;
   cargo?: boolean;
-  departamento: string;
   conteo?: number;
 }) {
-  const [fav, setFav] = useState(false);
-
-  useEffect(() => {
-    setFav(esFavorito(departamento, h.id));
-  }, [departamento, h.id]);
-
   return (
     <div className={`hp-card ${cargo ? "rol" : ""}`}>
-      <button
-        className={`hp-card-fav ${fav ? "active" : ""}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleFavorito(departamento, h.id);
-          setFav((v) => !v);
-        }}
-        title={fav ? "Quitar de favoritos" : "Marcar como favorito"}
-      >
-        ★
-      </button>
       <button className="hp-card-main" onClick={onClick}>
         <span className="hex"></span>
         <span className="hp-card-name">{h.nombre}</span>

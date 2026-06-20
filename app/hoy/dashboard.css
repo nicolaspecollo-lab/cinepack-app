@@ -417,12 +417,6 @@
 .cp-dash .hp-card-count{ font-size:9.5px; font-family:'Poppins',sans-serif; font-weight:700; background:var(--acc); color:#101010; border-radius:999px; padding:1px 7px; }
 .cp-dash .hp-card-count.hp-card-count-empty{ background:var(--hl3); color:var(--muted); }
 .cp-dash .hp-card-hint{ font-size:11px; color:var(--muted); line-height:1.5; }
-.cp-dash .hp-card-fav{
-  position:absolute; top:8px; right:8px; background:none; border:none; cursor:pointer;
-  font-size:14px; color:var(--line); padding:4px; line-height:1; z-index:1;
-}
-.cp-dash .hp-card-fav:hover{ color:var(--muted); }
-.cp-dash .hp-card-fav.active{ color:var(--acc); }
 
 /* Vista abierta de una herramienta */
 .cp-dash .hp-open{ display:flex; flex-direction:column; }
@@ -642,35 +636,6 @@
   border-radius:6px; padding:3px 6px; line-height:1;
 }
 .cp-dash .cp-inbox-actions button:hover{ color:var(--text); border-color:var(--acc); }
-
-/* Sidebar de favoritos y recientes */
-.cp-dash .cp-sidebar{
-  position:fixed; right:0; top:50%; transform:translateY(-50%); z-index:150;
-  display:flex; flex-direction:row-reverse; align-items:flex-start;
-}
-.cp-dash .cp-sidebar-toggle{
-  background:var(--panel); border:1px solid var(--line); border-right:none; color:var(--muted);
-  cursor:pointer; font-size:14px; padding:10px 8px; border-radius:8px 0 0 8px;
-}
-.cp-dash .cp-sidebar-toggle:hover{ color:var(--acc); }
-.cp-dash .cp-sidebar-body{
-  width:220px; max-height:60vh; overflow-y:auto; background:var(--panel); border:1px solid var(--line);
-  border-right:none; border-radius:8px 0 0 8px; padding:12px; display:flex; flex-direction:column; gap:14px;
-  box-shadow:0 12px 40px rgba(0,0,0,.35);
-}
-.cp-dash .cp-sidebar-section{ display:flex; flex-direction:column; gap:4px; }
-.cp-dash .cp-sidebar-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); padding:0 4px 2px; }
-.cp-dash .cp-sidebar-section ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
-.cp-dash .cp-sidebar-section li{ display:flex; align-items:center; gap:4px; }
-.cp-dash .cp-sidebar-item{
-  flex:1; text-align:left; background:none; border:none; color:var(--text); cursor:pointer;
-  font-size:12px; padding:7px 8px; border-radius:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-.cp-dash .cp-sidebar-item:hover{ background:var(--hl3); }
-.cp-dash .cp-sidebar-star{ background:none; border:none; color:var(--acc); cursor:pointer; font-size:12px; padding:4px; }
-@media (max-width: 900px){
-  .cp-dash .cp-sidebar{ display:none; }
-}
 
 /* Pulso del proyecto */
 .cp-dash .pulso{ padding:24px 30px 6px; }
