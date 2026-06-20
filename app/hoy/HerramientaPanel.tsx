@@ -735,13 +735,14 @@ function RichCell({
 // Barra de formato reutilizable (mismo aspecto que la de Nota). Actúa sobre el
 // elemento contentEditable que tenga el foco. Los controles son BOTONES con
 // preventDefault: así el foco no sale de la celda y no se dispara el commit.
-function RichToolbar({ className = "" }: { className?: string }) {
+function RichToolbar({ className = "", inline = false }: { className?: string; inline?: boolean }) {
   const cmd = (c: string, v?: string) => document.execCommand(c, false, v);
-  return (
-    <div className={`hp-nota-toolbar hp-richbar ${className}`}>
-      <button type="button" title="Negrita" onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><b>B</b></button>
-      <button type="button" title="Cursiva" onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><i>I</i></button>
-      <button type="button" title="Subrayado" onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><u>U</u></button>
+  const btncls = inline ? "hp-rich-btn" : "";
+  const content = (
+    <>
+      <button type="button" className={btncls} title="Negrita" onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><b>B</b></button>
+      <button type="button" className={btncls} title="Cursiva" onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><i>I</i></button>
+      <button type="button" className={btncls} title="Subrayado" onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><u>U</u></button>
       <span className="hp-nota-sep" />
       <span className="hp-nota-colors">
         {CELL_TEXT_COLORS.map((c) => (
@@ -751,16 +752,18 @@ function RichToolbar({ className = "" }: { className?: string }) {
       </span>
       <span className="hp-nota-sep" />
       {([["2", "S"], ["3", "M"], ["4", "L"], ["5", "XL"]] as const).map(([size, label]) => (
-        <button key={size} type="button" title={`Tamaño ${label}`}
+        <button key={size} type="button" className={btncls} title={`Tamaño ${label}`}
           onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); }}>{label}</button>
       ))}
       <span className="hp-nota-sep" />
       {CELL_FONTS.map((f) => (
-        <button key={f.label} type="button" title={`Fuente ${f.label}`} style={{ fontFamily: f.value, fontSize: 11 }}
+        <button key={f.label} type="button" className={btncls} title={`Fuente ${f.label}`} style={{ fontFamily: f.value, fontSize: 11 }}
           onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); }}>{f.label}</button>
       ))}
-    </div>
+    </>
   );
+  if (inline) return content;
+  return <div className={`hp-nota-toolbar hp-richbar ${className}`}>{content}</div>;
 }
 
 // Celda con soporte de autocomplete via datalist
@@ -1303,7 +1306,7 @@ function TablaTool({
         {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
           <>
             <span className="hp-nota-sep" />
-            <RichToolbar className="hp-tabla-richbar" />
+            <RichToolbar inline />
           </>
         )}
         <button

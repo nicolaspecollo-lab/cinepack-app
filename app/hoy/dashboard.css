@@ -473,10 +473,19 @@
   font-family:inherit; font-size:12.5px; padding:9px 11px; min-height:38px; outline:none;
 }
 .cp-dash .hp-ficha-rich:focus{ border-color:var(--acc); }
-/* Barra de formato: dentro del hp-tabla-toolbar fluye inline (display:contents) */
+/* Barra de formato */
 .cp-dash .hp-richbar{ align-items:center; }
-.cp-dash .hp-tabla-toolbar .hp-richbar{ display:contents; }
 .cp-dash .hp-ficha-richbar{ margin-bottom:4px; }
+/* Botones rich text cuando fluyen inline dentro de hp-tabla-toolbar */
+.cp-dash .hp-tabla-toolbar .hp-rich-btn{
+  display:flex; align-items:center; justify-content:center;
+  background:none; border:1px solid var(--line); color:var(--text);
+  width:26px; height:26px; font-size:12px; cursor:pointer; border-radius:4px;
+  transition:background .12s, border-color .12s; flex-shrink:0;
+}
+.cp-dash .hp-tabla-toolbar .hp-rich-btn:hover{ background:var(--hl1); border-color:var(--acc); }
+.cp-dash .hp-tabla-toolbar .hp-nota-sep{ width:1px; height:18px; background:var(--line); margin:0 2px; flex-shrink:0; }
+.cp-dash .hp-tabla-toolbar .hp-nota-colors{ display:flex; gap:3px; align-items:center; flex-shrink:0; }
 .cp-dash .hp-cell-select option{ background:var(--panel); color:var(--text); }
 
 /* Tonos de estado */
