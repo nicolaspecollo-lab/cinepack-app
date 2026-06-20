@@ -606,14 +606,8 @@
 .cp-dash .cmdk-item-group{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); white-space:nowrap; }
 
 /* Inbox unificado */
-.cp-dash .cp-inbox{ position:relative; }
-.cp-dash .cp-inbox-trigger{ position:relative; }
-.cp-dash .cp-inbox-badge{
-  background:var(--acc); color:var(--bg); font-size:10px; font-weight:700; border-radius:999px;
-  padding:1px 6px; line-height:1.4;
-}
 .cp-dash .cp-inbox-panel{
-  position:absolute; top:calc(100% + 8px); right:0; width:min(360px, 90vw); max-height:60vh; overflow-y:auto;
+  position:fixed; top:62px; right:18px; width:min(360px, 92vw); max-height:70vh; overflow-y:auto;
   background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,.5);
   z-index:210;
 }

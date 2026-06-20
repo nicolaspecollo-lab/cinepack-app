@@ -105,6 +105,13 @@ export default function WorkspaceShell({
                 <span>{t("changeProject")}</span>
                 <span className="muted">{proyecto}</span>
               </Link>
+              <button
+                className="cp-menu-item"
+                onClick={() => { window.dispatchEvent(new Event("cp-inbox-open")); setOpen(false); }}
+              >
+                <span>{t("notifications")}</span>
+                <span className="muted">{t("notificationsSub")}</span>
+              </button>
 
               {isAdmin && onDeptChange && (
                 <>

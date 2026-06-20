@@ -46,6 +46,17 @@ export default function InboxPanel({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
+  // El trigger ya no vive en la barra: se abre desde el menú del shell
+  // (Preferencias → Notificaciones) que dispara este evento.
+  useEffect(() => {
+    function onOpen() {
+      setSnoozed(leerSnoozed());
+      setOpen(true);
+    }
+    window.addEventListener("cp-inbox-open", onOpen);
+    return () => window.removeEventListener("cp-inbox-open", onOpen);
+  }, []);
+
   function snooze(id: string) {
     const next = { ...snoozed, [id]: Date.now() + SNOOZE_MS };
     setSnoozed(next);
@@ -57,17 +68,13 @@ export default function InboxPanel({
     return !hasta || hasta < Date.now();
   });
 
+  if (!open) return null;
+
   return (
     <div className="cp-inbox" ref={ref}>
-      <button className="cmdk-trigger cp-inbox-trigger" onClick={() => setOpen((v) => !v)} title="Inbox de notificaciones">
-        <span className="hex"></span> Inbox
-        {visibles.length > 0 && <span className="cp-inbox-badge">{visibles.length}</span>}
-      </button>
-
-      {open && (
-        <div className="cp-inbox-panel">
+      <div className="cp-inbox-panel">
           <div className="cp-inbox-head">
-            <span>Inbox</span>
+            <span>Notificaciones</span>
             {visibles.length > 0 && (
               <button className="cp-inbox-go" onClick={() => { onIrAPulso(); setOpen(false); }}>
                 Ver en Pulso →
@@ -89,8 +96,7 @@ export default function InboxPanel({
               ))}
             </ul>
           )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -191,12 +191,6 @@ export default function DepartmentDashboard({
   const headerControls = (
     <div className="cp-dash-controls">
       <CommandPalette items={paletteItems} onCrearTarea={onCrearTarea} onAskIA={onAskIA} />
-      <InboxPanel
-        items={inboxItems}
-        onCompletar={completarTareaPalette}
-        onDescartar={descartarAlertaPalette}
-        onIrAPulso={() => setTab("pulso")}
-      />
       <button
         className="cp-dash-ctrl-btn"
         onClick={() => window.dispatchEvent(new Event("cp-asistente-open"))}
@@ -206,6 +200,17 @@ export default function DepartmentDashboard({
       </button>
       <EquipoMini departamento={nombre} />
     </div>
+  );
+
+  // El Inbox ya no tiene botón en la barra: se abre desde el menú del shell
+  // (evento cp-inbox-open). Se monta como panel flotante, fuera de la barra.
+  const inboxPanel = (
+    <InboxPanel
+      items={inboxItems}
+      onCompletar={completarTareaPalette}
+      onDescartar={descartarAlertaPalette}
+      onIrAPulso={() => setTab("pulso")}
+    />
   );
 
   if (nombre === CLIENTE_DEPT) {
@@ -332,6 +337,8 @@ export default function DepartmentDashboard({
           <ArchivosPanel departamento={nombre} />
         </div>
       )}
+
+      {inboxPanel}
     </div>
   );
 }
