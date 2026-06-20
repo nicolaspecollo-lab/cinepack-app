@@ -251,53 +251,32 @@ export default function DepartmentDashboard({
   return (
     <div className="view active" style={{ "--acc": accVar } as React.CSSProperties}>
       {headerMounted && createPortal(headerControls, document.getElementById("cp-header-controls")!)}
-      <div className="dhead">
-        <div className="dhead-top">
-          <span className="hex"></span>
-          <div className="dhead-info">
-            <span className="proj">Panel de departamento</span>
-            <div className="dhead-titulo-row">
-              <h2>{nombre}</h2>
-              {jornadaActiva && (
-                <span className="dhead-jornada-badge">
-                  Día {jornadaActiva.dia_numero} de {jornadaActiva.dia_total} · Rodaje activo
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="dhead-user">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="role-avatar" />
-            ) : (
-              <span className="role-avatar role-avatar-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
-              </span>
-            )}
-            <div className="dhead-user-info">
-              <b>{fullName}</b>
-              <span>{cargo ?? "Sin asignar"}</span>
-            </div>
+      <div className="wtabs">
+        <div className="cp-wdept-label">
+          <span className="hex" />
+          <span>{nombre}</span>
+        </div>
+        <button className={`wtab ${tab === "pulso" ? "active" : ""}`} onClick={() => setTab("pulso")}>
+          Pulso{pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
+        </button>
+        <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>Generales</button>
+        <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>Departamentos</button>
+        <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
+        <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
+        <div style={{ flex: 1 }} />
+        <div className="cp-wuser-block">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="cp-wuser-avatar" />
+          ) : (
+            <span className="cp-wuser-avatar cp-wuser-avatar-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+            </span>
+          )}
+          <div className="cp-wuser-info">
+            <b>{fullName}</b>
+            <span>{cargo ?? "Sin asignar"}</span>
           </div>
         </div>
-      </div>
-
-      <div className="wtabs">
-        <button className={`wtab ${tab === "pulso" ? "active" : ""}`} onClick={() => setTab("pulso")}>
-          Pulso
-          {pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
-        </button>
-        <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>
-          Generales
-        </button>
-        <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>
-          Departamento
-        </button>
-        <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>
-          Exclusivas
-        </button>
-        <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>
-          Archivos
-        </button>
       </div>
 
       {tab === "pulso" && (

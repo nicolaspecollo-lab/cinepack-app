@@ -41,18 +41,62 @@
 .cp-dash .dhead .role-avatar-icon svg{ width:100%; height:100%; }
 
 /* ===== Pestañas (UNIFORME en todos los departamentos) ===== */
-.cp-dash .wtabs{ display:flex; gap:0; border-bottom:1px solid var(--line); padding:0 30px; margin-top:16px; flex-wrap:wrap; }
+.cp-dash .wtabs{
+  display:flex; gap:0; align-items:stretch;
+  border-bottom:1px solid var(--line); padding:0; margin-top:0;
+  flex-wrap:nowrap; min-height:40px; position:relative; overflow:hidden;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(159%2C232%2C112%2C0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size:120px 104px;
+}
+.cp-dash.cp-light .wtabs{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(13%2C13%2C18%2C0.05)' stroke-width='1.5'/%3E%3C/svg%3E");
+}
 .cp-dash .wtab{
-  font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; text-transform:uppercase;
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase;
   letter-spacing:0.06em; color:var(--muted); background:none; border:none;
-  border-bottom:2px solid transparent; padding:14px 4px; margin-right:26px; cursor:pointer;
-  transition:all .15s ease; display:flex; align-items:center; gap:8px;
+  border-bottom:2px solid transparent; padding:0 12px; margin-right:0; cursor:pointer;
+  transition:all .15s ease; display:flex; align-items:center; gap:7px; white-space:nowrap; flex-shrink:0;
 }
 .cp-dash .wtab:hover{ color:var(--text); }
 .cp-dash .wtab.active{ color:var(--acc); border-bottom-color:var(--acc); }
 .cp-dash .wtab-badge{
-  display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px;
-  border-radius:999px; background:var(--acc); color:#101010; font-size:10px; font-weight:800; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center; min-width:16px; height:16px; padding:0 4px;
+  border-radius:999px; background:var(--acc); color:#101010; font-size:9px; font-weight:800; line-height:1;
+}
+
+/* Etiqueta de departamento (no clickeable) */
+.cp-dash .cp-wdept-label{
+  display:flex; align-items:center; gap:7px;
+  padding:0 14px 0 16px;
+  border-right:1px solid var(--line);
+  margin-right:4px; flex-shrink:0;
+}
+.cp-dash .cp-wdept-label .hex{ width:10px; height:9px; background:var(--acc); flex-shrink:0; }
+.cp-dash .cp-wdept-label span:last-child{
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:800;
+  letter-spacing:0.07em; text-transform:uppercase; color:var(--acc);
+}
+
+/* Bloque usuario derecha de tabs */
+.cp-dash .cp-wuser-block{
+  display:flex; align-items:center; gap:8px;
+  padding:0 14px; border-left:1px solid var(--line); flex-shrink:0;
+}
+.cp-dash .cp-wuser-avatar{
+  width:26px; height:26px; border-radius:50%; object-fit:cover; flex-shrink:0; display:block;
+}
+.cp-dash .cp-wuser-avatar-icon{
+  background:var(--acc); color:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  padding:5px; box-sizing:border-box;
+}
+.cp-dash .cp-wuser-avatar-icon svg{ width:100%; height:100%; }
+.cp-dash .cp-wuser-info{ display:flex; flex-direction:column; line-height:1.3; }
+.cp-dash .cp-wuser-info b{
+  font-family:'Poppins',sans-serif; font-size:10px; font-weight:700; color:var(--text);
+}
+.cp-dash .cp-wuser-info span{
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:600; color:var(--muted);
 }
 .cp-dash .badge{ font-size:10px; background:var(--hl5); border-radius:999px; padding:1px 8px; color:var(--text); }
 
@@ -215,9 +259,9 @@
 .cp-dash .perm span b{ color:var(--acc); font-weight:700; }
 
 @media (max-width: 640px){
-  .cp-dash .dhead{ padding:18px 16px 0; }
-  .cp-dash .wtabs{ padding:0 16px; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .cp-dash .wtab{ margin-right:16px; white-space:nowrap; flex-shrink:0; }
+  .cp-dash .wtabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .cp-dash .cp-wuser-info{ display:none; }
+  .cp-dash .wtab{ padding:0 8px; }
   .cp-dash .today{ padding:18px 16px; gap:14px; grid-template-columns:1fr; }
   .cp-dash .tools{ padding:16px 16px 28px; gap:16px; }
   .cp-dash .pipe{ margin:16px 16px 0; }
