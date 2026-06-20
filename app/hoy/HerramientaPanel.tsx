@@ -663,7 +663,7 @@ function Celda({
       </select>
     );
   }
-  if (col.tipo === "largo" || col.tipo === "texto") {
+  if (!col.tipo || col.tipo === "largo" || col.tipo === "texto") {
     return <RichCell valor={valor} editable={editable} onChange={onChange} onCommit={onCommit} />;
   }
   if (col.tipo === "money") {
@@ -1310,7 +1310,7 @@ function TablaTool({
       </div>
 
       {/* ── Barra de formato (texto/largo): misma banda que las funciones ── */}
-      {editable && columnas.some((c) => c.tipo === "largo" || c.tipo === "texto") && (
+      {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
         <RichToolbar className="hp-tabla-richbar" />
       )}
 
@@ -1789,7 +1789,7 @@ function GaleriaTool({
   }
   return (
     <>
-      {editable && columnas.some((c) => c.tipo === "largo" || c.tipo === "texto") && (
+      {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
         <RichToolbar className="hp-tabla-richbar" />
       )}
       <div className="hp-galeria">
@@ -1821,7 +1821,7 @@ function GaleriaTool({
                     />
                   ) : c.tipo === "link" ? (
                     <LinkCell valor={f.datos?.[c.key] ?? ""} editable={editable} onSave={(v) => set(f, c.key, v)} />
-                  ) : c.tipo === "largo" || c.tipo === "texto" ? (
+                  ) : !c.tipo || c.tipo === "largo" || c.tipo === "texto" ? (
                     <RichCell
                       valor={f.datos?.[c.key] ?? ""}
                       editable={editable}
@@ -1891,7 +1891,7 @@ function FichaTool({
   return (
     <div className="hp-print-area">
     <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
-    {editable && campos.some((c) => c.tipo === "largo" || c.tipo === "texto") && (
+    {editable && campos.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
       <RichToolbar className="hp-ficha-richbar" />
     )}
     <div className="hp-ficha">
@@ -1918,7 +1918,7 @@ function FichaTool({
               editable={editable}
               onSave={(v) => set(c.key, v)}
             />
-          ) : c.tipo === "largo" || c.tipo === "texto" ? (
+          ) : !c.tipo || c.tipo === "largo" || c.tipo === "texto" ? (
             <RichCell
               valor={fila?.datos?.[c.key] ?? ""}
               editable={editable}
