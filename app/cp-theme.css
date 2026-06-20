@@ -12,7 +12,7 @@
   --bg-2: #16161D;
   --line: rgba(255,255,255,0.08);
   --text: #F4F4F6;
-  --muted: #9295A1;
+  --muted: #C8CAD4;
   --blue: #2C7DE8;
   --pink: #F37FB5;
   --yellow: #F2DD6E;
@@ -54,7 +54,7 @@
   --bg-2: #FFFFFF;
   --line: rgba(13,13,18,0.12);
   --text: #16161D;
-  --muted: #33363D;
+  --muted: #16161D;
   --panel: rgba(13,13,18,0.03);
   --hl1: rgba(13,13,18,0.025);
   --hl2: rgba(13,13,18,0.04);
@@ -340,7 +340,7 @@
 .cp-hero-content h2{ font-size:1.6rem; margin-bottom:8px; }
 .cp-hero-content p{ color:var(--muted); font-size:13px; max-width:520px; line-height:1.6; }
 
-.cp-np-section{ max-width:760px; margin:0 auto; padding:24px 30px; display:flex; flex-direction:column; gap:24px; width:100%; }
+.cp-np-section{ padding:24px 40px; display:flex; flex-direction:column; gap:24px; width:100%; box-sizing:border-box; }
 .cp-np-block{ display:flex; flex-direction:column; gap:12px; }
 .cp-np-block > span.label{ font-size:11px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; }
 

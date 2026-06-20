@@ -147,6 +147,7 @@ export default function HerramientasPanel({
         return (
           <section className="hp-group" key={g.cargo}>
             <span className="hp-group-label">
+              <span className="hex" style={{ width: "8px", height: "7px" }} />
               {g.cargo}
               {esMio && <span className="hp-mine">tu cargo</span>}
             </span>
@@ -165,7 +166,6 @@ export default function HerramientasPanel({
 function ToolCard({
   h,
   onClick,
-  cargo,
   conteo,
 }: {
   h: Herramienta;
@@ -173,22 +173,21 @@ function ToolCard({
   cargo?: boolean;
   conteo?: number;
 }) {
+  const unidad = h.tipo === "checklist" ? "items" : h.tipo === "galeria" ? "fotos" : "filas";
   return (
-    <div className={`hp-card ${cargo ? "rol" : ""}`}>
-      <button className="hp-card-main" onClick={onClick}>
-        <span className="hex"></span>
-        <span className="hp-card-name">{h.nombre}</span>
-        <div className="hp-card-row">
-          <span className="hp-card-tag">{TIPO_TAG[h.tipo]}</span>
-          {conteo != null && conteo > 0 && (
-            <span className="hp-card-count">{conteo} {h.tipo === "checklist" ? "items" : h.tipo === "galeria" ? "fotos" : "filas"}</span>
-          )}
-          {(conteo == null || conteo === 0) && h.tipo === "tabla" && (
-            <span className="hp-card-count hp-card-count-empty">vacía</span>
-          )}
-        </div>
-        {h.hint && <span className="hp-card-hint">{h.hint}</span>}
-      </button>
-    </div>
+    <button className="hcard" onClick={onClick}>
+      <div className="hcard-accent" />
+      <div className="hcard-title">{h.nombre}</div>
+      {h.hint && <div className="hcard-desc">{h.hint}</div>}
+      <div className="hcard-meta">
+        <span className="hcard-badge">{TIPO_TAG[h.tipo]}</span>
+        {conteo != null && conteo > 0 && (
+          <span className="hcard-count">{conteo} {unidad}</span>
+        )}
+        {(conteo == null || conteo === 0) && h.tipo === "tabla" && (
+          <span className="hcard-badge">vacía</span>
+        )}
+      </div>
+    </button>
   );
 }

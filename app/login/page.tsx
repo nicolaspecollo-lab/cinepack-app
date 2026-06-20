@@ -56,7 +56,7 @@ export default function LoginPage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           <div className="cp-auth-logo">
-            <img src="/logo-cinepack.png" alt="CINE PACK" />
+            <img src={theme === "light" ? "/logo-cinepack-light.png" : "/logo-cinepack-dark.png"} alt="CINE PACK" />
           </div>
 
           <div className="authcard">

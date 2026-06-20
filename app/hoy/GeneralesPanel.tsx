@@ -15,6 +15,7 @@ import PipelinePanel from "./PipelinePanel";
 import HerramientaPanel from "./HerramientaPanel";
 import OrdenRodajePanel from "./OrdenRodajePanel";
 import { GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
+import { ACCENTS } from "../constants";
 
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
 // que despliega sub-pestañas. Iguales para todo el proyecto.
@@ -49,26 +50,70 @@ function canEditSub(sub: Sub, departamento: string): boolean {
   return owners.includes(departamento);
 }
 
-type SubDef = { id: Sub; label: string; cond?: (d: string) => boolean };
+type SubDef = {
+  id: Sub;
+  label: string;
+  desc: string;
+  editores: string[] | null;   // null = todos
+  visores: string[] | "todos";
+  cond?: (d: string) => boolean;
+};
 
 const SUBS: SubDef[] = [
-  { id: "comunicados", label: "Comunicados" },
-  { id: "notificaciones", label: "Notificaciones", cond: (d) => d === "Ejecutivo" },
-  { id: "consultas", label: "Consultas" },
-  { id: "calendario", label: "Calendario general" },
-  { id: "guion", label: "Guion" },
-  { id: "guiontec", label: "Guion Técnico" },
-  { id: "plan", label: "Plan de rodaje" },
-  { id: "orden", label: "Orden de rodaje" },
-  { id: "escena3d", label: "Escena 3D" },
-  { id: "espacio", label: "Espacio de trabajo" },
-  { id: "visionado", label: "Visionado" },
-  { id: "equipo", label: "Equipo" },
-  { id: "accesos", label: "Accesos" },
-  { id: "pipeline", label: "Pipeline", cond: (d) => d === "Ejecutivo" || d === "Producción" },
-  { id: "contactos", label: "Contactos emergencia" },
-  { id: "wrap", label: "Checklist wrap" },
+  { id: "comunicados",    label: "Comunicados",          desc: "Avisos y mensajes internos para el equipo.",              editores: null,                                                           visores: "todos" },
+  { id: "notificaciones", label: "Notificaciones",       desc: "Centro de alertas globales del proyecto.",                editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo"],             cond: (d) => d === "Ejecutivo" },
+  { id: "consultas",      label: "Consultas",            desc: "Canal de preguntas entre departamentos.",                 editores: null,                                                           visores: "todos" },
+  { id: "calendario",     label: "Calendario general",   desc: "Hitos globales y fechas del proyecto.",                   editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
+  { id: "guion",          label: "Guion",                desc: "Guion literario compartido con el equipo.",               editores: ["Guion", "Ejecutivo"],                                         visores: "todos" },
+  { id: "guiontec",       label: "Guion Técnico",        desc: "Desglose por secuencia y plano técnico.",                 editores: ["Dirección", "Guion", "Ejecutivo"],                            visores: ["Dirección", "Guion", "Producción"] },
+  { id: "plan",           label: "Plan de rodaje",       desc: "Cronograma diario de escenas y locaciones.",             editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
+  { id: "orden",          label: "Orden de rodaje",      desc: "Secuencia optimizada por locación y recursos.",          editores: ["Dirección", "Producción", "Ejecutivo"],                       visores: "todos" },
+  { id: "escena3d",       label: "Escena 3D",            desc: "Vista agregada de escenas en profundidad.",              editores: [],                                                              visores: "todos" },
+  { id: "espacio",        label: "Espacio de trabajo",   desc: "Notas y bloques de trabajo por departamento.",           editores: null,                                                           visores: "todos" },
+  { id: "visionado",      label: "Visionado",            desc: "Galería de materiales y referencias visuales.",          editores: ["Dirección", "Arte", "Fotografía", "Postproducción", "Ejecutivo"], visores: "todos" },
+  { id: "equipo",         label: "Equipo",               desc: "Listado completo del equipo técnico y artístico.",       editores: ["RRHH", "Ejecutivo"],                                          visores: "todos" },
+  { id: "accesos",        label: "Accesos",              desc: "Gestión de permisos por cargo y herramienta.",           editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo"] },
+  { id: "pipeline",       label: "Pipeline",             desc: "Financiación, acuerdos y entregables ejecutivos.",       editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo", "Producción"], cond: (d) => d === "Ejecutivo" || d === "Producción" },
+  { id: "contactos",      label: "Contactos emergencia", desc: "Teléfonos y contactos clave para urgencias.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
+  { id: "wrap",           label: "Checklist wrap",       desc: "Lista de control para el cierre del rodaje.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
 ];
+
+function deptColor(dept: string) {
+  return `var(--${ACCENTS[dept] ?? "lime"})`;
+}
+
+function DeptHexes({ label, depts }: { label: string; depts: string[] | null | "todos" }) {
+  if (depts === null) {
+    return (
+      <span className="hcard-perm-group">
+        <span className="hcard-perm-label">{label}</span>
+        <span className="hcard-badge">Todos</span>
+      </span>
+    );
+  }
+  if (depts === "todos") {
+    return (
+      <span className="hcard-perm-group">
+        <span className="hcard-perm-label">{label}</span>
+        <span className="hcard-badge">Todos</span>
+      </span>
+    );
+  }
+  if (depts.length === 0) return null;
+  return (
+    <span className="hcard-perm-group">
+      <span className="hcard-perm-label">{label}</span>
+      {depts.map((d) => (
+        <span
+          key={d}
+          className="hcard-dept-hex"
+          style={{ background: deptColor(d) }}
+          title={d}
+        />
+      ))}
+    </span>
+  );
+}
 
 export default function GeneralesPanel({
   departamento,
@@ -80,7 +125,7 @@ export default function GeneralesPanel({
   jumpTo?: { sub: Sub; token: number } | null;
 }) {
   const subs = SUBS.filter((s) => !s.cond || s.cond(departamento));
-  const [sub, setSub] = useState<Sub>("comunicados");
+  const [sub, setSub] = useState<Sub | null>(null);
 
   useEffect(() => {
     if (jumpTo) setSub(jumpTo.sub);
@@ -88,19 +133,38 @@ export default function GeneralesPanel({
 
   const ce = (s: Sub) => canEditSub(s, departamento);
 
+  if (sub === null) {
+    return (
+      <div className="hp-index">
+        <div>
+          <div className="hp-group-label hp-group-label-muted" style={{ marginBottom: "12px" }}>
+            Herramientas compartidas
+          </div>
+          <div className="hp-cards">
+            {subs.map((s) => (
+              <button key={s.id} className="hcard" onClick={() => setSub(s.id)}>
+                <div className="hcard-accent" />
+                <div className="hcard-title">{s.label}</div>
+                <div className="hcard-desc">{s.desc}</div>
+                <div className="hcard-meta">
+                  <DeptHexes label="✏" depts={s.editores} />
+                  <DeptHexes label="👁" depts={s.visores} />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="gen">
-      <div className="dsubtabs">
-        {subs.map((s) => (
-          <button
-            key={s.id}
-            className={`dsubtab ${sub === s.id ? "active" : ""}`}
-            onClick={() => setSub(s.id)}
-          >
-            {s.label}
-            {!ce(s.id) && <span className="dsubtab-eye" title="Solo visionado"> 👁</span>}
-          </button>
-        ))}
+      <div className="dsubtabs" style={{ paddingBottom: "0" }}>
+        <button className="dsubtab active" onClick={() => setSub(null)}>← Volver</button>
+        <span className="dsubtab" style={{ cursor: "default", opacity: 0.5 }}>
+          {subs.find((s) => s.id === sub)?.label}
+        </span>
       </div>
 
       <div className="gen-body">

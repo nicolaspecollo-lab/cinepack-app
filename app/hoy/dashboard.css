@@ -431,36 +431,62 @@
    =========================================================================== */
 .cp-dash .hp-index{ padding:20px 30px 36px; display:flex; flex-direction:column; gap:26px; }
 .cp-dash .hp-group{ display:flex; flex-direction:column; gap:12px; }
-.cp-dash .hp-group-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.16em; color:var(--muted); display:flex; align-items:center; gap:10px; }
+.cp-dash .hp-group-label{
+  font-size:9px; font-family:'Poppins',sans-serif; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.08em; color:var(--acc);
+  display:flex; align-items:center; gap:6px; margin-bottom:4px;
+}
+.cp-dash .hp-group-label .hex{ width:8px; height:7px; background:var(--acc); flex-shrink:0; }
+.cp-dash .hp-group-label-muted{ color:var(--muted); }
 
-/* Exclusivas: roles en columnas, una al lado de la otra */
-.cp-dash .hp-index-cols{ flex-direction:row; align-items:flex-start; overflow-x:auto; gap:18px; padding-bottom:30px; }
-.cp-dash .hp-index-cols .hp-group{
-  flex:0 0 240px; min-width:240px; border:1px solid var(--line); background:var(--panel); padding:14px; gap:10px;
-}
-.cp-dash .hp-index-cols .hp-group-label{ padding-bottom:8px; border-bottom:1px solid var(--line); }
-.cp-dash .hp-index-cols .hp-cards{ display:flex; flex-direction:column; gap:10px; }
-.cp-dash .hp-index-cols .hp-card{ width:100%; }
+/* Grid 3 columnas */
+.cp-dash .hp-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+
+/* Exclusivas: por cargo con label destacado */
+.cp-dash .hp-index-cols{ flex-direction:column; gap:24px; }
 .cp-dash .hp-mine{ font-size:8.5px; letter-spacing:0.1em; color:#0D0D12; background:var(--acc); border-radius:999px; padding:2px 8px; }
-.cp-dash .hp-cards{ display:grid; grid-template-columns:1fr; gap:10px; }
-.cp-dash .hp-card{
-  position:relative; border:1px solid var(--line); border-top:2px solid var(--acc);
-  background:var(--panel); transition:transform .12s ease, border-color .12s ease, background .12s ease;
+
+/* ── hcard: tarjeta de herramienta ── */
+.cp-dash .hcard{
+  position:relative; overflow:hidden;
+  background:var(--bg-2); border:1px solid var(--line);
+  padding:16px 18px 14px 20px; cursor:pointer;
+  transition:border-color .15s, transform .1s;
+  text-align:left; width:100%; display:flex; flex-direction:column; gap:0;
 }
-.cp-dash .hp-card:hover{ transform:translateY(-2px); background:var(--hl1); }
-.cp-dash .hp-card .hex{ width:16px; height:14px; background:var(--acc); }
-.cp-dash .hp-card.rol{ border-top-color:var(--pink); }
-.cp-dash .hp-card.rol .hex{ background:var(--pink); }
-.cp-dash .hp-card-main{
-  width:100%; text-align:left; background:none; border:none; cursor:pointer;
-  padding:16px 16px 18px; display:flex; flex-direction:column; gap:8px;
+.cp-dash .hcard:hover{ border-color:var(--acc); transform:translateY(-1px); }
+.cp-dash .hcard-accent{
+  position:absolute; top:0; left:0; width:3px; height:100%; background:var(--acc);
 }
-.cp-dash .hp-card-name{ font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; line-height:1.3; padding-right:20px; }
-.cp-dash .hp-card-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.cp-dash .hp-card-tag{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
-.cp-dash .hp-card-count{ font-size:9.5px; font-family:'Poppins',sans-serif; font-weight:700; background:var(--acc); color:#101010; border-radius:999px; padding:1px 7px; }
-.cp-dash .hp-card-count.hp-card-count-empty{ background:var(--hl3); color:var(--muted); }
-.cp-dash .hp-card-hint{ font-size:11px; color:var(--muted); line-height:1.5; }
+.cp-dash .hcard-title{
+  font-family:'Poppins',sans-serif; font-size:14px; font-weight:700;
+  color:var(--text); margin-bottom:6px; line-height:1.3;
+}
+.cp-dash .hcard-desc{
+  font-size:12px; color:var(--text); line-height:1.5; margin-bottom:12px; opacity:0.75;
+}
+.cp-dash .hcard-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.cp-dash .hcard-perm-group{ display:flex; align-items:center; gap:4px; }
+.cp-dash .hcard-perm-label{
+  font-family:'Poppins',sans-serif; font-size:8px; font-weight:600;
+  color:var(--text); opacity:0.45; letter-spacing:0.04em;
+}
+.cp-dash .hcard-dept-hex{
+  width:11px; height:10px;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  cursor:help; flex-shrink:0; transition:transform .1s;
+}
+.cp-dash .hcard-dept-hex:hover{ transform:scale(1.3); }
+.cp-dash .hcard-badge{
+  font-family:'Poppins',sans-serif; font-size:8px; font-weight:600;
+  padding:2px 7px; background:var(--hl3); color:var(--text); border:1px solid var(--line);
+}
+.cp-dash .hcard-count{
+  font-family:'Poppins',sans-serif; font-size:8px; font-weight:700;
+  padding:2px 7px; background:var(--acc); color:#101010;
+}
+
+/* Vista abierta de una herramienta (se mantiene igual) */
 
 /* Vista abierta de una herramienta */
 .cp-dash .hp-open{ display:flex; flex-direction:column; }
@@ -948,6 +974,96 @@
 .cp-dash .hp-archivos-nombre{ font-size:12.5px; font-weight:600; word-break:break-all; }
 .cp-dash .hp-archivos-meta{ font-size:10.5px; color:var(--muted); }
 .cp-dash .hp-archivos-actions{ display:flex; gap:6px; margin-top:4px; }
+
+/* ── ArchivosPanel rediseñado ── */
+.cp-dash .arc-wrap{ display:flex; flex-direction:column; min-height:300px; }
+.cp-dash .arc-head{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:16px 30px; border-bottom:1px solid var(--line);
+}
+.cp-dash .arc-head-title{
+  font-family:'Poppins',sans-serif; font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.07em; color:var(--text);
+  display:flex; align-items:center; gap:7px;
+}
+.cp-dash .arc-head-title .hex{ background:var(--acc); }
+.cp-dash .arc-head-actions{ display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:wrap; }
+.cp-dash .arc-back{
+  background:none; border:none; color:var(--muted); font-size:11px;
+  font-family:'Poppins',sans-serif; font-weight:700; cursor:pointer; padding:0;
+  letter-spacing:0.04em; text-transform:uppercase;
+}
+.cp-dash .arc-back:hover{ color:var(--text); }
+.cp-dash .arc-btn-outline{
+  background:none; border:1px solid rgba(159,232,112,0.35); color:var(--lime);
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:0.06em; text-transform:uppercase; padding:5px 10px; cursor:pointer;
+  transition:border-color .15s, background .15s;
+}
+.cp-dash .arc-btn-outline:hover{ border-color:var(--lime); background:rgba(159,232,112,0.07); }
+.cp-dash .arc-btn-acc{
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--acc); color:#0b0d10;
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:0.06em; text-transform:uppercase; padding:6px 12px; cursor:pointer; border:none;
+  transition:opacity .15s;
+}
+.cp-dash .arc-btn-acc.disabled{ opacity:0.5; }
+.cp-dash .arc-btn{
+  background:none; border:1px solid var(--line); color:var(--text);
+  font-size:11px; padding:4px 8px; cursor:pointer; font-family:'Poppins',sans-serif; font-weight:600;
+  transition:border-color .12s;
+}
+.cp-dash .arc-btn:hover{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .arc-btn.arc-btn-del:hover{ border-color:var(--rose); color:var(--rose); }
+.cp-dash .arc-nueva-row{ display:flex; align-items:center; gap:6px; }
+.cp-dash .arc-nueva-input{
+  background:var(--bg-2); border:1px solid var(--acc); color:var(--text);
+  font-size:12px; padding:5px 10px; outline:none; min-width:160px;
+}
+
+/* grid de carpetas (home) */
+.cp-dash .arc-folder-grid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+  padding:20px 30px 30px;
+}
+.cp-dash .arc-folder-card{
+  display:flex; flex-direction:column; align-items:center; gap:7px;
+  background:var(--bg-2); border:1px solid var(--line); padding:18px 12px;
+  cursor:pointer; transition:border-color .15s, transform .1s;
+  text-align:center;
+}
+.cp-dash .arc-folder-card:hover{ border-color:var(--acc); transform:translateY(-1px); }
+.cp-dash .arc-folder-icon{ font-size:26px; line-height:1; }
+.cp-dash .arc-folder-name{
+  font-family:'Poppins',sans-serif; font-size:11px; font-weight:700;
+  color:var(--text); word-break:break-word;
+}
+.cp-dash .arc-folder-count{ font-size:10px; color:var(--muted); }
+
+/* vista interior de carpeta */
+.cp-dash .arc-dropzone{
+  margin:20px 30px; border:2px dashed var(--line); padding:40px 20px;
+  text-align:center; cursor:pointer; color:var(--text); font-size:13px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  transition:border-color .15s;
+}
+.cp-dash .arc-dropzone .hex{ background:var(--acc); }
+.cp-dash .arc-dropzone:hover{ border-color:var(--acc); }
+.cp-dash .arc-drop-sub{ font-size:11px; color:var(--muted); }
+.cp-dash .arc-files-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px;
+  padding:16px 30px 24px;
+}
+.cp-dash .arc-file-card{
+  border:1px solid var(--line); background:var(--bg-2); padding:14px 12px;
+  display:flex; flex-direction:column; gap:5px; transition:border-color .15s, transform .1s;
+}
+.cp-dash .arc-file-card:hover{ border-color:var(--acc); transform:translateY(-1px); }
+.cp-dash .arc-file-icon{ font-size:22px; line-height:1; }
+.cp-dash .arc-file-name{ font-size:12px; font-weight:600; color:var(--text); word-break:break-all; }
+.cp-dash .arc-file-meta{ font-size:10px; color:var(--muted); }
+.cp-dash .arc-file-actions{ display:flex; gap:6px; margin-top:4px; }
 
 /* === EJECUTIVO: Briefing + Semáforo + Contratos === */
 .cp-dash .cp-ej-briefing{ border-left:3px solid var(--acc); }

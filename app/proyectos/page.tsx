@@ -60,7 +60,7 @@ export default function ProyectosPage() {
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <ThemeChooser onChoose={setTheme} />
       <header className="cp-topbar">
-        <div className="cp-logo"><img src="/logo-cinepack.png" alt="CINE PACK" /></div>
+        <div className="cp-logo"><img src={theme === "light" ? "/logo-cinepack-light.png" : "/logo-cinepack-dark.png"} alt="CINE PACK" /></div>
         <span className="cp-proj">Selecciona un proyecto</span>
         <div className="cp-spacer"></div>
         {isAdmin && (
