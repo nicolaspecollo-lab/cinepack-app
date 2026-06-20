@@ -96,7 +96,7 @@ export default function HerramientaPanel({
   editable?: boolean;
 }) {
   if (herramienta.tipo === "accesos") {
-    return <GestionAccesosPanel departamento={departamento} />;
+    return <GestionAccesosPanel departamento={departamento} scope="departamento" />;
   }
   return (
     <HerramientaData
@@ -839,6 +839,7 @@ function TablaTool({
   const [condRules, setCondRules] = useState<Array<{id: string; colKey: string; op: string; value: string; color: string}>>([]);
   const [condOpen, setCondOpen] = useState(false);
   const [colMenuOpen, setColMenuOpen] = useState(false);
+  const [pdfMenuOpen, setPdfMenuOpen] = useState(false);
   const [localOrder, setLocalOrder] = useState<string[] | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -851,13 +852,15 @@ function TablaTool({
 
   const tableRef = useRef<HTMLTableElement>(null);
   const colMenuRef = useRef<HTMLDivElement>(null);
+  const pdfMenuRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const resizingRef = useRef<{key: string; startX: number; startW: number} | null>(null);
 
-  // Cierre col menu al hacer click fuera
+  // Cierre col menu y pdf menu al hacer click fuera
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (colMenuRef.current && !colMenuRef.current.contains(e.target as Node)) setColMenuOpen(false);
+      if (pdfMenuRef.current && !pdfMenuRef.current.contains(e.target as Node)) setPdfMenuOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -994,6 +997,28 @@ function TablaTool({
     a.download = `${herramientaNombre.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function exportarPDF() {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const cols = columnas.filter((c) => c.tipo !== "archivo");
+    const proyectoNombre = localStorage.getItem("cinepack-proyecto") ?? "";
+    doc.setFontSize(13);
+    doc.text(proyectoNombre ? `${herramientaNombre} · ${proyectoNombre}` : herramientaNombre, 14, 14);
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(`CINE PACK · ${new Date().toLocaleDateString("es-ES")}`, 14, 20);
+    autoTable(doc, {
+      startY: 25,
+      head: [cols.map((c) => c.label)],
+      body: filasFiltradas.map((f) => cols.map((c) => stripHtml(f.datos?.[c.key] ?? ""))),
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [159, 232, 112], textColor: [13, 13, 18], fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+    doc.save(`${herramientaNombre.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.pdf`);
   }
 
   // ── Funciones nuevas ────────────────────────────────────────────────────
@@ -1294,7 +1319,15 @@ function TablaTool({
         )}
 
         <button className="btn" onClick={exportarCSV} title="Exportar CSV">CSV</button>
-        <button className="btn" onClick={() => window.print()} title="Exportar PDF">PDF</button>
+        <div className="hp-pdf-menu-wrap" ref={pdfMenuRef}>
+          <button className="btn" onClick={() => setPdfMenuOpen(v => !v)} title="PDF">PDF ▾</button>
+          {pdfMenuOpen && (
+            <div className="hp-pdf-menu-drop">
+              <button onClick={() => { exportarPDF(); setPdfMenuOpen(false); }}>⬇ Descargar PDF</button>
+              <button onClick={() => { window.print(); setPdfMenuOpen(false); }}>🖨 Imprimir</button>
+            </div>
+          )}
+        </div>
         {onImportarCSV && (
           <>
             <button className="btn" onClick={() => importInputRef.current?.click()} disabled={importando} title="Importar CSV">
@@ -1303,7 +1336,7 @@ function TablaTool({
             <input ref={importInputRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleImportCSV} />
           </>
         )}
-        {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
+        {columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
           <>
             <span className="hp-nota-sep" />
             <RichToolbar inline />
@@ -1384,8 +1417,6 @@ function TablaTool({
           })}
         </div>
       )}
-
-      {statsBar}
 
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />

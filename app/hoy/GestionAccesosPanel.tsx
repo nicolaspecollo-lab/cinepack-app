@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useEquipo } from "./useEquipo";
+import { deptTools, cargoGroups } from "../herramientas";
 
 // Herramientas Generales del mapa de trabajo (prototipo/mapa_herramientas.html).
 // Toda persona del proyecto las tiene disponibles; aquí la cabeza de equipo
@@ -88,11 +89,25 @@ function WebhookSettingsPanel() {
   );
 }
 
-export default function GestionAccesosPanel({ departamento }: { departamento: string }) {
+export default function GestionAccesosPanel({
+  departamento,
+  scope = "general",
+}: {
+  departamento: string;
+  scope?: "general" | "departamento";
+}) {
+  // Herramientas según el scope
+  const herramientasList: string[] = scope === "departamento"
+    ? [
+        ...deptTools(departamento).map((h) => h.nombre),
+        ...cargoGroups(departamento).flatMap((g) => g.tools.map((h) => `${g.cargo} · ${h.nombre}`)),
+      ]
+    : HERRAMIENTAS_GENERALES;
+
   const { miembros, loading: loadingEquipo } = useEquipo(departamento);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [herramienta, setHerramienta] = useState(HERRAMIENTAS_GENERALES[0]);
+  const [herramienta, setHerramienta] = useState(herramientasList[0] ?? "");
   const [saving, setSaving] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -171,23 +186,25 @@ export default function GestionAccesosPanel({ departamento }: { departamento: st
 
   return (
     <>
-      {departamento === "Ejecutivo" && <WebhookSettingsPanel />}
+      {departamento === "Ejecutivo" && scope === "general" && <WebhookSettingsPanel />}
 
       <p className="cons-text" style={{ padding: "20px 30px 0", margin: 0 }}>
-        Confirmá, por herramienta, quién de {departamento} puede <b>editar</b> (Editor) y quién solo{" "}
-        <b>visionar</b> (Visionario). Por defecto nadie tiene acceso marcado: el equipo ve sus
-        herramientas asignadas por cargo, y aquí das el ok formal o lo movés a otra persona.
+        {scope === "departamento"
+          ? <>Definí, por herramienta de <b>{departamento}</b>, quién puede <b>editar</b> y quién solo <b>visionar</b>. Los cambios aplican al instante.</>
+          : <>Confirmá, por herramienta, quién de {departamento} puede <b>editar</b> (Editor) y quién solo <b>visionar</b> (Visionario).</>
+        }
       </p>
 
       <div className="acc-toolbar">
         <div className="cp-select">
           <select value={herramienta} onChange={(e) => setHerramienta(e.target.value)}>
-            {HERRAMIENTAS_GENERALES.map((h) => (
+            {herramientasList.map((h) => (
               <option key={h} value={h}>{h}</option>
             ))}
           </select>
           <span className="cp-select-arrow"></span>
         </div>
+        {saving && <span className="acc-saving">Guardando…</span>}
       </div>
 
       <div className="acc-table-wrap">
@@ -196,8 +213,12 @@ export default function GestionAccesosPanel({ departamento }: { departamento: st
             <tr>
               <th>Integrante</th>
               <th>Cargo</th>
-              <th>Editor</th>
-              <th>Visionario</th>
+              <th className="acc-th-role">
+                <span className="acc-role-label acc-role-editor">✏ Editor</span>
+              </th>
+              <th className="acc-th-role">
+                <span className="acc-role-label acc-role-veedor">👁 Veedor</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -205,24 +226,28 @@ export default function GestionAccesosPanel({ departamento }: { departamento: st
               const val = valorPara(m.user_id, herramienta);
               const busy = saving === `${m.user_id}:${herramienta}`;
               return (
-                <tr key={m.user_id}>
-                  <td>{m.full_name}</td>
+                <tr key={m.user_id} className={busy ? "acc-row-busy" : ""}>
+                  <td className="acc-td-name">{m.full_name}</td>
                   <td className="acc-cargo">{m.cargo ?? "Sin cargo"}</td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={val?.editor ?? false}
+                  <td className="acc-td-check">
+                    <button
+                      className={`acc-toggle ${val?.editor ? "on" : ""}`}
                       disabled={busy}
-                      onChange={() => toggle(m.user_id, m.full_name, herramienta, "editor")}
-                    />
+                      onClick={() => toggle(m.user_id, m.full_name, herramienta, "editor")}
+                      title={val?.editor ? "Quitar editor" : "Dar editor"}
+                    >
+                      {val?.editor ? "✓" : "—"}
+                    </button>
                   </td>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={val?.visionario ?? false}
+                  <td className="acc-td-check">
+                    <button
+                      className={`acc-toggle ${val?.visionario ? "on veedor" : ""}`}
                       disabled={busy}
-                      onChange={() => toggle(m.user_id, m.full_name, herramienta, "visionario")}
-                    />
+                      onClick={() => toggle(m.user_id, m.full_name, herramienta, "visionario")}
+                      title={val?.visionario ? "Quitar veedor" : "Dar veedor"}
+                    >
+                      {val?.visionario ? "✓" : "—"}
+                    </button>
                   </td>
                 </tr>
               );

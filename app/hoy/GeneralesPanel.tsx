@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import ConsultasPanel from "./ConsultasPanel";
 import ComunicadosPanel from "./ComunicadosPanel";
 import GuionPanel from "./GuionPanel";
@@ -126,10 +127,15 @@ export default function GeneralesPanel({
 }) {
   const subs = SUBS.filter((s) => !s.cond || s.cond(departamento));
   const [sub, setSub] = useState<Sub | null>(null);
+  const [backMounted, setBackMounted] = useState(false);
 
   useEffect(() => {
     if (jumpTo) setSub(jumpTo.sub);
   }, [jumpTo]);
+
+  useEffect(() => {
+    setBackMounted(!!document.getElementById("cp-header-back"));
+  }, []);
 
   const ce = (s: Sub) => canEditSub(s, departamento);
 
@@ -160,12 +166,10 @@ export default function GeneralesPanel({
 
   return (
     <div className="gen">
-      <div className="dsubtabs" style={{ paddingBottom: "0" }}>
-        <button className="dsubtab active" onClick={() => setSub(null)}>← Volver</button>
-        <span className="dsubtab" style={{ cursor: "default", opacity: 0.5 }}>
-          {subs.find((s) => s.id === sub)?.label}
-        </span>
-      </div>
+      {backMounted && createPortal(
+        <button className="cp-header-back-btn" onClick={() => setSub(null)}>← Volver</button>,
+        document.getElementById("cp-header-back")!
+      )}
 
       <div className="gen-body">
         {sub === "comunicados" && <ComunicadosPanel deDepartamento={departamento} fullName={fullName} />}
@@ -181,33 +185,17 @@ export default function GeneralesPanel({
         {sub === "pipeline" && <PipelinePanel fullName={fullName} />}
 
         {sub === "calendario" && (
-          <div className="hp-open">
-            {!ce("calendario") && <ReadOnlyBanner propietario="Producción" />}
-            <div className="hp-open-head"><h3><span className="hex"></span> Calendario general del proyecto</h3></div>
-            <HerramientaPanel departamento="General" herramienta={GENERAL_CALENDARIO} fullName={fullName} editable={ce("calendario")} />
-          </div>
+          <HerramientaPanel departamento="General" herramienta={GENERAL_CALENDARIO} fullName={fullName} editable={ce("calendario")} />
         )}
         {sub === "plan" && (
-          <div className="hp-open">
-            {!ce("plan") && <ReadOnlyBanner propietario="Producción" />}
-            <div className="hp-open-head"><h3><span className="hex"></span> Plan de rodaje</h3></div>
-            <HerramientaPanel departamento="General" herramienta={GENERAL_PLAN_RODAJE} fullName={fullName} editable={ce("plan")} />
-          </div>
+          <HerramientaPanel departamento="General" herramienta={GENERAL_PLAN_RODAJE} fullName={fullName} editable={ce("plan")} />
         )}
         {sub === "orden" && <OrdenRodajePanel fullName={fullName} canEdit={ce("orden")} />}
         {sub === "contactos" && (
-          <div className="hp-open">
-            {!ce("contactos") && <ReadOnlyBanner propietario="Producción" />}
-            <div className="hp-open-head"><h3><span className="hex"></span> Contactos de emergencia</h3></div>
-            <HerramientaPanel departamento="General" herramienta={GENERAL_CONTACTOS_EMERGENCIA} fullName={fullName} editable={ce("contactos")} />
-          </div>
+          <HerramientaPanel departamento="General" herramienta={GENERAL_CONTACTOS_EMERGENCIA} fullName={fullName} editable={ce("contactos")} />
         )}
         {sub === "wrap" && (
-          <div className="hp-open">
-            {!ce("wrap") && <ReadOnlyBanner propietario="Producción" />}
-            <div className="hp-open-head"><h3><span className="hex"></span> Checklist de cierre de rodaje</h3></div>
-            <HerramientaPanel departamento="General" herramienta={GENERAL_CHECKLIST_WRAP} fullName={fullName} editable={ce("wrap")} />
-          </div>
+          <HerramientaPanel departamento="General" herramienta={GENERAL_CHECKLIST_WRAP} fullName={fullName} editable={ce("wrap")} />
         )}
       </div>
     </div>

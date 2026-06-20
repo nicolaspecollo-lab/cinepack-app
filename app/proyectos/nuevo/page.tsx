@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -448,11 +448,9 @@ export default function NuevoProyectoPage() {
                   value={p.full_name}
                   onChange={(e) => updatePersona(d, idx, "full_name", e.target.value)}
                 />
-                <input
-                  type="email"
-                  placeholder="Email"
+                <EmailInput
                   value={p.email}
-                  onChange={(e) => updatePersona(d, idx, "email", e.target.value)}
+                  onChange={(v) => updatePersona(d, idx, "email", v)}
                 />
                 <div className="cp-select" style={{ "--acc": accent(d) } as React.CSSProperties}>
                   <select
@@ -493,6 +491,47 @@ export default function NuevoProyectoPage() {
           {saving ? "Creando…" : "Crear proyecto y generar invitaciones"}
         </button>
       </form>
+    </div>
+  );
+}
+
+type EmailStatus = { status: "idle" | "checking" | "registered" | "invited" | "not_found" | "invalid"; full_name?: string; departamento?: string; cargo?: string };
+
+function EmailInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>({ status: "idle" });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    onChange(v);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!v.trim()) { setEmailStatus({ status: "idle" }); return; }
+    setEmailStatus({ status: "checking" });
+    timerRef.current = setTimeout(async () => {
+      const res = await fetch(`/api/check-email?email=${encodeURIComponent(v.trim())}`);
+      const data = await res.json() as EmailStatus;
+      setEmailStatus(data);
+    }, 600);
+  }
+
+  return (
+    <div className="cp-email-wrap">
+      <input type="email" placeholder="Email" value={value} onChange={handleChange} />
+      {emailStatus.status === "checking" && (
+        <span className="cp-email-hint checking">Verificando…</span>
+      )}
+      {emailStatus.status === "registered" && (
+        <span className="cp-email-hint ok">✓ {emailStatus.full_name} · {emailStatus.departamento} · ya registrado</span>
+      )}
+      {emailStatus.status === "invited" && (
+        <span className="cp-email-hint warn">⏳ Invitación pendiente para {emailStatus.full_name}</span>
+      )}
+      {emailStatus.status === "not_found" && (
+        <span className="cp-email-hint info">Correo válido · aún no tiene cuenta en CINE PACK</span>
+      )}
+      {emailStatus.status === "invalid" && (
+        <span className="cp-email-hint err">Formato de email inválido</span>
+      )}
     </div>
   );
 }

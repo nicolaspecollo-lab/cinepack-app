@@ -372,6 +372,16 @@
 .cp-personarow{ display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; }
 .cp-personarow input, .cp-personarow .cp-select{ flex:1 1 170px; }
 
+/* Email validation inline */
+.cp-email-wrap{ flex:1 1 200px; display:flex; flex-direction:column; gap:3px; }
+.cp-email-wrap input{ width:100%; box-sizing:border-box; }
+.cp-email-hint{ font-size:10px; font-family:'Poppins',sans-serif; padding:2px 4px; border-radius:3px; }
+.cp-email-hint.ok{ color:var(--lime); }
+.cp-email-hint.warn{ color:var(--amber); }
+.cp-email-hint.err{ color:var(--rose); }
+.cp-email-hint.info{ color:var(--cyan); }
+.cp-email-hint.checking{ color:var(--muted); }
+
 /* Select con flecha hexagonal en lugar de la nativa */
 .cp-select{ position:relative; }
 .cp-select select{ appearance:none; -webkit-appearance:none; padding-right:38px !important; cursor:pointer; width:100%; }

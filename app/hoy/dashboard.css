@@ -77,6 +77,18 @@
   letter-spacing:0.07em; text-transform:uppercase; color:var(--acc);
 }
 
+/* Botón Volver portaleado en el header */
+#cp-header-back{ display:flex; align-items:center; flex-shrink:0; }
+.cp-header-back-btn{
+  display:flex; align-items:center; gap:5px;
+  height:100%; padding:0 14px;
+  background:none; border:none; border-right:1px solid var(--line);
+  font-family:'Poppins',sans-serif; font-size:10px; font-weight:700;
+  color:var(--muted); cursor:pointer; letter-spacing:0.04em; text-transform:uppercase;
+  transition:color .15s;
+}
+.cp-header-back-btn:hover{ color:var(--acc); }
+
 /* Bloque usuario derecha de tabs */
 .cp-dash .cp-wuser-block{
   display:flex; align-items:center; gap:8px;
@@ -364,7 +376,30 @@
   .cp-dash .glist{ padding:14px 12px 0; }
 }
 
-/* Espacio de trabajo editable */
+/* Espacio de trabajo — creador */
+.cp-dash .esp-creator{ display:flex; flex-direction:column; gap:0; }
+.cp-dash .esp-creator-header{ display:flex; align-items:flex-start; gap:14px; padding:24px 30px 20px; }
+.cp-dash .esp-creator-header h4{ font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; margin:0 0 4px; }
+.cp-dash .esp-creator-header p{ font-size:12px; color:var(--muted); margin:0; }
+.cp-dash .esp-tipo-cards{ display:flex; gap:16px; padding:0 30px 24px; flex-wrap:wrap; }
+.cp-dash .esp-tipo-card{
+  flex:1; min-width:200px; max-width:320px;
+  display:flex; flex-direction:column; gap:8px; align-items:flex-start;
+  padding:20px; background:var(--panel); border:2px solid var(--line);
+  cursor:pointer; text-align:left; transition:border-color .15s, background .15s;
+}
+.cp-dash .esp-tipo-card:hover{ border-color:var(--acc); background:var(--hl1); }
+.cp-dash .esp-tipo-card.selected{ border-color:var(--acc); background:var(--hl1); }
+.cp-dash .esp-tipo-icon{ font-size:22px; line-height:1; }
+.cp-dash .esp-tipo-card strong{ font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
+.cp-dash .esp-tipo-card span{ font-size:11px; color:var(--muted); line-height:1.4; }
+.cp-dash .esp-creator-form{ display:flex; flex-direction:column; gap:14px; padding:0 30px 30px; max-width:520px; }
+
+/* Personal tools en Exclusivas */
+.cp-dash .hcard-personal{ border-left:3px solid var(--acc); }
+.cp-dash .hp-group-personal .hp-group-label{ color:var(--acc); }
+
+/* Espacio de trabajo editable (legado) */
 .cp-dash .esp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; padding:20px 30px 0; }
 .cp-dash .esp-block{ border:1px solid var(--line); border-left:3px solid var(--acc); background:var(--panel); padding:16px 18px; display:flex; flex-direction:column; gap:12px; }
 .cp-dash .esp-block-top{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -414,17 +449,36 @@
 }
 
 /* Accesos / Gestión de equipo (cargo-exclusivo de cabezas) */
-.cp-dash .acc-toolbar{ padding:18px 30px 0; max-width:360px; }
+.cp-dash .acc-toolbar{ padding:18px 30px 0; display:flex; align-items:center; gap:16px; }
+.cp-dash .acc-toolbar .cp-select{ max-width:320px; }
+.cp-dash .acc-saving{ font-size:10px; color:var(--muted); font-family:'Poppins',sans-serif; animation:fadein .2s; }
 .cp-dash .acc-table-wrap{ overflow-x:auto; padding:14px 30px 30px; }
 .cp-dash table.acc-table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:480px; }
 .cp-dash table.acc-table th{
   text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted);
   padding:10px 14px; border-bottom:1px solid var(--line);
 }
-.cp-dash table.acc-table td{ padding:11px 14px; border-bottom:1px solid var(--line); }
+.cp-dash table.acc-table .acc-th-role{ text-align:center; width:90px; }
+.cp-dash table.acc-table td{ padding:10px 14px; border-bottom:1px solid var(--line); }
 .cp-dash table.acc-table tr:last-child td{ border-bottom:none; }
+.cp-dash table.acc-table .acc-row-busy{ opacity:0.5; }
+.cp-dash table.acc-table .acc-td-name{ font-weight:600; }
 .cp-dash table.acc-table .acc-cargo{ color:var(--muted); }
+.cp-dash table.acc-table .acc-td-check{ text-align:center; }
 .cp-dash table.acc-table input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--acc); }
+.cp-dash .acc-role-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.08em; font-weight:700; }
+.cp-dash .acc-role-editor{ color:var(--acc); }
+.cp-dash .acc-role-veedor{ color:var(--cyan); }
+/* Botón toggle editor/veedor */
+.cp-dash .acc-toggle{
+  width:32px; height:32px; border-radius:50%; border:1.5px solid var(--line);
+  background:none; cursor:pointer; font-size:13px; font-weight:700;
+  color:var(--muted); display:inline-flex; align-items:center; justify-content:center;
+  transition:all .12s;
+}
+.cp-dash .acc-toggle:hover{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .acc-toggle.on{ background:var(--acc); border-color:var(--acc); color:var(--bg); }
+.cp-dash .acc-toggle.on.veedor{ background:var(--cyan); border-color:var(--cyan); }
 
 /* ===========================================================================
    MOTOR DE HERRAMIENTAS CINE PACK
@@ -549,11 +603,12 @@
 /* Botones rich text cuando fluyen inline dentro de hp-tabla-toolbar */
 .cp-dash .hp-tabla-toolbar .hp-rich-btn{
   display:flex; align-items:center; justify-content:center;
-  background:none; border:1px solid var(--line); color:var(--text);
-  width:26px; height:26px; font-size:12px; cursor:pointer; border-radius:4px;
-  transition:background .12s, border-color .12s; flex-shrink:0;
+  background:var(--hl1); border:none; color:var(--text);
+  width:30px; height:26px; font-size:12px; cursor:pointer;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  transition:background .12s; flex-shrink:0;
 }
-.cp-dash .hp-tabla-toolbar .hp-rich-btn:hover{ background:var(--hl1); border-color:var(--acc); }
+.cp-dash .hp-tabla-toolbar .hp-rich-btn:hover{ background:var(--acc); color:var(--bg); }
 .cp-dash .hp-tabla-toolbar .hp-nota-sep{ width:1px; height:18px; background:var(--line); margin:0 2px; flex-shrink:0; }
 .cp-dash .hp-tabla-toolbar .hp-nota-colors{ display:flex; gap:3px; align-items:center; flex-shrink:0; }
 .cp-dash .hp-cell-select option{ background:var(--panel); color:var(--text); }
@@ -1040,6 +1095,24 @@
   color:var(--text); word-break:break-word;
 }
 .cp-dash .arc-folder-count{ font-size:10px; color:var(--muted); }
+.cp-dash .arc-breadcrumb{ display:flex; align-items:center; gap:0; flex-wrap:wrap; }
+.cp-dash .arc-bc-seg{ display:flex; align-items:center; }
+.cp-dash .arc-bc-sep{ color:var(--muted); font-size:13px; margin:0 4px; }
+.cp-dash .arc-bc-btn{
+  background:none; border:none; color:var(--muted); cursor:pointer; padding:0;
+  font-family:'Poppins',sans-serif; font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.07em;
+}
+.cp-dash .arc-bc-btn:hover{ color:var(--acc); }
+.cp-dash .arc-bc-current{
+  font-family:'Poppins',sans-serif; font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.07em; color:var(--text);
+}
+.cp-dash .arc-error{
+  margin:12px 30px; padding:8px 12px; background:rgba(255,80,80,0.1);
+  border:1px solid rgba(255,80,80,0.3); color:#ff5050;
+  font-size:11px; font-family:'Poppins',sans-serif;
+}
 
 /* vista interior de carpeta */
 .cp-dash .arc-dropzone{
@@ -1323,6 +1396,21 @@
 }
 .cp-dash .hp-col-menu-item:hover{ background:var(--hl3); }
 .cp-dash .hp-col-menu-item input[type="checkbox"]{ accent-color:var(--lime); cursor:pointer; }
+
+/* Menú PDF */
+.cp-dash .hp-pdf-menu-wrap{ position:relative; }
+.cp-dash .hp-pdf-menu-drop{
+  position:absolute; top:calc(100% + 4px); right:0; z-index:200;
+  background:var(--bg-2); border:1px solid var(--line); border-top:2px solid var(--lime);
+  min-width:160px; padding:4px 0; box-shadow:0 8px 24px rgba(0,0,0,0.25);
+}
+.cp-dash .hp-pdf-menu-drop button{
+  display:flex; align-items:center; gap:8px; padding:8px 14px; width:100%;
+  background:none; border:none; text-align:left;
+  font-size:11px; font-family:'Poppins',sans-serif; font-weight:600;
+  color:var(--text); cursor:pointer; letter-spacing:0.04em;
+}
+.cp-dash .hp-pdf-menu-drop button:hover{ background:var(--hl3); }
 
 /* Paginación */
 .cp-dash .hp-paginacion{

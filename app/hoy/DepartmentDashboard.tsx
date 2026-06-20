@@ -45,6 +45,7 @@ export default function DepartmentDashboard({
     [misTareas, misAlertas]
   );
   const [reloadToken, setReloadToken] = useState(0);
+  const [generalesPendientes, setGeneralesPendientes] = useState(0);
   const [archivosDirectos, setArchivosDirectos] = useState<{ nombre: string; path: string }[]>([]);
   const [headerMounted, setHeaderMounted] = useState(false);
   const [jornadaActiva, setJornadaActiva] = useState<{ dia_numero: number; dia_total: number } | null>(null);
@@ -97,17 +98,38 @@ export default function DepartmentDashboard({
       const projectId = localStorage.getItem("cinepack-proyecto-id");
       if (!projectId) return;
       const supabase = createClient();
-      const [{ data: tareas }, { data: alertas }] = await Promise.all([
+
+      const [{ data: tareas }, { data: alertas }, { data: consultas }, { data: comunicados }] = await Promise.all([
         supabase.from("tareas").select("id, titulo, para_departamento").eq("project_id", projectId).eq("completada", false),
         supabase.from("alertas").select("id, texto, para_departamento").eq("project_id", projectId).eq("leida", false),
+        supabase.from("consultas").select("id").eq("project_id", projectId).eq("estado", "pendiente").contains("para_departamentos", [nombre]),
+        supabase.from("comunicados").select("id").eq("project_id", projectId).gte("created_at", new Date(Date.now() - 86400000).toISOString()),
       ]);
+
       const misT = (tareas ?? []).filter((r) => !r.para_departamento || r.para_departamento === nombre);
       const misA = (alertas ?? []).filter((r) => !r.para_departamento || r.para_departamento === nombre);
       setMisTareas(misT.map((t) => ({ id: t.id, titulo: t.titulo })));
       setMisAlertas(misA.map((a) => ({ id: a.id, texto: a.texto })));
       setPulsoPendientes(misT.length + misA.length);
+      setGeneralesPendientes((consultas?.length ?? 0) + (comunicados?.length ?? 0));
     })();
   }, [nombre, reloadToken]);
+
+  // Realtime: refrescar badge cuando llegan nuevos comunicados o consultas
+  useEffect(() => {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) return;
+    const supabase = createClient();
+    const channel = supabase.channel(`notif-${nombre}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "comunicados", filter: `project_id=eq.${projectId}` },
+        () => setReloadToken((t) => t + 1))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "consultas", filter: `project_id=eq.${projectId}` },
+        () => setReloadToken((t) => t + 1))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "consultas", filter: `project_id=eq.${projectId}` },
+        () => setReloadToken((t) => t + 1))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [nombre]);
 
   async function completarTareaPalette(id: string) {
     const supabase = createClient();
@@ -259,11 +281,14 @@ export default function DepartmentDashboard({
         <button className={`wtab ${tab === "pulso" ? "active" : ""}`} onClick={() => setTab("pulso")}>
           Pulso{pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
         </button>
-        <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>Generales</button>
+        <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>
+          Generales{generalesPendientes > 0 && <span className="wtab-badge">{generalesPendientes}</span>}
+        </button>
         <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>Departamentos</button>
         <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
         <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
         <div style={{ flex: 1 }} />
+        <div id="cp-header-back" />
         <div className="cp-wuser-block">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="cp-wuser-avatar" />
