@@ -178,7 +178,7 @@
 .cp-dash .cfilter:hover{ color:var(--text); border-color:var(--acc); }
 .cp-dash .cfilter.active{ color:#0D0D12; background:var(--acc); border-color:var(--acc); }
 .cp-dash .cons-filters + .cons-list{ padding-top:14px; }
-.cp-dash .cons-list{ display:flex; flex-direction:column; gap:14px; padding:24px 30px 36px; max-width:860px; }
+.cp-dash .cons-list{ display:flex; flex-direction:column; gap:14px; padding:24px 30px 36px; }
 .cp-dash .cons{ border:1px solid var(--line); border-left:3px solid var(--acc); background:var(--panel); padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
 .cp-dash .cons-top{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
 .cp-dash .cons-title{ font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; }
