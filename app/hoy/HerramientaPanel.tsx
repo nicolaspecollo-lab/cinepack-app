@@ -53,6 +53,29 @@ function timeAgo(iso: string) {
   return `hace ${days} días`;
 }
 
+// Las celdas de tipo "largo" guardan HTML (rich text). Para que búsqueda,
+// filtros y orden sigan comparando texto y no los tags, se normaliza a texto
+// plano. Fast-path: si no hay "<", se devuelve tal cual (celdas de texto plano).
+function stripHtml(s: string): string {
+  if (!s || s.indexOf("<") === -1) return s;
+  if (typeof document !== "undefined") {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = s;
+    return tmp.textContent || "";
+  }
+  return s.replace(/<[^>]*>/g, "");
+}
+
+// Fuentes ofrecidas en el selector de fuente de las celdas de texto largo.
+const CELL_FONTS: { label: string; value: string }[] = [
+  { label: "Sans", value: "Arial, Helvetica, sans-serif" },
+  { label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Mono", value: "'Courier New', monospace" },
+  { label: "Poppins", value: "'Poppins', sans-serif" },
+  { label: "Times", value: "'Times New Roman', serif" },
+];
+const CELL_TEXT_COLORS = ["#F4F4F6", "#9FE870", "#11C2DC", "#F5A623", "#FF6B6B", "#C084FC"];
+
 // Encabezado de marca, sólo visible al exportar/imprimir en PDF.
 export function PrintHeader({ herramientaNombre, departamento }: { herramientaNombre: string; departamento: string }) {
   const proyecto = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto") : null;
@@ -648,18 +671,7 @@ function Celda({
     );
   }
   if (col.tipo === "largo") {
-    return (
-      <textarea
-        className="hp-cell-area"
-        value={valor}
-        readOnly={!editable}
-        rows={1}
-        ref={autoResize}
-        onInput={(e) => autoResize(e.currentTarget)}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onCommit}
-      />
-    );
+    return <LargoCell valor={valor} editable={editable} onChange={onChange} onCommit={onCommit} />;
   }
   if (col.tipo === "money") {
     return (
@@ -684,6 +696,43 @@ function Celda({
       readOnly={!editable}
       onChange={(e) => onChange(e.target.value)}
       onBlur={onCommit}
+    />
+  );
+}
+
+// Celda de texto largo con rich text (HTML). El formato se aplica desde la
+// toolbar fija de la tabla (execCommand sobre la celda enfocada). No reescribe
+// su innerHTML mientras está enfocada, para no romper el cursor al teclear.
+function LargoCell({
+  valor,
+  editable,
+  onChange,
+  onCommit,
+}: {
+  valor: string;
+  editable: boolean;
+  onChange: (v: string) => void;
+  onCommit: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const focused = useRef(false);
+
+  useEffect(() => {
+    if (ref.current && !focused.current && ref.current.innerHTML !== (valor ?? "")) {
+      ref.current.innerHTML = valor ?? "";
+    }
+  }, [valor]);
+
+  return (
+    <div
+      ref={ref}
+      className={`hp-cell-area hp-cell-rich ${!editable ? "readonly" : ""}`}
+      contentEditable={editable}
+      suppressContentEditableWarning
+      data-rich-cell="1"
+      onFocus={() => { focused.current = true; }}
+      onInput={(e) => onChange(e.currentTarget.innerHTML)}
+      onBlur={() => { focused.current = false; onCommit(); }}
     />
   );
 }
@@ -804,7 +853,9 @@ function TablaTool({
   const autocomplete = useMemo(() => {
     const map: Record<string, string[]> = {};
     for (const col of columnas) {
-      if (col.tipo === "texto" || col.tipo === "largo") {
+      // "largo" ahora es rich text (HTML): se excluye del autocomplete para no
+      // sugerir HTML crudo. Solo texto corto alimenta el datalist.
+      if (col.tipo === "texto") {
         const vals = Array.from(new Set(filas.map(f => f.datos?.[col.key] ?? "").filter(Boolean))).sort();
         if (vals.length > 0) map[col.key] = vals;
       }
@@ -834,20 +885,20 @@ function TablaTool({
       : [...filas];
     if (busqueda.trim()) {
       const q = busqueda.trim().toLowerCase();
-      res = res.filter(f => columnas.some(c => (f.datos?.[c.key] ?? "").toLowerCase().includes(q)));
+      res = res.filter(f => columnas.some(c => stripHtml(f.datos?.[c.key] ?? "").toLowerCase().includes(q)));
     }
     for (const [k, v] of Object.entries(filtros)) {
       if (v) res = res.filter(f => (f.datos?.[k] ?? "") === v);
     }
     for (const [k, v] of Object.entries(colHeaderFilter)) {
-      if (v) res = res.filter(f => (f.datos?.[k] ?? "").toLowerCase().includes(v.toLowerCase()));
+      if (v) res = res.filter(f => stripHtml(f.datos?.[k] ?? "").toLowerCase().includes(v.toLowerCase()));
     }
     if (sortKey) {
       const col = columnas.find(c => c.key === sortKey);
       const col2 = sortKey2 ? columnas.find(c => c.key === sortKey2) : null;
       res = [...res].sort((a, b) => {
-        const va = a.datos?.[sortKey] ?? "";
-        const vb = b.datos?.[sortKey] ?? "";
+        const va = stripHtml(a.datos?.[sortKey] ?? "");
+        const vb = stripHtml(b.datos?.[sortKey] ?? "");
         let cmp = 0;
         if (col?.tipo === "num" || col?.tipo === "money") {
           cmp = (parseFloat(va || "0") || 0) - (parseFloat(vb || "0") || 0);
@@ -855,8 +906,8 @@ function TablaTool({
           cmp = va.localeCompare(vb, "es");
         }
         if (cmp === 0 && sortKey2 && col2) {
-          const va2 = a.datos?.[sortKey2] ?? "";
-          const vb2 = b.datos?.[sortKey2] ?? "";
+          const va2 = stripHtml(a.datos?.[sortKey2] ?? "");
+          const vb2 = stripHtml(b.datos?.[sortKey2] ?? "");
           let cmp2 = 0;
           if (col2.tipo === "num" || col2.tipo === "money") {
             cmp2 = (parseFloat(va2 || "0") || 0) - (parseFloat(vb2 || "0") || 0);
@@ -925,7 +976,7 @@ function TablaTool({
   function exportarCSV() {
     const cols = columnas.filter((c) => c.tipo !== "archivo");
     const header = cols.map((c) => c.label);
-    const lines = [header, ...filasFiltradas.map((f) => cols.map((c) => (f.datos?.[c.key] ?? "").replace(/\n/g, " ")))];
+    const lines = [header, ...filasFiltradas.map((f) => cols.map((c) => stripHtml(f.datos?.[c.key] ?? "").replace(/\n/g, " ")))];
     const csv = lines
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
       .join("\r\n");
@@ -1017,7 +1068,7 @@ function TablaTool({
 
   // Copiar fila al portapapeles
   function copiarFila(f: Fila) {
-    const text = columnas.map(c => `${c.label}: ${f.datos?.[c.key] ?? ""}`).join("\n");
+    const text = columnas.map(c => `${c.label}: ${stripHtml(f.datos?.[c.key] ?? "")}`).join("\n");
     navigator.clipboard.writeText(text).catch(() => {});
   }
 
@@ -1322,6 +1373,32 @@ function TablaTool({
       )}
 
       {statsBar}
+
+      {editable && columnas.some((c) => c.tipo === "largo") && (
+        <div className="hp-nota-toolbar hp-tabla-richbar">
+          <span className="hp-richbar-hint">Texto largo:</span>
+          <button type="button" title="Negrita" onMouseDown={(e) => { e.preventDefault(); document.execCommand("bold"); }}><b>B</b></button>
+          <button type="button" title="Cursiva" onMouseDown={(e) => { e.preventDefault(); document.execCommand("italic"); }}><i>I</i></button>
+          <button type="button" title="Subrayado" onMouseDown={(e) => { e.preventDefault(); document.execCommand("underline"); }}><u>U</u></button>
+          <span className="hp-nota-sep" />
+          <span className="hp-nota-colors">
+            {CELL_TEXT_COLORS.map((c) => (
+              <button key={c} type="button" title={`Color ${c}`} style={{ background: c }}
+                onMouseDown={(e) => { e.preventDefault(); document.execCommand("foreColor", false, c); }} />
+            ))}
+          </span>
+          <span className="hp-nota-sep" />
+          {([["2", "S"], ["3", "M"], ["4", "L"], ["5", "XL"]] as const).map(([size, label]) => (
+            <button key={size} type="button" title={`Tamaño ${label}`}
+              onMouseDown={(e) => { e.preventDefault(); document.execCommand("fontSize", false, size); }}>{label}</button>
+          ))}
+          <span className="hp-nota-sep" />
+          {CELL_FONTS.map((f) => (
+            <button key={f.label} type="button" title={`Fuente ${f.label}`} style={{ fontFamily: f.value, fontSize: 11 }}
+              onMouseDown={(e) => { e.preventDefault(); document.execCommand("fontName", false, f.value); }}>{f.label}</button>
+          ))}
+        </div>
+      )}
 
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />

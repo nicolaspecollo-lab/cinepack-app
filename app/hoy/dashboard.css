@@ -464,6 +464,12 @@
 .cp-dash .hp-cell-area{ resize:none; line-height:1.5; min-height:36px; overflow:hidden; }
 .cp-dash .hp-cell-input:focus, .cp-dash .hp-cell-area:focus, .cp-dash .hp-cell-select:focus{ outline:1px solid var(--acc); outline-offset:-1px; background:var(--hl1); }
 .cp-dash .hp-cell-select{ cursor:pointer; }
+/* Celda de texto largo con rich text (contentEditable) */
+.cp-dash .hp-cell-rich{ white-space:pre-wrap; word-break:break-word; cursor:text; }
+.cp-dash .hp-cell-rich.readonly{ cursor:default; }
+/* Barra de formato fija para celdas de texto largo (estilo igual a la de Nota) */
+.cp-dash .hp-tabla-richbar{ align-items:center; }
+.cp-dash .hp-richbar-hint{ font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-right:4px; }
 .cp-dash .hp-cell-select option{ background:var(--panel); color:var(--text); }
 
 /* Tonos de estado */
