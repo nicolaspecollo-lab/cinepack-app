@@ -272,6 +272,18 @@
   .cp-theme-toggle-label{ display:none; }
 }
 
+/* Selector de idioma por códigos: ES / EN / CA (activo en negrita) */
+.cp-locale-codes{ gap:2px; padding:7px 10px; cursor:default; }
+.cp-locale-codes:hover{ border-color:var(--line); color:var(--text); }
+.cp-locale-sep{ color:var(--muted); margin:0 2px; font-weight:400; }
+.cp-locale-code{
+  background:none; border:none; cursor:pointer; padding:2px 3px;
+  font-family:'Poppins',sans-serif; font-size:11px; letter-spacing:0.06em;
+  font-weight:400; color:var(--muted); transition:color .15s ease;
+}
+.cp-locale-code:hover{ color:var(--text); }
+.cp-locale-code.active{ font-weight:800; color:var(--text); }
+
 /* ===================================================================
    ELECCIÓN DE TEMA — pantalla de bienvenida (primer ingreso)
 =================================================================== */
