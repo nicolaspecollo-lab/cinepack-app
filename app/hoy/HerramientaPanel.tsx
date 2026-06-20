@@ -1300,6 +1300,12 @@ function TablaTool({
             <input ref={importInputRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleImportCSV} />
           </>
         )}
+        {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
+          <>
+            <span className="hp-nota-sep" />
+            <RichToolbar className="hp-tabla-richbar" />
+          </>
+        )}
         <button
           className="hp-expand-btn"
           onClick={() => setExpandida(v => !v)}
@@ -1308,11 +1314,6 @@ function TablaTool({
           {expandida ? "⊡" : "⤢"}
         </button>
       </div>
-
-      {/* ── Barra de formato (texto/largo): misma banda que las funciones ── */}
-      {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
-        <RichToolbar className="hp-tabla-richbar" />
-      )}
 
       {/* ── Batch edit bar ───────────────────────────────────────────── */}
       {seleccionadas.size > 0 && (
