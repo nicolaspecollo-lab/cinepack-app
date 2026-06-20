@@ -81,7 +81,7 @@ export default function WorkspaceShell({
   return (
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar">
-        <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cinepack-light.png" : "/logo-cinepack-dark.png"} alt="CINE PACK" /></Link>
+        <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
         <span className="cp-proj">{proyecto}</span>
         <div className="cp-spacer"></div>
         <div id="cp-header-controls" className="cp-header-controls"></div>
