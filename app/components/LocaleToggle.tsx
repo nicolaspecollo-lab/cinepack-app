@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { setLocale } from "@/i18n/actions";
-import { ACTIVE_LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
+import { ACTIVE_LOCALES, type Locale } from "@/i18n/config";
 
 // Selector de idioma flotante para pantallas sin menú (login/registro).
 // Mismo patrón visual que ThemeToggle: un botón "pill" con hex + etiqueta que
@@ -37,7 +37,7 @@ export default function LocaleToggle() {
         <circle cx="12" cy="12" r="10" />
         <path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20" />
       </svg>
-      <span className="cp-theme-toggle-label">{LOCALE_NAMES[locale] ?? locale}</span>
+      <span className="cp-theme-toggle-label">{locale.toUpperCase()}</span>
     </button>
   );
 }

@@ -156,7 +156,7 @@ export default function WorkspaceShell({
               </button>
               <button className="cp-menu-item" onClick={() => setLangOpen((v) => !v)}>
                 <span>{t("language")}</span>
-                <span className="muted">{LOCALE_NAMES[locale] ?? locale} {langOpen ? "▲" : "▼"}</span>
+                <span className="muted">{locale.toUpperCase()} {langOpen ? "▲" : "▼"}</span>
               </button>
               {langOpen && (
                 <div className="cp-menu-deptlist">
