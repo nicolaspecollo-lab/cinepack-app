@@ -80,7 +80,7 @@
 .cp-header-controls{ display:flex; align-items:center; gap:8px; }
 .cp-topbar .cp-logo{ display:flex; align-items:center; gap:10px; font-family:'Poppins',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.04em; }
 .cp-topbar .cp-logo .hex{ width:16px; height:14px; background:var(--lime); flex-shrink:0; }
-.cp-topbar .cp-logo img{ height:22px; width:auto; display:block; }
+.cp-topbar .cp-logo img{ height:28px; width:auto; display:block; }
 .cp-topbar .cp-proj{ font-size:11px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; }
 .cp-topbar .cp-spacer{ flex:1; }
 .cp-topbar-theme-btn{
