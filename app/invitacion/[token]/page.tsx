@@ -20,7 +20,7 @@ type Invitacion = {
 export default function InvitacionPage() {
   const params = useParams<{ token: string }>();
   const router = useRouter();
-  const token = params?.token;
+  const token = params?.token ?? "";
   const { theme, toggleTheme } = useTheme();
 
   const [loading, setLoading] = useState(true);
