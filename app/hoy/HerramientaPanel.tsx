@@ -24,13 +24,6 @@ type Fila = {
   updated_at: string;
 };
 
-// Auto-crece un textarea según su contenido (sin overflow, sin scrollbar interna).
-function autoResize(el: HTMLTextAreaElement | null) {
-  if (!el) return;
-  el.style.height = "auto";
-  el.style.height = `${el.scrollHeight}px`;
-}
-
 // Tono visual para valores de tipo "estado" (Pendiente, Firmado, Descartado, etc).
 function estadoTono(valor: string): "ok" | "warn" | "bad" | "info" | "neutral" {
   const v = valor.trim().toLowerCase();
@@ -74,7 +67,7 @@ const CELL_FONTS: { label: string; value: string }[] = [
   { label: "Poppins", value: "'Poppins', sans-serif" },
   { label: "Times", value: "'Times New Roman', serif" },
 ];
-const CELL_TEXT_COLORS = ["#F4F4F6", "#9FE870", "#11C2DC", "#F5A623", "#FF6B6B", "#C084FC"];
+const CELL_TEXT_COLORS = ["#111111", "#F4F4F6", "#9FE870", "#11C2DC", "#F5A623", "#FF6B6B", "#C084FC"];
 
 // Encabezado de marca, sólo visible al exportar/imprimir en PDF.
 export function PrintHeader({ herramientaNombre, departamento }: { herramientaNombre: string; departamento: string }) {
@@ -670,8 +663,8 @@ function Celda({
       </select>
     );
   }
-  if (col.tipo === "largo") {
-    return <LargoCell valor={valor} editable={editable} onChange={onChange} onCommit={onCommit} />;
+  if (col.tipo === "largo" || col.tipo === "texto") {
+    return <RichCell valor={valor} editable={editable} onChange={onChange} onCommit={onCommit} />;
   }
   if (col.tipo === "money") {
     return (
@@ -700,19 +693,21 @@ function Celda({
   );
 }
 
-// Celda de texto largo con rich text (HTML). El formato se aplica desde la
-// toolbar fija de la tabla (execCommand sobre la celda enfocada). No reescribe
-// su innerHTML mientras está enfocada, para no romper el cursor al teclear.
-function LargoCell({
+// Celda/campo de texto con rich text (HTML). El formato se aplica desde la
+// RichToolbar (execCommand sobre el elemento enfocado). No reescribe su
+// innerHTML mientras está enfocado, para no romper el cursor al teclear.
+function RichCell({
   valor,
   editable,
   onChange,
   onCommit,
+  className = "hp-cell-area hp-cell-rich",
 }: {
   valor: string;
   editable: boolean;
-  onChange: (v: string) => void;
-  onCommit: () => void;
+  onChange?: (v: string) => void;
+  onCommit: (html: string) => void;
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const focused = useRef(false);
@@ -726,39 +721,58 @@ function LargoCell({
   return (
     <div
       ref={ref}
-      className={`hp-cell-area hp-cell-rich ${!editable ? "readonly" : ""}`}
+      className={`${className} ${!editable ? "readonly" : ""}`}
       contentEditable={editable}
       suppressContentEditableWarning
       data-rich-cell="1"
       onFocus={() => { focused.current = true; }}
-      onInput={(e) => onChange(e.currentTarget.innerHTML)}
-      onBlur={() => { focused.current = false; onCommit(); }}
+      onInput={(e) => onChange?.(e.currentTarget.innerHTML)}
+      onBlur={(e) => { focused.current = false; onCommit(e.currentTarget.innerHTML); }}
     />
+  );
+}
+
+// Barra de formato reutilizable (mismo aspecto que la de Nota). Actúa sobre el
+// elemento contentEditable que tenga el foco. Los controles son BOTONES con
+// preventDefault: así el foco no sale de la celda y no se dispara el commit.
+function RichToolbar({ className = "" }: { className?: string }) {
+  const cmd = (c: string, v?: string) => document.execCommand(c, false, v);
+  return (
+    <div className={`hp-nota-toolbar hp-richbar ${className}`}>
+      <button type="button" title="Negrita" onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><b>B</b></button>
+      <button type="button" title="Cursiva" onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><i>I</i></button>
+      <button type="button" title="Subrayado" onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><u>U</u></button>
+      <span className="hp-nota-sep" />
+      <span className="hp-nota-colors">
+        {CELL_TEXT_COLORS.map((c) => (
+          <button key={c} type="button" title={`Color ${c}`} style={{ background: c }}
+            onMouseDown={(e) => { e.preventDefault(); cmd("foreColor", c); }} />
+        ))}
+      </span>
+      <span className="hp-nota-sep" />
+      {([["2", "S"], ["3", "M"], ["4", "L"], ["5", "XL"]] as const).map(([size, label]) => (
+        <button key={size} type="button" title={`Tamaño ${label}`}
+          onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); }}>{label}</button>
+      ))}
+      <span className="hp-nota-sep" />
+      {CELL_FONTS.map((f) => (
+        <button key={f.label} type="button" title={`Fuente ${f.label}`} style={{ fontFamily: f.value, fontSize: 11 }}
+          onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); }}>{f.label}</button>
+      ))}
+    </div>
   );
 }
 
 // Celda con soporte de autocomplete via datalist
 function CeldaConAutocomp({
-  col, valor, editable, onChange, onCommit, onSave, departamento, herramientaId, filaId, listId,
+  col, valor, editable, onChange, onCommit, onSave, departamento, herramientaId, filaId,
 }: {
   col: Columna; valor: string; editable: boolean; onChange: (v: string) => void;
   onCommit: () => void; onSave?: (v: string) => void; departamento?: string;
   herramientaId?: string; filaId?: string; listId?: string;
 }) {
-  if (col.tipo === "texto" && listId && editable) {
-    return (
-      <>
-        <input
-          className="hp-cell-input"
-          type="text"
-          list={listId}
-          value={valor}
-          onChange={e => onChange(e.target.value)}
-          onBlur={onCommit}
-        />
-      </>
-    );
-  }
+  // texto y largo son rich text (RichCell); ya no hay autocomplete por datalist
+  // (incompatible con contentEditable). El formato prima sobre la sugerencia.
   return (
     <Celda col={col} valor={valor} editable={editable} onChange={onChange}
       onCommit={onCommit} onSave={onSave} departamento={departamento}
@@ -850,18 +864,8 @@ function TablaTool({
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
 
   // Valores únicos por columna (autocomplete)
-  const autocomplete = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    for (const col of columnas) {
-      // "largo" ahora es rich text (HTML): se excluye del autocomplete para no
-      // sugerir HTML crudo. Solo texto corto alimenta el datalist.
-      if (col.tipo === "texto") {
-        const vals = Array.from(new Set(filas.map(f => f.datos?.[col.key] ?? "").filter(Boolean))).sort();
-        if (vals.length > 0) map[col.key] = vals;
-      }
-    }
-    return map;
-  }, [filas, columnas]);
+  // texto y largo ahora son rich text (HTML) → sin autocomplete por datalist.
+  const autocomplete = useMemo<Record<string, string[]>>(() => ({}), []);
 
   // Máximo por columna numérica (data bars)
   const maxVals = useMemo(() => {
@@ -1305,6 +1309,11 @@ function TablaTool({
         </button>
       </div>
 
+      {/* ── Barra de formato (texto/largo): misma banda que las funciones ── */}
+      {editable && columnas.some((c) => c.tipo === "largo" || c.tipo === "texto") && (
+        <RichToolbar className="hp-tabla-richbar" />
+      )}
+
       {/* ── Batch edit bar ───────────────────────────────────────────── */}
       {seleccionadas.size > 0 && (
         <div className="hp-batch-bar">
@@ -1373,32 +1382,6 @@ function TablaTool({
       )}
 
       {statsBar}
-
-      {editable && columnas.some((c) => c.tipo === "largo") && (
-        <div className="hp-nota-toolbar hp-tabla-richbar">
-          <span className="hp-richbar-hint">Texto largo:</span>
-          <button type="button" title="Negrita" onMouseDown={(e) => { e.preventDefault(); document.execCommand("bold"); }}><b>B</b></button>
-          <button type="button" title="Cursiva" onMouseDown={(e) => { e.preventDefault(); document.execCommand("italic"); }}><i>I</i></button>
-          <button type="button" title="Subrayado" onMouseDown={(e) => { e.preventDefault(); document.execCommand("underline"); }}><u>U</u></button>
-          <span className="hp-nota-sep" />
-          <span className="hp-nota-colors">
-            {CELL_TEXT_COLORS.map((c) => (
-              <button key={c} type="button" title={`Color ${c}`} style={{ background: c }}
-                onMouseDown={(e) => { e.preventDefault(); document.execCommand("foreColor", false, c); }} />
-            ))}
-          </span>
-          <span className="hp-nota-sep" />
-          {([["2", "S"], ["3", "M"], ["4", "L"], ["5", "XL"]] as const).map(([size, label]) => (
-            <button key={size} type="button" title={`Tamaño ${label}`}
-              onMouseDown={(e) => { e.preventDefault(); document.execCommand("fontSize", false, size); }}>{label}</button>
-          ))}
-          <span className="hp-nota-sep" />
-          {CELL_FONTS.map((f) => (
-            <button key={f.label} type="button" title={`Fuente ${f.label}`} style={{ fontFamily: f.value, fontSize: 11 }}
-              onMouseDown={(e) => { e.preventDefault(); document.execCommand("fontName", false, f.value); }}>{f.label}</button>
-          ))}
-        </div>
-      )}
 
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
@@ -1806,6 +1789,9 @@ function GaleriaTool({
   }
   return (
     <>
+      {editable && columnas.some((c) => c.tipo === "largo" || c.tipo === "texto") && (
+        <RichToolbar className="hp-tabla-richbar" />
+      )}
       <div className="hp-galeria">
         {filas.map((f) => {
           const yoVi = (f.visionado_por ?? []).some((v) => v.usuario === fullName);
@@ -1835,14 +1821,12 @@ function GaleriaTool({
                     />
                   ) : c.tipo === "link" ? (
                     <LinkCell valor={f.datos?.[c.key] ?? ""} editable={editable} onSave={(v) => set(f, c.key, v)} />
-                  ) : c.tipo === "largo" ? (
-                    <textarea
-                      defaultValue={f.datos?.[c.key] ?? ""}
-                      readOnly={!editable}
-                      rows={2}
-                      ref={autoResize}
-                      onInput={(e) => autoResize(e.currentTarget)}
-                      onBlur={(e) => set(f, c.key, e.target.value)}
+                  ) : c.tipo === "largo" || c.tipo === "texto" ? (
+                    <RichCell
+                      valor={f.datos?.[c.key] ?? ""}
+                      editable={editable}
+                      onCommit={(html) => set(f, c.key, html)}
+                      className="hp-gfield-rich hp-cell-rich"
                     />
                   ) : (
                     <input defaultValue={f.datos?.[c.key] ?? ""} readOnly={!editable} onBlur={(e) => set(f, c.key, e.target.value)} />
@@ -1907,6 +1891,9 @@ function FichaTool({
   return (
     <div className="hp-print-area">
     <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
+    {editable && campos.some((c) => c.tipo === "largo" || c.tipo === "texto") && (
+      <RichToolbar className="hp-ficha-richbar" />
+    )}
     <div className="hp-ficha">
       {campos.map((c) => (
         <label className="hp-ficha-field" key={c.key}>
@@ -1931,14 +1918,12 @@ function FichaTool({
               editable={editable}
               onSave={(v) => set(c.key, v)}
             />
-          ) : c.tipo === "largo" ? (
-            <textarea
-              defaultValue={fila?.datos?.[c.key] ?? ""}
-              readOnly={!editable}
-              rows={3}
-              ref={autoResize}
-              onInput={(e) => autoResize(e.currentTarget)}
-              onBlur={(e) => set(c.key, e.target.value)}
+          ) : c.tipo === "largo" || c.tipo === "texto" ? (
+            <RichCell
+              valor={fila?.datos?.[c.key] ?? ""}
+              editable={editable}
+              onCommit={(html) => set(c.key, html)}
+              className="hp-ficha-rich hp-cell-rich"
             />
           ) : c.tipo === "estado" ? (
             <select
@@ -1995,7 +1980,7 @@ function FichaTool({
 }
 
 // ---- Nota ----
-const NOTA_COLORS = ["#F4F4F6","#9FE870","#11C2DC","#F5A623","#FF6B6B","#C084FC","#60A5FA","#FCD34D"];
+const NOTA_COLORS = ["#111111","#F4F4F6","#9FE870","#11C2DC","#F5A623","#FF6B6B","#C084FC","#60A5FA","#FCD34D"];
 const NOTA_HIGHLIGHT = ["#FCD34D","#86EFAC","#93C5FD","#F9A8D4","#FCA5A5","transparent"];
 
 function NotaTool({
