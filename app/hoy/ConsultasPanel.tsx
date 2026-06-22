@@ -198,6 +198,71 @@ export default function ConsultasPanel({
         </button>
       </div>
 
+      {showForm && (
+        <form onSubmit={handleCreate} className="cons-new cons-form">
+          <label className="afield">
+            <span>Para (uno o más departamentos)</span>
+            <div className="chip-group">
+              {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
+                <button
+                  type="button"
+                  key={d}
+                  className={`dept-chip ${paraDepartamentos.includes(d) ? "active" : ""}`}
+                  style={{ "--chip-acc": `var(--${ACCENTS[d] ?? "lime"})` } as React.CSSProperties}
+                  onClick={() => toggleParaDepartamento(d)}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </label>
+          {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
+            <label className="afield">
+              <span>Cargo al que se dirige (opcional)</span>
+              <div className="chip-group">
+                {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
+                  <button
+                    type="button"
+                    key={c}
+                    className={`dept-chip ${cargo === c ? "active" : ""}`}
+                    style={{ "--chip-acc": `var(--${ACCENTS[paraDepartamentos[0]] ?? "lime"})` } as React.CSSProperties}
+                    onClick={() => setCargo((prev) => (prev === c ? "" : c))}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </label>
+          )}
+          <label className="afield">
+            <span>Título</span>
+            <input
+              type="text"
+              required
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Resumen breve de la consulta"
+            />
+          </label>
+          <label className="afield">
+            <span>Mensaje</span>
+            <textarea
+              required
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              rows={3}
+              placeholder="Detalle de la consulta"
+            />
+          </label>
+
+          {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
+
+          <button type="submit" className="abtn" disabled={sending}>
+            {sending ? "Enviando…" : "Enviar consulta"}
+          </button>
+        </form>
+      )}
+
       <div className="cons-list">
         {loading && <p className="cons-text">Cargando consultas…</p>}
         {!loading && filtered.length === 0 && (
@@ -299,71 +364,6 @@ export default function ConsultasPanel({
           );
         })}
       </div>
-
-      {showForm && (
-        <form onSubmit={handleCreate} className="cons-new cons-form">
-          <label className="afield">
-            <span>Para (uno o más departamentos)</span>
-            <div className="chip-group">
-              {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
-                <button
-                  type="button"
-                  key={d}
-                  className={`dept-chip ${paraDepartamentos.includes(d) ? "active" : ""}`}
-                  style={{ "--chip-acc": `var(--${ACCENTS[d] ?? "lime"})` } as React.CSSProperties}
-                  onClick={() => toggleParaDepartamento(d)}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          </label>
-          {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
-            <label className="afield">
-              <span>Cargo al que se dirige (opcional)</span>
-              <div className="chip-group">
-                {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
-                  <button
-                    type="button"
-                    key={c}
-                    className={`dept-chip ${cargo === c ? "active" : ""}`}
-                    style={{ "--chip-acc": `var(--${ACCENTS[paraDepartamentos[0]] ?? "lime"})` } as React.CSSProperties}
-                    onClick={() => setCargo((prev) => (prev === c ? "" : c))}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </label>
-          )}
-          <label className="afield">
-            <span>Título</span>
-            <input
-              type="text"
-              required
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Resumen breve de la consulta"
-            />
-          </label>
-          <label className="afield">
-            <span>Mensaje</span>
-            <textarea
-              required
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              rows={3}
-              placeholder="Detalle de la consulta"
-            />
-          </label>
-
-          {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
-
-          <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Enviando…" : "Enviar consulta"}
-          </button>
-        </form>
-      )}
     </>
   );
 }
