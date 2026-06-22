@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DEPARTAMENTOS } from "../constants";
+import { DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 
 type ConsFilter = "todas" | "pend" | "res";
 
@@ -18,6 +18,7 @@ type Consulta = {
   autor_nombre: string;
   de_departamento: string;
   para_departamentos: string[];
+  para_cargo: string | null;
   titulo: string;
   texto: string;
   estado: "pendiente" | "resuelta";
@@ -53,6 +54,7 @@ export default function ConsultasPanel({
   const [titulo, setTitulo] = useState("");
   const [texto, setTexto] = useState("");
   const [paraDepartamentos, setParaDepartamentos] = useState<string[]>([]);
+  const [cargo, setCargo] = useState("");
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [respuestaDrafts, setRespuestaDrafts] = useState<Record<string, string>>({});
@@ -106,6 +108,7 @@ export default function ConsultasPanel({
       autor_nombre: fullName,
       de_departamento: deDepartamento,
       para_departamentos: paraDepartamentos,
+      para_cargo: paraDepartamentos.length === 1 ? cargo.trim() || null : null,
       titulo,
       texto,
     });
@@ -120,12 +123,14 @@ export default function ConsultasPanel({
     setTitulo("");
     setTexto("");
     setParaDepartamentos([]);
+    setCargo("");
     setShowForm(false);
     await load();
   }
 
   function toggleParaDepartamento(d: string) {
     setParaDepartamentos((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+    setCargo("");
   }
 
   async function handleResponder(c: Consulta) {
@@ -209,7 +214,8 @@ export default function ConsultasPanel({
                 <div>
                   <div className="cons-title">{c.titulo}</div>
                   <span className="cons-meta">
-                    {c.de_departamento} → {c.para_departamentos.join(", ")} · {c.autor_nombre} · {timeAgo(c.created_at)}
+                    {c.de_departamento} → {c.para_departamentos.join(", ")}
+                    {c.para_cargo && ` (${c.para_cargo})`} · {c.autor_nombre} · {timeAgo(c.created_at)}
                   </span>
                 </div>
                 {c.estado === "resuelta" ? (
@@ -304,6 +310,17 @@ export default function ConsultasPanel({
               ))}
             </div>
           </label>
+          {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
+            <label className="afield">
+              <span>Cargo al que se dirige (opcional)</span>
+              <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
+                <option value="">Cualquiera del departamento</option>
+                {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className="afield">
             <span>Título</span>
             <input
