@@ -260,16 +260,23 @@
 .cp-dash .btn:hover{ border-color:var(--acc); color:var(--acc); }
 .cp-dash .btn.acc{ background:var(--acc); color:#0D0D12; border-color:var(--acc); }
 
-/* selectores rectangulares con color por departamento (Consultas: Para / Cargo) */
+/* selectores rectangulares con color por departamento (Consultas: Para / Cargo) —
+   mismo patrón de acento que las tarjetas de herramientas (.hcard-accent): línea
+   sólida de 3px a la izquierda, sin transparencias en el fondo */
 .cp-dash .chip-group{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
 .cp-dash .dept-chip{
+  position:relative; overflow:hidden;
   font-family:'Poppins',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:0.02em;
-  border-radius:0; border:1px solid var(--chip-acc); color:#0D0D12;
-  background:color-mix(in srgb, var(--chip-acc) 22%, white);
-  padding:7px 14px; cursor:pointer; transition:all .15s ease;
+  border-radius:0; border:1px solid var(--line); color:var(--text);
+  background:var(--bg-2);
+  padding:7px 14px 7px 17px; cursor:pointer; transition:all .15s ease;
 }
-.cp-dash .dept-chip:hover{ background:color-mix(in srgb, var(--chip-acc) 38%, white); }
-.cp-dash .dept-chip.active{ background:var(--chip-acc); color:#0D0D12; border-color:var(--chip-acc); }
+.cp-dash .dept-chip::before{
+  content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--chip-acc);
+}
+.cp-dash .dept-chip:hover{ border-color:var(--chip-acc); background:var(--hl2); }
+.cp-dash .dept-chip.active{ background:var(--hl3); border-color:var(--chip-acc); }
+.cp-dash .dept-chip.active::before{ width:4px; }
 
 /* hilo de chat de una consulta: acciones (Chat/Resolver) y composer */
 .cp-dash .cons-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center; }

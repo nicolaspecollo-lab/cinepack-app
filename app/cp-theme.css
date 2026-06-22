@@ -400,6 +400,13 @@
 .cp-deptcard.active{ border-color:var(--acc); background:var(--hl3); }
 .cp-deptcard.active .check{ color:var(--acc); }
 
+.cp-deptcustom{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.cp-deptcustom input{
+  flex:1; min-width:220px; background:var(--bg); border:1px solid var(--line); color:var(--text);
+  padding:10px 12px; font-size:13px; font-family:'Courier New', Courier, monospace;
+}
+.cp-deptcustom input:focus{ outline:none; border-color:var(--lime); }
+
 .cp-deptteam{
   border:1px solid var(--line); border-left:3px solid var(--acc); background:var(--panel); padding:18px;
   display:flex; flex-direction:column; gap:14px;

@@ -24,6 +24,7 @@ export default function NuevoProyectoPage() {
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState("");
   const [deptos, setDeptos] = useState<string[]>([]);
+  const [deptoCustomInput, setDeptoCustomInput] = useState("");
   const [personas, setPersonas] = useState<Record<string, Persona[]>>({});
   const [plantillas, setPlantillas] = useState<Plantilla[]>([]);
   const [plantillaId, setPlantillaId] = useState<string | null>(null);
@@ -93,6 +94,15 @@ export default function NuevoProyectoPage() {
       }
       return [...prev, d];
     });
+  }
+
+  function addCustomDepto() {
+    const nombre = deptoCustomInput.trim();
+    if (!nombre) return;
+    if (!deptos.some((d) => d.toLowerCase() === nombre.toLowerCase())) {
+      setDeptos((prev) => [...prev, nombre]);
+    }
+    setDeptoCustomInput("");
   }
 
   function addPersona(depto: string) {
@@ -433,6 +443,32 @@ export default function NuevoProyectoPage() {
                 </button>
               );
             })}
+            {deptos.filter((d) => !DEPARTAMENTOS.includes(d)).map((d) => (
+              <button
+                type="button"
+                key={d}
+                className="cp-deptcard active"
+                style={{ "--acc": accent(d) } as React.CSSProperties}
+                onClick={() => toggleDepto(d)}
+                title="Quitar departamento"
+              >
+                <span className="hex"></span>
+                <span className="name">{d}</span>
+                <span className="check">✓ Personalizado · Quitar</span>
+              </button>
+            ))}
+          </div>
+          <div className="cp-deptcustom">
+            <input
+              type="text"
+              placeholder="¿Falta un departamento? Escribilo aquí (ej. Producción de podcast)"
+              value={deptoCustomInput}
+              onChange={(e) => setDeptoCustomInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomDepto(); } }}
+            />
+            <button type="button" className="abtn" onClick={addCustomDepto}>
+              + Agregar departamento nuevo
+            </button>
           </div>
         </div>
 
