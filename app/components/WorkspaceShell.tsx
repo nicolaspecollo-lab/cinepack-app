@@ -39,6 +39,7 @@ export default function WorkspaceShell({
   const [deptOpen, setDeptOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [proyecto, setProyecto] = useState(proyectoProp ?? "Marea Oscura");
+  const [menuTop, setMenuTop] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function WorkspaceShell({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
-  // Pista visual (degradado) de scroll horizontal en .wtabs — sin esto, en
+  // Pista visual (degradado) de scroll horizontal en .cp-wtabs-nav — sin esto, en
   // móvil las pestañas se cortan de golpe en el borde sin indicar que hay más.
   useEffect(() => {
     function update(el: Element) {
@@ -71,7 +72,7 @@ export default function WorkspaceShell({
       el.classList.toggle("can-right", canRight);
     }
     function scan() {
-      document.querySelectorAll(".wtabs").forEach((el) => {
+      document.querySelectorAll(".cp-wtabs-nav").forEach((el) => {
         update(el);
         if (!(el as HTMLElement).dataset.scrollFadeBound) {
           (el as HTMLElement).dataset.scrollFadeBound = "1";
@@ -111,20 +112,34 @@ export default function WorkspaceShell({
       <header className="cp-topbar">
         <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
         <span className="cp-proj">{proyecto}</span>
+        <div className="cp-topbar-break" aria-hidden="true"></div>
         <div className="cp-spacer"></div>
-        <div id="cp-header-controls" className="cp-header-controls"></div>
-        <button
-          className="cp-topbar-theme-btn"
-          onClick={toggleTheme}
-          title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
-        >◑</button>
-        <div className="cp-menu" ref={menuRef}>
-          <button className="cp-menu-btn" onClick={() => setOpen((v) => !v)}>
-            <span className="hex"></span>
-            {t("menu")}
-          </button>
-          {open && (
-            <div className="cp-menu-drop">
+        <div className="cp-topbar-actions">
+          <div id="cp-header-controls" className="cp-header-controls"></div>
+          <div className="cp-topbar-secondary">
+          <button
+            className="cp-topbar-theme-btn"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+          >◑</button>
+          <div className="cp-menu" ref={menuRef}>
+            <button
+              className="cp-menu-btn"
+              onClick={() => {
+                if (!open && menuRef.current) {
+                  setMenuTop(menuRef.current.getBoundingClientRect().bottom + 8);
+                }
+                setOpen((v) => !v);
+              }}
+            >
+              <span className="hex"></span>
+              {t("menu")}
+            </button>
+            {open && (
+              <div
+                className="cp-menu-drop"
+                style={menuTop != null ? ({ "--menu-top": `${menuTop}px` } as React.CSSProperties) : undefined}
+              >
               <div className="cp-menu-section">{t("account")}</div>
               <div className="cp-menu-item" style={{ cursor: "default" }}>
                 <span>{fullName}</span>
@@ -224,8 +239,10 @@ export default function WorkspaceShell({
               <button className="cp-menu-item" onClick={handleLogout}>
                 {t("logout")}
               </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+          </div>
         </div>
       </header>
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>{children}</div>

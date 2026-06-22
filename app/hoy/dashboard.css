@@ -44,13 +44,17 @@
 .cp-dash .wtabs{
   display:flex; gap:0; align-items:stretch;
   border-bottom:1px solid var(--line); padding:0; margin-top:0;
-  flex-wrap:nowrap; min-height:40px; position:relative; overflow:hidden;
+  flex-wrap:nowrap; min-height:40px; position:relative;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(159%2C232%2C112%2C0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
   background-size:120px 104px;
 }
 .cp-dash.cp-light .wtabs{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(13%2C13%2C18%2C0.05)' stroke-width='1.5'/%3E%3C/svg%3E");
 }
+/* orden visual fijo: etiqueta de depto · pestañas de navegación · usuario+cargo */
+.cp-dash .cp-wdept-label{ order:1; }
+.cp-dash .cp-wtabs-nav{ order:2; flex:1; min-width:0; display:flex; align-items:stretch; overflow:hidden; }
+.cp-dash .cp-wuser-block{ order:3; }
 .cp-dash .wtab{
   font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase;
   letter-spacing:0.06em; color:var(--muted); background:none; border:none;
@@ -59,15 +63,15 @@
 }
 .cp-dash .wtab:hover{ color:var(--text); }
 .cp-dash .wtab.active{ color:var(--acc); border-bottom-color:var(--acc); }
-.cp-dash .wtabs.can-right{
+.cp-dash .cp-wtabs-nav.can-right{
   -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
   mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
 }
-.cp-dash .wtabs.can-left{
+.cp-dash .cp-wtabs-nav.can-left{
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px);
   mask-image: linear-gradient(to right, transparent 0, black 24px);
 }
-.cp-dash .wtabs.can-left.can-right{
+.cp-dash .cp-wtabs-nav.can-left.can-right{
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 28px), transparent 100%);
   mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 28px), transparent 100%);
 }
@@ -283,9 +287,6 @@
 .cp-dash .perm span b{ color:var(--acc); font-weight:700; }
 
 @media (max-width: 640px){
-  .cp-dash .wtabs{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  .cp-dash .cp-wuser-info{ display:none; }
-  .cp-dash .wtab{ padding:0 8px; }
   .cp-dash .today{ padding:18px 16px; gap:14px; grid-template-columns:1fr; }
   .cp-dash .tools{ padding:16px 16px 28px; gap:16px; }
   .cp-dash .pipe{ margin:16px 16px 0; }
@@ -298,9 +299,8 @@
   .cp-dash .grid2{ grid-template-columns:1fr; gap:14px; }
   .cp-dash table.t{ min-width:560px; font-size:11.5px; }
 
-  /* ===== topbar: solo lo esencial cabe en una fila en móvil ===== */
+  /* ===== topbar: 2 filas — (1) logo+proyecto (2) buscador/IA — tema — menú ===== */
   .cp-topbar{ padding:10px 14px; gap:8px; }
-  .cp-topbar .cp-proj{ display:none; }
   .cp-topbar .cp-logo img{ height:28px; }
   .cp-team-mini{ display:none; }
   .cp-dash-ctrl-btn span:not(.hex){ display:none; }
@@ -308,10 +308,20 @@
   .cmdk-inline-field{ min-width:0; padding:7px 8px; }
   .cmdk-inline-input{ width:0; padding:0; opacity:0; pointer-events:none; transition:width .15s ease, opacity .15s ease; }
   .cmdk-inline-field:focus-within .cmdk-inline-input{ width:120px; padding:0 2px; opacity:1; pointer-events:auto; }
-  .cmdk-drop{ left:auto; right:0; min-width:min(320px,90vw); }
+  .cmdk-drop{ left:auto; right:0; max-width:calc(100vw - 24px); min-width:min(320px,90vw); }
   .cp-menu-btn span:not(.hex){ display:none; }
   .cp-menu-btn{ padding:8px; }
-  .cp-menu-drop{ right:-8px; }
+
+  /* ===== fila de pestañas: (3) hex de depto + usuario/cargo · (4) pestañas de navegación ===== */
+  .cp-dash .wtabs{ flex-wrap:wrap; min-height:0; height:auto; }
+  .cp-dash .cp-wdept-label{ order:1; border-right:none; padding:10px 0 10px 16px; }
+  .cp-dash .cp-wuser-block{ order:2; border-left:none; margin-left:auto; padding:10px 16px 10px 0; }
+  .cp-dash .cp-wuser-info{ display:flex; }
+  .cp-dash .cp-wtabs-nav{
+    order:3; flex-basis:100%; flex:none; width:100%; max-width:100%;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; border-top:1px solid var(--line);
+  }
+  .cp-dash .wtab{ padding:0 10px; }
 
   /* ===== cabecera de departamento: nunca se aplasta, cae a 2 líneas ===== */
   .cp-dash .dhead{ padding:16px 16px 0; }

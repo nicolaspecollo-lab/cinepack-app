@@ -278,17 +278,6 @@ export default function DepartmentDashboard({
           <span className="hex" />
           <span>{nombre}</span>
         </div>
-        <button className={`wtab ${tab === "pulso" ? "active" : ""}`} onClick={() => setTab("pulso")}>
-          Pulso{pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
-        </button>
-        <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>
-          Generales{generalesPendientes > 0 && <span className="wtab-badge">{generalesPendientes}</span>}
-        </button>
-        <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>Departamentos</button>
-        <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
-        <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
-        <div style={{ flex: 1 }} />
-        <div id="cp-header-back" />
         <div className="cp-wuser-block">
           {avatarUrl ? (
             <img src={avatarUrl} alt="" className="cp-wuser-avatar" />
@@ -301,6 +290,19 @@ export default function DepartmentDashboard({
             <b>{fullName}</b>
             <span>{cargo ?? "Sin asignar"}</span>
           </div>
+        </div>
+        <div className="cp-wtabs-nav">
+          <button className={`wtab ${tab === "pulso" ? "active" : ""}`} onClick={() => setTab("pulso")}>
+            Pulso{pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
+          </button>
+          <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>
+            Generales{generalesPendientes > 0 && <span className="wtab-badge">{generalesPendientes}</span>}
+          </button>
+          <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>Departamentos</button>
+          <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
+          <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
+          <div style={{ flex: 1 }} />
+          <div id="cp-header-back" />
         </div>
       </div>
 
