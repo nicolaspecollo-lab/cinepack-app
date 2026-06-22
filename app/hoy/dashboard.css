@@ -260,6 +260,14 @@
 .cp-dash .btn:hover{ border-color:var(--acc); color:var(--acc); }
 .cp-dash .btn.acc{ background:var(--acc); color:#0D0D12; border-color:var(--acc); }
 .cp-dash .cons-new{ padding:0 30px 30px; display:flex; gap:10px; flex-wrap:wrap; }
+/* formulario "Nueva consulta": ancho completo disponible, centrado por tier */
+.cp-dash .cons-form{ flex-direction:column; padding-top:0; width:100%; max-width:960px; margin:0 auto; box-sizing:border-box; }
+@media (max-width:1024px){
+  .cp-dash .cons-form{ max-width:720px; }
+}
+@media (max-width:640px){
+  .cp-dash .cons-form{ max-width:100%; }
+}
 
 /* ===== COMUNICADOS (común) ===== */
 .cp-dash .com-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; padding:20px 30px 30px; }

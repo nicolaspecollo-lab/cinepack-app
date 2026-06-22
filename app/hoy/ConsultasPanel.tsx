@@ -293,7 +293,7 @@ export default function ConsultasPanel({
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
+        <form onSubmit={handleCreate} className="cons-new cons-form">
           <label className="afield">
             <span>Para (uno o más departamentos)</span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
