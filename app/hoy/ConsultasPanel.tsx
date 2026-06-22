@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
+import { ACCENTS, DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 
 type ConsFilter = "todas" | "pend" | "res";
 
@@ -296,14 +296,14 @@ export default function ConsultasPanel({
         <form onSubmit={handleCreate} className="cons-new cons-form">
           <label className="afield">
             <span>Para (uno o más departamentos)</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "4px" }}>
+            <div className="chip-group">
               {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
                 <button
                   type="button"
                   key={d}
-                  className={`pill ${paraDepartamentos.includes(d) ? "p-ok" : ""}`}
+                  className={`dept-chip ${paraDepartamentos.includes(d) ? "active" : ""}`}
+                  style={{ "--chip-acc": `var(--${ACCENTS[d] ?? "lime"})` } as React.CSSProperties}
                   onClick={() => toggleParaDepartamento(d)}
-                  style={{ cursor: "pointer", border: "1px solid var(--line)" }}
                 >
                   {d}
                 </button>
@@ -313,12 +313,19 @@ export default function ConsultasPanel({
           {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
             <label className="afield">
               <span>Cargo al que se dirige (opcional)</span>
-              <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
-                <option value="">Cualquiera del departamento</option>
+              <div className="chip-group">
                 {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <button
+                    type="button"
+                    key={c}
+                    className={`dept-chip ${cargo === c ? "active" : ""}`}
+                    style={{ "--chip-acc": `var(--${ACCENTS[paraDepartamentos[0]] ?? "lime"})` } as React.CSSProperties}
+                    onClick={() => setCargo((prev) => (prev === c ? "" : c))}
+                  >
+                    {c}
+                  </button>
                 ))}
-              </select>
+              </div>
             </label>
           )}
           <label className="afield">

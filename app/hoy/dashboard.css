@@ -259,6 +259,17 @@
 .cp-dash .btn{ font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; padding:8px 16px; border:1px solid var(--line); background:none; color:var(--text); cursor:pointer; }
 .cp-dash .btn:hover{ border-color:var(--acc); color:var(--acc); }
 .cp-dash .btn.acc{ background:var(--acc); color:#0D0D12; border-color:var(--acc); }
+
+/* selectores rectangulares con color por departamento (Consultas: Para / Cargo) */
+.cp-dash .chip-group{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.cp-dash .dept-chip{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:0.02em;
+  border-radius:6px; border:1px solid var(--chip-acc); color:var(--chip-acc);
+  background:color-mix(in srgb, var(--chip-acc) 13%, transparent);
+  padding:7px 14px; cursor:pointer; transition:all .15s ease;
+}
+.cp-dash .dept-chip:hover{ background:color-mix(in srgb, var(--chip-acc) 24%, transparent); }
+.cp-dash .dept-chip.active{ background:var(--chip-acc); color:#0D0D12; border-color:var(--chip-acc); }
 .cp-dash .cons-new{ padding:0 30px 30px; display:flex; gap:10px; flex-wrap:wrap; }
 /* formulario "Nueva consulta": ancho completo disponible, centrado por tier */
 .cp-dash .cons-form{ flex-direction:column; padding-top:0; width:100%; max-width:960px; margin:0 auto; box-sizing:border-box; }
