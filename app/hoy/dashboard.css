@@ -291,7 +291,8 @@
   .cp-dash .tools{ padding:16px 16px 28px; gap:16px; }
   .cp-dash .pipe{ margin:16px 16px 0; }
   .cp-dash .dsubtabs{ padding:14px 16px 0; }
-  .cp-dash .cons-filters{ padding:18px 16px 0; }
+  .cp-dash .cons-filters{ padding:18px 16px 0; flex-wrap:wrap; }
+  .cp-dash .cons-filters > div[style*="flex: 1"]{ flex-basis:100%; height:0; }
   .cp-dash .cons-list{ padding:18px 16px 28px; }
   .cp-dash .cons-new{ padding:0 16px 22px; }
   .cp-dash .com-list{ padding:16px 16px 24px; }

@@ -185,6 +185,10 @@ export default function ConsultasPanel({
         <button className={`cfilter ${consFilter === "res" ? "active" : ""}`} onClick={() => setConsFilter("res")}>
           Resueltas
         </button>
+        <div style={{ flex: 1 }} />
+        <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
+          {showForm ? "Cancelar" : "+ Nueva consulta"}
+        </button>
       </div>
 
       <div className="cons-list">
@@ -280,12 +284,6 @@ export default function ConsultasPanel({
             </div>
           );
         })}
-      </div>
-
-      <div className="cons-new">
-        <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Nueva consulta"}
-        </button>
       </div>
 
       {showForm && (
