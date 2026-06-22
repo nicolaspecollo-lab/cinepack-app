@@ -59,6 +59,18 @@
 }
 .cp-dash .wtab:hover{ color:var(--text); }
 .cp-dash .wtab.active{ color:var(--acc); border-bottom-color:var(--acc); }
+.cp-dash .wtabs.can-right{
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+}
+.cp-dash .wtabs.can-left{
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px);
+  mask-image: linear-gradient(to right, transparent 0, black 24px);
+}
+.cp-dash .wtabs.can-left.can-right{
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black 24px, black calc(100% - 28px), transparent 100%);
+}
 .cp-dash .wtab-badge{
   display:inline-flex; align-items:center; justify-content:center; min-width:16px; height:16px; padding:0 4px;
   border-radius:999px; background:var(--acc); color:#101010; font-size:9px; font-weight:800; line-height:1;
@@ -285,6 +297,29 @@
   .cp-dash .note{ margin:0 16px 22px; }
   .cp-dash .grid2{ grid-template-columns:1fr; gap:14px; }
   .cp-dash table.t{ min-width:560px; font-size:11.5px; }
+
+  /* ===== topbar: solo lo esencial cabe en una fila en móvil ===== */
+  .cp-topbar{ padding:10px 14px; gap:8px; }
+  .cp-topbar .cp-proj{ display:none; }
+  .cp-topbar .cp-logo img{ height:28px; }
+  .cp-team-mini{ display:none; }
+  .cp-dash-ctrl-btn span:not(.hex){ display:none; }
+  .cp-dash-ctrl-btn{ padding:8px; }
+  .cmdk-inline-field{ min-width:0; padding:7px 8px; }
+  .cmdk-inline-input{ width:0; padding:0; opacity:0; pointer-events:none; transition:width .15s ease, opacity .15s ease; }
+  .cmdk-inline-field:focus-within .cmdk-inline-input{ width:120px; padding:0 2px; opacity:1; pointer-events:auto; }
+  .cmdk-drop{ left:auto; right:0; min-width:min(320px,90vw); }
+  .cp-menu-btn span:not(.hex){ display:none; }
+  .cp-menu-btn{ padding:8px; }
+  .cp-menu-drop{ right:-8px; }
+
+  /* ===== cabecera de departamento: nunca se aplasta, cae a 2 líneas ===== */
+  .cp-dash .dhead{ padding:16px 16px 0; }
+  .cp-dash .dhead-top{ flex-wrap:wrap; gap:10px; }
+  .cp-dash .dhead-top .hex{ width:22px; height:19px; }
+  .cp-dash .dhead h2{ font-size:1.15rem; }
+  .cp-dash .dhead-user{ margin-left:0; }
+  .cp-dash .dhead-user-info{ display:none; }
 }
 
 /* ===== GUION ===== */
@@ -493,8 +528,8 @@
 .cp-dash .hp-group-label .hex{ width:8px; height:7px; background:var(--acc); flex-shrink:0; }
 .cp-dash .hp-group-label-muted{ color:var(--muted); }
 
-/* Grid 3 columnas */
-.cp-dash .hp-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+/* Grid de tarjetas: 3 columnas en desktop, se adapta solo en pantallas chicas */
+.cp-dash .hp-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:10px; }
 
 /* Exclusivas: por cargo con label destacado */
 .cp-dash .hp-index-cols{ flex-direction:column; gap:24px; }

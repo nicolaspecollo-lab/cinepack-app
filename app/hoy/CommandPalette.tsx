@@ -89,7 +89,7 @@ export default function CommandPalette({
 
   return (
     <div className="cmdk-inline-wrap" ref={wrapRef}>
-      <div className="cmdk-inline-field">
+      <div className="cmdk-inline-field" onClick={() => inputRef.current?.focus()}>
         <span className="hex cmdk-inline-hex"></span>
         <input
           ref={inputRef}

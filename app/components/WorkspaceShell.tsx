@@ -61,6 +61,34 @@ export default function WorkspaceShell({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [open]);
 
+  // Pista visual (degradado) de scroll horizontal en .wtabs — sin esto, en
+  // móvil las pestañas se cortan de golpe en el borde sin indicar que hay más.
+  useEffect(() => {
+    function update(el: Element) {
+      const canLeft = el.scrollLeft > 2;
+      const canRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+      el.classList.toggle("can-left", canLeft);
+      el.classList.toggle("can-right", canRight);
+    }
+    function scan() {
+      document.querySelectorAll(".wtabs").forEach((el) => {
+        update(el);
+        if (!(el as HTMLElement).dataset.scrollFadeBound) {
+          (el as HTMLElement).dataset.scrollFadeBound = "1";
+          el.addEventListener("scroll", () => update(el), { passive: true });
+        }
+      });
+    }
+    scan();
+    const mo = new MutationObserver(scan);
+    mo.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", scan);
+    return () => {
+      mo.disconnect();
+      window.removeEventListener("resize", scan);
+    };
+  }, []);
+
   function chooseLang(next: Locale) {
     setLangOpen(false);
     setOpen(false);

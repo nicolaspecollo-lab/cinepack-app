@@ -45,6 +45,10 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
+  /* red de seguridad: ningún elemento mal medido puede abrir scroll
+     horizontal de la página y dejar un hueco vacío al deslizar */
+  overflow-x: hidden;
+  width: 100%;
   transition: background .25s ease, color .25s ease;
 }
 
@@ -76,13 +80,17 @@
 .cp-topbar{
   display:flex; align-items:center; gap:10px; padding:14px 30px;
   border-bottom:1px solid var(--line); position:relative; z-index:40;
+  flex-wrap:wrap;
 }
-.cp-header-controls{ display:flex; align-items:center; gap:8px; }
-.cp-topbar .cp-logo{ display:flex; align-items:center; gap:10px; font-family:'Poppins',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.04em; }
+.cp-header-controls{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0; }
+.cp-topbar .cp-logo{ display:flex; align-items:center; gap:10px; font-family:'Poppins',sans-serif; font-weight:800; font-size:14px; letter-spacing:0.04em; flex-shrink:0; }
 .cp-topbar .cp-logo .hex{ width:16px; height:14px; background:var(--lime); flex-shrink:0; }
-.cp-topbar .cp-logo img{ height:38px; width:auto; display:block; }
-.cp-topbar .cp-proj{ font-size:11px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; }
-.cp-topbar .cp-spacer{ flex:1; }
+.cp-topbar .cp-logo img{ height:38px; width:auto; max-width:none; object-fit:contain; display:block; flex-shrink:0; }
+.cp-topbar .cp-proj{
+  font-size:11px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;
+}
+.cp-topbar .cp-spacer{ flex:1; min-width:8px; }
 .cp-topbar-theme-btn{
   width:30px; height:30px; border-radius:50%;
   background:var(--bg-2); border:1px solid var(--line);
@@ -262,6 +270,14 @@
   .cp-topbar{ padding:12px 16px; }
   .authcard{ padding:28px 22px; }
   .cp-projects{ padding:18px 16px 28px; }
+
+  /* el toggle de idioma/tema deja de flotar sobre la tarjeta de login
+     y pasa a ocupar su propia fila arriba, sin solaparse nunca */
+  .cp-auth-wrap{ flex-direction:column; padding-top:18px; }
+  .cp-theme-toggle-floating{
+    position:static; display:flex; align-items:center; justify-content:flex-end;
+    gap:8px; width:100%; max-width:420px; margin:0 auto 14px;
+  }
 }
 
 /* ===================================================================
