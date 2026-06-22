@@ -270,6 +270,16 @@
 }
 .cp-dash .dept-chip:hover{ background:color-mix(in srgb, var(--chip-acc) 24%, transparent); }
 .cp-dash .dept-chip.active{ background:var(--chip-acc); color:#0D0D12; border-color:var(--chip-acc); }
+
+/* hilo de chat de una consulta: acciones (Chat/Resolver) y composer */
+.cp-dash .cons-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; align-items:center; }
+.cp-dash .cons-chat-input{
+  flex:1; min-width:180px; background:var(--bg); border:1px solid var(--line); color:var(--text);
+  padding:8px 10px; font-size:12px; font-family:'Courier New', Courier, monospace; border-radius:6px;
+}
+.cp-dash .cons-chat-input:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .cons-chat-badge{ background:var(--hl3); color:var(--cyan); }
+
 .cp-dash .cons-new{ padding:0 30px 30px; display:flex; gap:10px; flex-wrap:wrap; }
 /* formulario "Nueva consulta": ancho completo disponible, centrado por tier */
 .cp-dash .cons-form{ flex-direction:column; padding-top:0; width:100%; max-width:960px; margin:0 auto; box-sizing:border-box; }

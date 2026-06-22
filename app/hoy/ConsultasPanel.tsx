@@ -59,6 +59,8 @@ export default function ConsultasPanel({
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [respuestaDrafts, setRespuestaDrafts] = useState<Record<string, string>>({});
   const [resolverDrafts, setResolverDrafts] = useState<Record<string, string>>({});
+  const [chatOpen, setChatOpen] = useState<Record<string, boolean>>({});
+  const [resolveOpen, setResolveOpen] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -218,13 +220,16 @@ export default function ConsultasPanel({
                     {c.para_cargo && ` (${c.para_cargo})`} · {c.autor_nombre} · {timeAgo(c.created_at)}
                   </span>
                 </div>
-                {c.estado === "resuelta" ? (
-                  <span className="pill p-ok">Resuelta</span>
-                ) : (
-                  <span className="pill p-warn">
-                    <span className="pulse"></span>Pendiente
-                  </span>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                  {c.estado === "resuelta" ? (
+                    <span className="pill p-ok">Resuelta</span>
+                  ) : (
+                    <span className="pill p-warn">
+                      <span className="pulse"></span>Pendiente
+                    </span>
+                  )}
+                  {c.respuestas.length > 0 && <span className="pill cons-chat-badge">💬 Conversación</span>}
+                </div>
               </div>
               <div className="cons-text">{c.texto}</div>
 
@@ -240,50 +245,53 @@ export default function ConsultasPanel({
                 </div>
               )}
 
-              {c.estado === "pendiente" && puedeResponder && (
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
+              {c.estado === "pendiente" && (puedeResponder || esAutor) && (
+                <div className="cons-actions">
+                  <button
+                    type="button"
+                    className={`btn ${chatOpen[c.id] ? "acc" : ""}`}
+                    onClick={() => setChatOpen((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
+                  >
+                    💬 Chat
+                  </button>
+                  {esAutor && (
+                    <button
+                      type="button"
+                      className="btn acc"
+                      onClick={() => setResolveOpen((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
+                    >
+                      Resolver
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {c.estado === "pendiente" && chatOpen[c.id] && (puedeResponder || esAutor) && (
+                <div className="cons-actions">
                   <input
                     type="text"
-                    placeholder="Escribe una respuesta…"
+                    placeholder="Escribe un mensaje…"
                     value={respuestaDrafts[c.id] ?? ""}
                     onChange={(e) => setRespuestaDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                    style={{
-                      flex: 1,
-                      minWidth: "180px",
-                      background: "var(--bg)",
-                      border: "1px solid var(--line)",
-                      color: "var(--text)",
-                      padding: "8px 10px",
-                      fontSize: "12px",
-                      fontFamily: "'Courier New', Courier, monospace",
-                    }}
+                    className="cons-chat-input"
                   />
                   <button className="btn" onClick={() => handleResponder(c)}>
-                    Responder
+                    Enviar
                   </button>
                 </div>
               )}
 
-              {c.estado === "pendiente" && esAutor && (
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
+              {c.estado === "pendiente" && esAutor && resolveOpen[c.id] && (
+                <div className="cons-actions">
                   <input
                     type="text"
                     placeholder="Nota de cierre (opcional)…"
                     value={resolverDrafts[c.id] ?? ""}
                     onChange={(e) => setResolverDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                    style={{
-                      flex: 1,
-                      minWidth: "180px",
-                      background: "var(--bg)",
-                      border: "1px solid var(--line)",
-                      color: "var(--text)",
-                      padding: "8px 10px",
-                      fontSize: "12px",
-                      fontFamily: "'Courier New', Courier, monospace",
-                    }}
+                    className="cons-chat-input"
                   />
                   <button className="btn acc" onClick={() => handleResolve(c.id)}>
-                    Resolver
+                    Confirmar resolución
                   </button>
                 </div>
               )}
