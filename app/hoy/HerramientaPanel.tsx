@@ -67,7 +67,7 @@ const CELL_FONTS: { label: string; value: string }[] = [
   { label: "Poppins", value: "'Poppins', sans-serif" },
   { label: "Times", value: "'Times New Roman', serif" },
 ];
-const CELL_TEXT_COLORS = ["#111111", "#F4F4F6", "#9FE870", "#11C2DC", "#F5A623", "#FF6B6B", "#C084FC"];
+const CELL_TEXT_COLORS = ["#111111", "#F4F4F6", "#9EEE6A", "#19CBE6", "#E8A330", "#F07A7A", "#C084FC"];
 
 // Encabezado de marca, sólo visible al exportar/imprimir en PDF.
 export function PrintHeader({ herramientaNombre, departamento }: { herramientaNombre: string; departamento: string }) {
@@ -1547,7 +1547,7 @@ function TablaTool({
                             <input
                               type="color"
                               className="hp-row-color-picker"
-                              value={rowColor || "#9fe870"}
+                              value={rowColor || "#9eee6a"}
                               onChange={(e) => cambiarColorFila(f, e.target.value)}
                               title="Color de fila"
                             />
@@ -2015,7 +2015,7 @@ function FichaTool({
 }
 
 // ---- Nota ----
-const NOTA_COLORS = ["#111111","#F4F4F6","#9FE870","#11C2DC","#F5A623","#FF6B6B","#C084FC","#60A5FA","#FCD34D"];
+const NOTA_COLORS = ["#111111","#F4F4F6","#9EEE6A","#19CBE6","#E8A330","#F07A7A","#C084FC","#60A5FA","#FCD34D"];
 const NOTA_HIGHLIGHT = ["#FCD34D","#86EFAC","#93C5FD","#F9A8D4","#FCA5A5","transparent"];
 
 function NotaTool({
