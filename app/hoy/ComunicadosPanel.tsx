@@ -76,11 +76,13 @@ export default function ComunicadosPanel({
     const supabase = createClient();
     const { data } = await supabase.from("comunicado_acuse").select("*").in("comunicado_id", ids);
     const grouped: Record<string, Acuse[]> = {};
+    for (const id of ids) grouped[id] = []; // limpia solo los ids que se están refrescando
     for (const row of data ?? []) {
       grouped[row.comunicado_id] = grouped[row.comunicado_id] ?? [];
       grouped[row.comunicado_id].push(row as Acuse);
     }
-    setAcuses(grouped);
+    // Fusiona con lo ya cargado: no pisa el estado de comunicados no incluidos en `ids`.
+    setAcuses((prev) => ({ ...prev, ...grouped }));
   }, []);
 
   const load = useCallback(async () => {
