@@ -15,6 +15,7 @@ type Respuesta = {
 
 type Consulta = {
   id: string;
+  autor_id: string;
   autor_nombre: string;
   de_departamento: string;
   para_departamentos: string[];
@@ -26,6 +27,15 @@ type Consulta = {
   respuesta_autor: string | null;
   respuestas: Respuesta[];
   created_at: string;
+  is_private: boolean;
+  private_recipient_id: string | null;
+  private_recipient_nombre: string | null;
+};
+
+type MiembroProyecto = {
+  user_id: string;
+  full_name: string;
+  departamento: string;
 };
 
 function timeAgo(iso: string) {
@@ -55,6 +65,10 @@ export default function ConsultasPanel({
   const [texto, setTexto] = useState("");
   const [paraDepartamentos, setParaDepartamentos] = useState<string[]>([]);
   const [cargo, setCargo] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [privateRecipientId, setPrivateRecipientId] = useState("");
+  const [miembrosProyecto, setMiembrosProyecto] = useState<MiembroProyecto[]>([]);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [respuestaDrafts, setRespuestaDrafts] = useState<Record<string, string>>({});
@@ -69,6 +83,10 @@ export default function ConsultasPanel({
       return;
     }
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const uid = user?.id ?? null;
+    setUserId(uid);
+
     let query = supabase
       .from("consultas")
       .select("*")
@@ -76,18 +94,42 @@ export default function ConsultasPanel({
 
     // Un departamento solo ve las consultas en las que participa (emisor o
     // receptor). El rol Ejecutivo ve todas las consultas del proyecto.
+    // Las consultas privadas solo las ve el emisor y el destinatario (RLS
+    // refuerza esto server-side; este filtro es defensa adicional client-side).
     if (deDepartamento !== "Ejecutivo") {
-      query = query.or(`de_departamento.eq.${deDepartamento},para_departamentos.cs.{${deDepartamento}}`);
+      const visibilidad = [`de_departamento.eq.${deDepartamento}`, `para_departamentos.cs.{${deDepartamento}}`];
+      if (uid) visibilidad.push(`autor_id.eq.${uid}`, `private_recipient_id.eq.${uid}`);
+      query = query.or(visibilidad.join(","));
     }
 
     const { data } = await query.order("created_at", { ascending: false });
-    setConsultas(data ?? []);
+    setConsultas((data ?? []).filter((c) => !c.is_private || c.autor_id === uid || c.private_recipient_id === uid || deDepartamento === "Ejecutivo"));
     setLoading(false);
   }, [deDepartamento]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    (async () => {
+      const projectId = localStorage.getItem("cinepack-proyecto-id");
+      if (!projectId) return;
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("project_members")
+        .select("user_id, profiles(full_name, departamento)")
+        .eq("project_id", projectId);
+      const lista = (data ?? [])
+        .map((row) => {
+          const p = row.profiles as unknown as { full_name: string; departamento: string } | null;
+          if (!p) return null;
+          return { user_id: row.user_id as string, full_name: p.full_name, departamento: p.departamento };
+        })
+        .filter((m): m is MiembroProyecto => m !== null);
+      setMiembrosProyecto(lista);
+    })();
+  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -98,6 +140,10 @@ export default function ConsultasPanel({
     }
     if (paraDepartamentos.length === 0) {
       setMsg({ type: "err", text: "Selecciona al menos un departamento." });
+      return;
+    }
+    if (isPrivate && !privateRecipientId) {
+      setMsg({ type: "err", text: "Selecciona el destinatario de la consulta privada." });
       return;
     }
 
@@ -111,6 +157,8 @@ export default function ConsultasPanel({
       return;
     }
 
+    const destinatario = miembrosProyecto.find((m) => m.user_id === privateRecipientId);
+
     const { error } = await supabase.from("consultas").insert({
       project_id: projectId,
       autor_id: user.id,
@@ -120,6 +168,9 @@ export default function ConsultasPanel({
       para_cargo: paraDepartamentos.length === 1 ? cargo.trim() || null : null,
       titulo,
       texto,
+      is_private: isPrivate,
+      private_recipient_id: isPrivate ? privateRecipientId : null,
+      private_recipient_nombre: isPrivate ? destinatario?.full_name ?? null : null,
     });
 
     setSending(false);
@@ -133,6 +184,8 @@ export default function ConsultasPanel({
     setTexto("");
     setParaDepartamentos([]);
     setCargo("");
+    setIsPrivate(false);
+    setPrivateRecipientId("");
     setShowForm(false);
     await load();
   }
@@ -241,6 +294,27 @@ export default function ConsultasPanel({
               </div>
             </label>
           )}
+          <label className="afield" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+            <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} style={{ width: "auto" }} />
+            <span style={{ textTransform: "none", fontSize: "13px" }}>🔒 Consulta privada (solo la ve el destinatario)</span>
+          </label>
+
+          {isPrivate && (
+            <label className="afield">
+              <span>Destinatario (@usuario)</span>
+              <select value={privateRecipientId} onChange={(e) => setPrivateRecipientId(e.target.value)}>
+                <option value="">Selecciona un destinatario…</option>
+                {miembrosProyecto
+                  .filter((m) => paraDepartamentos.length === 0 || paraDepartamentos.includes(m.departamento))
+                  .map((m) => (
+                    <option key={m.user_id} value={m.user_id}>
+                      @{m.full_name} ({m.departamento})
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
+
           <label className="afield">
             <span>Título</span>
             <input
@@ -281,18 +355,24 @@ export default function ConsultasPanel({
         )}
         {filtered.map((c) => {
           const esAutor = c.de_departamento === deDepartamento;
-          const puedeResponder = c.para_departamentos.includes(deDepartamento);
+          const esDestinatarioPrivado = c.is_private && c.private_recipient_id === userId;
+          const puedeResponder = c.is_private
+            ? esDestinatarioPrivado || c.autor_id === userId
+            : c.para_departamentos.includes(deDepartamento);
           return (
             <div className="cons" key={c.id} style={c.estado === "resuelta" ? { borderLeftColor: "var(--line)" } : undefined}>
               <div className="cons-top">
                 <div>
                   <div className="cons-title">{c.titulo}</div>
                   <span className="cons-meta">
-                    {c.de_departamento} → {c.para_departamentos.join(", ")}
-                    {c.para_cargo && ` (${c.para_cargo})`} · {c.autor_nombre} · {timeAgo(c.created_at)}
+                    {c.is_private
+                      ? `${c.autor_nombre} → @${c.private_recipient_nombre}`
+                      : `${c.de_departamento} → ${c.para_departamentos.join(", ")}${c.para_cargo ? ` (${c.para_cargo})` : ""}`}
+                    {" "}· {c.autor_nombre} · {timeAgo(c.created_at)}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                  {c.is_private && <span className="pill" title="Solo visible para el emisor, el destinatario y el Ejecutivo">🔒 Privada</span>}
                   {c.estado === "resuelta" ? (
                     <span className="pill p-ok">Resuelta</span>
                   ) : (
