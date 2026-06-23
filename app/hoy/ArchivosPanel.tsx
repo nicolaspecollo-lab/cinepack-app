@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import * as pdfjsLib from "pdfjs-dist";
 
 type Archivo = {
   path: string;
@@ -61,6 +62,10 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   const [carpetaError, setCarpetaError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [previewFile, setPreviewFile] = useState<Archivo | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
 
@@ -194,6 +199,46 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     setArchivos((prev) => prev.filter((f) => f.path !== path));
   }
 
+  async function abrirPreview(archivo: Archivo) {
+    setPreviewFile(archivo);
+    setPreviewUrl(null);
+    setPreviewLoading(true);
+
+    const supabase = createClient();
+    const isImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(archivo.nombre);
+    const isPdf = /\.(pdf)$/i.test(archivo.nombre);
+
+    try {
+      if (isImagen) {
+        // Para imágenes, obtén URL pública directa del archivo
+        const { data } = supabase.storage.from(BUCKET).getPublicUrl(archivo.path);
+        setPreviewUrl(data.publicUrl);
+      } else if (isPdf) {
+        // Para PDFs, descarga y renderiza la primera página
+        const { data } = await supabase.storage.from(BUCKET).download(archivo.path);
+        if (data) {
+          const arrayBuffer = await data.arrayBuffer();
+          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          const page = await pdf.getPage(1);
+          const canvas = document.createElement("canvas");
+          const viewport = page.getViewport({ scale: 1.5 });
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            await page.render({ canvasContext: ctx, viewport } as any).promise;
+            setPreviewUrl(canvas.toDataURL("image/png"));
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error al generar preview:", err);
+    }
+
+    setPreviewLoading(false);
+  }
+
   const breadcrumb = ["Archivos", ...pathStack];
   const isRoot = pathStack.length === 0;
   const isEmpty = carpetas.length === 0 && archivos.length === 0;
@@ -272,17 +317,43 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
 
           {archivos.length > 0 && (
             <div className="arc-files-grid">
-              {archivos.map((f, i) => (
-                <div key={i} className="arc-file-card">
-                  <span className="arc-file-icon">{fileIcon(f.nombre)}</span>
-                  <span className="arc-file-name">{f.nombre}</span>
-                  <span className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at)}</span>
-                  <div className="arc-file-actions">
-                    <button className="arc-btn" onClick={() => descargar(f.path, f.nombre)}>⬇</button>
-                    <button className="arc-btn arc-btn-del" onClick={() => eliminar(f.path)}>✕</button>
+              {archivos.map((f, i) => {
+                const isImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.nombre);
+                const isPdf = /\.(pdf)$/i.test(f.nombre);
+                const conPreview = isImagen || isPdf;
+                return (
+                  <div key={i} className="arc-file-card" style={{ position: "relative" }}>
+                    {conPreview ? (
+                      <button
+                        className="arc-file-thumb"
+                        onClick={() => abrirPreview(f)}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          background: "var(--hl3)",
+                          border: "1px solid var(--line)",
+                          borderRadius: "4px",
+                          padding: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span style={{ fontSize: "48px" }}>{fileIcon(f.nombre)}</span>
+                      </button>
+                    ) : (
+                      <span className="arc-file-icon">{fileIcon(f.nombre)}</span>
+                    )}
+                    <span className="arc-file-name">{f.nombre}</span>
+                    <span className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at)}</span>
+                    <div className="arc-file-actions">
+                      <button className="arc-btn" onClick={() => descargar(f.path, f.nombre)}>⬇</button>
+                      <button className="arc-btn arc-btn-del" onClick={() => eliminar(f.path)}>✕</button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -303,6 +374,67 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
             </div>
           )}
         </>
+      )}
+
+      {/* Modal de preview */}
+      {previewFile && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "20px",
+            cursor: previewLoading ? "wait" : "pointer",
+          }}
+          onClick={() => { setPreviewFile(null); setPreviewUrl(null); }}
+        >
+          <div
+            style={{
+              background: "var(--bg)",
+              borderRadius: "8px",
+              padding: "20px",
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              overflow: "auto",
+              cursor: "default",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <span style={{ fontSize: "14px", color: "var(--muted)" }}>{previewFile.nombre}</span>
+              <button
+                onClick={() => { setPreviewFile(null); setPreviewUrl(null); }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  color: "var(--muted)",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            {previewLoading ? (
+              <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>
+                Cargando preview…
+              </div>
+            ) : previewUrl ? (
+              <img src={previewUrl} alt={previewFile.nombre} style={{ maxWidth: "100%", maxHeight: "calc(90vh - 60px)", borderRadius: "4px" }} />
+            ) : (
+              <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>
+                No se puede mostrar una vista previa de este archivo
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
