@@ -187,12 +187,17 @@
   flex:1; display:flex; align-items:center; justify-content:center; padding:48px 20px; position:relative;
   overflow:hidden;
 }
-.cp-auth-wrap .hexbg{
+/* Fondo de hexágonos — genérico y reutilizable en CUALQUIER contenedor con
+   position:relative (login, hero, paneles del admin, etc.). Ver Estándares
+   de Diseño (Biblia, sección 10) y memoria del proyecto: el hexágono es un
+   elemento de marca y debe aparecer de forma sutil en los fondos, no solo
+   en login/hero. */
+.cp-dash .hexbg{
   position:absolute; inset:0; z-index:0; pointer-events:none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='1.5'/%3E%3C/svg%3E");
   background-size: 120px 104px;
 }
-.cp-dash.cp-light .cp-auth-wrap .hexbg{
+.cp-dash.cp-light .hexbg{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(13,13,18,0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 .cp-auth-logo{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:26px; }
@@ -362,14 +367,6 @@
 =================================================================== */
 .cp-hero{
   padding:30px 30px 20px; border-bottom:1px solid var(--line); position:relative; overflow:hidden;
-}
-.cp-hero .hexbg{
-  position:absolute; inset:0; z-index:0; pointer-events:none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(255,255,255,0.045)' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-size: 120px 104px;
-}
-.cp-dash.cp-light .cp-hero .hexbg{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(13,13,18,0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 .cp-hero-content{ position:relative; z-index:1; max-width:760px; }
 .cp-hero-content .eyebrow{ display:inline-flex; align-items:center; gap:10px; font-size:11px; color:var(--muted); letter-spacing:0.18em; text-transform:uppercase; font-weight:700; font-family:'Poppins',sans-serif; margin-bottom:10px; }

@@ -16,6 +16,8 @@ const TABS = [
   { href: "/admin/flags", label: "Feature flags" },
 ];
 
+const BIBLIA_URL = "https://cinepack.es/biblia/";
+
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
@@ -44,9 +46,15 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             {t.label}
           </Link>
         ))}
+        <a href={BIBLIA_URL} target="_blank" rel="noreferrer" className="cp-admin-tab cp-admin-tab-biblia">
+          <span className="hex"></span> Biblia de Producto ↗
+        </a>
       </nav>
 
-      <main className="cp-admin-main">{children}</main>
+      <main className="cp-admin-main">
+        <div className="hexbg"></div>
+        <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
+      </main>
     </div>
   );
 }

@@ -8,13 +8,26 @@
 }
 .cp-dash .cp-admin-tab:hover{ color:var(--text); }
 .cp-dash .cp-admin-tab.active{ color:var(--lime); border-bottom-color:var(--lime); }
+.cp-dash .cp-admin-tab-biblia{
+  margin-left:auto; display:flex; align-items:center; gap:7px; color:var(--cyan);
+}
+.cp-dash .cp-admin-tab-biblia .hex{ width:11px; height:9px; background:var(--cyan); flex-shrink:0; }
+.cp-dash .cp-admin-tab-biblia:hover{ color:var(--cyan); border-bottom-color:var(--cyan); }
 
-.cp-dash .cp-admin-main{ flex:1; width:100%; padding:24px 30px 48px; box-sizing:border-box; }
+.cp-dash .cp-admin-main{ flex:1; width:100%; padding:24px 30px 48px; box-sizing:border-box; position:relative; overflow:hidden; }
+
+@media (max-width: 640px){
+  .cp-dash .cp-admin-tab-biblia{ margin-left:0; }
+}
 
 .cp-dash .cp-admin-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:28px; }
-.cp-dash .cp-admin-kpi{ border:1px solid var(--line); background:var(--panel); padding:18px 20px; }
-.cp-dash .cp-admin-kpi .num{ font-family:'Poppins',sans-serif; font-weight:800; font-size:2rem; line-height:1; }
-.cp-dash .cp-admin-kpi .label{ font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:6px; display:block; }
+.cp-dash .cp-admin-kpi{ border:1px solid var(--line); background:var(--panel); padding:18px 20px; position:relative; overflow:hidden; }
+.cp-dash .cp-admin-kpi::after{
+  content:''; position:absolute; top:-18px; right:-14px; width:64px; height:56px; background:var(--lime); opacity:.06;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+}
+.cp-dash .cp-admin-kpi .num{ font-family:'Poppins',sans-serif; font-weight:800; font-size:2rem; line-height:1; position:relative; z-index:1; }
+.cp-dash .cp-admin-kpi .label{ font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:6px; display:block; position:relative; z-index:1; }
 
 .cp-dash .cp-admin-section{ margin-bottom:32px; }
 .cp-dash .cp-admin-section h3{ font-size:1.1rem; margin-bottom:14px; }
@@ -58,3 +71,28 @@
   .cp-dash .cp-admin-main{ padding:18px 16px 36px; }
   .cp-dash table.cp-admin-table{ display:block; overflow-x:auto; white-space:nowrap; }
 }
+
+/* ===== gráficas: columnas, dona y línea ===== */
+.cp-dash .cp-admin-charts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px; margin-bottom:32px; }
+.cp-dash .cp-chart-card{ border:1px solid var(--line); background:var(--panel); padding:18px 20px; position:relative; overflow:hidden; }
+.cp-dash .cp-chart-card.wide{ grid-column:1 / -1; }
+.cp-dash .cp-chart-card h4{
+  font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin:0 0 16px;
+  display:flex; align-items:center; gap:7px; position:relative; z-index:1;
+}
+.cp-dash .cp-chart-card h4 .hex{ width:9px; height:8px; background:var(--acc,var(--lime)); flex-shrink:0; }
+.cp-dash .cp-chart-card > *:not(h4){ position:relative; z-index:1; }
+
+.cp-dash .cp-chart-bars{ display:flex; flex-direction:column; gap:10px; }
+.cp-dash .cp-chart-bar-row{ display:grid; grid-template-columns:110px 1fr 32px; align-items:center; gap:10px; font-size:11.5px; }
+.cp-dash .cp-chart-bar-label{ color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cp-dash .cp-chart-bar-track{ background:var(--bg); border:1px solid var(--line); height:14px; }
+.cp-dash .cp-chart-bar-fill{ height:100%; transition:width .3s ease; }
+.cp-dash .cp-chart-bar-value{ text-align:right; font-weight:700; color:var(--text); }
+
+.cp-dash .cp-chart-donut-wrap{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+.cp-dash .cp-chart-legend{ display:flex; flex-direction:column; gap:8px; flex:1; min-width:140px; }
+.cp-dash .cp-chart-legend-row{ display:flex; align-items:center; gap:8px; font-size:12px; }
+.cp-dash .cp-chart-legend-row .dot{ width:9px; height:9px; flex-shrink:0; }
+.cp-dash .cp-chart-legend-row .lbl{ color:var(--text); flex:1; }
+.cp-dash .cp-chart-legend-row .pct{ color:var(--muted); font-weight:700; }
