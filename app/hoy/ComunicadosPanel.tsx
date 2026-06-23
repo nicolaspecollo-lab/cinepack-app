@@ -266,7 +266,24 @@ export default function ComunicadosPanel({
                 </div>
                 <span className={`pill ${TIPO_CLASS[c.tipo]}`}>{TIPO_LABEL[c.tipo]}</span>
               </div>
-              <div className="com-text">{c.texto}</div>
+              <div
+                className="com-text"
+                style={
+                  !expanded
+                    ? {
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 3,
+                        overflow: "hidden",
+                      }
+                    : { whiteSpace: "pre-wrap" }
+                }
+              >
+                {c.texto}
+              </div>
+              {!expanded && c.texto.length > 180 && (
+                <span style={{ fontSize: "11px", color: "var(--cyan)" }}>Ver más…</span>
+              )}
 
               {expanded && (
                 <div onClick={(e) => e.stopPropagation()} style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
