@@ -7,6 +7,7 @@ import GeneralesPanel, { type Sub as GeneralesSub } from "./GeneralesPanel";
 import ModoRodajePanel from "./ModoRodajePanel";
 import HerramientasPanel from "./HerramientasPanel";
 import ArchivosPanel from "./ArchivosPanel";
+import AdminPanel from "./AdminPanel";
 import EquipoMini from "./EquipoMini";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
 import CommandPalette, { type PaletteItem } from "./CommandPalette";
@@ -16,7 +17,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CLIENTE_DEPT } from "../constants";
 import "./dashboard.css";
 
-type Tab = "pulso" | "generales" | "departamento" | "exclusivas" | "archivos";
+type Tab = "pulso" | "generales" | "departamento" | "exclusivas" | "archivos" | "admin";
 
 export default function DepartmentDashboard({
   nombre,
@@ -174,6 +175,9 @@ export default function DepartmentDashboard({
       { id: "tab-exclusivas", label: "Exclusivas", group: "Sección", onSelect: () => setTab("exclusivas") },
       { id: "tab-archivos", label: "Archivos", group: "Sección", onSelect: () => setTab("archivos") },
     ];
+    if (nombre === "Ejecutivo") {
+      items.push({ id: "tab-admin", label: "Admin", group: "Sección", onSelect: () => setTab("admin") });
+    }
     for (const h of deptTools(nombre)) {
       items.push({ id: `dept-${h.id}`, label: h.nombre, hint: h.hint, group: "Departamento", onSelect: () => setTab("departamento") });
     }
@@ -301,6 +305,9 @@ export default function DepartmentDashboard({
           <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>Departamentos</button>
           <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
           <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
+          {nombre === "Ejecutivo" && (
+            <button className={`wtab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>Admin</button>
+          )}
           <div style={{ flex: 1 }} />
           <div id="cp-header-back" />
         </div>
@@ -341,6 +348,12 @@ export default function DepartmentDashboard({
       {tab === "archivos" && (
         <div className="tpanel active">
           <ArchivosPanel departamento={nombre} />
+        </div>
+      )}
+
+      {tab === "admin" && nombre === "Ejecutivo" && (
+        <div className="tpanel active">
+          <AdminPanel />
         </div>
       )}
 

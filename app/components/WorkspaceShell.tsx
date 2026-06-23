@@ -9,7 +9,6 @@ import { DEPARTAMENTOS } from "../constants";
 import { useTheme } from "../useTheme";
 import { setLocale } from "@/i18n/actions";
 import { ACTIVE_LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
-import FeedbackPanel from "../hoy/FeedbackPanel";
 import "../cp-theme.css";
 
 export default function WorkspaceShell({
@@ -241,13 +240,6 @@ export default function WorkspaceShell({
 
               <div className="cp-menu-div"></div>
               <div className="cp-menu-section">Contacta con nosotros</div>
-              <button
-                className="cp-menu-item"
-                onClick={() => { window.dispatchEvent(new Event("cp-feedback-open")); setOpen(false); }}
-              >
-                <span>Enviar feedback</span>
-                <span className="muted">Bug o sugerencia</span>
-              </button>
               <Link className="cp-menu-item" href="/sugerencias" onClick={() => setOpen(false)}>
                 <span>Sugiérenos</span>
                 <span className="muted">Cuéntanos tu experiencia</span>
@@ -268,7 +260,6 @@ export default function WorkspaceShell({
           </div>
         </div>
       </header>
-      <FeedbackPanel />
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>{children}</div>
     </div>
   );

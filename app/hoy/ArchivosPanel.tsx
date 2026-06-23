@@ -66,6 +66,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   const [previewFile, setPreviewFile] = useState<Archivo | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
   const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
 
@@ -113,9 +114,59 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     setCarpetas(c);
     setArchivos(a);
     setLoading(false);
+    generarMiniaturas(a);
   }
 
   useEffect(() => { load(); }, [departamento, pathStack.join("/")]); // eslint-disable-line
+
+  // Las imágenes usan directamente la signed URL como miniatura (el navegador
+  // la escala). Los PDF se renderizan a una imagen pequeña con pdfjs porque
+  // el bucket "documentos" es privado: no existe URL pública servible.
+  async function renderPdfThumbnail(path: string, scale: number): Promise<string | null> {
+    const supabase = createClient();
+    const { data } = await supabase.storage.from(BUCKET).download(path);
+    if (!data) return null;
+    const arrayBuffer = await data.arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const page = await pdf.getPage(1);
+    const canvas = document.createElement("canvas");
+    const viewport = page.getViewport({ scale });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    await page.render({ canvasContext: ctx, viewport } as Parameters<typeof page.render>[0]).promise;
+    return canvas.toDataURL("image/png");
+  }
+
+  async function generarMiniaturas(files: Archivo[]) {
+    const imagenes = files.filter((f) => /\.(jpg|jpeg|png|gif|webp)$/i.test(f.nombre));
+    const pdfs = files.filter((f) => /\.(pdf)$/i.test(f.nombre));
+
+    if (imagenes.length > 0) {
+      const supabase = createClient();
+      const { data } = await supabase.storage.from(BUCKET).createSignedUrls(imagenes.map((f) => f.path), 3600);
+      if (data) {
+        setThumbs((prev) => {
+          const next = { ...prev };
+          data.forEach((d, i) => {
+            if (d.signedUrl) next[imagenes[i].path] = d.signedUrl;
+          });
+          return next;
+        });
+      }
+    }
+
+    for (const f of pdfs) {
+      try {
+        const url = await renderPdfThumbnail(f.path, 0.5);
+        if (url) setThumbs((prev) => ({ ...prev, [f.path]: url }));
+      } catch (err) {
+        console.error("Error al generar miniatura de PDF:", err);
+      }
+    }
+  }
 
   async function crearCarpeta() {
     const nombre = nuevaCarpeta.trim().replace(/[^a-zA-Z0-9\-_ áéíóúÁÉÍÓÚñÑ]/g, "").trim();
@@ -204,33 +255,19 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     setPreviewUrl(null);
     setPreviewLoading(true);
 
-    const supabase = createClient();
     const isImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(archivo.nombre);
     const isPdf = /\.(pdf)$/i.test(archivo.nombre);
 
     try {
       if (isImagen) {
-        // Para imágenes, obtén URL pública directa del archivo
-        const { data } = supabase.storage.from(BUCKET).getPublicUrl(archivo.path);
-        setPreviewUrl(data.publicUrl);
+        // El bucket "documentos" es privado: necesita signed URL, no pública.
+        const supabase = createClient();
+        const { data } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.path, 3600);
+        if (data) setPreviewUrl(data.signedUrl);
       } else if (isPdf) {
-        // Para PDFs, descarga y renderiza la primera página
-        const { data } = await supabase.storage.from(BUCKET).download(archivo.path);
-        if (data) {
-          const arrayBuffer = await data.arrayBuffer();
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-          const page = await pdf.getPage(1);
-          const canvas = document.createElement("canvas");
-          const viewport = page.getViewport({ scale: 1.5 });
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            await page.render({ canvasContext: ctx, viewport } as any).promise;
-            setPreviewUrl(canvas.toDataURL("image/png"));
-          }
-        }
+        // Renderiza a mayor escala que la miniatura para verse bien en el modal.
+        const url = await renderPdfThumbnail(archivo.path, 1.5);
+        setPreviewUrl(url);
       }
     } catch (err) {
       console.error("Error al generar preview:", err);
@@ -338,9 +375,18 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
                           alignItems: "center",
                           justifyContent: "center",
                           cursor: "pointer",
+                          overflow: "hidden",
                         }}
                       >
-                        <span style={{ fontSize: "48px" }}>{fileIcon(f.nombre)}</span>
+                        {thumbs[f.path] ? (
+                          <img
+                            src={thumbs[f.path]}
+                            alt={f.nombre}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: "48px" }}>{fileIcon(f.nombre)}</span>
+                        )}
                       </button>
                     ) : (
                       <span className="arc-file-icon">{fileIcon(f.nombre)}</span>
