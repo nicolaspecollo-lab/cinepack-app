@@ -122,30 +122,34 @@ export default function ComunicadosPanel({
     load();
   }, [load]);
 
+  // Un departamento se considera "acusado" cuando TODOS sus integrantes
+  // confirmaron el acuse EN ese departamento (deDepartamento). Esto permite
+  // que un mismo usuario con varios cargos (Punto 8) o en "Modo de prueba"
+  // acuse de forma independiente por cada departamento en el que actúa.
   function deptStatus(comunicadoId: string) {
     const porDepto: Record<string, string[]> = {};
     for (const m of miembros) {
       porDepto[m.departamento] = porDepto[m.departamento] ?? [];
       porDepto[m.departamento].push(m.user_id);
     }
-    const ackedUserIds = new Set(
-      (acuses[comunicadoId] ?? []).filter((a) => a.acked_at).map((a) => a.user_id)
+    const ackedPairs = new Set(
+      (acuses[comunicadoId] ?? [])
+        .filter((a) => a.acked_at)
+        .map((a) => `${a.user_id}__${a.department_id}`)
     );
 
-    // "Visualizado por": una persona por cada integrante que ya confirmó el acuse.
-    const visualizado = miembros
-      .filter((m) => ackedUserIds.has(m.user_id))
-      .map((m) => ({ user_id: m.user_id, departamento: m.departamento, nombre: m.full_name }));
-
-    // "Pendiente de visualización": un departamento por cada uno que tenga al
-    // menos un integrante sin confirmar.
+    const visualizado: string[] = [];
     const pendiente: string[] = [];
     for (const [depto, userIds] of Object.entries(porDepto)) {
-      const completo = userIds.length > 0 && userIds.every((uid) => ackedUserIds.has(uid));
-      if (!completo) pendiente.push(depto);
+      const completo = userIds.length > 0 && userIds.every((uid) => ackedPairs.has(`${uid}__${depto}`));
+      (completo ? visualizado : pendiente).push(depto);
     }
 
     return { visualizado, pendiente };
+  }
+
+  function miAcuse(c: Comunicado) {
+    return (acuses[c.id] ?? []).find((a) => a.user_id === userId && a.department_id === deDepartamento);
   }
 
   async function handleExpand(c: Comunicado) {
@@ -153,15 +157,13 @@ export default function ComunicadosPanel({
     setExpandedId(opening ? c.id : null);
     if (!opening || !userId) return;
 
-    const existing = (acuses[c.id] ?? []).find((a) => a.user_id === userId);
-    if (existing) return;
+    if (miAcuse(c)) return;
 
     const supabase = createClient();
-    const miDepto = miembros.find((m) => m.user_id === userId)?.departamento ?? "";
     await supabase.from("comunicado_acuse").insert({
       comunicado_id: c.id,
       user_id: userId,
-      department_id: miDepto,
+      department_id: deDepartamento,
       opened_at: new Date().toISOString(),
     });
     await loadAcuses([c.id]);
@@ -170,20 +172,20 @@ export default function ComunicadosPanel({
   async function handleAcuse(c: Comunicado) {
     if (!userId) return;
     const supabase = createClient();
-    const existing = (acuses[c.id] ?? []).find((a) => a.user_id === userId);
-    const miDepto = miembros.find((m) => m.user_id === userId)?.departamento ?? "";
+    const existing = miAcuse(c);
 
     if (existing) {
       await supabase
         .from("comunicado_acuse")
         .update({ acked_at: new Date().toISOString() })
         .eq("comunicado_id", c.id)
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .eq("department_id", deDepartamento);
     } else {
       await supabase.from("comunicado_acuse").insert({
         comunicado_id: c.id,
         user_id: userId,
-        department_id: miDepto,
+        department_id: deDepartamento,
         opened_at: new Date().toISOString(),
         acked_at: new Date().toISOString(),
       });
@@ -247,7 +249,7 @@ export default function ComunicadosPanel({
         {comunicados.map((c) => {
           const expanded = expandedId === c.id;
           const { visualizado, pendiente } = deptStatus(c.id);
-          const yaAcuso = !!(acuses[c.id] ?? []).find((a) => a.user_id === userId && a.acked_at);
+          const yaAcuso = !!miAcuse(c)?.acked_at;
           return (
             <div
               className="com"
@@ -271,13 +273,13 @@ export default function ComunicadosPanel({
                   <div>
                     <span className="afield" style={{ display: "block", marginBottom: "4px" }}>Visualizado por:</span>
                     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {visualizado.length === 0 && <span className="com-text">— nadie hizo el acuse aún</span>}
-                      {visualizado.map((p) => (
+                      {visualizado.length === 0 && <span className="com-text">— ningún departamento completó el acuse aún</span>}
+                      {visualizado.map((d) => (
                         <span
-                          key={p.user_id}
+                          key={d}
                           className="hex"
-                          title={`${p.nombre} (${p.departamento})`}
-                          style={{ background: `var(--${ACCENTS[p.departamento] ?? "lime"})`, width: "18px", height: "15px" }}
+                          title={d}
+                          style={{ background: `var(--${ACCENTS[d] ?? "lime"})`, width: "18px", height: "15px" }}
                         ></span>
                       ))}
                     </div>
