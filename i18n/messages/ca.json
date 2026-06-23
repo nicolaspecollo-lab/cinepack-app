@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "email": "Correu electrònic",
+    "password": "Contrasenya",
+    "signin": "Inicia sessió",
+    "signup": "Registra't",
+    "fullname": "Nom complet",
+    "departamento": "Departament",
+    "register_submit": "Crear compte",
+    "signin_submit": "Entra",
+    "already_have_account": "Ja tens compte?",
+    "dont_have_account": "No tens compte?"
+  },
+  "shell": {
+    "myprojects": "Els meus projectes",
+    "myprofile": "El meu perfil",
+    "logout": "Tancar sessió",
+    "appearance": "Aparença",
+    "language": "Idioma",
+    "light": "Clar",
+    "dark": "Fosc",
+    "preferences": "Preferències",
+    "support": "Suport",
+    "admin_panel": "Panell de control",
+    "feedback": "Envia comentaris"
+  },
+  "herramientas": {
+    "today": "Avui",
+    "general_tools": "Eines generals",
+    "department": "Departament",
+    "exclusive": "Exclusives",
+    "my_role": "el teu càrrec",
+    "empty": "Sense eines"
+  },
+  "consultas": {
+    "title": "Consultes",
+    "all": "Totes",
+    "pending": "Pendents",
+    "resolved": "Resueltes",
+    "new_query": "+ Nova consulta",
+    "to": "Per a",
+    "message": "Missatge",
+    "send": "Enviar consulta",
+    "answer": "💬 Xat",
+    "resolve": "Resoldre",
+    "resolved_by": "Resolta per",
+    "private": "🔒 Consulta privada"
+  },
+  "comunicados": {
+    "title": "Comunicats",
+    "type": "Tipus",
+    "info": "Informació",
+    "suggestion": "Suggerència",
+    "new": "+ Nou comunicat",
+    "publish": "Publicar",
+    "ack": "Acusament de rebuda"
+  }
+}

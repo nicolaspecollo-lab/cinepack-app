@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "signin": "Sign in",
+    "signup": "Sign up",
+    "fullname": "Full name",
+    "departamento": "Department",
+    "register_submit": "Create account",
+    "signin_submit": "Sign in",
+    "already_have_account": "Already have an account?",
+    "dont_have_account": "Don't have an account?"
+  },
+  "shell": {
+    "myprojects": "My projects",
+    "myprofile": "My profile",
+    "logout": "Sign out",
+    "appearance": "Appearance",
+    "language": "Language",
+    "light": "Light",
+    "dark": "Dark",
+    "preferences": "Preferences",
+    "support": "Support",
+    "admin_panel": "Admin panel",
+    "feedback": "Send feedback"
+  },
+  "herramientas": {
+    "today": "Today",
+    "general_tools": "General Tools",
+    "department": "Department",
+    "exclusive": "Exclusive",
+    "my_role": "your role",
+    "empty": "No tools"
+  },
+  "consultas": {
+    "title": "Queries",
+    "all": "All",
+    "pending": "Pending",
+    "resolved": "Resolved",
+    "new_query": "+ New query",
+    "to": "To",
+    "message": "Message",
+    "send": "Send query",
+    "answer": "💬 Chat",
+    "resolve": "Resolve",
+    "resolved_by": "Resolved by",
+    "private": "🔒 Private query"
+  },
+  "comunicados": {
+    "title": "Announcements",
+    "type": "Type",
+    "info": "Information",
+    "suggestion": "Suggestion",
+    "new": "+ New announcement",
+    "publish": "Publish",
+    "ack": "Read receipt"
+  }
+}

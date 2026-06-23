@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "email": "Email",
+    "password": "Contraseña",
+    "signin": "Iniciar sesión",
+    "signup": "Registrarse",
+    "fullname": "Nombre completo",
+    "departamento": "Departamento",
+    "register_submit": "Crear cuenta",
+    "signin_submit": "Entrar",
+    "already_have_account": "¿Ya tenés cuenta?",
+    "dont_have_account": "¿No tenés cuenta?"
+  },
+  "shell": {
+    "myprojects": "Mis proyectos",
+    "myprofile": "Mi perfil",
+    "logout": "Cerrar sesión",
+    "appearance": "Apariencia",
+    "language": "Idioma",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "preferences": "Preferencias",
+    "support": "Soporte",
+    "admin_panel": "Panel de administrador",
+    "feedback": "Feedback"
+  },
+  "herramientas": {
+    "today": "Hoy",
+    "general_tools": "Herramientas Generales",
+    "department": "Departamento",
+    "exclusive": "Exclusivas",
+    "my_role": "tu cargo",
+    "empty": "Sin herramientas"
+  },
+  "consultas": {
+    "title": "Consultas",
+    "all": "Todas",
+    "pending": "Pendientes",
+    "resolved": "Resueltas",
+    "new_query": "+ Nueva consulta",
+    "to": "Para",
+    "message": "Mensaje",
+    "send": "Enviar consulta",
+    "answer": "💬 Chat",
+    "resolve": "Resolver",
+    "resolved_by": "Resuelta por",
+    "private": "🔒 Consulta privada"
+  },
+  "comunicados": {
+    "title": "Comunicados",
+    "type": "Tipo",
+    "info": "Información",
+    "suggestion": "Sugerencia",
+    "new": "+ Nuevo comunicado",
+    "publish": "Publicar comunicado",
+    "ack": "Acuse de recibo"
+  }
+}
