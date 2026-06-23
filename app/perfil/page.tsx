@@ -30,7 +30,8 @@ export default function PerfilPage() {
   const [departamento, setDepartamento] = useState("");
   const [bio, setBio] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [cargo, setCargo] = useState("");
+  const [cargos, setCargos] = useState<string[]>([]);
+  const [cargoNuevo, setCargoNuevo] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,20 +56,28 @@ export default function PerfilPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, departamento, nombre_artistico, avatar_url, bio, telefono, cargo")
+        .select("full_name, departamento, nombre_artistico, avatar_url, bio, telefono")
         .eq("id", user.id)
         .single();
 
       if (profile) {
-        setOriginal(profile);
+        setOriginal({ ...profile, cargo: null });
         setFullName(profile.full_name ?? "");
         setDepartamento(profile.departamento ?? "");
         setNombreArtistico(profile.nombre_artistico ?? "");
         setBio(profile.bio ?? "");
         setTelefono(profile.telefono ?? "");
-        setCargo(profile.cargo ?? "");
         setAvatarUrl(profile.avatar_url ?? null);
       }
+
+      // Cargar cargos del usuario de user_roles
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("cargo")
+        .eq("user_id", user.id)
+        .order("cargo");
+      setCargos((roles ?? []).map((r) => r.cargo));
+
       setLoading(false);
     })();
   }, [router]);
@@ -111,7 +120,6 @@ export default function PerfilPage() {
         nombre_artistico: nombreArtistico || null,
         bio: bio || null,
         telefono: telefono || null,
-        cargo: cargo || null,
         avatar_url: avatarUrl,
       })
       .eq("id", userId);
@@ -127,7 +135,6 @@ export default function PerfilPage() {
       { campo: "Nombre artístico", antes: original.nombre_artistico, ahora: nombreArtistico || null },
       { campo: "Bio", antes: original.bio, ahora: bio || null },
       { campo: "Teléfono", antes: original.telefono, ahora: telefono || null },
-      { campo: "Cargo", antes: original.cargo, ahora: cargo || null },
       { campo: "Foto de perfil", antes: original.avatar_url, ahora: avatarUrl },
     ].filter((c) => (c.antes ?? "") !== (c.ahora ?? ""));
 
@@ -150,7 +157,7 @@ export default function PerfilPage() {
       avatar_url: avatarUrl,
       bio: bio || null,
       telefono: telefono || null,
-      cargo: cargo || null,
+      cargo: null,
     });
 
     setSaving(false);
@@ -284,15 +291,59 @@ export default function PerfilPage() {
               <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
             </label>
 
-            <label className="afield">
-              <span>Cargo</span>
-              <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
-                <option value="">Sin especificar</option>
-                {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </label>
+            <div className="afield afield-span2">
+              <span>Cargos</span>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                {cargos.length === 0 ? (
+                  <span style={{ fontSize: "13px", color: "var(--muted)" }}>Sin cargos asignados</span>
+                ) : (
+                  cargos.map((c) => (
+                    <div key={c} style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--hl3)", padding: "6px 10px", borderRadius: "4px", border: "1px solid var(--line)" }}>
+                      <span>{c}</span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!userId) return;
+                          const supabase = createClient();
+                          await supabase.from("user_roles").delete().eq("user_id", userId).eq("cargo", c);
+                          setCargos((prev) => prev.filter((x) => x !== c));
+                        }}
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--pink)" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div style={{ display: "flex", gap: "6px", alignItems: "flex-end" }}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "600", letterSpacing: "0.06em", textTransform: "uppercase" }}>Agregar cargo</span>
+                  <select value={cargoNuevo} onChange={(e) => setCargoNuevo(e.target.value)} style={{ padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}>
+                    <option value="">Selecciona un cargo…</option>
+                    {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? [])
+                      .filter((c) => !cargos.includes(c))
+                      .map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!userId || !cargoNuevo) return;
+                    const supabase = createClient();
+                    await supabase.from("user_roles").insert({ user_id: userId, cargo: cargoNuevo });
+                    setCargos((prev) => [...prev, cargoNuevo].sort());
+                    setCargoNuevo("");
+                  }}
+                  disabled={!cargoNuevo}
+                  style={{ padding: "10px 12px", background: "var(--lime)", color: "var(--bg)", border: "none", borderRadius: "4px", cursor: cargoNuevo ? "pointer" : "default", opacity: cargoNuevo ? 1 : 0.5 }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
 
             <label className="afield afield-span2">
               <span>Bio (opcional)</span>
