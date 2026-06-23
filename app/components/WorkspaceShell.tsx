@@ -9,6 +9,7 @@ import { DEPARTAMENTOS } from "../constants";
 import { useTheme } from "../useTheme";
 import { setLocale } from "@/i18n/actions";
 import { ACTIVE_LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
+import FeedbackPanel from "../hoy/FeedbackPanel";
 import "../cp-theme.css";
 
 export default function WorkspaceShell({
@@ -161,6 +162,16 @@ export default function WorkspaceShell({
                 <span className="muted">{t("notificationsSub")}</span>
               </button>
 
+              {isAdmin && (
+                <>
+                  <div className="cp-menu-div"></div>
+                  <Link href="/admin" className="cp-menu-item" onClick={() => setOpen(false)}>
+                    <span>Panel de administrador</span>
+                    <span className="muted">Usuarios, proyectos, feedback</span>
+                  </Link>
+                </>
+              )}
+
               {isAdmin && onDeptChange && (
                 <>
                   <div className="cp-menu-div"></div>
@@ -229,6 +240,13 @@ export default function WorkspaceShell({
               )}
 
               <div className="cp-menu-div"></div>
+              <button
+                className="cp-menu-item"
+                onClick={() => { window.dispatchEvent(new Event("cp-feedback-open")); setOpen(false); }}
+              >
+                <span>Enviar feedback</span>
+                <span className="muted">Bug o sugerencia</span>
+              </button>
               <a
                 className="cp-menu-item"
                 href="mailto:info@cinepack.es?subject=Soporte%20CINE%20PACK"
@@ -245,6 +263,7 @@ export default function WorkspaceShell({
           </div>
         </div>
       </header>
+      <FeedbackPanel />
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>{children}</div>
     </div>
   );

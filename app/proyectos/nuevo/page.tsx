@@ -34,6 +34,14 @@ export default function NuevoProyectoPage() {
   const [invites, setInvites] = useState<Invite[] | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
+  // Gate de pago: solo se activa si beta_mode está OFF y el usuario ya tiene
+  // al menos un proyecto (el primer proyecto de cualquiera es siempre gratis).
+  const [betaMode, setBetaMode] = useState<boolean | null>(null);
+  const [proyectosPrevios, setProyectosPrevios] = useState<number | null>(null);
+  const [packElegido, setPackElegido] = useState<string | null>(null);
+  const [personalizadoMsg, setPersonalizadoMsg] = useState("");
+  const [personalizadoEnviado, setPersonalizadoEnviado] = useState(false);
+
   useEffect(() => {
     (async () => {
       const supabase = createClient();
@@ -63,8 +71,19 @@ export default function NuevoProyectoPage() {
         .map((row) => row.proyectos as unknown as Plantilla)
         .filter(Boolean);
       setPlantillas(lista);
+      setProyectosPrevios(lista.length);
+
+      const { data: flag } = await supabase
+        .from("feature_flags")
+        .select("enabled")
+        .eq("key", "beta_mode")
+        .maybeSingle();
+      setBetaMode(flag?.enabled ?? true);
     })();
   }, [router]);
+
+  const requierePago = betaMode === false && (proyectosPrevios ?? 0) > 0;
+  const gateResuelto = !requierePago || packElegido !== null || personalizadoEnviado;
 
   function elegirPlantilla(p: Plantilla) {
     if (plantillaId === p.id) {
@@ -128,6 +147,10 @@ export default function NuevoProyectoPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (requierePago && !gateResuelto) {
+      setMsg({ type: "err", text: "Elegí un pack o solicitá un presupuesto personalizado antes de continuar." });
+      return;
+    }
     if (!nombre.trim()) {
       setMsg({ type: "err", text: "Ponle un nombre al proyecto." });
       return;
@@ -166,9 +189,23 @@ export default function NuevoProyectoPage() {
       return;
     }
 
+    const pagoEstado = !requierePago
+      ? "beta_gratis"
+      : personalizadoEnviado
+      ? "pendiente_personalizado"
+      : "pendiente_pago";
+
     const { data: proyecto, error: errProyecto } = await supabase
       .from("proyectos")
-      .insert({ nombre: nombre.trim(), tipo, departamentos: deptos })
+      .insert({
+        nombre: nombre.trim(),
+        tipo,
+        departamentos: deptos,
+        pago_estado: pagoEstado,
+        pack_tipo: packElegido,
+        pack_config: personalizadoEnviado ? { personalizado: true, mensaje: personalizadoMsg.trim() } : null,
+        creado_por: user.id,
+      })
       .select("id")
       .single();
 
@@ -350,6 +387,87 @@ export default function NuevoProyectoPage() {
           <Link href="/proyectos" className="abtn" style={{ textDecoration: "none", alignSelf: "flex-start" }}>
             Ir a mis proyectos
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (requierePago && !gateResuelto) {
+    const packs = TIPOS_PROYECTO;
+    return (
+      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+        <header className="cp-topbar">
+          <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
+          <span className="cp-proj">Nuevo proyecto</span>
+          <div className="cp-spacer"></div>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
+            <span className="hex"></span> Cancelar
+          </Link>
+        </header>
+
+        <div className="cp-hero">
+          <div className="hexbg"></div>
+          <div className="cp-hero-content">
+            <span className="eyebrow"><span className="hex"></span> Proyecto adicional</span>
+            <h2>Elegí un pack para este nuevo proyecto</h2>
+            <p>
+              Ya tenés {proyectosPrevios} proyecto{proyectosPrevios === 1 ? "" : "s"} activo{proyectosPrevios === 1 ? "" : "s"}.
+              Los proyectos adicionales requieren elegir un pack — los precios completos están en{" "}
+              <a href="https://cinepack.es/packs.html" target="_blank" rel="noreferrer">cinepack.es/packs.html</a>.
+            </p>
+          </div>
+        </div>
+
+        <div className="cp-np-section">
+          <div className="cp-np-block">
+            <span className="label">Tipo de proyecto / pack</span>
+            <div className="chip-group">
+              {packs.map((p) => (
+                <button
+                  type="button"
+                  key={p}
+                  className={`dept-chip ${packElegido === p ? "active" : ""}`}
+                  style={{ "--chip-acc": "var(--cyan)" } as React.CSSProperties}
+                  onClick={() => setPackElegido(p)}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {packElegido && (
+            <div className="cp-np-block">
+              <div className="soon-box">
+                <span className="hex"></span>
+                <h4>Pago pendiente de conectar</h4>
+                <p>
+                  El cobro con tarjeta todavía no está conectado (falta configurar Stripe). Por ahora el proyecto se
+                  crea con estado &quot;pendiente de pago&quot; — el equipo de CINE PACK te va a contactar para coordinarlo.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="cp-np-block">
+            <span className="label">¿Ninguno de estos packs encaja? (ej. podcast, evento, otro formato)</span>
+            <textarea
+              value={personalizadoMsg}
+              onChange={(e) => setPersonalizadoMsg(e.target.value)}
+              rows={3}
+              placeholder="Contanos brevemente qué necesitás y te armamos un presupuesto a medida."
+            />
+            <button
+              type="button"
+              className="btn"
+              disabled={!personalizadoMsg.trim()}
+              onClick={() => setPersonalizadoEnviado(true)}
+              style={{ alignSelf: "flex-start", marginTop: "8px" }}
+            >
+              Solicitar presupuesto personalizado
+            </button>
+          </div>
         </div>
       </div>
     );
