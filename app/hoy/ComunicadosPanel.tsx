@@ -24,7 +24,7 @@ type Acuse = {
   acked_at: string | null;
 };
 
-type MiembroDept = { user_id: string; departamento: string };
+type MiembroDept = { user_id: string; departamento: string; full_name: string };
 
 const TIPO_LABEL: Record<Tipo, string> = {
   info: "Información",
@@ -104,13 +104,13 @@ export default function ComunicadosPanel({
 
     const { data: members } = await supabase
       .from("project_members")
-      .select("user_id, profiles(departamento)")
+      .select("user_id, profiles(departamento, full_name)")
       .eq("project_id", projectId);
     const lista = (members ?? [])
       .map((row) => {
-        const p = row.profiles as unknown as { departamento: string } | null;
+        const p = row.profiles as unknown as { departamento: string; full_name: string } | null;
         if (!p) return null;
-        return { user_id: row.user_id as string, departamento: p.departamento };
+        return { user_id: row.user_id as string, departamento: p.departamento, full_name: p.full_name };
       })
       .filter((m): m is MiembroDept => m !== null);
     setMiembros(lista);
@@ -129,12 +129,20 @@ export default function ComunicadosPanel({
     const ackedUserIds = new Set(
       (acuses[comunicadoId] ?? []).filter((a) => a.acked_at).map((a) => a.user_id)
     );
-    const visualizado: string[] = [];
+
+    // "Visualizado por": una persona por cada integrante que ya confirmó el acuse.
+    const visualizado = miembros
+      .filter((m) => ackedUserIds.has(m.user_id))
+      .map((m) => ({ user_id: m.user_id, departamento: m.departamento, nombre: m.full_name }));
+
+    // "Pendiente de visualización": un departamento por cada uno que tenga al
+    // menos un integrante sin confirmar.
     const pendiente: string[] = [];
     for (const [depto, userIds] of Object.entries(porDepto)) {
       const completo = userIds.length > 0 && userIds.every((uid) => ackedUserIds.has(uid));
-      (completo ? visualizado : pendiente).push(depto);
+      if (!completo) pendiente.push(depto);
     }
+
     return { visualizado, pendiente };
   }
 
@@ -261,9 +269,14 @@ export default function ComunicadosPanel({
                   <div>
                     <span className="afield" style={{ display: "block", marginBottom: "4px" }}>Visualizado por:</span>
                     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {visualizado.length === 0 && <span className="com-text">— nadie completó el acuse aún</span>}
-                      {visualizado.map((d) => (
-                        <span key={d} className="hex" title={d} style={{ background: `var(--${ACCENTS[d] ?? "lime"})`, width: "18px", height: "15px" }}></span>
+                      {visualizado.length === 0 && <span className="com-text">— nadie hizo el acuse aún</span>}
+                      {visualizado.map((p) => (
+                        <span
+                          key={p.user_id}
+                          className="hex"
+                          title={`${p.nombre} (${p.departamento})`}
+                          style={{ background: `var(--${ACCENTS[p.departamento] ?? "lime"})`, width: "18px", height: "15px" }}
+                        ></span>
                       ))}
                     </div>
                   </div>
