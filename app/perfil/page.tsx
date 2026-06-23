@@ -218,7 +218,7 @@ export default function PerfilPage() {
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
-      <div style={{ maxWidth: "640px", margin: "0 auto", padding: "30px 20px 60px", width: "100%" }}>
+      <div style={{ padding: "30px 30px 60px", width: "100%" }}>
         <form onSubmit={handleSave} className="apanel">
           <h3>Datos de perfil</h3>
           <p className="asub">
@@ -226,77 +226,79 @@ export default function PerfilPage() {
             Productor Ejecutivo.
           </p>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "50%",
-                overflow: "hidden",
-                background: "var(--hl3)",
-                border: "1px solid var(--line)",
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Foto de perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <span className="hex" style={{ width: "24px", height: "20px", background: "var(--lime)" }}></span>
-              )}
+          <div className="afields-grid">
+            <div className="afield-span2" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div
+                style={{
+                  width: "72px",
+                  height: "72px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  background: "var(--hl3)",
+                  border: "1px solid var(--line)",
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Foto de perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <span className="hex" style={{ width: "24px", height: "20px", background: "var(--lime)" }}></span>
+                )}
+              </div>
+              <label className="afield" style={{ flex: 1 }}>
+                <span>{uploadingAvatar ? "Subiendo…" : "Cambiar foto de perfil"}</span>
+                <input type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
+              </label>
             </div>
-            <label className="afield" style={{ flex: 1 }}>
-              <span>{uploadingAvatar ? "Subiendo…" : "Cambiar foto de perfil"}</span>
-              <input type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
+
+            <label className="afield">
+              <span>Email</span>
+              <input type="email" value={email} disabled />
+            </label>
+
+            <label className="afield">
+              <span>Departamento</span>
+              <input type="text" value={departamento} disabled />
+            </label>
+
+            <label className="afield">
+              <span>Nombre completo</span>
+              <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+            </label>
+
+            <label className="afield">
+              <span>Nombre artístico (opcional)</span>
+              <input
+                type="text"
+                placeholder="Como querés que te vean en créditos"
+                value={nombreArtistico}
+                onChange={(e) => setNombreArtistico(e.target.value)}
+              />
+            </label>
+
+            <label className="afield">
+              <span>Teléfono (opcional)</span>
+              <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+            </label>
+
+            <label className="afield">
+              <span>Cargo</span>
+              <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
+                <option value="">Sin especificar</option>
+                {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="afield afield-span2">
+              <span>Bio (opcional)</span>
+              <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
             </label>
           </div>
-
-          <label className="afield">
-            <span>Email</span>
-            <input type="email" value={email} disabled />
-          </label>
-
-          <label className="afield">
-            <span>Departamento</span>
-            <input type="text" value={departamento} disabled />
-          </label>
-
-          <label className="afield">
-            <span>Nombre completo</span>
-            <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          </label>
-
-          <label className="afield">
-            <span>Nombre artístico (opcional)</span>
-            <input
-              type="text"
-              placeholder="Como querés que te vean en créditos"
-              value={nombreArtistico}
-              onChange={(e) => setNombreArtistico(e.target.value)}
-            />
-          </label>
-
-          <label className="afield">
-            <span>Teléfono (opcional)</span>
-            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-          </label>
-
-          <label className="afield">
-            <span>Cargo</span>
-            <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
-              <option value="">Sin especificar</option>
-              {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="afield">
-            <span>Bio (opcional)</span>
-            <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
-          </label>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
@@ -309,26 +311,28 @@ export default function PerfilPage() {
 
         <form onSubmit={handlePasswordChange} className="apanel">
           <h3>Cambiar contraseña</h3>
-          <label className="afield">
-            <span>Nueva contraseña</span>
-            <input
-              type="password"
-              placeholder="••••••••"
-              minLength={6}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-          </label>
-          <label className="afield">
-            <span>Confirmar contraseña</span>
-            <input
-              type="password"
-              placeholder="••••••••"
-              minLength={6}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </label>
+          <div className="afields-grid">
+            <label className="afield">
+              <span>Nueva contraseña</span>
+              <input
+                type="password"
+                placeholder="••••••••"
+                minLength={6}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </label>
+            <label className="afield">
+              <span>Confirmar contraseña</span>
+              <input
+                type="password"
+                placeholder="••••••••"
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </label>
+          </div>
 
           {pwdMsg && <p className={`amsg ${pwdMsg.type === "err" ? "err" : "ok"}`}>{pwdMsg.text}</p>}
 

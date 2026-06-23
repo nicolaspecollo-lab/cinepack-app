@@ -222,6 +222,9 @@
 .atab.register.active::after{ background:var(--cyan); }
 
 .apanel{ display:flex; flex-direction:column; gap:14px; }
+.afields-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px 22px; }
+.afields-grid .afield-span2{ grid-column:1 / -1; }
+@media (max-width: 640px){ .afields-grid{ grid-template-columns:1fr; } }
 .apanel h3{ font-size:1.3rem; }
 .apanel .asub{ color:var(--muted); font-size:13px; margin-top:-6px; }
 .afield{ display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; }
