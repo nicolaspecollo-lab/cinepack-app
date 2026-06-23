@@ -69,14 +69,21 @@ export default function ConsultasPanel({
       return;
     }
     const supabase = createClient();
-    const { data } = await supabase
+    let query = supabase
       .from("consultas")
       .select("*")
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false });
+      .eq("project_id", projectId);
+
+    // Un departamento solo ve las consultas en las que participa (emisor o
+    // receptor). El rol Ejecutivo ve todas las consultas del proyecto.
+    if (deDepartamento !== "Ejecutivo") {
+      query = query.or(`de_departamento.eq.${deDepartamento},para_departamentos.cs.{${deDepartamento}}`);
+    }
+
+    const { data } = await query.order("created_at", { ascending: false });
     setConsultas(data ?? []);
     setLoading(false);
-  }, []);
+  }, [deDepartamento]);
 
   useEffect(() => {
     load();
