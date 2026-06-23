@@ -31,7 +31,8 @@ const TIPO_TAG: Record<Herramienta["tipo"], string> = {
   accesos: "Accesos",
 };
 
-const openKey = (dept: string) => `cinepack-open-tool-${dept}`;
+const openKey = (dept: string, seccion: string) => `cinepack-open-tool-${dept}-${seccion}`;
+const openPersonalKey = (dept: string) => `cinepack-open-personal-${dept}`;
 
 export default function HerramientasPanel({
   departamento,
@@ -89,22 +90,48 @@ export default function HerramientasPanel({
 
   function abrir(h: Herramienta) {
     setAbierta(h);
+    localStorage.setItem(openKey(departamento, seccion), h.id);
   }
 
+  function cerrar() {
+    setAbierta(null);
+    setVista("tabla");
+    localStorage.removeItem(openKey(departamento, seccion));
+  }
+
+  function abrirPersonal(pt: PersonalTool) {
+    setAbiertaPersonal(pt);
+    localStorage.setItem(openPersonalKey(departamento), pt.id);
+  }
+
+  function cerrarPersonal() {
+    setAbiertaPersonal(null);
+    localStorage.removeItem(openPersonalKey(departamento));
+  }
+
+  // Restaura la herramienta que estaba abierta en esta pestaña (Departamento/Exclusivas)
+  // al volver a ella, leyendo de localStorage por departamento + seccion.
   useEffect(() => {
-    const id = localStorage.getItem(openKey(departamento));
+    const id = localStorage.getItem(openKey(departamento, seccion));
     if (!id) return;
     const candidatos =
       seccion === "departamento"
         ? deptTools(departamento)
         : cargoGroups(departamento).flatMap((g) => g.tools);
     const h = candidatos.find((t) => t.id === id);
-    if (h) {
-      localStorage.removeItem(openKey(departamento));
-      abrir(h);
-    }
+    if (h) setAbierta(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamento, seccion]);
+
+  // Restaura la herramienta personal abierta (solo aplica en Exclusivas).
+  useEffect(() => {
+    if (seccion !== "cargo" || personalTools.length === 0) return;
+    const id = localStorage.getItem(openPersonalKey(departamento));
+    if (!id) return;
+    const pt = personalTools.find((p) => p.id === id);
+    if (pt) setAbiertaPersonal(pt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departamento, seccion, personalTools]);
 
   // Personal tool abierta
   if (abiertaPersonal) {
@@ -112,7 +139,7 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         <div className="hp-open-head">
-          <button className="btn" onClick={() => setAbiertaPersonal(null)}>← Volver</button>
+          <button className="btn" onClick={cerrarPersonal}>← Volver</button>
           <h3><span className="hex"></span> {abiertaPersonal.titulo}</h3>
           <span className="hp-open-tag">{TIPO_TAG[h.tipo]}</span>
           <button
@@ -123,7 +150,7 @@ export default function HerramientasPanel({
               const supabase = createClient();
               await supabase.from("personal_tools").delete().eq("id", abiertaPersonal.id);
               setPersonalTools((prev) => prev.filter((p) => p.id !== abiertaPersonal.id));
-              setAbiertaPersonal(null);
+              cerrarPersonal();
             }}
           >
             🗑 Eliminar
@@ -139,7 +166,7 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         <div className="hp-open-head">
-          <button className="btn" onClick={() => { setAbierta(null); setVista("tabla"); }}>← Volver</button>
+          <button className="btn" onClick={cerrar}>← Volver</button>
           <h3><span className="hex"></span> {abierta.nombre}</h3>
           <span className="hp-open-tag">{TIPO_TAG[abierta.tipo]}</span>
         </div>
@@ -210,7 +237,7 @@ export default function HerramientasPanel({
           </span>
           <div className="hp-cards">
             {personalTools.map((pt) => (
-              <button key={pt.id} className="hcard hcard-personal" onClick={() => setAbiertaPersonal(pt)}>
+              <button key={pt.id} className="hcard hcard-personal" onClick={() => abrirPersonal(pt)}>
                 <div className="hcard-accent" />
                 <div className="hcard-title">{pt.titulo}</div>
                 <div className="hcard-meta">
