@@ -240,6 +240,7 @@ export default function WorkspaceShell({
               )}
 
               <div className="cp-menu-div"></div>
+              <div className="cp-menu-section">Contacta con nosotros</div>
               <button
                 className="cp-menu-item"
                 onClick={() => { window.dispatchEvent(new Event("cp-feedback-open")); setOpen(false); }}
@@ -247,6 +248,10 @@ export default function WorkspaceShell({
                 <span>Enviar feedback</span>
                 <span className="muted">Bug o sugerencia</span>
               </button>
+              <Link className="cp-menu-item" href="/sugerencias" onClick={() => setOpen(false)}>
+                <span>Sugiérenos</span>
+                <span className="muted">Cuéntanos tu experiencia</span>
+              </Link>
               <a
                 className="cp-menu-item"
                 href="mailto:info@cinepack.es?subject=Soporte%20CINE%20PACK"
