@@ -7,11 +7,11 @@ import AdminShell from "../AdminShell";
 
 type Fila = {
   id: string;
-  mensaje: string;
-  pagina: string | null;
-  estado: "abierto" | "resuelto";
+  content: string;
+  resuelto: boolean;
   created_at: string;
   user_id: string | null;
+  profiles: { full_name: string | null } | null;
 };
 
 export default function AdminFeedback() {
@@ -22,11 +22,14 @@ export default function AdminFeedback() {
 
   async function load() {
     const supabase = createClient();
-    let query = supabase.from("feedback_beta").select("*").order("created_at", { ascending: false });
-    if (filtro === "abierto") query = query.eq("estado", "abierto");
+    let query = supabase
+      .from("sugerencias")
+      .select("id, content, resuelto, created_at, user_id, profiles(full_name)")
+      .order("created_at", { ascending: false });
+    if (filtro === "abierto") query = query.eq("resuelto", false);
     const { data, error } = await query;
     if (error) throw error;
-    setFilas(data ?? []);
+    setFilas((data ?? []) as unknown as Fila[]);
   }
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export default function AdminFeedback() {
 
   async function resolver(id: string) {
     const supabase = createClient();
-    await supabase.from("feedback_beta").update({ estado: "resuelto" }).eq("id", id);
+    await supabase.from("sugerencias").update({ resuelto: true }).eq("id", id);
     load().catch((e) => setErr(e.message));
   }
 
@@ -47,9 +50,9 @@ export default function AdminFeedback() {
       {err && <div className="cp-admin-err">{err}</div>}
       <div className="cp-admin-section">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-          <h3 style={{ margin: 0 }}>Feedback de testers</h3>
+          <h3 style={{ margin: 0 }}>Sugerencias / feedback de usuarios</h3>
           <div className="cons-filters" style={{ padding: 0 }}>
-            <button className={`cfilter ${filtro === "abierto" ? "active" : ""}`} onClick={() => setFiltro("abierto")}>Abiertos</button>
+            <button className={`cfilter ${filtro === "abierto" ? "active" : ""}`} onClick={() => setFiltro("abierto")}>Pendientes</button>
             <button className={`cfilter ${filtro === "todos" ? "active" : ""}`} onClick={() => setFiltro("todos")}>Todos</button>
           </div>
         </div>
@@ -59,12 +62,12 @@ export default function AdminFeedback() {
           <div key={f.id} className="cons" style={{ marginBottom: "10px" }}>
             <div className="cons-top">
               <div>
-                <span className="cons-meta">{f.pagina ?? "página no especificada"} · {new Date(f.created_at).toLocaleString("es-ES")}</span>
+                <span className="cons-meta">{f.profiles?.full_name ?? "Usuario"} · {new Date(f.created_at).toLocaleString("es-ES")}</span>
               </div>
-              <span className={`cp-admin-badge ${f.estado === "abierto" ? "warn" : "ok"}`}>{f.estado}</span>
+              <span className={`cp-admin-badge ${!f.resuelto ? "warn" : "ok"}`}>{f.resuelto ? "resuelto" : "pendiente"}</span>
             </div>
-            <div className="cons-text">{f.mensaje}</div>
-            {f.estado === "abierto" && (
+            <div className="cons-text">{f.content}</div>
+            {!f.resuelto && (
               <div className="cons-actions">
                 <button className="btn acc" onClick={() => resolver(f.id)}>Marcar como resuelto</button>
               </div>
