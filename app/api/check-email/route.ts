@@ -14,6 +14,10 @@ export async function GET(req: Request) {
 
   try {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ status: "error" }, { status: 401 });
+    }
     // Busca en profiles usando la join con auth.users via RPC o tabla directa
     // profiles tiene id = auth.users.id, y el email está en auth.users
     // Usamos listUsers del admin si está disponible, sino buscamos en invitaciones

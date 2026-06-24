@@ -143,6 +143,26 @@ export default function AdminUsuarios() {
     }
   }
 
+  async function resetearPassword(u: Usuario) {
+    if (!u.email) return;
+    setBusy(u.id);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${u.id}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: u.email }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      await navigator.clipboard.writeText(json.link);
+      alert(`Link de reseteo copiado al portapapeles. Enviáselo a ${u.email}:\n\n${json.link}`);
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (checking) return null;
 
   const filtrados = usuarios?.filter((u) =>
@@ -219,6 +239,7 @@ export default function AdminUsuarios() {
                   <td>
                     <div className="cons-actions" style={{ marginTop: 0 }}>
                       <button className="btn" disabled={busy === u.id} onClick={() => impersonar(u)}>Suplantar</button>
+                      <button className="btn" disabled={busy === u.id} onClick={() => resetearPassword(u)}>Resetear contraseña</button>
                       <button className="btn" disabled={busy === u.id} onClick={() => toggleBan(u)}>
                         {u.banned ? "Reactivar" : "Suspender"}
                       </button>
