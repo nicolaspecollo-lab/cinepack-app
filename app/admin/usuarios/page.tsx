@@ -143,6 +143,26 @@ export default function AdminUsuarios() {
     }
   }
 
+  async function cambiarRol(u: Usuario, app_role: string) {
+    if (app_role === u.app_role) return;
+    if (!confirm(`Cambiar el rol de ${u.full_name ?? u.email} a "${APP_ROLE_LABEL[app_role] ?? app_role}"?`)) return;
+    setBusy(u.id);
+    try {
+      const res = await fetch(`/api/admin/usuarios/${u.id}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ app_role }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      await load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function resetearPassword(u: Usuario) {
     if (!u.email) return;
     setBusy(u.id);
@@ -208,7 +228,18 @@ export default function AdminUsuarios() {
                   <td>{u.full_name ?? "—"}</td>
                   <td>{u.email}</td>
                   <td>{u.departamento ?? "—"}</td>
-                  <td>{APP_ROLE_LABEL[u.app_role] ?? u.app_role}</td>
+                  <td>
+                    <select
+                      value={u.app_role}
+                      disabled={busy === u.id}
+                      onChange={(e) => cambiarRol(u, e.target.value)}
+                      style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "6px 8px", fontSize: "12px" }}
+                    >
+                      {Object.entries(APP_ROLE_LABEL).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </td>
                   <td>
                     {u.beta_project_nombre ? (
                       <div className="cons-actions" style={{ marginTop: 0 }}>
