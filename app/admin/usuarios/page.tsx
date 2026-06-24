@@ -30,6 +30,8 @@ export default function AdminUsuarios() {
   const { checking, isAdmin } = useAdminGuard();
   const [usuarios, setUsuarios] = useState<Usuario[] | null>(null);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [miembrosPorProyecto, setMiembrosPorProyecto] = useState<Record<string, Set<string>>>({});
+  const [filtroProyecto, setFiltroProyecto] = useState("");
   const [seleccion, setSeleccion] = useState<Record<string, string>>({});
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -49,6 +51,13 @@ export default function AdminUsuarios() {
       const supabase = createClient();
       const { data } = await supabase.from("proyectos").select("id, nombre").order("nombre");
       setProyectos(data ?? []);
+      const { data: miembros } = await supabase.from("project_members").select("project_id, user_id");
+      const mapa: Record<string, Set<string>> = {};
+      (miembros ?? []).forEach((m) => {
+        if (!mapa[m.project_id]) mapa[m.project_id] = new Set();
+        mapa[m.project_id].add(m.user_id);
+      });
+      setMiembrosPorProyecto(mapa);
     })();
   }, [isAdmin]);
 
@@ -185,9 +194,12 @@ export default function AdminUsuarios() {
 
   if (checking) return null;
 
-  const filtrados = usuarios?.filter((u) =>
-    !q.trim() || (u.email ?? "").toLowerCase().includes(q.toLowerCase()) || (u.full_name ?? "").toLowerCase().includes(q.toLowerCase())
-  );
+  const filtrados = usuarios?.filter((u) => {
+    const coincideTexto =
+      !q.trim() || (u.email ?? "").toLowerCase().includes(q.toLowerCase()) || (u.full_name ?? "").toLowerCase().includes(q.toLowerCase());
+    const coincideProyecto = !filtroProyecto || miembrosPorProyecto[filtroProyecto]?.has(u.id);
+    return coincideTexto && coincideProyecto;
+  });
 
   return (
     <AdminShell>
@@ -195,13 +207,25 @@ export default function AdminUsuarios() {
       <div className="cp-admin-section">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "14px", flexWrap: "wrap" }}>
           <h3 style={{ margin: 0 }}>Usuarios ({filtrados?.length ?? 0})</h3>
-          <input
-            type="text"
-            placeholder="Buscar por nombre o email…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px", minWidth: "220px" }}
-          />
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <select
+              value={filtroProyecto}
+              onChange={(e) => setFiltroProyecto(e.target.value)}
+              style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }}
+            >
+              <option value="">Todos los proyectos</option>
+              {proyectos.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Buscar por nombre o email…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px", minWidth: "220px" }}
+            />
+          </div>
         </div>
 
         {usuarios === null && !err && <div className="cp-admin-empty">Cargando…</div>}
