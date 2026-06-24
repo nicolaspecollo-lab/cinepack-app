@@ -7,6 +7,8 @@ import AdminShell from "./AdminShell";
 import BarChart from "./charts/BarChart";
 import DonutChart from "./charts/DonutChart";
 import LineChart from "./charts/LineChart";
+import HorasUsoCard from "./charts/HorasUsoCard";
+import RegionUsoCard from "./charts/RegionUsoCard";
 
 type Stats = {
   proyectos: number;
@@ -56,7 +58,7 @@ export default function AdminDashboard() {
         await Promise.all([
           supabase.from("proyectos").select("*", { count: "exact", head: true }),
           supabase.from("project_members").select("*", { count: "exact", head: true }),
-          supabase.from("feedback_beta").select("*", { count: "exact", head: true }).eq("estado", "abierto"),
+          supabase.from("sugerencias").select("*", { count: "exact", head: true }).eq("resuelto", false),
           supabase.from("feature_flags").select("enabled").eq("key", "beta_mode").maybeSingle(),
         ]);
       setStats({
@@ -173,6 +175,7 @@ export default function AdminDashboard() {
           <h4><span className="hex"></span>Actividad últimos 14 días (filas de herramientas + consultas)</h4>
           {actividadDiaria ? <LineChart data={actividadDiaria} color="var(--lime)" /> : <div className="cp-admin-empty">Cargando…</div>}
         </div>
+        <HorasUsoCard />
         <div className="cp-chart-card">
           <h4><span className="hex"></span>Proyectos por tipo</h4>
           {porTipo ? <BarChart data={porTipo} color="var(--cyan)" /> : <div className="cp-admin-empty">Cargando…</div>}
@@ -187,6 +190,7 @@ export default function AdminDashboard() {
           {horasPico?.length === 0 && <div className="cp-admin-empty">Sin datos suficientes aún.</div>}
           {horasPico && horasPico.length > 0 && <BarChart data={horasPico} color="var(--cyan)" />}
         </div>
+        <RegionUsoCard />
       </div>
 
       <div className="cp-admin-section">
