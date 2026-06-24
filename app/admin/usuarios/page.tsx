@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
 
@@ -12,11 +13,24 @@ type Usuario = {
   banned: boolean;
   full_name: string | null;
   departamento: string | null;
+  app_role: string;
+  beta_project_id: string | null;
+  beta_project_nombre: string | null;
+};
+
+type Proyecto = { id: string; nombre: string };
+
+const APP_ROLE_LABEL: Record<string, string> = {
+  super_admin: "Super admin",
+  support: "Soporte",
+  executive_producer: "Productor ejecutivo",
 };
 
 export default function AdminUsuarios() {
   const { checking, isAdmin } = useAdminGuard();
   const [usuarios, setUsuarios] = useState<Usuario[] | null>(null);
+  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [seleccion, setSeleccion] = useState<Record<string, string>>({});
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -31,7 +45,51 @@ export default function AdminUsuarios() {
   useEffect(() => {
     if (!isAdmin) return;
     load().catch((e) => setErr(e.message));
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase.from("proyectos").select("id, nombre").order("nombre");
+      setProyectos(data ?? []);
+    })();
   }, [isAdmin]);
+
+  async function habilitarBeta(u: Usuario) {
+    const project_id = seleccion[u.id];
+    if (!project_id) return;
+    setBusy(u.id);
+    try {
+      const res = await fetch("/api/admin/beta-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: u.id, project_id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      await load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function revocarBeta(u: Usuario) {
+    if (!u.beta_project_id) return;
+    setBusy(u.id);
+    try {
+      const res = await fetch("/api/admin/beta-access", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: u.id, project_id: u.beta_project_id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+      await load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function toggleBan(u: Usuario) {
     setBusy(u.id);
@@ -116,6 +174,8 @@ export default function AdminUsuarios() {
                 <th>Nombre</th>
                 <th>Email</th>
                 <th>Departamento</th>
+                <th>Rol</th>
+                <th>Proyecto beta</th>
                 <th>Alta</th>
                 <th>Último acceso</th>
                 <th>Estado</th>
@@ -128,6 +188,31 @@ export default function AdminUsuarios() {
                   <td>{u.full_name ?? "—"}</td>
                   <td>{u.email}</td>
                   <td>{u.departamento ?? "—"}</td>
+                  <td>{APP_ROLE_LABEL[u.app_role] ?? u.app_role}</td>
+                  <td>
+                    {u.beta_project_nombre ? (
+                      <div className="cons-actions" style={{ marginTop: 0 }}>
+                        <span>{u.beta_project_nombre}</span>
+                        <button className="btn" disabled={busy === u.id} onClick={() => revocarBeta(u)}>Revocar</button>
+                      </div>
+                    ) : (
+                      <div className="cons-actions" style={{ marginTop: 0 }}>
+                        <select
+                          value={seleccion[u.id] ?? ""}
+                          onChange={(e) => setSeleccion((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                          style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "6px 8px", fontSize: "12px" }}
+                        >
+                          <option value="">Elegir proyecto…</option>
+                          {proyectos.map((p) => (
+                            <option key={p.id} value={p.id}>{p.nombre}</option>
+                          ))}
+                        </select>
+                        <button className="btn" disabled={busy === u.id || !seleccion[u.id]} onClick={() => habilitarBeta(u)}>
+                          Habilitar beta
+                        </button>
+                      </div>
+                    )}
+                  </td>
                   <td>{new Date(u.created_at).toLocaleDateString("es-ES")}</td>
                   <td>{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString("es-ES") : "Nunca"}</td>
                   <td><span className={`cp-admin-badge ${u.banned ? "pend" : "ok"}`}>{u.banned ? "suspendido" : "activo"}</span></td>

@@ -215,6 +215,13 @@ export default function NuevoProyectoPage() {
       return;
     }
 
+    await supabase.from("audit_logs").insert({
+      user_id: user.id,
+      project_id: proyecto.id,
+      action: "project_created",
+      metadata: { nombre: nombre.trim(), tipo },
+    });
+
     await supabase
       .from("project_members")
       .upsert({ project_id: proyecto.id, user_id: user.id, rol: "Ejecutivo" });

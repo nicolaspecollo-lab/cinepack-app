@@ -28,6 +28,23 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const [{ data: perfiles }, { data: betaAccess }] = await Promise.all([
+    adminClient.from("profiles").select("id, app_role"),
+    adminClient
+      .from("beta_access")
+      .select("user_id, project_id, proyectos(nombre)")
+      .eq("status", "active"),
+  ]);
+
+  const appRolePorId: Record<string, string> = {};
+  (perfiles ?? []).forEach((p) => (appRolePorId[p.id] = p.app_role));
+
+  const betaPorId: Record<string, { project_id: string; proyecto_nombre: string | null }> = {};
+  (betaAccess ?? []).forEach((b) => {
+    const proyecto = b.proyectos as unknown as { nombre: string } | null;
+    betaPorId[b.user_id] = { project_id: b.project_id, proyecto_nombre: proyecto?.nombre ?? null };
+  });
+
   const usuarios = data.users.map((u) => ({
     id: u.id,
     email: u.email,
@@ -36,6 +53,9 @@ export async function GET() {
     banned: !!u.banned_until && new Date(u.banned_until) > new Date(),
     full_name: (u.user_metadata as Record<string, unknown>)?.full_name ?? null,
     departamento: (u.user_metadata as Record<string, unknown>)?.departamento ?? null,
+    app_role: appRolePorId[u.id] ?? "executive_producer",
+    beta_project_id: betaPorId[u.id]?.project_id ?? null,
+    beta_project_nombre: betaPorId[u.id]?.proyecto_nombre ?? null,
   }));
 
   return NextResponse.json({ usuarios });

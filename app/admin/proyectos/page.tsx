@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -26,30 +27,55 @@ function badgeClass(estado: string) {
 
 export default function AdminProyectos() {
   const { checking, isAdmin } = useAdminGuard();
+  const router = useRouter();
   const [filas, setFilas] = useState<Fila[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function load() {
+    const supabase = createClient();
+    const { data: proyectos, error } = await supabase
+      .from("proyectos")
+      .select("id, nombre, tipo, departamentos, pago_estado, pack_tipo, pack_config, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    const { data: membresias } = await supabase.from("project_members").select("project_id");
+    const conteo: Record<string, number> = {};
+    (membresias ?? []).forEach((m) => {
+      conteo[m.project_id] = (conteo[m.project_id] ?? 0) + 1;
+    });
+
+    setFilas(
+      (proyectos ?? []).map((p) => ({ ...p, miembros: conteo[p.id] ?? 0 }))
+    );
+  }
 
   useEffect(() => {
     if (!isAdmin) return;
-    (async () => {
-      const supabase = createClient();
-      const { data: proyectos, error } = await supabase
-        .from("proyectos")
-        .select("id, nombre, tipo, departamentos, pago_estado, pack_tipo, pack_config, created_at")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-
-      const { data: membresias } = await supabase.from("project_members").select("project_id");
-      const conteo: Record<string, number> = {};
-      (membresias ?? []).forEach((m) => {
-        conteo[m.project_id] = (conteo[m.project_id] ?? 0) + 1;
-      });
-
-      setFilas(
-        (proyectos ?? []).map((p) => ({ ...p, miembros: conteo[p.id] ?? 0 }))
-      );
-    })().catch((e) => setErr(e.message));
+    load().catch((e) => setErr(e.message));
   }, [isAdmin]);
+
+  async function toggleBeta(p: Fila) {
+    setBusy(p.id);
+    try {
+      const supabase = createClient();
+      const nuevoEstado = p.pago_estado === "beta_gratis" ? "pendiente_pago" : "beta_gratis";
+      const { error } = await supabase.from("proyectos").update({ pago_estado: nuevoEstado }).eq("id", p.id);
+      if (error) throw error;
+      await load();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function verComoSoporte(p: Fila) {
+    localStorage.setItem("cinepack-proyecto", p.nombre);
+    localStorage.setItem("cinepack-proyecto-id", p.id);
+    router.push("/hoy");
+  }
 
   if (checking) return null;
 
@@ -71,6 +97,7 @@ export default function AdminProyectos() {
                 <th>Estado de pago</th>
                 <th>Pack / Nota</th>
                 <th>Creado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -83,6 +110,16 @@ export default function AdminProyectos() {
                   <td><span className={`cp-admin-badge ${badgeClass(p.pago_estado)}`}>{p.pago_estado.replace("_", " ")}</span></td>
                   <td>{p.pack_config?.mensaje ? p.pack_config.mensaje : (p.pack_tipo ?? "—")}</td>
                   <td>{new Date(p.created_at).toLocaleDateString("es-ES")}</td>
+                  <td>
+                    <div className="cons-actions" style={{ marginTop: 0 }}>
+                      <button className="btn" disabled={busy === p.id} onClick={() => toggleBeta(p)}>
+                        {p.pago_estado === "beta_gratis" ? "Desactivar beta" : "Activar beta"}
+                      </button>
+                      <button className="btn" disabled={busy === p.id} onClick={() => verComoSoporte(p)}>
+                        Ver como soporte
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
