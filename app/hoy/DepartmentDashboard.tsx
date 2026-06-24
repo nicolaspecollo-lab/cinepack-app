@@ -175,7 +175,7 @@ export default function DepartmentDashboard({
       { id: "tab-archivos", label: "Archivos", group: "Sección", onSelect: () => setTab("archivos") },
     ];
     if (nombre === "Ejecutivo") {
-      items.push({ id: "tab-admin", label: "Admin", group: "Sección", onSelect: () => setTab("admin") });
+      items.push({ id: "tab-control", label: "Control", group: "Sección", onSelect: () => setTab("admin") });
     }
     for (const h of deptTools(nombre)) {
       items.push({ id: `dept-${h.id}`, label: h.nombre, hint: h.hint, group: "Departamento", onSelect: () => setTab("departamento") });
@@ -304,7 +304,7 @@ export default function DepartmentDashboard({
           <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
           <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
           {nombre === "Ejecutivo" && (
-            <button className={`wtab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>Admin</button>
+            <button className={`wtab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>Control</button>
           )}
           <div style={{ flex: 1 }} />
           <div id="cp-header-back" />
