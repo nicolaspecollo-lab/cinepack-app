@@ -17,6 +17,8 @@ type Profile = {
   bio: string | null;
   telefono: string | null;
   cargo: string | null;
+  lugar_residencia: string | null;
+  lugar_produccion: string | null;
 };
 
 export default function PerfilPage() {
@@ -30,6 +32,8 @@ export default function PerfilPage() {
   const [departamento, setDepartamento] = useState("");
   const [bio, setBio] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [lugarResidencia, setLugarResidencia] = useState("");
+  const [lugarProduccion, setLugarProduccion] = useState("");
   const [cargos, setCargos] = useState<string[]>([]);
   const [cargoNuevo, setCargoNuevo] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -56,7 +60,7 @@ export default function PerfilPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, departamento, nombre_artistico, avatar_url, bio, telefono")
+        .select("full_name, departamento, nombre_artistico, avatar_url, bio, telefono, lugar_residencia, lugar_produccion")
         .eq("id", user.id)
         .single();
 
@@ -68,6 +72,8 @@ export default function PerfilPage() {
         setBio(profile.bio ?? "");
         setTelefono(profile.telefono ?? "");
         setAvatarUrl(profile.avatar_url ?? null);
+        setLugarResidencia(profile.lugar_residencia ?? "");
+        setLugarProduccion(profile.lugar_produccion ?? "");
       }
 
       // Cargar cargos del usuario de user_roles
@@ -107,6 +113,10 @@ export default function PerfilPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!userId || !original) return;
+    if (!lugarResidencia.trim() || !lugarProduccion.trim()) {
+      setMsg({ type: "err", text: "Completá lugar de residencia y lugar de producción." });
+      return;
+    }
 
     setSaving(true);
     setMsg(null);
@@ -121,6 +131,8 @@ export default function PerfilPage() {
         bio: bio || null,
         telefono: telefono || null,
         avatar_url: avatarUrl,
+        lugar_residencia: lugarResidencia.trim(),
+        lugar_produccion: lugarProduccion.trim(),
       })
       .eq("id", userId);
 
@@ -136,6 +148,8 @@ export default function PerfilPage() {
       { campo: "Bio", antes: original.bio, ahora: bio || null },
       { campo: "Teléfono", antes: original.telefono, ahora: telefono || null },
       { campo: "Foto de perfil", antes: original.avatar_url, ahora: avatarUrl },
+      { campo: "Lugar de residencia", antes: original.lugar_residencia, ahora: lugarResidencia.trim() },
+      { campo: "Lugar de producción", antes: original.lugar_produccion, ahora: lugarProduccion.trim() },
     ].filter((c) => (c.antes ?? "") !== (c.ahora ?? ""));
 
     if (cambios.length > 0) {
@@ -158,6 +172,8 @@ export default function PerfilPage() {
       bio: bio || null,
       telefono: telefono || null,
       cargo: null,
+      lugar_residencia: lugarResidencia.trim(),
+      lugar_produccion: lugarProduccion.trim(),
     });
 
     setSaving(false);
@@ -289,6 +305,28 @@ export default function PerfilPage() {
             <label className="afield">
               <span>Teléfono (opcional)</span>
               <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+            </label>
+
+            <label className="afield">
+              <span>Lugar de residencia</span>
+              <input
+                type="text"
+                required
+                placeholder="Ciudad, país"
+                value={lugarResidencia}
+                onChange={(e) => setLugarResidencia(e.target.value)}
+              />
+            </label>
+
+            <label className="afield">
+              <span>Lugar de producción</span>
+              <input
+                type="text"
+                required
+                placeholder="Dónde se está produciendo este proyecto"
+                value={lugarProduccion}
+                onChange={(e) => setLugarProduccion(e.target.value)}
+              />
             </label>
 
             <div className="afield afield-span2">
