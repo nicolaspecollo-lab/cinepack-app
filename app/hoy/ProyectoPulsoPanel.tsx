@@ -75,6 +75,7 @@ export default function ProyectoPulsoPanel() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [esEjecutivo, setEsEjecutivo] = useState(false);
   const [contratosVencen, setContratosVencen] = useState<ContratoVence[]>([]);
+  const [creditos, setCreditos] = useState<{ nombre: string; escrito_por: string[]; dirigido_por: string[]; producido_por: string[] } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -85,6 +86,20 @@ export default function ProyectoPulsoPanel() {
       }
       setProjectId(projectId);
       const supabase = createClient();
+
+      const { data: proyectoCreditos } = await supabase
+        .from("proyectos")
+        .select("nombre, escrito_por, dirigido_por, producido_por")
+        .eq("id", projectId)
+        .single();
+      if (proyectoCreditos) {
+        setCreditos({
+          nombre: proyectoCreditos.nombre,
+          escrito_por: (proyectoCreditos.escrito_por as string[]) ?? [],
+          dirigido_por: (proyectoCreditos.dirigido_por as string[]) ?? [],
+          producido_por: (proyectoCreditos.producido_por as string[]) ?? [],
+        });
+      }
 
       const [{ data: tareasData }, { data: alertasData }, { data: filasData }] =
         await Promise.all([
@@ -261,6 +276,23 @@ export default function ProyectoPulsoPanel() {
 
       {vista === "resumen" && (
       <>
+
+      {creditos && (creditos.escrito_por.length > 0 || creditos.dirigido_por.length > 0 || creditos.producido_por.length > 0) && (
+        <div className="tcard pulso-card cp-creditos-card">
+          <h4><span className="hex"></span>{creditos.nombre}</h4>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
+            {creditos.dirigido_por.length > 0 && (
+              <li><span style={{ color: "var(--muted)" }}>Dirigido por</span> {creditos.dirigido_por.join(", ")}</li>
+            )}
+            {creditos.escrito_por.length > 0 && (
+              <li><span style={{ color: "var(--muted)" }}>Escrito por</span> {creditos.escrito_por.join(", ")}</li>
+            )}
+            {creditos.producido_por.length > 0 && (
+              <li><span style={{ color: "var(--muted)" }}>Producido por</span> {creditos.producido_por.join(", ")}</li>
+            )}
+          </ul>
+        </div>
+      )}
 
       {esEjecutivo && (
         <div className="tcard pulso-card cp-ej-briefing">

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS, ACCENTS, JERARQUIA_POR_DEPARTAMENTO, TIPOS_PROYECTO } from "../../constants";
 import { useTheme } from "../../useTheme";
 import ThemeToggle from "../../components/ThemeToggle";
+import CreditosChips from "../../components/CreditosChips";
 import "../../cp-theme.css";
 
 const CARGO_CUSTOM = "__custom__";
@@ -23,6 +24,9 @@ export default function NuevoProyectoPage() {
 
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState("");
+  const [escritoPor, setEscritoPor] = useState<string[]>([]);
+  const [dirigidoPor, setDirigidoPor] = useState<string[]>([]);
+  const [producidoPor, setProducidoPor] = useState<string[]>([]);
   const [deptos, setDeptos] = useState<string[]>([]);
   const [deptoCustomInput, setDeptoCustomInput] = useState("");
   const [personas, setPersonas] = useState<Record<string, Persona[]>>({});
@@ -205,6 +209,9 @@ export default function NuevoProyectoPage() {
         pack_tipo: packElegido,
         pack_config: personalizadoEnviado ? { personalizado: true, mensaje: personalizadoMsg.trim() } : null,
         creado_por: user.id,
+        escrito_por: escritoPor,
+        dirigido_por: dirigidoPor,
+        producido_por: producidoPor,
       })
       .select("id")
       .single();
@@ -548,6 +555,10 @@ export default function NuevoProyectoPage() {
             <span className="cp-select-arrow"></span>
           </div>
         </div>
+
+        <CreditosChips label="Escrito por (opcional)" placeholder="Nombre del guionista" valores={escritoPor} onChange={setEscritoPor} />
+        <CreditosChips label="Dirigido por (opcional)" placeholder="Nombre del director/a" valores={dirigidoPor} onChange={setDirigidoPor} />
+        <CreditosChips label="Producido por (opcional)" placeholder="Nombre de la productora" valores={producidoPor} onChange={setProducidoPor} />
 
         <div className="cp-np-block">
           <span className="label">Departamentos involucrados</span>

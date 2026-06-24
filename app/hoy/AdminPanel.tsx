@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
+import { DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { CICLO_SELECT, ETAPAS, fechasCicloDesdeFila, type FechasCiclo } from "./cicloVida";
+import CreditosChips from "../components/CreditosChips";
 
 type Cambio = {
   user_nombre: string;
@@ -36,6 +37,25 @@ export default function AdminPanel() {
   const [asignando, setAsignando] = useState(false);
   const [asignarMsg, setAsignarMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
+  const [departamentosProyecto, setDepartamentosProyecto] = useState<string[]>([]);
+  const [deptoNuevoInput, setDeptoNuevoInput] = useState("");
+  const [agregandoDepto, setAgregandoDepto] = useState(false);
+
+  const [escritoPor, setEscritoPor] = useState<string[]>([]);
+  const [dirigidoPor, setDirigidoPor] = useState<string[]>([]);
+  const [producidoPor, setProducidoPor] = useState<string[]>([]);
+  const [savingCreditos, setSavingCreditos] = useState(false);
+  const [creditosMsg, setCreditosMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const [inviteNombre, setInviteNombre] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteDepto, setInviteDepto] = useState("");
+  const [inviteCargo, setInviteCargo] = useState("");
+  const [invitando, setInvitando] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [linkCopiado, setLinkCopiado] = useState(false);
+
   function timeAgo(iso: string) {
     const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
     if (mins < 1) return "ahora";
@@ -62,6 +82,18 @@ export default function AdminPanel() {
       .single();
     if (proyecto) {
       setFechasCiclo(fechasCicloDesdeFila(proyecto));
+    }
+
+    const { data: proyectoExtra } = await supabase
+      .from("proyectos")
+      .select("departamentos, escrito_por, dirigido_por, producido_por")
+      .eq("id", projectId)
+      .single();
+    if (proyectoExtra) {
+      setDepartamentosProyecto(proyectoExtra.departamentos ?? []);
+      setEscritoPor((proyectoExtra.escrito_por as string[]) ?? []);
+      setDirigidoPor((proyectoExtra.dirigido_por as string[]) ?? []);
+      setProducidoPor((proyectoExtra.producido_por as string[]) ?? []);
     }
 
     const { data: members } = await supabase
@@ -143,6 +175,78 @@ export default function AdminPanel() {
     setAsignarMsg({ type: "ok", text: "Cargo asignado correctamente." });
     setAsignarCargo("");
     await load();
+  }
+
+  async function guardarCreditos(e: React.FormEvent) {
+    e.preventDefault();
+    if (!proyectoId) return;
+    setSavingCreditos(true);
+    setCreditosMsg(null);
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("proyectos")
+      .update({ escrito_por: escritoPor, dirigido_por: dirigidoPor, producido_por: producidoPor })
+      .eq("id", proyectoId);
+    setSavingCreditos(false);
+    if (error) {
+      setCreditosMsg({ type: "err", text: error.message });
+      return;
+    }
+    setCreditosMsg({ type: "ok", text: "Créditos actualizados. Ya se ven en el Pulso del proyecto." });
+  }
+
+  async function agregarDepartamento(e: React.FormEvent) {
+    e.preventDefault();
+    const nombre = deptoNuevoInput.trim();
+    if (!nombre || !proyectoId) return;
+    if (departamentosProyecto.some((d) => d.toLowerCase() === nombre.toLowerCase())) {
+      setDeptoNuevoInput("");
+      return;
+    }
+    setAgregandoDepto(true);
+    const nuevos = [...departamentosProyecto, nombre];
+    const supabase = createClient();
+    const { error } = await supabase.from("proyectos").update({ departamentos: nuevos }).eq("id", proyectoId);
+    setAgregandoDepto(false);
+    if (!error) {
+      setDepartamentosProyecto(nuevos);
+      setDeptoNuevoInput("");
+    }
+  }
+
+  async function enviarInvitacion(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inviteNombre.trim() || !inviteEmail.trim() || !inviteDepto || !proyectoId) return;
+    setInvitando(true);
+    setInviteMsg(null);
+    setInviteLink(null);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("invitaciones")
+      .insert({
+        project_id: proyectoId,
+        email: inviteEmail.trim(),
+        full_name: inviteNombre.trim(),
+        departamento: inviteDepto,
+        cargo: inviteCargo || null,
+      })
+      .select("token")
+      .single();
+    setInvitando(false);
+    if (error || !data) {
+      setInviteMsg({ type: "err", text: error?.message ?? "No se pudo generar la invitación." });
+      return;
+    }
+    if (!departamentosProyecto.some((d) => d.toLowerCase() === inviteDepto.toLowerCase())) {
+      const nuevos = [...departamentosProyecto, inviteDepto];
+      await supabase.from("proyectos").update({ departamentos: nuevos }).eq("id", proyectoId);
+      setDepartamentosProyecto(nuevos);
+    }
+    setInviteLink(`${window.location.origin}/invitacion/${data.token}`);
+    setInviteMsg({ type: "ok", text: "Invitación creada. Copiá el link y envíaselo." });
+    setInviteNombre("");
+    setInviteEmail("");
+    setInviteCargo("");
   }
 
   if (loading) {
@@ -241,6 +345,92 @@ export default function AdminPanel() {
             {asignarMsg && <p className={`amsg ${asignarMsg.type === "err" ? "err" : "ok"}`}>{asignarMsg.text}</p>}
             <button type="submit" className="btn acc" disabled={asignando || !asignarUserId || !asignarCargo}>
               {asignando ? "Asignando…" : "Asignar cargo"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="apanel">
+        <h3><span className="hex"></span>Créditos del proyecto</h3>
+        <p className="asub">Se muestran en el Pulso, visibles para todo el equipo.</p>
+        <form onSubmit={guardarCreditos}>
+          <CreditosChips label="Escrito por" placeholder="Nombre del guionista" valores={escritoPor} onChange={setEscritoPor} />
+          <CreditosChips label="Dirigido por" placeholder="Nombre del director/a" valores={dirigidoPor} onChange={setDirigidoPor} />
+          <CreditosChips label="Producido por" placeholder="Nombre de la productora" valores={producidoPor} onChange={setProducidoPor} />
+          {creditosMsg && <p className={`amsg ${creditosMsg.type === "err" ? "err" : "ok"}`}>{creditosMsg.text}</p>}
+          <button type="submit" className="btn acc" disabled={savingCreditos} style={{ marginTop: "10px" }}>
+            {savingCreditos ? "Guardando…" : "Guardar créditos"}
+          </button>
+        </form>
+      </section>
+
+      <section className="apanel">
+        <h3><span className="hex"></span>Agregar departamento al proyecto</h3>
+        <p className="asub">Departamentos actuales: {departamentosProyecto.length > 0 ? departamentosProyecto.join(", ") : "ninguno todavía"}.</p>
+        <form onSubmit={agregarDepartamento} style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Nombre del departamento nuevo"
+            value={deptoNuevoInput}
+            onChange={(e) => setDeptoNuevoInput(e.target.value)}
+            style={{ flex: 1, minWidth: "220px", padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}
+          />
+          <button type="submit" className="btn acc" disabled={agregandoDepto || !deptoNuevoInput.trim()}>
+            {agregandoDepto ? "Agregando…" : "+ Agregar departamento"}
+          </button>
+        </form>
+      </section>
+
+      <section className="apanel">
+        <h3><span className="hex"></span>Agregar usuario nuevo al proyecto</h3>
+        <p className="asub">Genera un link de invitación. La persona elige su propia contraseña al abrirlo.</p>
+        <form onSubmit={enviarInvitacion} className="afields-grid">
+          <label className="afield">
+            <span>Nombre completo</span>
+            <input type="text" required value={inviteNombre} onChange={(e) => setInviteNombre(e.target.value)} />
+          </label>
+          <label className="afield">
+            <span>Email</span>
+            <input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+          </label>
+          <label className="afield">
+            <span>Departamento</span>
+            <select required value={inviteDepto} onChange={(e) => { setInviteDepto(e.target.value); setInviteCargo(""); }}>
+              <option value="">Selecciona…</option>
+              {Array.from(new Set([...DEPARTAMENTOS, ...departamentosProyecto])).map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </label>
+          <label className="afield">
+            <span>Cargo (opcional)</span>
+            <select value={inviteCargo} onChange={(e) => setInviteCargo(e.target.value)} disabled={!inviteDepto}>
+              <option value="">Sin cargo</option>
+              {(JERARQUIA_POR_DEPARTAMENTO[inviteDepto] ?? []).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </label>
+          <div className="afield-span2">
+            {inviteMsg && <p className={`amsg ${inviteMsg.type === "err" ? "err" : "ok"}`}>{inviteMsg.text}</p>}
+            {inviteLink && (
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "10px" }}>
+                <code style={{ flex: 1, fontSize: "12px", padding: "8px 10px", background: "var(--hl3)", border: "1px solid var(--line)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inviteLink}</code>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(inviteLink);
+                    setLinkCopiado(true);
+                    setTimeout(() => setLinkCopiado(false), 2000);
+                  }}
+                >
+                  {linkCopiado ? "Copiado ✓" : "Copiar link"}
+                </button>
+              </div>
+            )}
+            <button type="submit" className="btn acc" disabled={invitando}>
+              {invitando ? "Generando…" : "Generar invitación"}
             </button>
           </div>
         </form>
