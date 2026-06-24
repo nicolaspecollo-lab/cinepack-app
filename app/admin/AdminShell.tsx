@@ -15,6 +15,7 @@ const TABS = [
   { href: "/admin/feedback", label: "Feedback" },
   { href: "/admin/flags", label: "Feature flags" },
   { href: "/admin/soporte", label: "Soporte" },
+  { href: "/admin/gestion", label: "Gestión" },
 ];
 
 const BIBLIA_URL = "https://cinepack.es/biblia/";
