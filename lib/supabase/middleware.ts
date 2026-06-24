@@ -33,5 +33,23 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("app_role")
+      .eq("id", user.id)
+      .single();
+    if (profile?.app_role !== "super_admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/proyectos";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }
