@@ -1,15 +1,13 @@
 {
   "auth": {
     "tabLogin": "Iniciar sesión",
-    "tabRegister": "Registrarse",
     "welcomeBack": "Bienvenido/a de vuelta",
     "loginSubtitle": "Accedé a tu panel y al de tu proyecto.",
     "email": "Email",
     "password": "Contraseña",
     "entering": "Entrando...",
     "enter": "Entrar",
-    "noAccount": "¿No tienes cuenta?",
-    "signUp": "Regístrate"
+    "closedRegistration": "El registro está cerrado. Si tenés una invitación, usá el enlace que recibiste."
   },
   "shell": {
     "menu": "MENÚ",

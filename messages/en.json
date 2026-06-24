@@ -1,15 +1,13 @@
 {
   "auth": {
     "tabLogin": "Log in",
-    "tabRegister": "Sign up",
     "welcomeBack": "Welcome back",
     "loginSubtitle": "Access your dashboard and your project's.",
     "email": "Email",
     "password": "Password",
     "entering": "Signing in...",
     "enter": "Sign in",
-    "noAccount": "Don't have an account?",
-    "signUp": "Sign up"
+    "closedRegistration": "Registration is closed. If you have an invitation, use the link you received."
   },
   "shell": {
     "menu": "MENU",

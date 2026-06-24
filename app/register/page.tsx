@@ -1,46 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { DEPARTAMENTOS } from "../constants";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
 import "../cp-theme.css";
 
+// El registro público está cerrado: esta ruta solo redirige.
+// - Con ?token=<uuid> válido: reusa el flujo real de /invitacion/[token]
+//   (que ya valida el email contra la invitación antes de crear la cuenta).
+// - Sin token o con token inválido: vuelve a /login con el aviso de
+//   registro cerrado.
+//
+// TODO (post-pago): cuando se conecte la pasarela de pago, el flujo
+// pasarela → cuenta → acceso debería generar acá un token de registro
+// directo (sin invitación de un Ejecutivo existente) asociado al pago
+// confirmado, en vez de depender de /invitacion/[token]. Por ahora no
+// está implementado.
 export default function RegisterPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { theme, toggleTheme } = useTheme();
-  const [fullName, setFullName] = useState("");
-  const [departamento, setDepartamento] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setMsg(null);
+  useEffect(() => {
+    (async () => {
+      const token = searchParams.get("token");
+      if (!token) {
+        router.replace("/login?registro=cerrado");
+        return;
+      }
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, departamento } },
-    });
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("get_invitation", { p_token: token });
+      const inv = Array.isArray(data) ? data[0] : data;
 
-    setLoading(false);
+      if (error || !inv) {
+        router.replace("/login?registro=cerrado");
+        return;
+      }
 
-    if (error) {
-      setMsg({ type: "err", text: error.message });
-      return;
-    }
-
-    setMsg({
-      type: "ok",
-      text: "Cuenta creada. Revisá tu email para confirmar la cuenta antes de iniciar sesión.",
-    });
-  }
+      router.replace(`/invitacion/${token}`);
+    })();
+  }, [router, searchParams]);
 
   return (
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
@@ -49,80 +51,9 @@ export default function RegisterPage() {
         <div className="cp-theme-toggle-floating">
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-          <div className="cp-auth-logo">
-            <img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" />
-          </div>
-
-          <div className="authcard">
-            <div className="atabs">
-              <Link href="/login" className="atab">Iniciar sesión</Link>
-              <span className="atab register active">Registrarse</span>
-            </div>
-
-            <form onSubmit={handleSubmit} className="apanel register">
-              <h3>Crea tu cuenta</h3>
-              <p className="asub">Te damos acceso según tu departamento y rol.</p>
-
-              <label className="afield">
-                <span>Nombre completo</span>
-                <input
-                  type="text"
-                  placeholder="Nombre y apellidos"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </label>
-              <label className="afield">
-                <span>Email</span>
-                <input
-                  type="email"
-                  placeholder="tu@productora.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </label>
-              <label className="afield">
-                <span>Departamento</span>
-                <select
-                  required
-                  value={departamento}
-                  onChange={(e) => setDepartamento(e.target.value)}
-                >
-                  <option value="" disabled>Selecciona tu departamento</option>
-                  {DEPARTAMENTOS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="afield">
-                <span>Contraseña</span>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </label>
-
-              {msg && (
-                <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>
-              )}
-
-              <button type="submit" disabled={loading} className="abtn">
-                {loading ? "Creando cuenta..." : "Crear cuenta"}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
-              </button>
-
-              <p className="aswitch">
-                ¿Ya tienes cuenta? <Link href="/login">Inicia sesión</Link>
-              </p>
-            </form>
-          </div>
+        <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
+          <span className="hex"></span>
+          <h4>Verificando invitación…</h4>
         </div>
       </div>
     </div>

@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
@@ -12,11 +11,14 @@ import "../cp-theme.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations("auth");
   const { theme, toggleTheme } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
+    searchParams.get("registro") === "cerrado" ? { type: "err", text: t("closedRegistration") } : null
+  );
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,7 +64,6 @@ export default function LoginPage() {
           <div className="authcard">
             <div className="atabs">
               <span className="atab active">{t("tabLogin")}</span>
-              <Link href="/register" className="atab register">{t("tabRegister")}</Link>
             </div>
 
             <form onSubmit={handleSubmit} className="apanel">
@@ -99,9 +100,7 @@ export default function LoginPage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
               </button>
 
-              <p className="aswitch">
-                {t("noAccount")} <Link href="/register">{t("signUp")}</Link>
-              </p>
+              <p className="aswitch">{t("closedRegistration")}</p>
             </form>
           </div>
         </div>

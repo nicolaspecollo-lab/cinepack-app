@@ -1,15 +1,13 @@
 {
   "auth": {
     "tabLogin": "Inicia sessió",
-    "tabRegister": "Registra't",
     "welcomeBack": "Benvingut/da de nou",
     "loginSubtitle": "Accedeix al teu tauler i al del teu projecte.",
     "email": "Correu electrònic",
     "password": "Contrasenya",
     "entering": "Entrant...",
     "enter": "Entra",
-    "noAccount": "No tens compte?",
-    "signUp": "Registra't"
+    "closedRegistration": "El registre està tancat. Si tens una invitació, fes servir l'enllaç que vas rebre."
   },
   "shell": {
     "menu": "MENÚ",
