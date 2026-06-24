@@ -90,7 +90,7 @@
 .cp-topbar .cp-logo img{ height:38px; width:auto; max-width:none; object-fit:contain; display:block; flex-shrink:0; }
 .cp-topbar .cp-proj{
   font-size:11px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;
+  white-space:nowrap;
 }
 .cp-topbar .cp-spacer{ flex:1; min-width:8px; }
 .cp-topbar-break{ display:none; }
