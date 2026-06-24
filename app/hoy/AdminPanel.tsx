@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
+import { CICLO_SELECT, ETAPAS, fechasCicloDesdeFila, type FechasCiclo } from "./cicloVida";
 
 type Cambio = {
   user_nombre: string;
@@ -17,11 +18,12 @@ type Miembro = { user_id: string; full_name: string; departamento: string };
 export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [proyectoId, setProyectoId] = useState<string | null>(null);
-  const [faseActual, setFaseActual] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [savingEstado, setSavingEstado] = useState(false);
-  const [estadoMsg, setEstadoMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+
+  const [fechasCiclo, setFechasCiclo] = useState<FechasCiclo>({
+    desarrollo: null, financiacion: null, preproduccion: null, rodaje: null, postproduccion: null, distribucion: null,
+  });
+  const [savingCiclo, setSavingCiclo] = useState(false);
+  const [cicloMsg, setCicloMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const [conteosDepto, setConteosDepto] = useState<Record<string, number>>({});
   const [conteosCargo, setConteosCargo] = useState<Record<string, number>>({});
@@ -55,13 +57,11 @@ export default function AdminPanel() {
 
     const { data: proyecto } = await supabase
       .from("proyectos")
-      .select("fase_actual, fecha_inicio, fecha_fin")
+      .select(CICLO_SELECT)
       .eq("id", projectId)
       .single();
     if (proyecto) {
-      setFaseActual(proyecto.fase_actual ?? "");
-      setFechaInicio(proyecto.fecha_inicio ?? "");
-      setFechaFin(proyecto.fecha_fin ?? "");
+      setFechasCiclo(fechasCicloDesdeFila(proyecto));
     }
 
     const { data: members } = await supabase
@@ -103,26 +103,29 @@ export default function AdminPanel() {
     load();
   }, []);
 
-  async function guardarEstado(e: React.FormEvent) {
+  async function guardarCiclo(e: React.FormEvent) {
     e.preventDefault();
     if (!proyectoId) return;
-    setSavingEstado(true);
-    setEstadoMsg(null);
+    setSavingCiclo(true);
+    setCicloMsg(null);
     const supabase = createClient();
     const { error } = await supabase
       .from("proyectos")
       .update({
-        fase_actual: faseActual || null,
-        fecha_inicio: fechaInicio || null,
-        fecha_fin: fechaFin || null,
+        fase_desarrollo_inicio: fechasCiclo.desarrollo || null,
+        fase_financiacion_inicio: fechasCiclo.financiacion || null,
+        fase_preproduccion_inicio: fechasCiclo.preproduccion || null,
+        fase_rodaje_inicio: fechasCiclo.rodaje || null,
+        fase_postproduccion_inicio: fechasCiclo.postproduccion || null,
+        fase_distribucion_inicio: fechasCiclo.distribucion || null,
       })
       .eq("id", proyectoId);
-    setSavingEstado(false);
+    setSavingCiclo(false);
     if (error) {
-      setEstadoMsg({ type: "err", text: error.message });
+      setCicloMsg({ type: "err", text: error.message });
       return;
     }
-    setEstadoMsg({ type: "ok", text: "Estado del proyecto actualizado." });
+    setCicloMsg({ type: "ok", text: "Ciclo de vida actualizado." });
   }
 
   async function asignarCargoCompartido(e: React.FormEvent) {
@@ -152,54 +155,51 @@ export default function AdminPanel() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="admin-wrap">
       <section className="apanel">
-        <h3>📅 Estado general del proyecto</h3>
-        <form onSubmit={guardarEstado} className="afields-grid">
-          <label className="afield">
-            <span>Fase actual</span>
-            <input type="text" value={faseActual} onChange={(e) => setFaseActual(e.target.value)} placeholder="Ej. Preproducción, Rodaje, Postproducción…" />
-          </label>
-          <label className="afield">
-            <span>Fecha de inicio</span>
-            <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
-          </label>
-          <label className="afield">
-            <span>Fecha de fin</span>
-            <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
-          </label>
+        <h3><span className="hex"></span>Ciclo de vida del proyecto</h3>
+        <p className="asub">Definí la fecha de inicio de cada etapa. El fin de una etapa es el inicio de la siguiente; la app calcula sola la etapa actual y cuántos días lleva.</p>
+        <form onSubmit={guardarCiclo} className="afields-grid">
+          {ETAPAS.map((etapa) => (
+            <label className="afield" key={etapa.key}>
+              <span>{etapa.label}</span>
+              <input
+                type="date"
+                value={fechasCiclo[etapa.key] ?? ""}
+                onChange={(e) => setFechasCiclo((f) => ({ ...f, [etapa.key]: e.target.value || null }))}
+              />
+            </label>
+          ))}
           <div className="afield-span2">
-            {estadoMsg && <p className={`amsg ${estadoMsg.type === "err" ? "err" : "ok"}`}>{estadoMsg.text}</p>}
-            <button type="submit" className="abtn" disabled={savingEstado} style={{ marginTop: "8px" }}>
-              {savingEstado ? "Guardando…" : "Guardar estado"}
+            {cicloMsg && <p className={`amsg ${cicloMsg.type === "err" ? "err" : "ok"}`}>{cicloMsg.text}</p>}
+            <button type="submit" className="btn acc" disabled={savingCiclo}>
+              {savingCiclo ? "Guardando…" : "Guardar ciclo de vida"}
             </button>
           </div>
         </form>
       </section>
 
       <section className="apanel">
-        <h3>👥 Supervisión general — miembros por departamento</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+        <h3><span className="hex"></span>Supervisión general — miembros por departamento</h3>
+        <div className="akpi-grid">
           {Object.entries(conteosDepto).map(([depto, count]) => (
-            <div key={depto} style={{ background: "var(--hl3)", padding: "14px", borderRadius: "6px", border: "1px solid var(--line)" }}>
-              <div style={{ fontSize: "11px", color: "var(--muted)", textTransform: "uppercase", fontWeight: "600", marginBottom: "6px" }}>
-                {depto}
-              </div>
-              <div style={{ fontSize: "24px", fontWeight: "bold", color: "var(--lime)" }}>{count}</div>
+            <div key={depto} className="akpi">
+              <div className="akpi-label">{depto}</div>
+              <div className="akpi-num">{count}</div>
             </div>
           ))}
         </div>
       </section>
 
       <section className="apanel">
-        <h3>🎬 Estadísticas de cargos</h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        <h3><span className="hex"></span>Estadísticas de cargos</h3>
+        <div className="acargo-chips">
           {Object.entries(conteosCargo).length === 0 ? (
-            <span style={{ fontSize: "13px", color: "var(--muted)" }}>Sin cargos asignados todavía</span>
+            <span className="acargo-empty">Sin cargos asignados todavía</span>
           ) : (
             Object.entries(conteosCargo).map(([cargo, count]) => (
-              <span key={cargo} style={{ background: "var(--hl3)", padding: "6px 12px", borderRadius: "4px", border: "1px solid var(--line)", fontSize: "13px" }}>
-                {cargo} <b style={{ color: "var(--cyan)" }}>{count}</b>
+              <span key={cargo} className="acargo-chip">
+                {cargo}<b>{count}</b>
               </span>
             ))
           )}
@@ -207,7 +207,7 @@ export default function AdminPanel() {
       </section>
 
       <section className="apanel">
-        <h3>➕ Asignar cargo compartido</h3>
+        <h3><span className="hex"></span>Asignar cargo compartido</h3>
         <p className="asub">Suma un cargo adicional a un usuario que ya cumple más de un rol en el equipo.</p>
         <form onSubmit={asignarCargoCompartido} className="afields-grid">
           <label className="afield">
@@ -239,7 +239,7 @@ export default function AdminPanel() {
           </label>
           <div className="afield-span2">
             {asignarMsg && <p className={`amsg ${asignarMsg.type === "err" ? "err" : "ok"}`}>{asignarMsg.text}</p>}
-            <button type="submit" className="abtn" disabled={asignando || !asignarUserId || !asignarCargo} style={{ marginTop: "8px" }}>
+            <button type="submit" className="btn acc" disabled={asignando || !asignarUserId || !asignarCargo}>
               {asignando ? "Asignando…" : "Asignar cargo"}
             </button>
           </div>
@@ -247,15 +247,15 @@ export default function AdminPanel() {
       </section>
 
       <section className="apanel">
-        <h3>📝 Acciones de cambios — log de ediciones recientes</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "360px", overflowY: "auto" }}>
+        <h3><span className="hex"></span>Acciones de cambios — log de ediciones recientes</h3>
+        <div className="alog">
           {cambios.length === 0 ? (
-            <span style={{ fontSize: "13px", color: "var(--muted)" }}>Sin cambios registrados</span>
+            <span className="alog-empty">Sin cambios registrados</span>
           ) : (
             cambios.map((c, i) => (
-              <div key={i} style={{ fontSize: "12px", padding: "8px", background: "var(--hl3)", borderRadius: "4px", borderLeft: "2px solid var(--lime)" }}>
-                <span style={{ fontWeight: "600" }}>{c.user_nombre}</span> cambió <span style={{ color: "var(--cyan)" }}>{c.campo}</span>
-                <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+              <div key={i} className="alog-item">
+                <b>{c.user_nombre}</b> cambió {c.campo}
+                <div className="alog-detail">
                   {c.valor_anterior} → {c.valor_nuevo} · {timeAgo(c.created_at)}
                 </div>
               </div>

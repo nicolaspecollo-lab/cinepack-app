@@ -8,7 +8,6 @@ import ModoRodajePanel from "./ModoRodajePanel";
 import HerramientasPanel from "./HerramientasPanel";
 import ArchivosPanel from "./ArchivosPanel";
 import AdminPanel from "./AdminPanel";
-import EquipoMini from "./EquipoMini";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
 import CommandPalette, { type PaletteItem } from "./CommandPalette";
 import InboxPanel, { type InboxItem } from "./InboxPanel";
@@ -224,7 +223,6 @@ export default function DepartmentDashboard({
       >
         <span className="hex"></span> IA
       </button>
-      <EquipoMini departamento={nombre} />
     </div>
   );
 

@@ -140,19 +140,6 @@
 .cp-team-name{ font-weight:700; font-family:'Poppins',sans-serif; font-size:13px; }
 .cp-team-cargo{ color:var(--muted); font-size:12px; margin-left:auto; text-align:right; }
 
-/* Mini listado de equipo en la cabecera (dhead .who) */
-.cp-team-mini{ display:flex; flex-direction:column; gap:4px; align-items:flex-end; }
-.cp-team-mini-row{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); }
-.cp-team-mini-row b{ color:var(--text); }
-.cp-team-mini-avatar{
-  width:16px; height:16px; border-radius:50%; object-fit:cover; flex-shrink:0; display:block;
-}
-.cp-team-mini-avatar-icon{
-  display:flex; align-items:center; justify-content:center; background:var(--acc,var(--lime));
-  color:var(--bg); padding:3px; box-sizing:border-box;
-}
-.cp-team-mini-avatar-icon svg{ width:100%; height:100%; }
-
 .cp-menu-drop{
   position:absolute; top:calc(100% + 0px); right:0; min-width:280px; width:max-content; max-width:340px; background:var(--bg-2);
   border:1px solid var(--line); border-top:3px solid var(--lime);

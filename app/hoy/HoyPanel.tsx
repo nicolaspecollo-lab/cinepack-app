@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS, ESTADO_COLOR } from "../constants";
+import { CICLO_SELECT, fechasCicloDesdeFila, resumenCiclo, type EtapaResumen } from "./cicloVida";
 
 type Pill = "warn" | "mut" | "bad" | "info" | "ok";
 
@@ -45,6 +46,13 @@ const PILL_LABEL: Record<Pill, string> = {
 
 type GestionTipo = "tarea" | "alerta" | "jornada";
 
+const ETAPA_ESTADO_LABEL: Record<EtapaResumen["estado"], (dias: number | null) => string> = {
+  completada: (dias) => `${dias} día${dias === 1 ? "" : "s"} completado${dias === 1 ? "" : "s"}`,
+  pendiente: (dias) => `${dias} día${dias === 1 ? "" : "s"} pendiente${dias === 1 ? "" : "s"}`,
+  en_curso: (dias) => `${dias} día${dias === 1 ? "" : "s"} (en curso)`,
+  sin_fecha: () => "Sin fecha definida",
+};
+
 export default function HoyPanel({
   deDepartamento,
   fullName,
@@ -56,6 +64,7 @@ export default function HoyPanel({
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ciclo, setCiclo] = useState<EtapaResumen[]>([]);
 
   const [showForm, setShowForm] = useState(false);
   const [gestionTipo, setGestionTipo] = useState<GestionTipo>("tarea");
@@ -87,7 +96,7 @@ export default function HoyPanel({
     }
     const supabase = createClient();
 
-    const [{ data: jornadaData }, { data: tareasData }, { data: alertasData }] = await Promise.all([
+    const [{ data: jornadaData }, { data: tareasData }, { data: alertasData }, { data: proyectoData }] = await Promise.all([
       supabase
         .from("jornadas")
         .select("*")
@@ -108,11 +117,17 @@ export default function HoyPanel({
         .eq("project_id", projectId)
         .eq("leida", false)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("proyectos")
+        .select(CICLO_SELECT)
+        .eq("id", projectId)
+        .single(),
     ]);
 
     setJornada(jornadaData ?? null);
     setTareas((tareasData ?? []).filter((t) => !t.para_departamento || t.para_departamento === deDepartamento));
     setAlertas((alertasData ?? []).filter((a) => !a.para_departamento || a.para_departamento === deDepartamento));
+    setCiclo(resumenCiclo(fechasCicloDesdeFila(proyectoData)));
     setLoading(false);
   }, [deDepartamento]);
 
@@ -239,36 +254,21 @@ export default function HoyPanel({
       <div className="today">
         <div className="tcard">
           <h4>
-            <span className="hex"></span>Jornada
+            <span className="hex"></span>Ciclo de vida del proyecto
           </h4>
           {loading && <p>Cargando…</p>}
-          {!loading && !jornada && <p>Todavía no hay información de la jornada cargada para este proyecto.</p>}
-          {!loading && jornada && (
-            <>
-              <div className="big">
-                Día {jornada.dia_numero} <small>de {jornada.dia_total}{jornada.ubicacion ? ` · ${jornada.ubicacion}` : ""}</small>
-              </div>
-              <ul>
-                {jornada.citacion && (
-                  <li>
-                    <span>Citación</span>
-                    <span>{jornada.citacion}</span>
-                  </li>
-                )}
-                {jornada.escenas_dia && (
-                  <li>
-                    <span>Escenas del día</span>
-                    <span>{jornada.escenas_dia}</span>
-                  </li>
-                )}
-                {jornada.visionado && (
-                  <li>
-                    <span>Visionado dailies</span>
-                    <span>{jornada.visionado}</span>
-                  </li>
-                )}
-              </ul>
-            </>
+          {!loading && ciclo.every((e) => e.estado === "sin_fecha") && (
+            <p>El Ejecutivo todavía no definió las fechas de las etapas en el Admin.</p>
+          )}
+          {!loading && ciclo.some((e) => e.estado !== "sin_fecha") && (
+            <ul>
+              {ciclo.map((e) => (
+                <li key={e.key} className={e.enCurso ? "etapa-actual" : undefined}>
+                  <span>{e.label}</span>
+                  <span>{ETAPA_ESTADO_LABEL[e.estado](e.dias)}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
