@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [porTipo, setPorTipo] = useState<{ label: string; value: number }[] | null>(null);
   const [porPago, setPorPago] = useState<{ label: string; value: number; color: string }[] | null>(null);
-  const [actividadDiaria, setActividadDiaria] = useState<{ label: string; value: number }[] | null>(null);
+  const [actividadDiaria, setActividadDiaria] = useState<{ label: string; value: number; usuarios: number }[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,17 +90,30 @@ export default function AdminDashboard() {
       const dias = ultimosNDias(14);
       const desde = `${dias[0]}T00:00:00.000Z`;
       const [{ data: filas }, { data: consultas }] = await Promise.all([
-        supabase.from("herramienta_filas").select("created_at").gte("created_at", desde),
-        supabase.from("consultas").select("created_at").gte("created_at", desde),
+        supabase.from("herramienta_filas").select("created_at, autor_nombre, editor_nombre").gte("created_at", desde),
+        supabase.from("consultas").select("created_at, autor_nombre").gte("created_at", desde),
       ]);
       const conteoDia: Record<string, number> = {};
-      dias.forEach((d) => (conteoDia[d] = 0));
-      [...(filas ?? []), ...(consultas ?? [])].forEach((r) => {
+      const usuariosDia: Record<string, Set<string>> = {};
+      dias.forEach((d) => {
+        conteoDia[d] = 0;
+        usuariosDia[d] = new Set();
+      });
+      (filas ?? []).forEach((r) => {
         const dia = r.created_at.slice(0, 10);
-        if (dia in conteoDia) conteoDia[dia] += 1;
+        if (!(dia in conteoDia)) return;
+        conteoDia[dia] += 1;
+        if (r.editor_nombre) usuariosDia[dia].add(r.editor_nombre);
+        else if (r.autor_nombre) usuariosDia[dia].add(r.autor_nombre);
+      });
+      (consultas ?? []).forEach((r) => {
+        const dia = r.created_at.slice(0, 10);
+        if (!(dia in conteoDia)) return;
+        conteoDia[dia] += 1;
+        if (r.autor_nombre) usuariosDia[dia].add(r.autor_nombre);
       });
       setActividadDiaria(
-        dias.map((d) => ({ label: d.slice(5).replace("-", "/"), value: conteoDia[d] }))
+        dias.map((d) => ({ label: d.slice(5).replace("-", "/"), value: conteoDia[d], usuarios: usuariosDia[d].size }))
       );
     })().catch((e) => setErr(e.message));
   }, [isAdmin]);
