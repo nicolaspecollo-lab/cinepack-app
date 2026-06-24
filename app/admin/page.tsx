@@ -45,6 +45,7 @@ export default function AdminDashboard() {
   const [porTipo, setPorTipo] = useState<{ label: string; value: number }[] | null>(null);
   const [porPago, setPorPago] = useState<{ label: string; value: number; color: string }[] | null>(null);
   const [actividadDiaria, setActividadDiaria] = useState<{ label: string; value: number; usuarios: number }[] | null>(null);
+  const [horasPico, setHorasPico] = useState<{ label: string; value: number; color?: string; hint: string }[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -115,6 +116,31 @@ export default function AdminDashboard() {
       setActividadDiaria(
         dias.map((d) => ({ label: d.slice(5).replace("-", "/"), value: conteoDia[d], usuarios: usuariosDia[d].size }))
       );
+
+      const { data: logs } = await supabase.from("audit_logs").select("created_at");
+      const conteoHora = Array.from({ length: 24 }, () => 0);
+      (logs ?? []).forEach((l) => {
+        const hora = new Date(l.created_at).getHours();
+        conteoHora[hora] += 1;
+      });
+      const totalLogs = conteoHora.reduce((a, b) => a + b, 0);
+      if (totalLogs === 0) {
+        setHorasPico([]);
+      } else {
+        const top5 = [...conteoHora]
+          .map((v, h) => ({ h, v }))
+          .sort((a, b) => b.v - a.v)
+          .slice(0, 5)
+          .map((x) => x.h);
+        setHorasPico(
+          conteoHora.map((v, h) => ({
+            label: `${h}h`,
+            value: v,
+            color: top5.includes(h) && v > 0 ? "var(--rose)" : undefined,
+            hint: `${v} evento${v === 1 ? "" : "s"} entre las ${h}h y las ${h + 1}h`,
+          }))
+        );
+      }
     })().catch((e) => setErr(e.message));
   }, [isAdmin]);
 
@@ -154,6 +180,12 @@ export default function AdminDashboard() {
         <div className="cp-chart-card">
           <h4><span className="hex"></span>Proyectos por estado de pago</h4>
           {porPago ? <DonutChart data={porPago} /> : <div className="cp-admin-empty">Cargando…</div>}
+        </div>
+        <div className="cp-chart-card wide">
+          <h4><span className="hex"></span>Horas del día con más uso (top 5 destacadas)</h4>
+          {horasPico === null && <div className="cp-admin-empty">Cargando…</div>}
+          {horasPico?.length === 0 && <div className="cp-admin-empty">Sin datos suficientes aún.</div>}
+          {horasPico && horasPico.length > 0 && <BarChart data={horasPico} color="var(--cyan)" />}
         </div>
       </div>
 
