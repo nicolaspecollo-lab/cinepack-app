@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../../useTheme";
 import ThemeToggle from "../../components/ThemeToggle";
+import PasswordField from "../../components/PasswordField";
 import "../../cp-theme.css";
 
 type Invitacion = {
@@ -29,6 +30,7 @@ export default function InvitacionPage() {
 
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<"session" | "confirm" | null>(null);
@@ -55,6 +57,11 @@ export default function InvitacionPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!invitacion) return;
+
+    if (password !== confirmPassword) {
+      setMsg({ type: "err", text: "Las contraseñas no coinciden." });
+      return;
+    }
 
     setSubmitting(true);
     setMsg(null);
@@ -228,17 +235,21 @@ export default function InvitacionPage() {
                 />
               </label>
 
-              <label className="afield">
-                <span>Contraseña</span>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </label>
+              <PasswordField
+                label="Contraseña"
+                value={password}
+                onChange={setPassword}
+                required
+                minLength={6}
+              />
+
+              <PasswordField
+                label="Repetir contraseña"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                required
+                minLength={6}
+              />
 
               {msg && (
                 <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>

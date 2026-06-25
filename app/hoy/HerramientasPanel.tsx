@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
 import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
+import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { createClient } from "@/lib/supabase/client";
 
 type PersonalTool = {
@@ -50,6 +51,19 @@ export default function HerramientasPanel({
   const [conteos, setConteos] = useState<Record<string, number>>({});
   const [personalTools, setPersonalTools] = useState<PersonalTool[]>([]);
   const [abiertaPersonal, setAbiertaPersonal] = useState<PersonalTool | null>(null);
+  const [creandoEspacio, setCreandoEspacio] = useState(false);
+
+  async function recargarPersonalTools() {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) return;
+    const supabase = createClient();
+    const { data: pts } = await supabase
+      .from("personal_tools")
+      .select("id, titulo, tipo, created_at")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
+    setPersonalTools((pts ?? []) as PersonalTool[]);
+  }
 
   useEffect(() => {
     (async () => {
@@ -76,15 +90,8 @@ export default function HerramientasPanel({
         }
       }
 
-      // Herramientas personales del usuario (solo en Exclusivas)
-      if (seccion === "cargo") {
-        const { data: pts } = await supabase
-          .from("personal_tools")
-          .select("id, titulo, tipo, created_at")
-          .eq("project_id", projectId)
-          .order("created_at", { ascending: false });
-        setPersonalTools((pts ?? []) as PersonalTool[]);
-      }
+      // Herramientas personales del usuario (visibles en Departamento y Exclusivas)
+      await recargarPersonalTools();
     })();
   }, [departamento, seccion]);
 
@@ -191,43 +198,92 @@ export default function HerramientasPanel({
 
   if (seccion === "departamento") {
     const tools = deptTools(departamento);
-    if (tools.length === 0) {
-      return (
-        <div className="soon-box">
-          <span className="hex"></span>
-          <h4>Sin herramientas de departamento</h4>
-          <p>Este departamento todavía no tiene herramientas compartidas en el mapa de trabajo.</p>
-        </div>
-      );
-    }
     return (
       <div className="hp-index">
-        <section className="hp-group">
-          <span className="hp-group-label">Herramientas de {departamento}</span>
-          <div className="hp-cards">
-            {tools.map((h) => (
-              <ToolCard key={h.id} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
-            ))}
+        {creandoEspacio ? (
+          <EspacioTrabajoCreator
+            departamento={departamento}
+            fullName={fullName}
+            onCancel={() => setCreandoEspacio(false)}
+            onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
+          />
+        ) : (
+          <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
+            + Espacio de trabajo
+          </button>
+        )}
+        {tools.length === 0 && personalTools.length === 0 && (
+          <div className="soon-box">
+            <span className="hex"></span>
+            <h4>Sin herramientas de departamento</h4>
+            <p>Este departamento todavía no tiene herramientas compartidas en el mapa de trabajo.</p>
           </div>
-        </section>
+        )}
+        {personalTools.length > 0 && (
+          <section className="hp-group hp-group-personal">
+            <span className="hp-group-label">
+              <span className="hex" style={{ width: "8px", height: "7px" }} />
+              Mis herramientas
+              <span className="hp-mine">personales</span>
+            </span>
+            <div className="hp-cards">
+              {personalTools.map((pt) => (
+                <button key={pt.id} className="hcard hcard-personal" onClick={() => abrirPersonal(pt)}>
+                  <div className="hcard-accent" />
+                  <div className="hcard-title">{pt.titulo}</div>
+                  <div className="hcard-meta">
+                    <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Nota"}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+        {tools.length > 0 && (
+          <section className="hp-group">
+            <span className="hp-group-label">Herramientas de {departamento}</span>
+            <div className="hp-cards">
+              {tools.map((h) => (
+                <ToolCard key={h.id} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     );
   }
 
   // seccion === "cargo": agrupadas por cargo, todas las del departamento.
   const groups = cargoGroups(departamento).filter((g) => g.tools.length > 0);
-  if (groups.length === 0 && personalTools.length === 0) {
+  if (groups.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
-      <div className="soon-box">
-        <span className="hex"></span>
-        <h4>Sin herramientas exclusivas</h4>
-        <p>Este departamento todavía no tiene herramientas exclusivas de cargo en el mapa.</p>
+      <div className="hp-index">
+        <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
+          + Espacio de trabajo
+        </button>
+        <div className="soon-box">
+          <span className="hex"></span>
+          <h4>Sin herramientas exclusivas</h4>
+          <p>Este departamento todavía no tiene herramientas exclusivas de cargo en el mapa.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="hp-index hp-index-cols">
+      {creandoEspacio ? (
+        <EspacioTrabajoCreator
+          departamento={departamento}
+          fullName={fullName}
+          onCancel={() => setCreandoEspacio(false)}
+          onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
+        />
+      ) : (
+        <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
+          + Espacio de trabajo
+        </button>
+      )}
       {personalTools.length > 0 && (
         <section className="hp-group hp-group-personal">
           <span className="hp-group-label">
@@ -265,6 +321,25 @@ export default function HerramientasPanel({
           </section>
         );
       })}
+    </div>
+  );
+}
+
+function EspacioTrabajoCreator({
+  departamento,
+  fullName,
+  onCreated,
+  onCancel,
+}: {
+  departamento: string;
+  fullName: string;
+  onCreated: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} />
+      <button className="btn" onClick={onCancel} style={{ marginTop: "8px" }}>Cancelar</button>
     </div>
   );
 }

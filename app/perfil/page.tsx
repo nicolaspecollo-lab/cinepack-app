@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
+import PasswordField from "../components/PasswordField";
+import PaisProvinciaField from "../components/PaisProvinciaField";
 import "../cp-theme.css";
 
 type Profile = {
@@ -17,8 +19,10 @@ type Profile = {
   bio: string | null;
   telefono: string | null;
   cargo: string | null;
-  lugar_residencia: string | null;
-  lugar_produccion: string | null;
+  pais_residencia: string | null;
+  provincia_residencia: string | null;
+  pais_produccion: string | null;
+  provincia_produccion: string | null;
 };
 
 export default function PerfilPage() {
@@ -32,8 +36,10 @@ export default function PerfilPage() {
   const [departamento, setDepartamento] = useState("");
   const [bio, setBio] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [lugarResidencia, setLugarResidencia] = useState("");
-  const [lugarProduccion, setLugarProduccion] = useState("");
+  const [paisResidencia, setPaisResidencia] = useState("");
+  const [provinciaResidencia, setProvinciaResidencia] = useState("");
+  const [paisProduccion, setPaisProduccion] = useState("");
+  const [provinciaProduccion, setProvinciaProduccion] = useState("");
   const [cargos, setCargos] = useState<string[]>([]);
   const [cargoNuevo, setCargoNuevo] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -60,7 +66,7 @@ export default function PerfilPage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, departamento, nombre_artistico, avatar_url, bio, telefono, lugar_residencia, lugar_produccion")
+        .select("full_name, departamento, nombre_artistico, avatar_url, bio, telefono, pais_residencia, provincia_residencia, pais_produccion, provincia_produccion")
         .eq("id", user.id)
         .single();
 
@@ -72,8 +78,10 @@ export default function PerfilPage() {
         setBio(profile.bio ?? "");
         setTelefono(profile.telefono ?? "");
         setAvatarUrl(profile.avatar_url ?? null);
-        setLugarResidencia(profile.lugar_residencia ?? "");
-        setLugarProduccion(profile.lugar_produccion ?? "");
+        setPaisResidencia(profile.pais_residencia ?? "");
+        setProvinciaResidencia(profile.provincia_residencia ?? "");
+        setPaisProduccion(profile.pais_produccion ?? "");
+        setProvinciaProduccion(profile.provincia_produccion ?? "");
       }
 
       // Cargar cargos del usuario de user_roles
@@ -113,8 +121,8 @@ export default function PerfilPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!userId || !original) return;
-    if (!lugarResidencia.trim() || !lugarProduccion.trim()) {
-      setMsg({ type: "err", text: "Completá lugar de residencia y lugar de producción." });
+    if (!paisResidencia || !provinciaResidencia || !paisProduccion || !provinciaProduccion) {
+      setMsg({ type: "err", text: "Completá país y provincia de residencia y de producción." });
       return;
     }
 
@@ -131,8 +139,12 @@ export default function PerfilPage() {
         bio: bio || null,
         telefono: telefono || null,
         avatar_url: avatarUrl,
-        lugar_residencia: lugarResidencia.trim(),
-        lugar_produccion: lugarProduccion.trim(),
+        pais_residencia: paisResidencia,
+        provincia_residencia: provinciaResidencia,
+        pais_produccion: paisProduccion,
+        provincia_produccion: provinciaProduccion,
+        lugar_residencia: `${provinciaResidencia}, ${paisResidencia}`,
+        lugar_produccion: `${provinciaProduccion}, ${paisProduccion}`,
       })
       .eq("id", userId);
 
@@ -148,8 +160,10 @@ export default function PerfilPage() {
       { campo: "Bio", antes: original.bio, ahora: bio || null },
       { campo: "Teléfono", antes: original.telefono, ahora: telefono || null },
       { campo: "Foto de perfil", antes: original.avatar_url, ahora: avatarUrl },
-      { campo: "Lugar de residencia", antes: original.lugar_residencia, ahora: lugarResidencia.trim() },
-      { campo: "Lugar de producción", antes: original.lugar_produccion, ahora: lugarProduccion.trim() },
+      { campo: "País de residencia", antes: original.pais_residencia, ahora: paisResidencia },
+      { campo: "Provincia de residencia", antes: original.provincia_residencia, ahora: provinciaResidencia },
+      { campo: "País de producción", antes: original.pais_produccion, ahora: paisProduccion },
+      { campo: "Provincia de producción", antes: original.provincia_produccion, ahora: provinciaProduccion },
     ].filter((c) => (c.antes ?? "") !== (c.ahora ?? ""));
 
     if (cambios.length > 0) {
@@ -172,8 +186,10 @@ export default function PerfilPage() {
       bio: bio || null,
       telefono: telefono || null,
       cargo: null,
-      lugar_residencia: lugarResidencia.trim(),
-      lugar_produccion: lugarProduccion.trim(),
+      pais_residencia: paisResidencia,
+      provincia_residencia: provinciaResidencia,
+      pais_produccion: paisProduccion,
+      provincia_produccion: provinciaProduccion,
     });
 
     setSaving(false);
@@ -307,27 +323,23 @@ export default function PerfilPage() {
               <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
             </label>
 
-            <label className="afield">
-              <span>Lugar de residencia</span>
-              <input
-                type="text"
-                required
-                placeholder="Ciudad, país"
-                value={lugarResidencia}
-                onChange={(e) => setLugarResidencia(e.target.value)}
-              />
-            </label>
+            <PaisProvinciaField
+              label="Lugar de residencia"
+              pais={paisResidencia}
+              provincia={provinciaResidencia}
+              onChangePais={setPaisResidencia}
+              onChangeProvincia={setProvinciaResidencia}
+              required
+            />
 
-            <label className="afield">
-              <span>Lugar de producción</span>
-              <input
-                type="text"
-                required
-                placeholder="Dónde se está produciendo este proyecto"
-                value={lugarProduccion}
-                onChange={(e) => setLugarProduccion(e.target.value)}
-              />
-            </label>
+            <PaisProvinciaField
+              label="Lugar de producción"
+              pais={paisProduccion}
+              provincia={provinciaProduccion}
+              onChangePais={setPaisProduccion}
+              onChangeProvincia={setProvinciaProduccion}
+              required
+            />
 
             <div className="afield afield-span2">
               <span>Cargos</span>
@@ -401,26 +413,8 @@ export default function PerfilPage() {
         <form onSubmit={handlePasswordChange} className="apanel">
           <h3>Cambiar contraseña</h3>
           <div className="afields-grid">
-            <label className="afield">
-              <span>Nueva contraseña</span>
-              <input
-                type="password"
-                placeholder="••••••••"
-                minLength={6}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </label>
-            <label className="afield">
-              <span>Confirmar contraseña</span>
-              <input
-                type="password"
-                placeholder="••••••••"
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </label>
+            <PasswordField label="Nueva contraseña" value={newPassword} onChange={setNewPassword} minLength={6} />
+            <PasswordField label="Confirmar contraseña" value={confirmPassword} onChange={setConfirmPassword} minLength={6} />
           </div>
 
           {pwdMsg && <p className={`amsg ${pwdMsg.type === "err" ? "err" : "ok"}`}>{pwdMsg.text}</p>}

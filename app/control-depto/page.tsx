@@ -14,6 +14,7 @@ type Miembro = {
   full_name: string;
   cargo: string | null;
   avatar_url: string | null;
+  cargosCompartidos: string[];
 };
 
 export default function ControlDeptPage() {
@@ -23,6 +24,29 @@ export default function ControlDeptPage() {
   const [loading, setLoading] = useState(true);
   const [departamento, setDepartamento] = useState("");
   const [miembros, setMiembros] = useState<Miembro[]>([]);
+  const [cargoCompartidoNuevo, setCargoCompartidoNuevo] = useState<Record<string, string>>({});
+
+  async function cargarMiembros(supabase: ReturnType<typeof createClient>, projectId: string, departamentoActual: string) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, cargo, avatar_url")
+      .eq("departamento", departamentoActual);
+
+    const ids = (profiles ?? []).map((p) => p.id);
+    const { data: roles } = ids.length > 0
+      ? await supabase.from("user_roles").select("user_id, cargo").in("user_id", ids)
+      : { data: [] as { user_id: string; cargo: string }[] };
+
+    const lista: Miembro[] = (profiles ?? []).map((p) => ({
+      user_id: p.id,
+      full_name: p.full_name,
+      cargo: p.cargo,
+      avatar_url: p.avatar_url,
+      cargosCompartidos: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.cargo),
+    }));
+
+    setMiembros(lista);
+  }
 
   useEffect(() => {
     (async () => {
@@ -61,25 +85,48 @@ export default function ControlDeptPage() {
       }
 
       setDepartamento(departamentoActual);
-
-      const { data: members } = await supabase
-        .from("project_members")
-        .select("user_id, profiles(full_name, cargo, avatar_url)")
-        .eq("project_id", projectId);
-
-      const lista = (members ?? [])
-        .map((m) => {
-          const p = m.profiles as unknown as { full_name: string; cargo: string | null; avatar_url: string | null } | null;
-          if (!p) return null;
-          return { user_id: m.user_id as string, full_name: p.full_name, cargo: p.cargo, avatar_url: p.avatar_url };
-        })
-        .filter((m): m is Miembro => m !== null);
-
-      setMiembros(lista);
+      await cargarMiembros(supabase, projectId, departamentoActual);
       setAuthorized(true);
       setLoading(false);
     })();
   }, [router]);
+
+  async function cambiarCargo(userId: string, nuevoCargo: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from("profiles").update({ cargo: nuevoCargo }).eq("id", userId);
+    if (error) {
+      alert(`No se pudo cambiar el cargo: ${error.message}`);
+      return;
+    }
+    setMiembros((prev) => prev.map((m) => (m.user_id === userId ? { ...m, cargo: nuevoCargo } : m)));
+  }
+
+  async function agregarCargoCompartido(userId: string) {
+    const cargo = cargoCompartidoNuevo[userId];
+    if (!cargo) return;
+    const supabase = createClient();
+    const { error } = await supabase.from("user_roles").insert({ user_id: userId, cargo });
+    if (error) {
+      alert(`No se pudo agregar el cargo compartido: ${error.message}`);
+      return;
+    }
+    setMiembros((prev) =>
+      prev.map((m) => (m.user_id === userId ? { ...m, cargosCompartidos: [...m.cargosCompartidos, cargo].sort() } : m))
+    );
+    setCargoCompartidoNuevo((prev) => ({ ...prev, [userId]: "" }));
+  }
+
+  async function quitarCargoCompartido(userId: string, cargo: string) {
+    const supabase = createClient();
+    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("cargo", cargo);
+    if (error) {
+      alert(`No se pudo quitar el cargo compartido: ${error.message}`);
+      return;
+    }
+    setMiembros((prev) =>
+      prev.map((m) => (m.user_id === userId ? { ...m, cargosCompartidos: m.cargosCompartidos.filter((c) => c !== cargo) } : m))
+    );
+  }
 
   if (loading) {
     return (
@@ -129,32 +176,83 @@ export default function ControlDeptPage() {
               <span style={{ fontSize: "13px", color: "var(--muted)" }}>Sin miembros en tu departamento</span>
             ) : (
               miembros.map((m) => (
-                <div key={m.user_id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px", background: "var(--bg)", borderRadius: "4px", border: "1px solid var(--line)" }}>
-                  <div
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "50%",
-                      overflow: "hidden",
-                      background: "var(--hl3)",
-                      border: "1px solid var(--line)",
-                      flexShrink: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {m.avatar_url ? (
-                      <img src={m.avatar_url} alt={m.full_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      <span className="hex" style={{ width: "14px", height: "12px", background: "var(--lime)" }}></span>
-                    )}
+                <div key={m.user_id} style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "12px", background: "var(--bg)", borderRadius: "4px", border: "1px solid var(--line)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        overflow: "hidden",
+                        background: "var(--hl3)",
+                        border: "1px solid var(--line)",
+                        flexShrink: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt={m.full_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <span className="hex" style={{ width: "14px", height: "12px", background: "var(--lime)" }}></span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "14px", fontWeight: "500" }}>{m.full_name}</div>
+                    </div>
+                    <select
+                      value={m.cargo ?? ""}
+                      onChange={(e) => cambiarCargo(m.user_id, e.target.value)}
+                      style={{ padding: "8px 10px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "12px" }}
+                    >
+                      <option value="">Sin cargo</option>
+                      {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "14px", fontWeight: "500" }}>{m.full_name}</div>
-                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>{m.cargo ?? "Sin cargo"}</div>
+
+                  <div style={{ paddingLeft: "52px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "6px" }}>
+                      Cargos compartidos
+                    </div>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                      {m.cargosCompartidos.length === 0 ? (
+                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>Ninguno</span>
+                      ) : (
+                        m.cargosCompartidos.map((c) => (
+                          <div key={c} style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--hl3)", padding: "5px 9px", borderRadius: "4px", border: "1px solid var(--line)", fontSize: "12px" }}>
+                            <span>{c}</span>
+                            <button type="button" onClick={() => quitarCargoCompartido(m.user_id, c)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--pink)" }}>✕</button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <select
+                        value={cargoCompartidoNuevo[m.user_id] ?? ""}
+                        onChange={(e) => setCargoCompartidoNuevo((prev) => ({ ...prev, [m.user_id]: e.target.value }))}
+                        style={{ padding: "8px 10px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "12px" }}
+                      >
+                        <option value="">Agregar cargo compartido…</option>
+                        {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? [])
+                          .filter((c) => c !== m.cargo && !m.cargosCompartidos.includes(c))
+                          .map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="btn"
+                        style={{ fontSize: "12px" }}
+                        disabled={!cargoCompartidoNuevo[m.user_id]}
+                        onClick={() => agregarCargoCompartido(m.user_id)}
+                      >
+                        + Agregar
+                      </button>
+                    </div>
                   </div>
-                  <button className="btn" style={{ fontSize: "12px" }}>Editar</button>
                 </div>
               ))
             )}

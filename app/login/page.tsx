@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
 import LocaleToggle from "../components/LocaleToggle";
+import PasswordField from "../components/PasswordField";
 import "../cp-theme.css";
 
 export default function LoginPage() {
@@ -80,16 +81,12 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
-              <label className="afield">
-                <span>{t("password")}</span>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </label>
+              <PasswordField
+                label={t("password")}
+                value={password}
+                onChange={setPassword}
+                required
+              />
 
               {msg && (
                 <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>

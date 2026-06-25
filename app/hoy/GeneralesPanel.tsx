@@ -17,6 +17,7 @@ import HerramientaPanel from "./HerramientaPanel";
 import OrdenRodajePanel from "./OrdenRodajePanel";
 import { GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
 import { ACCENTS } from "../constants";
+import { createClient } from "@/lib/supabase/client";
 
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
 // que despliega sub-pestañas. Iguales para todo el proyecto.
@@ -128,10 +129,29 @@ export default function GeneralesPanel({
   const subs = SUBS.filter((s) => !s.cond || s.cond(departamento));
   const [sub, setSub] = useState<Sub | null>(null);
   const [backMounted, setBackMounted] = useState(false);
+  const [pendientesPorSub, setPendientesPorSub] = useState<Partial<Record<Sub, number>>>({});
 
   useEffect(() => {
     if (jumpTo) setSub(jumpTo.sub);
   }, [jumpTo]);
+
+  // Señalización por card: misma fuente de datos que el badge de la pestaña
+  // "Generales" en DepartmentDashboard, pero desagregada por herramienta.
+  useEffect(() => {
+    (async () => {
+      const projectId = localStorage.getItem("cinepack-proyecto-id");
+      if (!projectId) return;
+      const supabase = createClient();
+      const [{ data: consultas }, { data: comunicados }] = await Promise.all([
+        supabase.from("consultas").select("id").eq("project_id", projectId).eq("estado", "pendiente").contains("para_departamentos", [departamento]),
+        supabase.from("comunicados").select("id").eq("project_id", projectId).gte("created_at", new Date(Date.now() - 86400000).toISOString()),
+      ]);
+      setPendientesPorSub({
+        consultas: consultas?.length ?? 0,
+        comunicados: comunicados?.length ?? 0,
+      });
+    })();
+  }, [departamento, jumpTo]);
 
   useEffect(() => {
     setBackMounted(!!document.getElementById("cp-header-back"));
@@ -150,6 +170,11 @@ export default function GeneralesPanel({
             {subs.map((s) => (
               <button key={s.id} className="hcard" onClick={() => setSub(s.id)}>
                 <div className="hcard-accent" />
+                {!!pendientesPorSub[s.id] && (
+                  <span className="wtab-badge" style={{ position: "absolute", top: "10px", right: "10px" }}>
+                    {pendientesPorSub[s.id]}
+                  </span>
+                )}
                 <div className="hcard-title">{s.label}</div>
                 <div className="hcard-desc">{s.desc}</div>
                 <div className="hcard-meta">

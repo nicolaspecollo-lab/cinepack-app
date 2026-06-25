@@ -13,9 +13,17 @@ export default async function HoyPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, departamento, is_admin, avatar_url, cargo")
+    .select("full_name, departamento, is_admin, avatar_url, cargo, pais_residencia, provincia_residencia, pais_produccion, provincia_produccion")
     .eq("id", user.id)
     .single();
+
+  if (
+    profile && !profile.is_admin &&
+    (!profile.full_name || !profile.cargo || !profile.pais_residencia || !profile.provincia_residencia ||
+      !profile.pais_produccion || !profile.provincia_produccion)
+  ) {
+    redirect("/crear-perfil");
+  }
 
   if (!profile) {
     return (

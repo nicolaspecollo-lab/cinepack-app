@@ -23,9 +23,11 @@ const OPCIONES: { tipo: TipoHerramienta; titulo: string; desc: string; icono: st
 export default function EspacioTrabajoPanel({
   departamento,
   fullName,
+  onCreated,
 }: {
   departamento: string;
   fullName: string;
+  onCreated?: () => void;
 }) {
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
   const [titulo, setTitulo] = useState("");
@@ -67,6 +69,7 @@ export default function EspacioTrabajoPanel({
     });
     setTitulo("");
     setElegido(null);
+    onCreated?.();
   }
 
   return (
