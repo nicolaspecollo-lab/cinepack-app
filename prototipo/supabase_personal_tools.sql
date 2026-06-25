@@ -9,6 +9,7 @@ create table if not exists public.personal_tools (
   departamento text not null,
   titulo      text not null,
   tipo        text not null check (tipo in ('tabla', 'nota')),
+  plantilla_id text, -- estilo elegido al crear (ver app/hoy/plantillasEspacio.ts), no precarga contenido
   created_at  timestamptz default now()
 );
 

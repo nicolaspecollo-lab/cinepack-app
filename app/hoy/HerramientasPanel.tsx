@@ -5,27 +5,29 @@ import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
 import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
+import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
 
 type PersonalTool = {
   id: string;
   titulo: string;
   tipo: "tabla" | "nota";
+  plantilla_id: string | null;
   created_at: string;
 };
 
 function personalToHerramienta(pt: PersonalTool): Herramienta {
-  return {
-    id: pt.id,
-    nombre: pt.titulo,
-    tipo: pt.tipo,
-    columnas: pt.tipo === "tabla" ? [] : undefined,
-  };
+  if (pt.tipo === "tabla") {
+    const plantilla = PLANTILLAS_TABLA.find((p) => p.id === pt.plantilla_id);
+    return { id: pt.id, nombre: pt.titulo, tipo: pt.tipo, columnas: plantilla?.columnas ?? [] };
+  }
+  const plantilla = PLANTILLAS_DOCUMENTO.find((p) => p.id === pt.plantilla_id);
+  return { id: pt.id, nombre: pt.titulo, tipo: pt.tipo, estiloDoc: plantilla?.estiloDoc };
 }
 
 const TIPO_TAG: Record<Herramienta["tipo"], string> = {
   tabla: "Tabla",
-  nota: "Nota",
+  nota: "Documento",
   checklist: "Checklist",
   ficha: "Ficha",
   galeria: "Galería",
@@ -59,7 +61,7 @@ export default function HerramientasPanel({
     const supabase = createClient();
     const { data: pts } = await supabase
       .from("personal_tools")
-      .select("id, titulo, tipo, created_at")
+      .select("id, titulo, tipo, plantilla_id, created_at")
       .eq("project_id", projectId)
       .order("created_at", { ascending: false });
     setPersonalTools((pts ?? []) as PersonalTool[]);
@@ -232,7 +234,7 @@ export default function HerramientasPanel({
                   <div className="hcard-accent" />
                   <div className="hcard-title">{pt.titulo}</div>
                   <div className="hcard-meta">
-                    <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Nota"}</span>
+                    <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Documento"}</span>
                   </div>
                 </button>
               ))}
@@ -297,7 +299,7 @@ export default function HerramientasPanel({
                 <div className="hcard-accent" />
                 <div className="hcard-title">{pt.titulo}</div>
                 <div className="hcard-meta">
-                  <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Nota"}</span>
+                  <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Documento"}</span>
                 </div>
               </button>
             ))}

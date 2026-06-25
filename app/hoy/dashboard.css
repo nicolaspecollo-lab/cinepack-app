@@ -509,7 +509,48 @@
 .cp-dash .esp-tipo-icon{ font-size:22px; line-height:1; }
 .cp-dash .esp-tipo-card strong{ font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
 .cp-dash .esp-tipo-card span{ font-size:11px; color:var(--muted); line-height:1.4; }
-.cp-dash .esp-creator-form{ display:flex; flex-direction:column; gap:14px; padding:0 30px 30px; max-width:520px; }
+.cp-dash .esp-creator-form{ display:flex; flex-direction:column; gap:14px; padding:0 30px 30px; max-width:720px; }
+.cp-dash .esp-creator-form .afield input{ max-width:480px; }
+
+/* Espacio de trabajo — selector de plantilla */
+.cp-dash .esp-plantilla-cards{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+.cp-dash .esp-plantilla-card{
+  display:flex; flex-direction:column; align-items:flex-start; gap:0;
+  padding:10px; background:var(--panel); border:1px solid var(--line);
+  cursor:pointer; text-align:left; transition:border-color .15s, background .15s;
+}
+.cp-dash .esp-plantilla-card:hover{ border-color:var(--acc); }
+.cp-dash .esp-plantilla-card.selected{ border-color:var(--acc); background:var(--hl1); }
+.cp-dash .esp-plantilla-card strong{ font-family:'Poppins',sans-serif; font-size:11px; font-weight:700; margin-top:8px; color:var(--text); }
+.cp-dash .esp-plantilla-card.selected strong{ color:var(--acc); }
+.cp-dash .esp-plantilla-card span{ font-size:10px; color:var(--muted); line-height:1.3; }
+
+.cp-dash .esp-plantilla-doc-preview{
+  width:100%; height:78px; background:var(--bg); border:1px solid var(--line);
+  padding:10px 12px; display:flex; flex-direction:column; gap:5px; overflow:hidden;
+}
+.cp-dash .esp-plantilla-doc-preview .esp-pp-l1{ font-size:10px; font-weight:700; color:var(--text); }
+.cp-dash .esp-plantilla-doc-preview .esp-pp-l2{ font-size:9px; color:var(--muted); line-height:1.3; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-clasico{ align-items:center; text-align:center; font-family:Georgia,'Times New Roman',serif; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-guion{ font-family:'Courier New',monospace; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-guion .esp-pp-l1{ align-self:center; letter-spacing:.04em; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-manifiesto{ justify-content:center; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-manifiesto .esp-pp-l1{ font-family:'Poppins',sans-serif; font-size:13px; font-weight:800; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-diario{ border-left:2px solid var(--acc); }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-tablon{ background:var(--hl2); }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-minimalista{ justify-content:center; gap:8px; }
+.cp-dash .esp-plantilla-doc-preview.hp-nota-estilo-minimalista .esp-pp-l1{ font-weight:500; }
+
+.cp-dash .esp-plantilla-tabla-preview{
+  width:100%; height:78px; background:var(--bg); border:1px solid var(--line);
+  padding:6px; display:flex; flex-direction:column; gap:3px; overflow:hidden;
+}
+.cp-dash .esp-plantilla-tabla-preview .esp-pp-row{ display:flex; gap:5px; }
+.cp-dash .esp-plantilla-tabla-preview .esp-pp-row span{
+  flex:1; min-width:0; font-size:8px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-bottom:1px solid var(--line); padding-bottom:3px;
+}
+.cp-dash .esp-plantilla-tabla-preview .esp-pp-head span{ font-weight:700; color:var(--text); border-bottom-color:var(--acc); }
 
 /* Personal tools en Exclusivas */
 .cp-dash .hcard-personal{ border-left:3px solid var(--acc); }
@@ -837,6 +878,14 @@
 .cp-dash .hp-nota.hp-nota-editor h3{ font-size:1.1rem; margin:0 0 6px; }
 .cp-dash .hp-nota.hp-nota-editor ul,.cp-dash .hp-nota.hp-nota-editor ol{ padding-left:20px; margin:6px 0; }
 .cp-dash .hp-nota.hp-nota-editor li{ margin:3px 0; }
+
+/* Estilos de documento (elegidos al crear, solo presentación, sin contenido precargado) */
+.cp-dash .hp-nota.hp-nota-estilo-clasico{ font-family:Georgia,'Times New Roman',serif; text-align:center; line-height:2; }
+.cp-dash .hp-nota.hp-nota-estilo-guion{ font-family:'Courier New',monospace; font-size:13px; line-height:1.6; }
+.cp-dash .hp-nota.hp-nota-estilo-manifiesto{ font-family:'Poppins',sans-serif; font-weight:700; font-size:22px; line-height:1.3; }
+.cp-dash .hp-nota.hp-nota-estilo-diario{ font-family:inherit; border-left:3px solid var(--acc); padding-left:18px; }
+.cp-dash .hp-nota.hp-nota-estilo-tablon{ font-family:inherit; background:var(--hl2); }
+.cp-dash .hp-nota.hp-nota-estilo-minimalista{ font-family:inherit; font-size:13px; line-height:2.1; background:transparent; border-color:transparent; padding:16px 4px; }
 
 /* Buscador inline (topbar) */
 .cp-dash .cmdk-inline-wrap{

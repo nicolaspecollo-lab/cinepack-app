@@ -449,6 +449,7 @@ function HerramientaData({
           asegurar={asegurarSingle}
           onGuardar={guardarFila}
           onVisionar={visionar}
+          estiloDoc={herramienta.estiloDoc}
         />
       )}
 
@@ -2025,6 +2026,7 @@ function NotaTool({
   asegurar,
   onGuardar,
   onVisionar,
+  estiloDoc,
 }: {
   fila: Fila | undefined;
   editable: boolean;
@@ -2032,6 +2034,7 @@ function NotaTool({
   asegurar: () => Promise<Fila>;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onVisionar: (id: string) => void;
+  estiloDoc?: string;
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const initialised = useRef(false);
@@ -2128,7 +2131,7 @@ function NotaTool({
       )}
       <div
         ref={editorRef}
-        className={`hp-nota hp-nota-editor ${!editable ? "readonly" : ""}`}
+        className={`hp-nota hp-nota-editor ${estiloDoc ?? ""} ${!editable ? "readonly" : ""}`}
         contentEditable={editable}
         suppressContentEditableWarning
         onBlur={commit}

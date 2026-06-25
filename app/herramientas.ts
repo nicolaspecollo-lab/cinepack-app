@@ -27,6 +27,7 @@ export type Herramienta = {
   hint?: string;
   columnas?: Columna[]; // tabla / galería (campos extra de cada tarjeta)
   campos?: Columna[];   // ficha (pares clave/valor)
+  estiloDoc?: string;   // nota (className de plantilla elegida al crear)
 };
 
 export type CargoTools = {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaDocumento, type PlantillaTabla } from "./plantillasEspacio";
 
 type TipoHerramienta = "tabla" | "nota";
 
@@ -14,7 +15,7 @@ const OPCIONES: { tipo: TipoHerramienta; titulo: string; desc: string; icono: st
   },
   {
     tipo: "nota",
-    titulo: "Nota",
+    titulo: "Documento",
     desc: "Documento de texto enriquecido con el mismo editor que Memoria Ejecutiva del Proyecto.",
     icono: "✎",
   },
@@ -31,6 +32,7 @@ export default function EspacioTrabajoPanel({
 }) {
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
   const [titulo, setTitulo] = useState("");
+  const [plantillaId, setPlantillaId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -40,6 +42,10 @@ export default function EspacioTrabajoPanel({
     if (!projectId || !elegido) return;
     if (!titulo.trim()) {
       setMsg({ type: "err", text: "Ponle un nombre a la herramienta." });
+      return;
+    }
+    if (!plantillaId) {
+      setMsg({ type: "err", text: "Elegí un estilo antes de crear." });
       return;
     }
     setSending(true);
@@ -55,6 +61,7 @@ export default function EspacioTrabajoPanel({
       departamento,
       titulo: titulo.trim(),
       tipo: elegido,
+      plantilla_id: plantillaId,
     });
 
     setSending(false);
@@ -69,6 +76,7 @@ export default function EspacioTrabajoPanel({
     });
     setTitulo("");
     setElegido(null);
+    setPlantillaId(null);
     onCreated?.();
   }
 
@@ -115,16 +123,67 @@ export default function EspacioTrabajoPanel({
               placeholder={elegido === "tabla" ? "Ej. Seguimiento de props, Lista de VFX…" : "Ej. Ideas de dirección, Notas de guion…"}
             />
           </label>
+
+          <label className="afield" style={{ marginBottom: 0 }}>
+            <span>Elegí un estilo {elegido === "tabla" ? "de cuadro" : "de documento"}</span>
+          </label>
+          <div className="esp-plantilla-cards">
+            {elegido === "tabla"
+              ? PLANTILLAS_TABLA.map((p) => (
+                  <PlantillaTablaCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
+                ))
+              : PLANTILLAS_DOCUMENTO.map((p) => (
+                  <PlantillaDocCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
+                ))}
+          </div>
+
           <div style={{ display: "flex", gap: 10 }}>
             <button type="submit" className="abtn" disabled={sending}>
-              {sending ? "Creando…" : `Crear ${elegido === "tabla" ? "cuadro de celdas" : "nota"}`}
+              {sending ? "Creando…" : `Crear ${elegido === "tabla" ? "cuadro de celdas" : "documento"}`}
             </button>
-            <button type="button" className="btn" onClick={() => { setElegido(null); setMsg(null); }}>
+            <button type="button" className="btn" onClick={() => { setElegido(null); setPlantillaId(null); setMsg(null); }}>
               Cancelar
             </button>
           </div>
         </form>
       )}
     </div>
+  );
+}
+
+function PlantillaDocCard({ p, selected, onClick }: { p: PlantillaDocumento; selected: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
+      <div className={`esp-plantilla-doc-preview ${p.estiloDoc}`}>
+        {p.previewLineas.map((linea, i) => (
+          <span key={i} className={i === 0 ? "esp-pp-l1" : "esp-pp-l2"}>{linea}</span>
+        ))}
+      </div>
+      <strong>{p.titulo}</strong>
+      <span>{p.descripcion}</span>
+    </button>
+  );
+}
+
+function PlantillaTablaCard({ p, selected, onClick }: { p: PlantillaTabla; selected: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
+      <div className="esp-plantilla-tabla-preview">
+        <div className="esp-pp-row esp-pp-head">
+          {p.columnas.map((c) => (
+            <span key={c.key}>{c.label}</span>
+          ))}
+        </div>
+        {p.previewFilas.map((fila, i) => (
+          <div className="esp-pp-row" key={i}>
+            {p.columnas.map((c) => (
+              <span key={c.key}>{fila[c.key] ?? ""}</span>
+            ))}
+          </div>
+        ))}
+      </div>
+      <strong>{p.titulo}</strong>
+      <span>{p.descripcion}</span>
+    </button>
   );
 }
