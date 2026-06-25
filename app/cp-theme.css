@@ -283,9 +283,11 @@
   .cp-proj{ order:2; display:block; }
   .cp-spacer{ display:none; }
   .cp-topbar-actions{
-    order:4; flex-basis:100%; width:100%; justify-content:space-between;
+    order:4; flex-basis:100%; width:100%; justify-content:flex-end; gap:10px;
   }
-  .cp-topbar-secondary{ flex-shrink:0; }
+  .cp-header-controls{ flex:1; min-width:0; justify-content:flex-end; }
+  .cp-topbar-secondary{ flex-shrink:0; gap:10px; }
+  .cp-topbar-theme-btn{ flex-shrink:0; }
 
   /* el menú es position:fixed en móvil, anclado al viewport (no al botón) con
      el top calculado en JS — así nunca se sale de pantalla, sea donde sea que
