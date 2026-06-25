@@ -162,8 +162,10 @@ export default function DepartmentDashboard({
     setReloadToken((t) => t + 1);
   }
 
-  function onAskIA(texto: string) {
-    window.dispatchEvent(new CustomEvent("cp-asistente-ask", { detail: { texto } }));
+  function onAskIA(_texto: string) {
+    alert(
+      "¡Hola! Al estar en la versión BETA de CINEPACK, estamos desarrollando esta función para brindarte un servicio más completo en este entorno de trabajo. Espero pronto estar a tu disposición y poder ayudarte a optimizar tu tiempo. ¡Nos vemos pronto!"
+    );
   }
 
   const paletteItems = useMemo<PaletteItem[]>(() => {
@@ -218,7 +220,7 @@ export default function DepartmentDashboard({
       <CommandPalette items={paletteItems} onCrearTarea={onCrearTarea} onAskIA={onAskIA} />
       <button
         className="cp-dash-ctrl-btn"
-        onClick={() => window.dispatchEvent(new Event("cp-asistente-open"))}
+        onClick={() => onAskIA("")}
         title="Asistente IA"
       >
         <span className="hex"></span> IA

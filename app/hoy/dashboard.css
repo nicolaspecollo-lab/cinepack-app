@@ -372,10 +372,14 @@
   .cp-topbar .cp-logo img{ height:28px; }
   .cp-dash-ctrl-btn span:not(.hex){ display:none; }
   .cp-dash-ctrl-btn{ padding:8px; }
-  .cmdk-inline-field{ min-width:0; padding:7px 8px; }
-  .cmdk-inline-input{ width:0; padding:0; opacity:0; pointer-events:none; transition:width .15s ease, opacity .15s ease; }
-  .cmdk-inline-field:focus-within .cmdk-inline-input{ width:120px; padding:0 2px; opacity:1; pointer-events:auto; }
-  .cmdk-drop{ left:auto; right:0; max-width:calc(100vw - 24px); min-width:min(320px,90vw); }
+  /* Estas 4 reglas necesitan el prefijo .cp-dash: las equivalentes sin
+     prefijo (líneas ~838-855) tienen más especificidad CSS y ganaban
+     siempre, incluso en mobile — por eso el buscador nunca colapsaba y
+     terminaba empujando/superponiendo el botón de tema sobre el de IA. */
+  .cp-dash .cmdk-inline-field{ min-width:0; padding:7px 8px; }
+  .cp-dash .cmdk-inline-input{ width:0; padding:0; opacity:0; pointer-events:none; transition:width .15s ease, opacity .15s ease; }
+  .cp-dash .cmdk-inline-field:focus-within .cmdk-inline-input{ width:120px; padding:0 2px; opacity:1; pointer-events:auto; }
+  .cp-dash .cmdk-drop{ left:auto; right:0; max-width:calc(100vw - 24px); min-width:min(320px,90vw); }
   .cp-menu-btn span:not(.hex){ display:none; }
   .cp-menu-btn{ padding:8px; }
 

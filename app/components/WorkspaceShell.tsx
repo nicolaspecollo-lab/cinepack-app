@@ -160,6 +160,18 @@ export default function WorkspaceShell({
                 <span>{t("notifications")}</span>
                 <span className="muted">{t("notificationsSub")}</span>
               </button>
+              <button
+                className="cp-menu-item"
+                onClick={() => {
+                  alert(
+                    "¡Hola! Al estar en la versión BETA de CINEPACK, estamos desarrollando una nueva sección con novedades, consejos, blog y un lugar para brindarte un servicio más completo en este entorno de trabajo. Esperamos que pronto estés disfrutando de esta sección. ¡Nos vemos pronto!"
+                  );
+                  setOpen(false);
+                }}
+              >
+                <span>Novedades CINE PACK</span>
+                <span className="muted">Próximamente</span>
+              </button>
 
               {isAdmin && (
                 <>
