@@ -6,19 +6,9 @@ import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaDocumento, type P
 
 type TipoHerramienta = "tabla" | "nota";
 
-const OPCIONES: { tipo: TipoHerramienta; titulo: string; desc: string; icono: string }[] = [
-  {
-    tipo: "tabla",
-    titulo: "Cuadro de celdas",
-    desc: "Tabla de filas y columnas con el mismo motor que Plan de rodaje: toolbar completo, filtros, CSV, PDF.",
-    icono: "⊞",
-  },
-  {
-    tipo: "nota",
-    titulo: "Documento",
-    desc: "Documento de texto enriquecido con el mismo editor que Memoria Ejecutiva del Proyecto.",
-    icono: "✎",
-  },
+const OPCIONES: { tipo: TipoHerramienta; titulo: string; icono: string }[] = [
+  { tipo: "tabla", titulo: "Cuadro de celdas", icono: "⊞" },
+  { tipo: "nota", titulo: "Documento", icono: "✎" },
 ];
 
 export default function EspacioTrabajoPanel({
@@ -101,7 +91,6 @@ export default function EspacioTrabajoPanel({
           >
             <span className="esp-tipo-icon">{op.icono}</span>
             <strong>{op.titulo}</strong>
-            <span>{op.desc}</span>
           </button>
         ))}
       </div>
@@ -141,13 +130,17 @@ export default function EspacioTrabajoPanel({
 function PlantillaDocCard({ p, selected, onClick }: { p: PlantillaDocumento; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
-      <div className={`esp-plantilla-doc-preview ${p.estiloDoc}`}>
-        {p.previewLineas.map((linea, i) => (
-          <span key={i} className={i === 0 ? "esp-pp-l1" : "esp-pp-l2"}>{linea}</span>
-        ))}
+      <div className="esp-plantilla-info">
+        <strong>{p.titulo}</strong>
+        <span>{p.descripcion}</span>
       </div>
-      <strong>{p.titulo}</strong>
-      <span>{p.descripcion}</span>
+      <div className="esp-plantilla-a4-wrap">
+        <div className={`esp-plantilla-a4 ${p.estiloDoc}`}>
+          {p.previewLineas.map((linea, i) => (
+            <span key={i} className={i === 0 ? "esp-pp-l1" : "esp-pp-l2"}>{linea}</span>
+          ))}
+        </div>
+      </div>
     </button>
   );
 }
@@ -155,22 +148,100 @@ function PlantillaDocCard({ p, selected, onClick }: { p: PlantillaDocumento; sel
 function PlantillaTablaCard({ p, selected, onClick }: { p: PlantillaTabla; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
-      <div className="esp-plantilla-tabla-preview">
-        <div className="esp-pp-row esp-pp-head">
-          {p.columnas.map((c) => (
-            <span key={c.key}>{c.label}</span>
-          ))}
+      <div className="esp-plantilla-info">
+        <strong>{p.titulo}</strong>
+        <span>{p.descripcion}</span>
+      </div>
+      <div className="esp-plantilla-tabla-wrap">
+        <TablaPreview id={p.id} p={p} />
+      </div>
+    </button>
+  );
+}
+
+function TablaPreview({ id, p }: { id: string; p: PlantillaTabla }) {
+  if (id === "kanban") {
+    return (
+      <div className="esp-tp esp-tp-kanban">
+        <div className="esp-tp-kcol">
+          <span className="esp-tp-khead">Por hacer</span>
+          <span className="esp-tp-kcard" style={{ background: "rgba(31,125,226,0.16)", borderColor: "#1F7DE2" }} />
+          <span className="esp-tp-kcard" style={{ background: "rgba(31,125,226,0.16)", borderColor: "#1F7DE2", height: 22 }} />
         </div>
-        {p.previewFilas.map((fila, i) => (
-          <div className="esp-pp-row" key={i}>
-            {p.columnas.map((c) => (
-              <span key={c.key}>{fila[c.key] ?? ""}</span>
-            ))}
+        <div className="esp-tp-kcol">
+          <span className="esp-tp-khead">En curso</span>
+          <span className="esp-tp-kcard" style={{ background: "rgba(158,238,106,0.18)", borderColor: "#9EEE6A", height: 30 }} />
+        </div>
+        <div className="esp-tp-kcol">
+          <span className="esp-tp-khead">Hecho</span>
+          <span className="esp-tp-kcard" style={{ background: "rgba(243,127,181,0.16)", borderColor: "#F37FB5" }} />
+          <span className="esp-tp-kcard" style={{ background: "rgba(243,127,181,0.16)", borderColor: "#F37FB5", height: 18 }} />
+        </div>
+      </div>
+    );
+  }
+  if (id === "timeline") {
+    return (
+      <div className="esp-tp esp-tp-timeline">
+        {p.previewFilas.map((f, i) => (
+          <div className="esp-tp-trow" key={i}>
+            <span className="esp-tp-tdot" style={{ background: i === 0 ? "#19CBE6" : "#E6B019" }} />
+            <span className="esp-tp-tfecha">{f.fecha}</span>
+            <span className="esp-tp-thito">{f.hito}</span>
           </div>
         ))}
       </div>
-      <strong>{p.titulo}</strong>
-      <span>{p.descripcion}</span>
-    </button>
+    );
+  }
+  if (id === "mosaico") {
+    const colores = ["#1F7DE2", "#F5E26A", "#EE9962", "#5BEDD6", "#C98AF2", "#52EC64", "#F37FB5", "#E6B019", "#66C3EE", "#F07A7A", "#9EEE6A", "#5F70ED"];
+    return (
+      <div className="esp-tp esp-tp-mosaico">
+        {colores.map((c, i) => (
+          <span key={i} className="esp-tp-swatch" style={{ background: c }} />
+        ))}
+      </div>
+    );
+  }
+  if (id === "checklist-tabla") {
+    return (
+      <div className="esp-tp esp-tp-checklist">
+        {p.previewFilas.map((f, i) => (
+          <div className="esp-tp-crow" key={i}>
+            <span className={`esp-tp-cdot${f.estado === "Hecho" ? " on" : ""}`} />
+            <span className="esp-tp-ctxt">{f.verificar}</span>
+          </div>
+        ))}
+        <div className="esp-tp-crow">
+          <span className="esp-tp-cdot" />
+          <span className="esp-tp-ctxt esp-tp-ctxt-muted">Liberación de derechos de imagen</span>
+        </div>
+      </div>
+    );
+  }
+  if (id === "storyboard") {
+    return (
+      <div className="esp-tp esp-tp-storyboard">
+        {p.previewFilas.map((f, i) => (
+          <div className="esp-tp-frame" key={i}>
+            <span className="esp-tp-frame-num">{f.plano}</span>
+          </div>
+        ))}
+        <div className="esp-tp-frame esp-tp-frame-empty" />
+      </div>
+    );
+  }
+  // grid-clasico
+  return (
+    <div className="esp-tp esp-tp-grid">
+      <div className="esp-tp-grow esp-tp-ghead">
+        {p.columnas.map((c) => <span key={c.key}>{c.label}</span>)}
+      </div>
+      {p.previewFilas.map((f, i) => (
+        <div className="esp-tp-grow" key={i}>
+          {p.columnas.map((c) => <span key={c.key}>{f[c.key] ?? ""}</span>)}
+        </div>
+      ))}
+    </div>
   );
 }

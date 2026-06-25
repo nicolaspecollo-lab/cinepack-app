@@ -36,6 +36,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Tratamiento de dirección",
       "La cámara observa antes de intervenir.",
       "Cada plano respira un segundo de más.",
+      "No hay corte sin motivo dramático.",
     ],
   },
   {
@@ -45,8 +46,10 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
     estiloDoc: "hp-nota-estilo-guion",
     previewLineas: [
       "INT. CASA DE MARTA — NOCHE",
+      "Marta enciende la última vela que le queda.",
       "MARTA",
       "      No es la primera vez que te espero así.",
+      "CORTE A:",
     ],
   },
   {
@@ -57,6 +60,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
     previewLineas: [
       "Filmamos lo que",
       "no se puede actuar.",
+      "Lo demás es ruido.",
     ],
   },
   {
@@ -68,6 +72,8 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "12 jun — Día 4",
       "Se perdió la luz natural a las 17:40.",
       "Repetimos la escena 22 con practicables.",
+      "13 jun — Día 5",
+      "Llueve. Pasamos al plan de interiores.",
     ],
   },
   {
@@ -79,6 +85,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Referencias de paleta",
       "Verdes desaturados para el bosque.",
       "Naranjas cálidos para el incendio final.",
+      "Azules fríos para la escena del hospital.",
     ],
   },
   {
