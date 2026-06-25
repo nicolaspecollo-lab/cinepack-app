@@ -83,10 +83,10 @@ export default function EspacioTrabajoPanel({
   return (
     <div className="esp-creator">
       <div className="esp-creator-header">
-        <span className="hex" style={{ width: 14, height: 12, background: "var(--acc)" }} />
+        <span className="hex esp-creator-hex" />
         <div>
           <h4>Espacio de trabajo</h4>
-          <p>Creá una herramienta personal. Quedará guardada en tu pestaña <strong>Exclusivas</strong>.</p>
+          <p>Creá una herramienta personal.</p>
         </div>
       </div>
 
@@ -124,17 +124,20 @@ export default function EspacioTrabajoPanel({
             />
           </label>
 
-          <label className="afield" style={{ marginBottom: 0 }}>
-            <span>Elegí un estilo {elegido === "tabla" ? "de cuadro" : "de documento"}</span>
-          </label>
-          <div className="esp-plantilla-cards">
-            {elegido === "tabla"
-              ? PLANTILLAS_TABLA.map((p) => (
-                  <PlantillaTablaCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
-                ))
-              : PLANTILLAS_DOCUMENTO.map((p) => (
-                  <PlantillaDocCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
-                ))}
+          <div className="esp-plantilla-box">
+            <div className="esp-plantilla-box-head">
+              <strong>Estilo {elegido === "tabla" ? "de cuadro de celdas" : "de documento"}</strong>
+              <span>Elegí cómo se va a ver. Empieza vacío, podés editar todo después.</span>
+            </div>
+            <div className="esp-plantilla-cards">
+              {elegido === "tabla"
+                ? PLANTILLAS_TABLA.map((p) => (
+                    <PlantillaTablaCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
+                  ))
+                : PLANTILLAS_DOCUMENTO.map((p) => (
+                    <PlantillaDocCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
+                  ))}
+            </div>
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
