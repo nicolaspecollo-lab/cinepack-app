@@ -118,6 +118,15 @@ export default function HerramientasPanel({
     localStorage.removeItem(openPersonalKey(departamento));
   }
 
+  async function renombrarPersonal(id: string, nuevo: string) {
+    const titulo = nuevo.trim();
+    if (!titulo) return;
+    const supabase = createClient();
+    await supabase.from("personal_tools").update({ titulo }).eq("id", id);
+    setPersonalTools((prev) => prev.map((p) => (p.id === id ? { ...p, titulo } : p)));
+    setAbiertaPersonal((prev) => (prev && prev.id === id ? { ...prev, titulo } : prev));
+  }
+
   // Restaura la herramienta que estaba abierta en esta pestaña (Departamento/Exclusivas)
   // al volver a ella, leyendo de localStorage por departamento + seccion.
   useEffect(() => {
@@ -149,7 +158,17 @@ export default function HerramientasPanel({
       <div className="hp-open">
         <div className="hp-open-head">
           <button className="btn" onClick={cerrarPersonal}>← Volver</button>
-          <h3><span className="hex"></span> {abiertaPersonal.titulo}</h3>
+          <h3 className="hp-open-title-edit">
+            <span className="hex"></span>
+            <input
+              key={abiertaPersonal.id}
+              className="hp-open-title-input"
+              defaultValue={abiertaPersonal.titulo}
+              placeholder={h.tipo === "tabla" ? "Cuadro sin título" : "Documento sin título"}
+              onBlur={(e) => renombrarPersonal(abiertaPersonal.id, e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+            />
+          </h3>
           <span className="hp-open-tag">{TIPO_TAG[h.tipo]}</span>
           <button
             className="btn hp-btn-danger"

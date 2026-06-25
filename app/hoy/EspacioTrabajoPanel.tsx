@@ -31,7 +31,6 @@ export default function EspacioTrabajoPanel({
   onCreated?: () => void;
 }) {
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
-  const [titulo, setTitulo] = useState("");
   const [plantillaId, setPlantillaId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -40,10 +39,6 @@ export default function EspacioTrabajoPanel({
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId || !elegido) return;
-    if (!titulo.trim()) {
-      setMsg({ type: "err", text: "Ponle un nombre a la herramienta." });
-      return;
-    }
     if (!plantillaId) {
       setMsg({ type: "err", text: "Elegí un estilo antes de crear." });
       return;
@@ -54,12 +49,14 @@ export default function EspacioTrabajoPanel({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSending(false); return; }
 
+    const tituloPorDefecto = elegido === "tabla" ? "Cuadro sin título" : "Documento sin título";
+
     const { error } = await supabase.from("personal_tools").insert({
       project_id: projectId,
       owner_id: user.id,
       owner_name: fullName,
       departamento,
-      titulo: titulo.trim(),
+      titulo: tituloPorDefecto,
       tipo: elegido,
       plantilla_id: plantillaId,
     });
@@ -72,9 +69,8 @@ export default function EspacioTrabajoPanel({
 
     setMsg({
       type: "ok",
-      text: `✓ "${titulo.trim()}" creada. Encontrala en la pestaña Exclusivas.`,
+      text: "✓ Creado. Ponele nombre desde adentro y encontralo en la pestaña Exclusivas.",
     });
-    setTitulo("");
     setElegido(null);
     setPlantillaId(null);
     onCreated?.();
@@ -101,7 +97,7 @@ export default function EspacioTrabajoPanel({
           <button
             key={op.tipo}
             className={`esp-tipo-card${elegido === op.tipo ? " selected" : ""}`}
-            onClick={() => { setElegido(op.tipo); setMsg(null); setTitulo(""); }}
+            onClick={() => { setElegido(op.tipo); setMsg(null); setPlantillaId(null); }}
           >
             <span className="esp-tipo-icon">{op.icono}</span>
             <strong>{op.titulo}</strong>
@@ -112,18 +108,6 @@ export default function EspacioTrabajoPanel({
 
       {elegido && (
         <form onSubmit={handleCreate} className="esp-creator-form">
-          <label className="afield">
-            <span>Nombre de la herramienta</span>
-            <input
-              type="text"
-              required
-              autoFocus
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder={elegido === "tabla" ? "Ej. Seguimiento de props, Lista de VFX…" : "Ej. Ideas de dirección, Notas de guion…"}
-            />
-          </label>
-
           <div className="esp-plantilla-box">
             <div className="esp-plantilla-box-head">
               <strong>Estilo {elegido === "tabla" ? "de cuadro de celdas" : "de documento"}</strong>
