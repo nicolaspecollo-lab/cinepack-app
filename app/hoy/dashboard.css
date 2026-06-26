@@ -520,66 +520,62 @@
   background:color-mix(in srgb, var(--esp-tipo-color) 18%, transparent); color:var(--esp-tipo-color);
 }
 .cp-dash .esp-tipo-card strong{ font-family:'Poppins',sans-serif; font-size:12px; font-weight:700; color:var(--text); }
-.cp-dash .esp-tipo-cancel{ flex-shrink:0; }
-.cp-dash .esp-creator-form{ display:flex; flex-direction:column; gap:14px; padding:0 30px 30px; width:100%; box-sizing:border-box; }
-.cp-dash .esp-creator-form .afield input{ width:100%; max-width:480px; box-sizing:border-box; }
 
 /* Selector de plantilla, agrupado en una sola tarjeta */
-.cp-dash .esp-plantilla-box{ border:1px solid var(--line); background:var(--panel); padding:16px; box-sizing:border-box; width:100%; }
+.cp-dash .esp-plantilla-box{ border:1px solid var(--line); background:var(--panel); padding:16px; box-sizing:border-box; width:100%; margin:0 30px 24px; max-width:calc(100% - 60px); }
 .cp-dash .esp-plantilla-box-head{ display:flex; flex-direction:column; gap:2px; margin-bottom:14px; }
 .cp-dash .esp-plantilla-box-head strong{ font-family:'Poppins',sans-serif; font-size:12px; font-weight:700; color:var(--text); }
 .cp-dash .esp-plantilla-box-head span{ font-size:11px; color:var(--muted); }
 
-/* Cada plantilla: fila completa — preview a la izquierda, info a la derecha. Responsive por achique, sin apilar. */
-.cp-dash .esp-plantilla-cards{ display:flex; flex-direction:column; gap:10px; width:100%; }
+/* Cada plantilla: fila completa — preview a la izquierda, info a la derecha. Clic = crear. */
+.cp-dash .esp-plantilla-cards{ display:flex; flex-direction:column; gap:8px; width:100%; }
+.cp-dash .esp-plantilla-cards.sending{ opacity:0.5; pointer-events:none; }
 .cp-dash .esp-plantilla-card{
-  display:flex; align-items:center; gap:14px; width:100%; box-sizing:border-box;
-  padding:10px; background:var(--bg-2); border:1px solid var(--line);
+  display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box;
+  padding:8px; background:var(--bg-2); border:1px solid var(--line);
   cursor:pointer; text-align:left; transition:border-color .15s, background .15s;
 }
-.cp-dash .esp-plantilla-card:hover{ border-color:var(--acc); }
-.cp-dash .esp-plantilla-card.selected{ border-color:var(--acc); background:var(--hl1); }
+.cp-dash .esp-plantilla-card:hover{ border-color:var(--acc); background:var(--hl1); }
 .cp-dash .esp-plantilla-info{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; }
 .cp-dash .esp-plantilla-info strong{ font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
-.cp-dash .esp-plantilla-card.selected .esp-plantilla-info strong{ color:var(--acc); }
 .cp-dash .esp-plantilla-info span{ font-size:11.5px; color:var(--muted); line-height:1.4; }
-@media (max-width:480px){
-  .cp-dash .esp-creator-form{ padding:0 16px 24px; }
-  .cp-dash .esp-plantilla-box{ padding:10px; }
-  .cp-dash .esp-plantilla-card{ padding:8px; gap:10px; }
-  .cp-dash .esp-plantilla-info span{ font-size:10.5px; }
-}
 
-/* Mini A4 — proporción real de hoja, en escala de miniatura (texto chico, no un "trozo" agrandado) */
+/* Mini A4 — proporción real de hoja (58x82, ratio 1:1.41), con barras en vez de texto agrandado */
 .cp-dash .esp-plantilla-a4-wrap{ flex-shrink:0; }
 .cp-dash .esp-plantilla-a4{
-  width:clamp(58px, 20vw, 86px); aspect-ratio:1 / 1.41; background:var(--bg); border:1px solid var(--line);
-  padding:9% 8%; display:flex; flex-direction:column; gap:3px; overflow:hidden; box-sizing:border-box;
+  width:58px; height:82px; background:var(--bg); border:1px solid var(--line);
+  padding:7px 6px; display:flex; flex-direction:column; gap:3px; overflow:hidden; box-sizing:border-box;
 }
-.cp-dash .esp-plantilla-a4 .esp-pp-l1{ font-size:5.5px; font-weight:700; color:var(--text); line-height:1.35; }
-.cp-dash .esp-plantilla-a4 .esp-pp-l2{ font-size:5px; color:var(--muted); line-height:1.45; }
+.cp-dash .esp-plantilla-a4 .esp-pp-l1{ font-size:6px; font-weight:700; color:var(--text); line-height:1.3; }
+.cp-dash .esp-doc-bar-line{ display:block; height:2.5px; background:var(--line); }
+.cp-dash .esp-doc-bar-center{ align-self:center; }
+.cp-dash .esp-doc-bar-indent{ align-self:flex-end; }
 .cp-dash .esp-plantilla-a4.hp-nota-estilo-clasico{ align-items:center; text-align:center; font-family:Georgia,'Times New Roman',serif; justify-content:center; background:var(--hl1); }
+.cp-dash .esp-plantilla-a4.hp-nota-estilo-clasico .esp-doc-bar-line{ align-self:center; }
 .cp-dash .esp-doc-rule{ width:40%; height:1px; background:var(--gold); margin:1px auto 2px; }
-.cp-dash .esp-plantilla-a4.hp-nota-estilo-guion{ font-family:'Courier New',monospace; gap:4px; }
-.cp-dash .esp-plantilla-a4.hp-nota-estilo-guion .esp-pp-l1{ letter-spacing:.01em; }
-.cp-dash .esp-doc-chip{ align-self:flex-start; background:rgba(245,226,106,0.22); color:var(--yellow); font-size:4.5px; font-weight:700; padding:1px 3px; }
+.cp-dash .esp-plantilla-a4.hp-nota-estilo-guion{ font-family:'Courier New',monospace; gap:4px; align-items:center; }
+.cp-dash .esp-doc-chip{ align-self:flex-start; background:rgba(245,226,106,0.22); color:var(--yellow); font-size:5px; font-weight:700; padding:1px 3px; }
 .cp-dash .esp-plantilla-a4.hp-nota-estilo-manifiesto{ justify-content:center; background:rgba(201,138,242,0.08); }
 .cp-dash .esp-doc-manifiesto-row{ display:flex; gap:4px; align-items:center; }
 .cp-dash .esp-doc-bar{ width:2px; height:60%; background:var(--violet); flex-shrink:0; align-self:stretch; }
 .cp-dash .esp-doc-manifiesto-txt{ display:flex; flex-direction:column; gap:1px; }
-.cp-dash .esp-plantilla-a4.hp-nota-estilo-manifiesto .esp-pp-l1{ font-family:'Poppins',sans-serif; font-size:7px; font-weight:800; line-height:1.25; }
+.cp-dash .esp-plantilla-a4.hp-nota-estilo-manifiesto .esp-pp-l1{ font-family:'Poppins',sans-serif; font-size:7.5px; font-weight:800; line-height:1.2; }
 .cp-dash .esp-plantilla-a4.hp-nota-estilo-diario{ border-left:2px solid var(--cyan); }
 .cp-dash .esp-doc-fecha{ color:var(--cyan) !important; }
 .cp-dash .esp-plantilla-a4.hp-nota-estilo-tablon{ background:var(--hl2); }
 .cp-dash .esp-doc-tablon-row{ display:flex; align-items:center; gap:3px; }
-.cp-dash .esp-doc-swatch{ width:7px; height:7px; flex-shrink:0; }
-.cp-dash .esp-plantilla-a4.hp-nota-estilo-minimalista{ justify-content:center; gap:5px; }
-.cp-dash .esp-plantilla-a4.hp-nota-estilo-minimalista .esp-pp-l1{ font-weight:500; font-size:6px; }
+.cp-dash .esp-doc-swatch{ width:6px; height:6px; flex-shrink:0; }
+.cp-dash .esp-plantilla-a4.hp-nota-estilo-minimalista{ justify-content:center; gap:6px; align-items:flex-start; }
+.cp-dash .esp-plantilla-a4.hp-nota-estilo-minimalista .esp-pp-l1{ font-weight:500; font-size:6.5px; }
 .cp-dash .esp-doc-dash{ width:9px; height:1px; background:var(--coral); }
 
 /* Cuadro de celdas — preview real por estructura, distinta por plantilla */
 .cp-dash .esp-plantilla-tabla-wrap{ flex-shrink:0; }
-.cp-dash .esp-tp{ width:clamp(92px, 30vw, 150px); height:clamp(64px, 21vw, 100px); background:var(--bg); border:1px solid var(--line); box-sizing:border-box; overflow:hidden; }
+.cp-dash .esp-tp{ width:84px; height:60px; background:var(--bg); border:1px solid var(--line); box-sizing:border-box; overflow:hidden; }
+@media (max-width:480px){
+  .cp-dash .esp-plantilla-box{ margin:0 16px 20px; max-width:calc(100% - 32px); padding:10px; }
+  .cp-dash .esp-plantilla-card{ padding:7px; gap:10px; }
+}
 
 .cp-dash .esp-tp-grid{ display:flex; flex-direction:column; padding:6px; gap:3px; }
 .cp-dash .esp-tp-grow{ display:flex; gap:5px; }

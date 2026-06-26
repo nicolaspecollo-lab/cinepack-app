@@ -41,7 +41,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Cada plano respira un segundo de más.",
       "No hay corte sin motivo dramático.",
     ],
-    esqueletoHtml: "<h3>Título del documento</h3><div>Escribí aquí el desarrollo de esta sección.</div>",
+    esqueletoHtml: "<h3>Título del documento</h3><div>Resumen breve de una línea.</div><h3>Desarrollo</h3><div>Escribí aquí el cuerpo principal del texto.</div><h3>Notas</h3><div>Observaciones adicionales.</div>",
   },
   {
     id: "guion",
@@ -55,7 +55,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "      No es la primera vez que te espero así.",
       "CORTE A:",
     ],
-    esqueletoHtml: "<div style=\"text-align:center\"><b>INT. LUGAR — MOMENTO</b></div><div><br></div><div style=\"text-align:center\"><b>PERSONAJE</b></div><div style=\"margin-left:40px\">(Texto del diálogo.)</div>",
+    esqueletoHtml: "<div style=\"text-align:center\"><b>INT. LUGAR — MOMENTO</b></div><div><br></div><div>Acción: descripción breve de lo que ocurre en escena.</div><div><br></div><div style=\"text-align:center\"><b>PERSONAJE</b></div><div style=\"margin-left:40px\">(Acotación.)</div><div style=\"margin-left:40px\">Texto del diálogo.</div><div><br></div><div style=\"text-align:center\"><b>CORTE A:</b></div>",
   },
   {
     id: "manifiesto",
@@ -67,7 +67,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "no se puede actuar.",
       "Lo demás es ruido.",
     ],
-    esqueletoHtml: "<h3>Tu frase central.</h3>",
+    esqueletoHtml: "<h3>Tu frase central.</h3><div>Una línea que sostiene el resto del texto.</div>",
   },
   {
     id: "diario",
@@ -81,7 +81,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "13 jun — Día 5",
       "Llueve. Pasamos al plan de interiores.",
     ],
-    esqueletoHtml: "<h3>Día 1</h3><ul><li>Anotá lo que pasó hoy.</li></ul>",
+    esqueletoHtml: "<h3>Día 1</h3><ul><li>Hora de llamado: </li><li>Primera escena: </li><li>Incidencias: </li></ul><h3>Día 2</h3><ul><li>Pendiente del día anterior: </li></ul>",
   },
   {
     id: "tablon",
@@ -94,7 +94,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Naranjas cálidos para el incendio final.",
       "Azules fríos para la escena del hospital.",
     ],
-    esqueletoHtml: "<h3>Referencias</h3><div>Sumá tus notas de paleta y estilo visual.</div>",
+    esqueletoHtml: "<h3>Referencias visuales</h3><div>Paleta de color: </div><div>Texturas y locaciones: </div><h3>Notas</h3><div>Sumá tus notas de estilo visual.</div>",
   },
   {
     id: "minimalista",
@@ -105,7 +105,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Notas sueltas",
       "Menos plano, más mirada.",
     ],
-    esqueletoHtml: "<div>Notas.</div>",
+    esqueletoHtml: "<h3>Notas</h3><div>—</div>",
   },
 ];
 

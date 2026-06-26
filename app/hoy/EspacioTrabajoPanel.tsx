@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaDocumento, type PlantillaTabla } from "./plantillasEspacio";
+import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaTabla } from "./plantillasEspacio";
 
 type TipoHerramienta = "tabla" | "nota";
 
@@ -15,33 +15,25 @@ export default function EspacioTrabajoPanel({
   departamento,
   fullName,
   onCreated,
-  onCancel,
 }: {
   departamento: string;
   fullName: string;
   onCreated?: () => void;
-  onCancel?: () => void;
 }) {
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
-  const [plantillaId, setPlantillaId] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
+  async function crear(tipo: TipoHerramienta, plantillaId: string) {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId || !elegido) return;
-    if (!plantillaId) {
-      setMsg({ type: "err", text: "Elegí un estilo antes de crear." });
-      return;
-    }
+    if (!projectId || sending) return;
     setSending(true);
     setMsg(null);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSending(false); return; }
 
-    const tituloPorDefecto = elegido === "tabla" ? "Cuadro sin título" : "Documento sin título";
+    const tituloPorDefecto = tipo === "tabla" ? "Cuadro sin título" : "Documento sin título";
 
     const { data: nuevaHerramienta, error } = await supabase
       .from("personal_tools")
@@ -51,7 +43,7 @@ export default function EspacioTrabajoPanel({
         owner_name: fullName,
         departamento,
         titulo: tituloPorDefecto,
-        tipo: elegido,
+        tipo,
         plantilla_id: plantillaId,
       })
       .select("id")
@@ -65,7 +57,7 @@ export default function EspacioTrabajoPanel({
 
     // El documento arranca con la estructura real de la plantilla (no contenido
     // de ejemplo): así el estilo elegido se nota desde el primer momento.
-    if (elegido === "nota") {
+    if (tipo === "nota") {
       const plantilla = PLANTILLAS_DOCUMENTO.find((p) => p.id === plantillaId);
       if (plantilla) {
         await supabase.from("herramienta_filas").insert({
@@ -89,7 +81,6 @@ export default function EspacioTrabajoPanel({
       text: "✓ Creado. Ponele nombre desde adentro y encontralo en la pestaña Exclusivas.",
     });
     setElegido(null);
-    setPlantillaId(null);
     onCreated?.();
   }
 
@@ -109,80 +100,76 @@ export default function EspacioTrabajoPanel({
         </p>
       )}
 
-      {!elegido && (
-        <div className="esp-tipo-cards">
-          {OPCIONES.map((op) => (
-            <button
-              key={op.tipo}
-              className={`esp-tipo-card${elegido === op.tipo ? " selected" : ""}`}
-              style={{ "--esp-tipo-color": op.color } as React.CSSProperties}
-              onClick={() => { setElegido(op.tipo); setMsg(null); setPlantillaId(null); }}
-            >
-              <span className="esp-tipo-icon">{op.icono}</span>
-              <strong>{op.titulo}</strong>
-            </button>
-          ))}
-          {onCancel && (
-            <button type="button" className="btn esp-tipo-cancel" onClick={onCancel}>Cancelar</button>
-          )}
-        </div>
-      )}
+      <div className="esp-tipo-cards">
+        {OPCIONES.map((op) => (
+          <button
+            key={op.tipo}
+            className={`esp-tipo-card${elegido === op.tipo ? " selected" : ""}`}
+            style={{ "--esp-tipo-color": op.color } as React.CSSProperties}
+            onClick={() => { setMsg(null); setElegido((cur) => (cur === op.tipo ? null : op.tipo)); }}
+          >
+            <span className="esp-tipo-icon">{op.icono}</span>
+            <strong>{op.titulo}</strong>
+          </button>
+        ))}
+      </div>
 
       {elegido && (
-        <form onSubmit={handleCreate} className="esp-creator-form">
-          <div className="esp-plantilla-box">
-            <div className="esp-plantilla-box-head">
-              <strong>Estilo {elegido === "tabla" ? "de cuadro de celdas" : "de documento"}</strong>
-              <span>Elegí cómo se va a ver. Empieza vacío, podés editar todo después.</span>
-            </div>
-            <div className="esp-plantilla-cards">
-              {elegido === "tabla"
-                ? PLANTILLAS_TABLA.map((p) => (
-                    <PlantillaTablaCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
-                  ))
-                : PLANTILLAS_DOCUMENTO.map((p) => (
-                    <PlantillaDocCard key={p.id} p={p} selected={plantillaId === p.id} onClick={() => setPlantillaId(p.id)} />
-                  ))}
-            </div>
+        <div className="esp-plantilla-box">
+          <div className="esp-plantilla-box-head">
+            <strong>Estilo {elegido === "tabla" ? "de cuadro de celdas" : "de documento"}</strong>
+            <span>Tocá una para crearla. Empieza con esta estructura, podés editar todo después.</span>
           </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <button type="submit" className="abtn" disabled={sending}>
-              {sending ? "Creando…" : `Crear ${elegido === "tabla" ? "cuadro de celdas" : "documento"}`}
-            </button>
-            <button type="button" className="btn" onClick={() => { setElegido(null); setPlantillaId(null); setMsg(null); }}>
-              Volver
-            </button>
+          <div className={`esp-plantilla-cards${sending ? " sending" : ""}`}>
+            {elegido === "tabla"
+              ? PLANTILLAS_TABLA.map((p) => (
+                  <PlantillaTablaCard key={p.id} p={p} onClick={() => crear("tabla", p.id)} />
+                ))
+              : PLANTILLAS_DOCUMENTO.map((p) => (
+                  <PlantillaDocCard key={p.id} id={p.id} titulo={p.titulo} descripcion={p.descripcion} estiloDoc={p.estiloDoc} heading={p.previewLineas[0]} onClick={() => crear("nota", p.id)} />
+                ))}
           </div>
-        </form>
+        </div>
       )}
     </div>
   );
 }
 
-function PlantillaDocCard({ p, selected, onClick }: { p: PlantillaDocumento; selected: boolean; onClick: () => void }) {
+function PlantillaDocCard({
+  id, titulo, descripcion, estiloDoc, heading, onClick,
+}: {
+  id: string; titulo: string; descripcion: string; estiloDoc: string; heading: string; onClick: () => void;
+}) {
   return (
-    <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
+    <button type="button" className="esp-plantilla-card" onClick={onClick}>
       <div className="esp-plantilla-a4-wrap">
-        <div className={`esp-plantilla-a4 ${p.estiloDoc}`}>
-          <DocPreview id={p.id} lineas={p.previewLineas} />
+        <div className={`esp-plantilla-a4 ${estiloDoc}`}>
+          <DocPreview id={id} heading={heading} />
         </div>
       </div>
       <div className="esp-plantilla-info">
-        <strong>{p.titulo}</strong>
-        <span>{p.descripcion}</span>
+        <strong>{titulo}</strong>
+        <span>{descripcion}</span>
       </div>
     </button>
   );
 }
 
-function DocPreview({ id, lineas }: { id: string; lineas: string[] }) {
+function Bars({ widths }: { widths: number[] }) {
+  return (
+    <>
+      {widths.map((w, i) => <span key={i} className="esp-doc-bar-line" style={{ width: `${w}%` }} />)}
+    </>
+  );
+}
+
+function DocPreview({ id, heading }: { id: string; heading: string }) {
   if (id === "clasico") {
     return (
       <>
-        <span className="esp-pp-l1">{lineas[0]}</span>
+        <span className="esp-pp-l1">{heading}</span>
         <span className="esp-doc-rule" />
-        {lineas.slice(1).map((l, i) => <span key={i} className="esp-pp-l2">{l}</span>)}
+        <Bars widths={[80, 65, 70]} />
       </>
     );
   }
@@ -190,7 +177,9 @@ function DocPreview({ id, lineas }: { id: string; lineas: string[] }) {
     return (
       <>
         <span className="esp-doc-chip">INT.</span>
-        {lineas.map((l, i) => <span key={i} className="esp-pp-l1">{l}</span>)}
+        <span className="esp-doc-bar-line esp-doc-bar-center" style={{ width: "55%" }} />
+        <span className="esp-doc-bar-line esp-doc-bar-indent" style={{ width: "38%" }} />
+        <span className="esp-doc-bar-line esp-doc-bar-indent" style={{ width: "28%" }} />
       </>
     );
   }
@@ -199,7 +188,8 @@ function DocPreview({ id, lineas }: { id: string; lineas: string[] }) {
       <div className="esp-doc-manifiesto-row">
         <span className="esp-doc-bar" />
         <div className="esp-doc-manifiesto-txt">
-          {lineas.map((l, i) => <span key={i} className="esp-pp-l1">{l}</span>)}
+          <span className="esp-pp-l1">{heading}</span>
+          <span className="esp-pp-l1">no se puede actuar.</span>
         </div>
       </div>
     );
@@ -207,23 +197,24 @@ function DocPreview({ id, lineas }: { id: string; lineas: string[] }) {
   if (id === "diario") {
     return (
       <>
-        {lineas.map((l, i) => (
-          <span key={i} className={/^\d/.test(l) ? "esp-pp-l1 esp-doc-fecha" : "esp-pp-l2"}>{l}</span>
-        ))}
+        <span className="esp-pp-l1 esp-doc-fecha">{heading}</span>
+        <Bars widths={[75, 58]} />
+        <span className="esp-pp-l1 esp-doc-fecha">Día 5</span>
+        <Bars widths={[64]} />
       </>
     );
   }
   if (id === "tablon") {
     return (
       <>
-        <span className="esp-pp-l1">{lineas[0]}</span>
+        <span className="esp-pp-l1">{heading}</span>
         <div className="esp-doc-tablon-row">
           <span className="esp-doc-swatch" style={{ background: "#EE9962" }} />
-          <span className="esp-pp-l2">{lineas[1]}</span>
+          <span className="esp-doc-bar-line" style={{ width: "55%" }} />
         </div>
         <div className="esp-doc-tablon-row">
           <span className="esp-doc-swatch" style={{ background: "#5BEDD6" }} />
-          <span className="esp-pp-l2">{lineas[2]}</span>
+          <span className="esp-doc-bar-line" style={{ width: "45%" }} />
         </div>
       </>
     );
@@ -232,14 +223,14 @@ function DocPreview({ id, lineas }: { id: string; lineas: string[] }) {
   return (
     <>
       <span className="esp-doc-dash" />
-      {lineas.map((l, i) => <span key={i} className="esp-pp-l1">{l}</span>)}
+      <span className="esp-pp-l1">{heading}</span>
     </>
   );
 }
 
-function PlantillaTablaCard({ p, selected, onClick }: { p: PlantillaTabla; selected: boolean; onClick: () => void }) {
+function PlantillaTablaCard({ p, onClick }: { p: PlantillaTabla; onClick: () => void }) {
   return (
-    <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
+    <button type="button" className="esp-plantilla-card" onClick={onClick}>
       <div className="esp-plantilla-tabla-wrap">
         <TablaPreview id={p.id} p={p} />
       </div>

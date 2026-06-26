@@ -221,17 +221,15 @@ export default function HerramientasPanel({
     const tools = deptTools(departamento);
     return (
       <div className="hp-index">
-        {creandoEspacio ? (
+        <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
+          {creandoEspacio ? "✕ Cerrar" : "+ Espacio de trabajo"}
+        </button>
+        {creandoEspacio && (
           <EspacioTrabajoCreator
             departamento={departamento}
             fullName={fullName}
-            onCancel={() => setCreandoEspacio(false)}
             onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
           />
-        ) : (
-          <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
-            + Espacio de trabajo
-          </button>
         )}
         {tools.length === 0 && personalTools.length === 0 && (
           <div className="soon-box">
@@ -293,17 +291,15 @@ export default function HerramientasPanel({
 
   return (
     <div className="hp-index hp-index-cols">
-      {creandoEspacio ? (
+      <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
+        {creandoEspacio ? "✕ Cerrar" : "+ Espacio de trabajo"}
+      </button>
+      {creandoEspacio && (
         <EspacioTrabajoCreator
           departamento={departamento}
           fullName={fullName}
-          onCancel={() => setCreandoEspacio(false)}
           onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
         />
-      ) : (
-        <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
-          + Espacio de trabajo
-        </button>
       )}
       {personalTools.length > 0 && (
         <section className="hp-group hp-group-personal">
@@ -350,16 +346,14 @@ function EspacioTrabajoCreator({
   departamento,
   fullName,
   onCreated,
-  onCancel,
 }: {
   departamento: string;
   fullName: string;
   onCreated: () => void;
-  onCancel: () => void;
 }) {
   return (
     <div style={{ marginBottom: "20px" }}>
-      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} onCancel={onCancel} />
+      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} />
     </div>
   );
 }
