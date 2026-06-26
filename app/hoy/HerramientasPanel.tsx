@@ -359,8 +359,7 @@ function EspacioTrabajoCreator({
 }) {
   return (
     <div style={{ marginBottom: "20px" }}>
-      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} />
-      <button className="btn" onClick={onCancel} style={{ marginTop: "8px" }}>Cancelar</button>
+      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} onCancel={onCancel} />
     </div>
   );
 }

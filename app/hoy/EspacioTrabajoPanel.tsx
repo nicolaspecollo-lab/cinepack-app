@@ -6,19 +6,21 @@ import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaDocumento, type P
 
 type TipoHerramienta = "tabla" | "nota";
 
-const OPCIONES: { tipo: TipoHerramienta; titulo: string; icono: string }[] = [
-  { tipo: "tabla", titulo: "Cuadro de celdas", icono: "⊞" },
-  { tipo: "nota", titulo: "Documento", icono: "✎" },
+const OPCIONES: { tipo: TipoHerramienta; titulo: string; icono: string; color: string }[] = [
+  { tipo: "tabla", titulo: "Cuadro de celdas", icono: "⊞", color: "var(--cyan)" },
+  { tipo: "nota", titulo: "Documento", icono: "✎", color: "var(--lime)" },
 ];
 
 export default function EspacioTrabajoPanel({
   departamento,
   fullName,
   onCreated,
+  onCancel,
 }: {
   departamento: string;
   fullName: string;
   onCreated?: () => void;
+  onCancel?: () => void;
 }) {
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
   const [plantillaId, setPlantillaId] = useState<string | null>(null);
@@ -82,18 +84,24 @@ export default function EspacioTrabajoPanel({
         </p>
       )}
 
-      <div className="esp-tipo-cards">
-        {OPCIONES.map((op) => (
-          <button
-            key={op.tipo}
-            className={`esp-tipo-card${elegido === op.tipo ? " selected" : ""}`}
-            onClick={() => { setElegido(op.tipo); setMsg(null); setPlantillaId(null); }}
-          >
-            <span className="esp-tipo-icon">{op.icono}</span>
-            <strong>{op.titulo}</strong>
-          </button>
-        ))}
-      </div>
+      {!elegido && (
+        <div className="esp-tipo-cards">
+          {OPCIONES.map((op) => (
+            <button
+              key={op.tipo}
+              className={`esp-tipo-card${elegido === op.tipo ? " selected" : ""}`}
+              style={{ "--esp-tipo-color": op.color } as React.CSSProperties}
+              onClick={() => { setElegido(op.tipo); setMsg(null); setPlantillaId(null); }}
+            >
+              <span className="esp-tipo-icon">{op.icono}</span>
+              <strong>{op.titulo}</strong>
+            </button>
+          ))}
+          {onCancel && (
+            <button type="button" className="btn esp-tipo-cancel" onClick={onCancel}>Cancelar</button>
+          )}
+        </div>
+      )}
 
       {elegido && (
         <form onSubmit={handleCreate} className="esp-creator-form">
@@ -118,7 +126,7 @@ export default function EspacioTrabajoPanel({
               {sending ? "Creando…" : `Crear ${elegido === "tabla" ? "cuadro de celdas" : "documento"}`}
             </button>
             <button type="button" className="btn" onClick={() => { setElegido(null); setPlantillaId(null); setMsg(null); }}>
-              Cancelar
+              Volver
             </button>
           </div>
         </form>
@@ -130,30 +138,89 @@ export default function EspacioTrabajoPanel({
 function PlantillaDocCard({ p, selected, onClick }: { p: PlantillaDocumento; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
+      <div className="esp-plantilla-a4-wrap">
+        <div className={`esp-plantilla-a4 ${p.estiloDoc}`}>
+          <DocPreview id={p.id} lineas={p.previewLineas} />
+        </div>
+      </div>
       <div className="esp-plantilla-info">
         <strong>{p.titulo}</strong>
         <span>{p.descripcion}</span>
       </div>
-      <div className="esp-plantilla-a4-wrap">
-        <div className={`esp-plantilla-a4 ${p.estiloDoc}`}>
-          {p.previewLineas.map((linea, i) => (
-            <span key={i} className={i === 0 ? "esp-pp-l1" : "esp-pp-l2"}>{linea}</span>
-          ))}
+    </button>
+  );
+}
+
+function DocPreview({ id, lineas }: { id: string; lineas: string[] }) {
+  if (id === "clasico") {
+    return (
+      <>
+        <span className="esp-pp-l1">{lineas[0]}</span>
+        <span className="esp-doc-rule" />
+        {lineas.slice(1).map((l, i) => <span key={i} className="esp-pp-l2">{l}</span>)}
+      </>
+    );
+  }
+  if (id === "guion") {
+    return (
+      <>
+        <span className="esp-doc-chip">INT.</span>
+        {lineas.map((l, i) => <span key={i} className="esp-pp-l1">{l}</span>)}
+      </>
+    );
+  }
+  if (id === "manifiesto") {
+    return (
+      <div className="esp-doc-manifiesto-row">
+        <span className="esp-doc-bar" />
+        <div className="esp-doc-manifiesto-txt">
+          {lineas.map((l, i) => <span key={i} className="esp-pp-l1">{l}</span>)}
         </div>
       </div>
-    </button>
+    );
+  }
+  if (id === "diario") {
+    return (
+      <>
+        {lineas.map((l, i) => (
+          <span key={i} className={/^\d/.test(l) ? "esp-pp-l1 esp-doc-fecha" : "esp-pp-l2"}>{l}</span>
+        ))}
+      </>
+    );
+  }
+  if (id === "tablon") {
+    return (
+      <>
+        <span className="esp-pp-l1">{lineas[0]}</span>
+        <div className="esp-doc-tablon-row">
+          <span className="esp-doc-swatch" style={{ background: "#EE9962" }} />
+          <span className="esp-pp-l2">{lineas[1]}</span>
+        </div>
+        <div className="esp-doc-tablon-row">
+          <span className="esp-doc-swatch" style={{ background: "#5BEDD6" }} />
+          <span className="esp-pp-l2">{lineas[2]}</span>
+        </div>
+      </>
+    );
+  }
+  // minimalista
+  return (
+    <>
+      <span className="esp-doc-dash" />
+      {lineas.map((l, i) => <span key={i} className="esp-pp-l1">{l}</span>)}
+    </>
   );
 }
 
 function PlantillaTablaCard({ p, selected, onClick }: { p: PlantillaTabla; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" className={`esp-plantilla-card${selected ? " selected" : ""}`} onClick={onClick}>
+      <div className="esp-plantilla-tabla-wrap">
+        <TablaPreview id={p.id} p={p} />
+      </div>
       <div className="esp-plantilla-info">
         <strong>{p.titulo}</strong>
         <span>{p.descripcion}</span>
-      </div>
-      <div className="esp-plantilla-tabla-wrap">
-        <TablaPreview id={p.id} p={p} />
       </div>
     </button>
   );
