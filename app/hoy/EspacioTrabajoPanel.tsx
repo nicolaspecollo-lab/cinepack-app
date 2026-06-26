@@ -78,10 +78,10 @@ export default function EspacioTrabajoPanel({
       if (plantilla) {
         await supabase.from("herramienta_filas").insert({ ...base, datos: { texto: plantilla.esqueletoHtml }, orden: 0 });
       }
-    } else {
-      // Cuadro de celdas: 3 filas vacías para que las columnas de la plantilla
-      // se vean de entrada como una tabla lista para completar (antes con 0
-      // filas se mostraba un empty-state que ocultaba la plantilla por completo).
+    } else if (plantillaId === "grid-clasico") {
+      // Solo la grilla genérica necesita filas sembradas (su empty-state
+      // ocultaría las columnas). Las vistas kanban/timeline/mosaico/checklist/
+      // storyboard renderizan su estructura aunque arranquen sin filas.
       const filasIniciales = [0, 1, 2].map((orden) => ({ ...base, datos: {}, orden }));
       await supabase.from("herramienta_filas").insert(filasIniciales);
     }

@@ -8,6 +8,10 @@ import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
+import PlantillaCuadro from "./PlantillaCuadro";
+
+// Plantillas de cuadro con vista propia (no la grilla genérica de HerramientaPanel).
+const VISTAS_CUADRO = new Set(["kanban", "timeline", "mosaico", "checklist-tabla", "storyboard"]);
 
 type PersonalTool = {
   id: string;
@@ -185,7 +189,17 @@ export default function HerramientasPanel({
             <Icon name="trash" size={13} /> Eliminar
           </button>
         </div>
-        <HerramientaPanel departamento={departamento} herramienta={h} fullName={fullName} editable />
+        {abiertaPersonal.tipo === "tabla" && abiertaPersonal.plantilla_id && VISTAS_CUADRO.has(abiertaPersonal.plantilla_id) ? (
+          <PlantillaCuadro
+            herramientaId={abiertaPersonal.id}
+            plantillaId={abiertaPersonal.plantilla_id}
+            departamento={departamento}
+            fullName={fullName}
+            editable
+          />
+        ) : (
+          <HerramientaPanel departamento={departamento} herramienta={h} fullName={fullName} editable />
+        )}
       </div>
     );
   }

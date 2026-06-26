@@ -1715,3 +1715,97 @@
     padding-left: var(--gutter); padding-right: var(--gutter);
   }
 }
+
+/* ===========================================================================
+   CUADROS DE PLANTILLA — vistas propias (kanban, timeline, mosaico,
+   checklist, storyboard). Esquinas rectas, superficies oscuras, acentos.
+   =========================================================================== */
+.cp-dash .pq-wrap{ padding:20px var(--gutter) 36px; }
+.cp-dash .pq-loading{ padding:30px var(--gutter); color:var(--muted); font-size:12px; }
+
+/* Inputs/textarea compartidos: invisibles hasta foco, fluyen con el contenido */
+.cp-dash .pq-ta, .cp-dash .pq-wrap input{
+  width:100%; background:transparent; border:1px solid transparent; color:var(--text);
+  font-family:inherit; font-size:13px; line-height:1.5; padding:5px 6px; box-sizing:border-box;
+  resize:none; outline:none; transition:border-color var(--dur-fast), background var(--dur-fast);
+}
+.cp-dash .pq-ta{ overflow:hidden; }
+.cp-dash .pq-wrap input::placeholder, .cp-dash .pq-ta::placeholder{ color:var(--muted); opacity:.7; }
+.cp-dash .pq-ta:not([readonly]):hover, .cp-dash .pq-wrap input:not([readonly]):hover{ background:var(--hl1); }
+.cp-dash .pq-ta:focus, .cp-dash .pq-wrap input:focus{ border-color:var(--acc); background:var(--hl1); }
+
+.cp-dash .pq-add{
+  width:100%; text-align:left; background:none; border:1px dashed var(--line); color:var(--muted);
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; padding:8px 10px; cursor:pointer;
+  transition:border-color var(--dur-fast), color var(--dur-fast);
+}
+.cp-dash .pq-add:hover{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .pq-add-block{ margin-top:10px; max-width:280px; }
+.cp-dash .pq-del{ background:none; border:none; color:var(--muted); cursor:pointer; padding:3px; display:inline-flex; transition:color var(--dur-fast); }
+.cp-dash .pq-del:hover{ color:var(--rose); }
+
+/* ── Kanban ── */
+.cp-dash .pq-kanban{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; align-items:start; }
+.cp-dash .pq-kcol{ background:var(--hl1); border:1px solid var(--line); display:flex; flex-direction:column; min-width:0; }
+.cp-dash .pq-kcol-head{
+  display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:2px solid var(--line);
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+}
+.cp-dash .pq-kcol-dot{ width:8px; height:8px; flex-shrink:0; }
+.cp-dash .pq-kcol-count{ margin-left:auto; color:var(--muted); font-size:11px; }
+.cp-dash .pq-kcol-body{ padding:10px; display:flex; flex-direction:column; gap:8px; }
+.cp-dash .pq-kcard{ background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--acc); padding:6px; }
+.cp-dash .pq-kcard-actions{ display:flex; gap:2px; margin-top:4px; }
+.cp-dash .pq-kcard-actions button{ background:none; border:none; color:var(--muted); cursor:pointer; padding:3px; display:inline-flex; transition:color var(--dur-fast); }
+.cp-dash .pq-kcard-actions button:hover:not(:disabled){ color:var(--acc); }
+.cp-dash .pq-kcard-actions button:disabled{ opacity:.25; cursor:default; }
+.cp-dash .pq-kcard-actions .pq-del{ margin-left:auto; }
+@media (max-width:680px){ .cp-dash .pq-kanban{ grid-template-columns:1fr; } }
+
+/* ── Timeline ── */
+.cp-dash .pq-timeline{ display:flex; flex-direction:column; }
+.cp-dash .pq-tl-row{ display:flex; gap:14px; }
+.cp-dash .pq-tl-rail{ position:relative; width:14px; flex-shrink:0; display:flex; justify-content:center; }
+.cp-dash .pq-tl-rail::before{ content:""; position:absolute; top:0; bottom:0; width:2px; background:var(--line); }
+.cp-dash .pq-tl-row:first-child .pq-tl-rail::before{ top:14px; }
+.cp-dash .pq-tl-row:last-child .pq-tl-rail::before{ bottom:auto; height:14px; }
+.cp-dash .pq-tl-dot{ position:relative; z-index:1; width:12px; height:12px; border-radius:50%; background:var(--cyan); margin-top:8px; box-shadow:0 0 0 3px var(--bg); }
+.cp-dash .pq-tl-card{ flex:1; min-width:0; border:1px solid var(--line); background:var(--hl1); padding:8px 10px; margin-bottom:12px; }
+.cp-dash .pq-tl-top{ display:flex; gap:8px; align-items:center; }
+.cp-dash .pq-tl-fecha{ max-width:110px; flex-shrink:0; color:var(--cyan) !important; font-weight:700; font-size:12px !important; }
+.cp-dash .pq-tl-hito{ font-family:'Poppins',sans-serif; font-weight:700; }
+
+/* ── Mosaico ── */
+.cp-dash .pq-mosaico{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+.cp-dash .pq-tile{ border:1px solid var(--line); border-top:3px solid; padding:10px; display:flex; flex-direction:column; gap:4px; min-height:120px; }
+.cp-dash .pq-tile-titulo{ font-family:'Poppins',sans-serif; font-weight:700; font-size:13px !important; }
+.cp-dash .pq-tile .pq-ta{ flex:1; }
+.cp-dash .pq-tile-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
+.cp-dash .pq-swatches{ display:flex; gap:4px; flex-wrap:wrap; }
+.cp-dash .pq-swatches button{ width:15px; height:15px; border:1px solid var(--line); padding:0; cursor:pointer; }
+.cp-dash .pq-swatches button.on{ outline:2px solid var(--text); outline-offset:1px; }
+.cp-dash .pq-tile-add{ align-items:center; justify-content:center; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; cursor:pointer; background:none; border:1px dashed var(--line); border-top:1px dashed var(--line); }
+.cp-dash .pq-tile-add:hover{ border-color:var(--acc); color:var(--acc); }
+
+/* ── Checklist ── */
+.cp-dash .pq-checklist{ display:flex; flex-direction:column; gap:2px; max-width:680px; }
+.cp-dash .pq-check-progress{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.cp-dash .pq-check-bar{ flex:1; height:5px; background:var(--hl3); overflow:hidden; }
+.cp-dash .pq-check-bar span{ display:block; height:100%; background:var(--lime); transition:width var(--dur); }
+.cp-dash .pq-check-progress > span{ font-size:11px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:700; }
+.cp-dash .pq-check-row{ display:flex; align-items:center; gap:10px; padding:2px 0; }
+.cp-dash .pq-check-box{ width:20px; height:20px; flex-shrink:0; border:1.5px solid var(--line); background:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--bg); transition:all var(--dur-fast); }
+.cp-dash .pq-check-row.done .pq-check-box{ background:var(--lime); border-color:var(--lime); }
+.cp-dash .pq-check-box:disabled{ cursor:default; }
+.cp-dash .pq-check-txt{ flex:1; }
+.cp-dash .pq-check-row.done .pq-check-txt{ color:var(--muted); text-decoration:line-through; }
+
+/* ── Storyboard ── */
+.cp-dash .pq-storyboard{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; }
+.cp-dash .pq-frame{ border:1px solid var(--line); background:var(--hl1); display:flex; flex-direction:column; }
+.cp-dash .pq-frame-img{ position:relative; aspect-ratio:16/9; background:var(--bg); border-bottom:1px solid var(--line); display:flex; align-items:flex-end; padding:6px; }
+.cp-dash .pq-frame-num{ font-family:'Poppins',sans-serif; font-weight:800; font-size:12px; color:var(--acc); background:var(--bg-2); padding:2px 7px; border:1px solid var(--line); }
+.cp-dash .pq-frame-del{ position:absolute; top:5px; right:5px; }
+.cp-dash .pq-frame-dur{ border-top:1px solid var(--line); color:var(--muted) !important; font-size:11px !important; }
+.cp-dash .pq-frame-add{ align-items:center; justify-content:center; gap:8px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; cursor:pointer; background:none; border:1px dashed var(--line); min-height:120px; }
+.cp-dash .pq-frame-add:hover{ border-color:var(--acc); color:var(--acc); }
