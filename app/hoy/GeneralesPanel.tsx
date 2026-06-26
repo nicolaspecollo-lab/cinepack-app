@@ -18,6 +18,7 @@ import OrdenRodajePanel from "./OrdenRodajePanel";
 import { GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
 import { ACCENTS } from "../constants";
 import { createClient } from "@/lib/supabase/client";
+import Icon from "../components/Icon";
 
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
 // que despliega sub-pestañas. Iguales para todo el proyecto.
@@ -84,7 +85,7 @@ function deptColor(dept: string) {
   return `var(--${ACCENTS[dept] ?? "lime"})`;
 }
 
-function DeptHexes({ label, depts }: { label: string; depts: string[] | null | "todos" }) {
+function DeptHexes({ label, depts }: { label: React.ReactNode; depts: string[] | null | "todos" }) {
   if (depts === null) {
     return (
       <span className="hcard-perm-group">
@@ -178,8 +179,8 @@ export default function GeneralesPanel({
                 <div className="hcard-title">{s.label}</div>
                 <div className="hcard-desc">{s.desc}</div>
                 <div className="hcard-meta">
-                  <DeptHexes label="✏" depts={s.editores} />
-                  <DeptHexes label="👁" depts={s.visores} />
+                  <DeptHexes label={<Icon name="pencil" size={11} />} depts={s.editores} />
+                  <DeptHexes label={<Icon name="eye" size={11} />} depts={s.visores} />
                 </div>
               </button>
             ))}
@@ -192,7 +193,7 @@ export default function GeneralesPanel({
   return (
     <div className="gen">
       {backMounted && createPortal(
-        <button className="cp-header-back-btn" onClick={() => setSub(null)}>← Volver</button>,
+        <button className="cp-header-back-btn" onClick={() => setSub(null)}><Icon name="arrow-left" size={14} /> Volver</button>,
         document.getElementById("cp-header-back")!
       )}
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useEquipo } from "./useEquipo";
 import { deptTools, cargoGroups } from "../herramientas";
+import Icon from "../components/Icon";
 
 // Herramientas Generales del mapa de trabajo (prototipo/mapa_herramientas.html).
 // Toda persona del proyecto las tiene disponibles; aquí la cabeza de equipo
@@ -214,10 +215,10 @@ export default function GestionAccesosPanel({
               <th>Integrante</th>
               <th>Cargo</th>
               <th className="acc-th-role">
-                <span className="acc-role-label acc-role-editor">✏ Editor</span>
+                <span className="acc-role-label acc-role-editor"><Icon name="pencil" size={12} /> Editor</span>
               </th>
               <th className="acc-th-role">
-                <span className="acc-role-label acc-role-veedor">👁 Veedor</span>
+                <span className="acc-role-label acc-role-veedor"><Icon name="eye" size={12} /> Veedor</span>
               </th>
             </tr>
           </thead>

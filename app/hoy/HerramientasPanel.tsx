@@ -7,6 +7,7 @@ import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
+import Icon from "../components/Icon";
 
 type PersonalTool = {
   id: string;
@@ -157,7 +158,7 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         <div className="hp-open-head">
-          <button className="btn" onClick={cerrarPersonal}>← Volver</button>
+          <button className="btn" onClick={cerrarPersonal}><Icon name="arrow-left" size={14} /> Volver</button>
           <h3 className="hp-open-title-edit">
             <span className="hex"></span>
             <input
@@ -181,7 +182,7 @@ export default function HerramientasPanel({
               cerrarPersonal();
             }}
           >
-            🗑 Eliminar
+            <Icon name="trash" size={13} /> Eliminar
           </button>
         </div>
         <HerramientaPanel departamento={departamento} herramienta={h} fullName={fullName} editable />
@@ -194,7 +195,7 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         <div className="hp-open-head">
-          <button className="btn" onClick={cerrar}>← Volver</button>
+          <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> Volver</button>
           <h3><span className="hex"></span> {abierta.nombre}</h3>
           <span className="hp-open-tag">{TIPO_TAG[abierta.tipo]}</span>
         </div>

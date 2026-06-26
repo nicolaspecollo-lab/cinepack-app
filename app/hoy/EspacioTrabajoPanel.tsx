@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaTabla } from "./plantillasEspacio";
+import Icon from "../components/Icon";
 
 type TipoHerramienta = "tabla" | "nota";
 
-const OPCIONES: { tipo: TipoHerramienta; titulo: string; icono: string; color: string }[] = [
-  { tipo: "tabla", titulo: "Cuadro de celdas", icono: "⊞", color: "var(--cyan)" },
-  { tipo: "nota", titulo: "Documento", icono: "✎", color: "var(--lime)" },
+const OPCIONES: { tipo: TipoHerramienta; titulo: string; icono: "table" | "file-text"; color: string }[] = [
+  { tipo: "tabla", titulo: "Cuadro de celdas", icono: "table", color: "var(--cyan)" },
+  { tipo: "nota", titulo: "Documento", icono: "file-text", color: "var(--lime)" },
 ];
 
 export default function EspacioTrabajoPanel({
@@ -112,7 +113,7 @@ export default function EspacioTrabajoPanel({
             style={{ "--esp-tipo-color": op.color } as React.CSSProperties}
             onClick={() => { setMsg(null); setElegido((cur) => (cur === op.tipo ? null : op.tipo)); }}
           >
-            <span className="esp-tipo-icon">{op.icono}</span>
+            <span className="esp-tipo-icon"><Icon name={op.icono} size={15} /></span>
             <strong>{op.titulo}</strong>
           </button>
         ))}
@@ -155,7 +156,7 @@ function PlantillaDocCard({
         <strong>{titulo}</strong>
         <span>{descripcion}</span>
       </div>
-      <span className="esp-plantilla-go">→</span>
+      <span className="esp-plantilla-go"><Icon name="arrow-right" size={15} /></span>
     </button>
   );
 }
@@ -243,7 +244,7 @@ function PlantillaTablaCard({ p, onClick }: { p: PlantillaTabla; onClick: () => 
         <strong>{p.titulo}</strong>
         <span>{p.descripcion}</span>
       </div>
-      <span className="esp-plantilla-go">→</span>
+      <span className="esp-plantilla-go"><Icon name="arrow-right" size={15} /></span>
     </button>
   );
 }

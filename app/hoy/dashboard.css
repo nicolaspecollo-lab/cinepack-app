@@ -926,11 +926,12 @@
 }
 .cp-dash .hp-nota-toolbar button{
   display:flex; align-items:center; justify-content:center;
-  background:none; border:1px solid var(--line); color:var(--text);
-  width:28px; height:28px; font-size:12px; cursor:pointer; border-radius:4px;
-  transition:background .12s, border-color .12s;
+  background:none; border:1px solid var(--line); color:var(--muted);
+  width:30px; height:30px; font-size:15px; cursor:pointer; border-radius:4px;
+  transition:background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
 }
-.cp-dash .hp-nota-toolbar button:hover{ background:var(--hl1); border-color:var(--acc); }
+.cp-dash .hp-nota-toolbar button:hover{ background:var(--hl1); border-color:var(--acc); color:var(--acc); }
+.cp-dash .btn svg{ margin-right:5px; }
 .cp-dash .hp-nota-toolbar select{
   background:var(--hl1); border:1px solid var(--line); color:var(--text);
   font-family:inherit; font-size:11px; padding:4px 6px; border-radius:4px; cursor:pointer;

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Herramienta, Columna } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
+import Icon from "../components/Icon";
 
 type Intervencion = { accion: string; usuario: string; fecha: string };
 type Visionado = { usuario: string; fecha: string };
@@ -1277,12 +1278,12 @@ function TablaTool({
         <button className={`btn${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)} title="Buscar y reemplazar">⌦ F&R</button>
         <button className={`btn${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)} title="Formato condicional">◈ Cond.</button>
         <button className={`btn${showExtStats ? " active" : ""}`} onClick={() => setShowExtStats(v => !v)} title="Estadísticas extendidas">∑ Stats</button>
-        <button className={`btn${compacto ? " active" : ""}`} onClick={() => setCompacto(v => !v)} title="Altura de fila compacta">≡ Compact</button>
+        <button className={`btn${compacto ? " active" : ""}`} onClick={() => setCompacto(v => !v)} title="Altura de fila compacta"><Icon name="rows" size={13} /> Compacto</button>
         <button className={`btn${showLastEdit ? " active" : ""}`} onClick={() => setShowLastEdit(v => !v)} title="Mostrar última edición">⏱</button>
 
         {/* Columnas visibles */}
         <div className="hp-col-menu-wrap" ref={colMenuRef}>
-          <button className="btn" onClick={() => setColMenuOpen(v => !v)} title="Mostrar/ocultar columnas">⊞ Cols</button>
+          <button className="btn" onClick={() => setColMenuOpen(v => !v)} title="Mostrar/ocultar columnas"><Icon name="columns" size={13} /> Columnas</button>
           {colMenuOpen && (
             <div className="hp-col-menu-drop">
               {columnas.map(c => (
@@ -2070,21 +2071,21 @@ function NotaTool({
       {editable && (
         <div className="hp-nota-toolbar">
           {/* Formato inline */}
-          <button type="button" title="Negrita (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><b>B</b></button>
-          <button type="button" title="Cursiva (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><i>I</i></button>
-          <button type="button" title="Subrayado (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><u>U</u></button>
-          <button type="button" title="Tachado" onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><s>S</s></button>
+          <button type="button" title="Negrita (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><Icon name="bold" /></button>
+          <button type="button" title="Cursiva (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><Icon name="italic" /></button>
+          <button type="button" title="Subrayado (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><Icon name="underline" /></button>
+          <button type="button" title="Tachado" onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><Icon name="strikethrough" /></button>
           <span className="hp-nota-sep"></span>
           {/* Bloques */}
-          <button type="button" title="Título" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}>H</button>
-          <button type="button" title="Texto normal" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}>¶</button>
-          <button type="button" title="Lista viñetas" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}>•</button>
-          <button type="button" title="Lista numerada" onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}>1.</button>
+          <button type="button" title="Título" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}><Icon name="heading" /></button>
+          <button type="button" title="Texto normal" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}><Icon name="paragraph" /></button>
+          <button type="button" title="Lista de viñetas" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}><Icon name="list" /></button>
+          <button type="button" title="Lista numerada" onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}><Icon name="list-ordered" /></button>
           <span className="hp-nota-sep"></span>
           {/* Alineación */}
-          <button type="button" title="Alinear izquierda" onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}>⬅</button>
-          <button type="button" title="Centrar" onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}>≡</button>
-          <button type="button" title="Alinear derecha" onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}>➡</button>
+          <button type="button" title="Alinear a la izquierda" onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}><Icon name="align-left" /></button>
+          <button type="button" title="Centrar" onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}><Icon name="align-center" /></button>
+          <button type="button" title="Alinear a la derecha" onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}><Icon name="align-right" /></button>
           <span className="hp-nota-sep"></span>
           {/* Color de texto */}
           <span className="hp-nota-colors">
@@ -2109,7 +2110,7 @@ function NotaTool({
                 style={{ background: c === "transparent" ? "var(--hl1)" : c, border: c === "transparent" ? "1px dashed var(--muted)" : "2px solid transparent" }}
                 onMouseDown={(e) => { e.preventDefault(); highlight(c); }}
               >
-                {c === "transparent" ? "✕" : ""}
+                {c === "transparent" ? <Icon name="x" size={12} /> : ""}
               </button>
             ))}
           </span>
@@ -2225,8 +2226,8 @@ function Firma({ fila }: { fila: Fila }) {
   const vis = fila.visionado_por ?? [];
   return (
     <span className="hp-firma">
-      ✎ {fila.editor_nombre ?? fila.autor_nombre ?? "—"} · {timeAgo(fila.updated_at)}
-      {vis.length > 0 && <> · 👁 {vis.map((v) => v.usuario).join(", ")}</>}
+      <Icon name="pencil" size={12} /> {fila.editor_nombre ?? fila.autor_nombre ?? "—"} · {timeAgo(fila.updated_at)}
+      {vis.length > 0 && <> · <Icon name="eye" size={12} /> {vis.map((v) => v.usuario).join(", ")}</>}
     </span>
   );
 }
