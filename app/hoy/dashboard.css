@@ -1672,3 +1672,25 @@
 .cp-dash .hp-tabla-toolbar .hp-tabla-search{
   min-width:100px; max-width:180px; flex-shrink:0;
 }
+
+/* ===========================================================================
+   GUTTER DE PÁGINA RESPONSIVE (sistema de diseño)
+   ---------------------------------------------------------------------------
+   Todos estos contenedores tenían padding lateral fijo de 30px sin breakpoint,
+   lo que en móvil costaba ~16% del ancho en márgenes vacíos. Acá se igualan al
+   gutter responsive (--gutter: 30px desktop / 16px ≤640px / 12px ≤380px).
+   Solo afecta el padding lateral; el vertical de cada contenedor se respeta.
+   =========================================================================== */
+@media (max-width:640px){
+  .cp-dash .dhead, .cp-dash .today, .cp-dash .tools, .cp-dash .doc-status,
+  .cp-dash .dsubtabs, .cp-dash .cons-filters, .cp-dash .cons-list, .cp-dash .cons-new,
+  .cp-dash .com-list, .cp-dash .perm, .cp-dash .admin-wrap, .cp-dash .gtabs,
+  .cp-dash .gup, .cp-dash .glist, .cp-dash .gcards, .cp-dash .esp-grid,
+  .cp-dash .acc-toolbar, .cp-dash .acc-table-wrap, .cp-dash .hp-open-head,
+  .cp-dash .hp-hint, .cp-dash .hp-actions, .cp-dash .hp-table-wrap,
+  .cp-dash .hp-thread-section, .cp-dash .hp-single-foot, .cp-dash .pulso,
+  .cp-dash .hp-checklist, .cp-dash .hp-ficha, .cp-dash .hp-galeria,
+  .cp-dash .hp-stats-bar, .cp-dash .cs-print{
+    padding-left: var(--gutter); padding-right: var(--gutter);
+  }
+}

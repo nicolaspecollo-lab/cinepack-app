@@ -38,6 +38,27 @@
   --shadow: rgba(0,0,0,0.35);
   --hexline: rgba(255,255,255,0.045);
 
+  /* ── Sistema de diseño: tokens (escala de espaciado, gutter responsive,
+        tipografía fluida y duraciones). Reemplazan los valores ad-hoc. ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  /* gutter lateral de página: 30px en desktop, baja en pantallas chicas */
+  --gutter: 30px;
+  /* escala tipográfica fluida (clamp: mínimo móvil / preferido / máximo) */
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: clamp(13px, 1.1vw + 11px, 14px);
+  --fs-md: clamp(14px, 1.4vw + 11px, 16px);
+  --fs-lg: clamp(16px, 2vw + 12px, 20px);
+  --fs-xl: clamp(20px, 3vw + 14px, 28px);
+  /* duraciones de animación coherentes */
+  --dur-fast: 120ms;
+  --dur: 180ms;
+
   background: var(--bg);
   color: var(--text);
   font-family: 'Courier New', Courier, monospace;
@@ -68,6 +89,11 @@
   --shadow: rgba(13,13,18,0.12);
   --hexline: rgba(13,13,18,0.07);
 }
+
+/* Gutter de página responsive: en móvil el margen lateral baja a 16px para
+   recuperar el ~16% de ancho que se perdía con los 30px fijos. */
+@media (max-width:640px){ .cp-dash{ --gutter:16px; } }
+@media (max-width:380px){ .cp-dash{ --gutter:12px; } }
 
 .cp-dash *{ box-sizing:border-box; }
 .cp-dash h1,.cp-dash h2,.cp-dash h3,.cp-dash h4{ font-family:'Poppins',sans-serif; font-weight:800; letter-spacing:-0.02em; line-height:1.1; }
