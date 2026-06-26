@@ -6,6 +6,7 @@
 // con su contenido en `datos`), así que comparten un único motor de datos.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
 
@@ -26,6 +27,7 @@ export default function PlantillaCuadro({
   fullName: string;
   editable: boolean;
 }) {
+  const tc = useTranslations("cuadro");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const projectIdRef = useRef<string | null>(null);
@@ -79,7 +81,7 @@ export default function PlantillaCuadro({
     await supabase.from("herramienta_filas").delete().eq("id", id);
   }
 
-  if (loading) return <div className="pq-loading">Cargando…</div>;
+  if (loading) return <div className="pq-loading">{tc("loading")}</div>;
 
   return (
     <div className="pq-wrap">
@@ -111,11 +113,12 @@ export function PlantillaCuadroView({ plantillaId, ...common }: ViewProps & { pl
 
 // ── Kanban ──────────────────────────────────────────────────────────────
 const KANBAN_COLS = [
-  { key: "0", label: "Por hacer", color: "#1F7DE2" },
-  { key: "1", label: "En curso", color: "#9EEE6A" },
-  { key: "2", label: "Hecho", color: "#F37FB5" },
-];
+  { key: "0", labelKey: "kanbanTodo", color: "#1F7DE2" },
+  { key: "1", labelKey: "kanbanDoing", color: "#9EEE6A" },
+  { key: "2", labelKey: "kanbanDone", color: "#F37FB5" },
+] as const;
 function KanbanView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) {
+  const t = useTranslations("cuadro");
   return (
     <div className="pq-kanban">
       {KANBAN_COLS.map((col) => {
@@ -124,7 +127,7 @@ function KanbanView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) 
           <div className="pq-kcol" key={col.key}>
             <div className="pq-kcol-head" style={{ borderColor: col.color }}>
               <span className="pq-kcol-dot" style={{ background: col.color }} />
-              {col.label}
+              {t(col.labelKey)}
               <span className="pq-kcol-count">{cards.length}</span>
             </div>
             <div className="pq-kcol-body">
@@ -132,23 +135,23 @@ function KanbanView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) 
                 <div className="pq-kcard" key={c.id} style={{ borderLeftColor: col.color }}>
                   <AutoTextarea
                     value={c.datos.texto ?? ""}
-                    placeholder="Escribí la tarea…"
+                    placeholder={t("cardPlaceholder")}
                     readOnly={!editable}
                     onCommit={(v) => patchRow(c.id, { texto: v })}
                   />
                   {editable && (
                     <div className="pq-kcard-actions">
-                      <button title="Mover a la izquierda" disabled={col.key === "0"}
+                      <button title={t("moveLeft")} disabled={col.key === "0"}
                         onClick={() => patchRow(c.id, { col: String(Number(col.key) - 1) })}><Icon name="arrow-left" size={13} /></button>
-                      <button title="Mover a la derecha" disabled={col.key === "2"}
+                      <button title={t("moveRight")} disabled={col.key === "2"}
                         onClick={() => patchRow(c.id, { col: String(Number(col.key) + 1) })}><Icon name="arrow-right" size={13} /></button>
-                      <button title="Eliminar" className="pq-del" onClick={() => removeRow(c.id)}><Icon name="trash" size={13} /></button>
+                      <button title={t("delete")} className="pq-del" onClick={() => removeRow(c.id)}><Icon name="trash" size={13} /></button>
                     </div>
                   )}
                 </div>
               ))}
               {editable && (
-                <button className="pq-add" onClick={() => addRow({ col: col.key, texto: "" })}>+ Agregar tarjeta</button>
+                <button className="pq-add" onClick={() => addRow({ col: col.key, texto: "" })}>{t("addCard")}</button>
               )}
             </div>
           </div>
@@ -160,6 +163,7 @@ function KanbanView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) 
 
 // ── Línea de tiempo ─────────────────────────────────────────────────────
 function TimelineView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) {
+  const t = useTranslations("cuadro");
   return (
     <div className="pq-timeline">
       {rows.map((r) => (
@@ -167,33 +171,34 @@ function TimelineView({ rows, editable, addRow, patchRow, removeRow }: ViewProps
           <div className="pq-tl-rail"><span className="pq-tl-dot" /></div>
           <div className="pq-tl-card">
             <div className="pq-tl-top">
-              <input className="pq-tl-fecha" placeholder="Fecha" defaultValue={r.datos.fecha ?? ""} readOnly={!editable}
+              <input className="pq-tl-fecha" placeholder={t("date")} defaultValue={r.datos.fecha ?? ""} readOnly={!editable}
                 onBlur={(e) => patchRow(r.id, { fecha: e.target.value })} />
-              <input className="pq-tl-hito" placeholder="Título del hito" defaultValue={r.datos.hito ?? ""} readOnly={!editable}
+              <input className="pq-tl-hito" placeholder={t("milestone")} defaultValue={r.datos.hito ?? ""} readOnly={!editable}
                 onBlur={(e) => patchRow(r.id, { hito: e.target.value })} />
-              {editable && <button className="pq-del" title="Eliminar" onClick={() => removeRow(r.id)}><Icon name="trash" size={13} /></button>}
+              {editable && <button className="pq-del" title={t("delete")} onClick={() => removeRow(r.id)}><Icon name="trash" size={13} /></button>}
             </div>
-            <AutoTextarea value={r.datos.detalle ?? ""} placeholder="Detalle…" readOnly={!editable}
+            <AutoTextarea value={r.datos.detalle ?? ""} placeholder={t("detail")} readOnly={!editable}
               onCommit={(v) => patchRow(r.id, { detalle: v })} />
           </div>
         </div>
       ))}
-      {editable && <button className="pq-add pq-add-block" onClick={() => addRow({})}>+ Agregar hito</button>}
+      {editable && <button className="pq-add pq-add-block" onClick={() => addRow({})}>{t("addMilestone")}</button>}
     </div>
   );
 }
 
 // ── Mosaico de color ────────────────────────────────────────────────────
 function MosaicoView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) {
+  const t = useTranslations("cuadro");
   return (
     <div className="pq-mosaico">
       {rows.map((r) => {
         const color = r.datos.color ?? PALETA[0];
         return (
           <div className="pq-tile" key={r.id} style={{ background: `${color}22`, borderColor: color }}>
-            <input className="pq-tile-titulo" placeholder="Título" defaultValue={r.datos.titulo ?? ""} readOnly={!editable}
+            <input className="pq-tile-titulo" placeholder={t("tileTitle")} defaultValue={r.datos.titulo ?? ""} readOnly={!editable}
               onBlur={(e) => patchRow(r.id, { titulo: e.target.value })} />
-            <AutoTextarea value={r.datos.nota ?? ""} placeholder="Nota…" readOnly={!editable}
+            <AutoTextarea value={r.datos.nota ?? ""} placeholder={t("note")} readOnly={!editable}
               onCommit={(v) => patchRow(r.id, { nota: v })} />
             {editable && (
               <div className="pq-tile-foot">
@@ -203,19 +208,20 @@ function MosaicoView({ rows, editable, addRow, patchRow, removeRow }: ViewProps)
                       onClick={() => patchRow(r.id, { color: c })} />
                   ))}
                 </div>
-                <button className="pq-del" title="Eliminar" onClick={() => removeRow(r.id)}><Icon name="trash" size={13} /></button>
+                <button className="pq-del" title={t("delete")} onClick={() => removeRow(r.id)}><Icon name="trash" size={13} /></button>
               </div>
             )}
           </div>
         );
       })}
-      {editable && <button className="pq-tile pq-tile-add" onClick={() => addRow({ color: PALETA[rows.length % PALETA.length] })}>+ Agregar</button>}
+      {editable && <button className="pq-tile pq-tile-add" onClick={() => addRow({ color: PALETA[rows.length % PALETA.length] })}>{t("add")}</button>}
     </div>
   );
 }
 
 // ── Checklist ───────────────────────────────────────────────────────────
 function ChecklistView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) {
+  const t = useTranslations("cuadro");
   const hechas = rows.filter((r) => r.datos.hecho === "1").length;
   return (
     <div className="pq-checklist">
@@ -229,40 +235,41 @@ function ChecklistView({ rows, editable, addRow, patchRow, removeRow }: ViewProp
         const done = r.datos.hecho === "1";
         return (
           <div className={`pq-check-row${done ? " done" : ""}`} key={r.id}>
-            <button className="pq-check-box" disabled={!editable} title={done ? "Marcar pendiente" : "Marcar hecho"}
+            <button className="pq-check-box" disabled={!editable} title={done ? t("markPending") : t("markDone")}
               onClick={() => patchRow(r.id, { hecho: done ? "" : "1" })}>
               {done && <Icon name="check" size={13} />}
             </button>
-            <input className="pq-check-txt" placeholder="Nuevo ítem…" defaultValue={r.datos.texto ?? ""} readOnly={!editable}
+            <input className="pq-check-txt" placeholder={t("newItem")} defaultValue={r.datos.texto ?? ""} readOnly={!editable}
               onBlur={(e) => patchRow(r.id, { texto: e.target.value })} />
-            {editable && <button className="pq-del" title="Eliminar" onClick={() => removeRow(r.id)}><Icon name="trash" size={13} /></button>}
+            {editable && <button className="pq-del" title={t("delete")} onClick={() => removeRow(r.id)}><Icon name="trash" size={13} /></button>}
           </div>
         );
       })}
-      {editable && <button className="pq-add pq-add-block" onClick={() => addRow({ hecho: "", texto: "" })}>+ Agregar ítem</button>}
+      {editable && <button className="pq-add pq-add-block" onClick={() => addRow({ hecho: "", texto: "" })}>{t("addItem")}</button>}
     </div>
   );
 }
 
 // ── Storyboard ──────────────────────────────────────────────────────────
 function StoryboardView({ rows, editable, addRow, patchRow, removeRow }: ViewProps) {
+  const t = useTranslations("cuadro");
   return (
     <div className="pq-storyboard">
       {rows.map((r, i) => (
         <div className="pq-frame" key={r.id}>
           <div className="pq-frame-img">
             <span className="pq-frame-num">{r.datos.num || String(i + 1).padStart(2, "0")}</span>
-            {editable && <button className="pq-del pq-frame-del" title="Eliminar" onClick={() => removeRow(r.id)}><Icon name="trash" size={12} /></button>}
+            {editable && <button className="pq-del pq-frame-del" title={t("delete")} onClick={() => removeRow(r.id)}><Icon name="trash" size={12} /></button>}
           </div>
-          <AutoTextarea value={r.datos.desc ?? ""} placeholder="Descripción del plano…" readOnly={!editable}
+          <AutoTextarea value={r.datos.desc ?? ""} placeholder={t("shotDesc")} readOnly={!editable}
             onCommit={(v) => patchRow(r.id, { desc: v })} />
-          <input className="pq-frame-dur" placeholder="Duración (ej. 6s)" defaultValue={r.datos.dur ?? ""} readOnly={!editable}
+          <input className="pq-frame-dur" placeholder={t("shotDur")} defaultValue={r.datos.dur ?? ""} readOnly={!editable}
             onBlur={(e) => patchRow(r.id, { dur: e.target.value })} />
         </div>
       ))}
       {editable && (
         <button className="pq-frame pq-frame-add" onClick={() => addRow({ num: String(rows.length + 1).padStart(2, "0") })}>
-          <Icon name="arrow-right" size={18} /> Agregar plano
+          <Icon name="arrow-right" size={18} /> {t("addShotLabel")}
         </button>
       )}
     </div>

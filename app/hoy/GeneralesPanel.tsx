@@ -18,6 +18,7 @@ import OrdenRodajePanel from "./OrdenRodajePanel";
 import { GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
 import { ACCENTS } from "../constants";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
 import Icon from "../components/Icon";
 
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
@@ -127,6 +128,7 @@ export default function GeneralesPanel({
   fullName: string;
   jumpTo?: { sub: Sub; token: number } | null;
 }) {
+  const tG = useTranslations("generales");
   const subs = SUBS.filter((s) => !s.cond || s.cond(departamento));
   const [sub, setSub] = useState<Sub | null>(null);
   const [backMounted, setBackMounted] = useState(false);
@@ -165,7 +167,7 @@ export default function GeneralesPanel({
       <div className="hp-index">
         <div>
           <div className="hp-group-label hp-group-label-muted" style={{ marginBottom: "12px" }}>
-            Herramientas compartidas
+            {tG("sharedTools")}
           </div>
           <div className="hp-cards">
             {subs.map((s) => (
@@ -176,8 +178,8 @@ export default function GeneralesPanel({
                     {pendientesPorSub[s.id]}
                   </span>
                 )}
-                <div className="hcard-title">{s.label}</div>
-                <div className="hcard-desc">{s.desc}</div>
+                <div className="hcard-title">{tG(`${s.id}.label`)}</div>
+                <div className="hcard-desc">{tG(`${s.id}.desc`)}</div>
                 <div className="hcard-meta">
                   <DeptHexes label={<Icon name="pencil" size={11} />} depts={s.editores} />
                   <DeptHexes label={<Icon name="eye" size={11} />} depts={s.visores} />

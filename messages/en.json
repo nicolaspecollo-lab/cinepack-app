@@ -24,5 +24,91 @@
     "language": "Language",
     "support": "Contact support",
     "logout": "Log out"
+  },
+  "nav": {
+    "pulso": "Pulse",
+    "generales": "General",
+    "departamentos": "Departments",
+    "exclusivas": "Exclusive",
+    "archivo": "Files",
+    "control": "Control",
+    "back": "Back"
+  },
+  "generales": {
+    "sharedTools": "Shared tools",
+    "comunicados": { "label": "Announcements", "desc": "Internal notices and messages for the team." },
+    "notificaciones": { "label": "Notifications", "desc": "Global alert center for the project." },
+    "consultas": { "label": "Queries", "desc": "Channel for questions between departments." },
+    "calendario": { "label": "General calendar", "desc": "Global milestones and project dates." },
+    "guion": { "label": "Script", "desc": "Literary script shared with the team." },
+    "guiontec": { "label": "Shooting script", "desc": "Breakdown by sequence and technical shot." },
+    "plan": { "label": "Shooting schedule", "desc": "Daily schedule of scenes and locations." },
+    "orden": { "label": "Shooting order", "desc": "Sequence optimized by location and resources." },
+    "escena3d": { "label": "3D scene", "desc": "Aggregated, in-depth view of scenes." },
+    "espacio": { "label": "Workspace", "desc": "Notes and work blocks by department." },
+    "visionado": { "label": "Screening", "desc": "Gallery of materials and visual references." },
+    "equipo": { "label": "Crew", "desc": "Full list of technical and artistic crew." },
+    "accesos": { "label": "Access", "desc": "Manage permissions by role and tool." },
+    "pipeline": { "label": "Pipeline", "desc": "Financing, agreements and executive deliverables." },
+    "contactos": { "label": "Emergency contacts", "desc": "Key phone numbers and contacts for emergencies." },
+    "wrap": { "label": "Wrap checklist", "desc": "Control list for closing out the shoot." }
+  },
+  "espacio": {
+    "title": "Workspace",
+    "subtitle": "Create a personal tool.",
+    "typeTable": "Cell grid",
+    "typeDoc": "Document",
+    "styleTableHead": "Cell grid style",
+    "styleDocHead": "Document style",
+    "styleHint": "Tap one to create it. It starts with this structure; you can edit everything later.",
+    "created": "✓ Created. Name it from inside and find it in the Exclusive tab.",
+    "errPickStyle": "Pick a style before creating.",
+    "errCreate": "The tool could not be created.",
+    "untitledTable": "Untitled grid",
+    "untitledDoc": "Untitled document"
+  },
+  "cuadro": {
+    "loading": "Loading…",
+    "kanbanTodo": "To do",
+    "kanbanDoing": "In progress",
+    "kanbanDone": "Done",
+    "addCard": "+ Add card",
+    "cardPlaceholder": "Write the task…",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "delete": "Delete",
+    "date": "Date",
+    "milestone": "Milestone title",
+    "detail": "Detail…",
+    "addMilestone": "+ Add milestone",
+    "tileTitle": "Title",
+    "note": "Note…",
+    "add": "+ Add",
+    "newItem": "New item…",
+    "addItem": "+ Add item",
+    "markDone": "Mark as done",
+    "markPending": "Mark as pending",
+    "shotDesc": "Shot description…",
+    "shotDur": "Duration (e.g. 6s)",
+    "addShot": "+ Add shot",
+    "addShotLabel": "Add shot"
+  },
+  "plantillas": {
+    "doc": {
+      "clasico": { "t": "Classic", "d": "Serif, centered, wide margins." },
+      "guion": { "t": "Script", "d": "Monospaced, indented dialogue." },
+      "manifiesto": { "t": "Manifesto", "d": "Large type, declarative statement." },
+      "diario": { "t": "Shoot diary", "d": "Side date, logbook-style entries." },
+      "tablon": { "t": "Visual board", "d": "Color blocks interleaved with text." },
+      "minimalista": { "t": "Minimalist", "d": "One thin line, all the air possible." }
+    },
+    "tabla": {
+      "grid-clasico": { "t": "Classic grid", "d": "Thin rows and columns, no frills." },
+      "kanban": { "t": "Kanban board", "d": "Columns with color cards." },
+      "timeline": { "t": "Timeline", "d": "Horizontal rows with a color marker." },
+      "mosaico": { "t": "Color mosaic", "d": "Each cell is a status swatch." },
+      "checklist-tabla": { "t": "Checklist", "d": "Rows with a status mark on the left." },
+      "storyboard": { "t": "Storyboard", "d": "Large frame-like cells." }
+    }
   }
 }

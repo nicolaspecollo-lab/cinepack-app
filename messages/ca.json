@@ -24,5 +24,91 @@
     "language": "Idioma",
     "support": "Contacte amb suport",
     "logout": "Tanca la sessió"
+  },
+  "nav": {
+    "pulso": "Pols",
+    "generales": "Generals",
+    "departamentos": "Departaments",
+    "exclusivas": "Exclusives",
+    "archivo": "Arxiu",
+    "control": "Control",
+    "back": "Torna"
+  },
+  "generales": {
+    "sharedTools": "Eines compartides",
+    "comunicados": { "label": "Comunicats", "desc": "Avisos i missatges interns per a l'equip." },
+    "notificaciones": { "label": "Notificacions", "desc": "Centre d'alertes globals del projecte." },
+    "consultas": { "label": "Consultes", "desc": "Canal de preguntes entre departaments." },
+    "calendario": { "label": "Calendari general", "desc": "Fites globals i dates del projecte." },
+    "guion": { "label": "Guió", "desc": "Guió literari compartit amb l'equip." },
+    "guiontec": { "label": "Guió tècnic", "desc": "Desglossament per seqüència i pla tècnic." },
+    "plan": { "label": "Pla de rodatge", "desc": "Cronograma diari d'escenes i localitzacions." },
+    "orden": { "label": "Ordre de rodatge", "desc": "Seqüència optimitzada per localització i recursos." },
+    "escena3d": { "label": "Escena 3D", "desc": "Vista agregada d'escenes en profunditat." },
+    "espacio": { "label": "Espai de treball", "desc": "Notes i blocs de treball per departament." },
+    "visionado": { "label": "Visionat", "desc": "Galeria de materials i referències visuals." },
+    "equipo": { "label": "Equip", "desc": "Llistat complet de l'equip tècnic i artístic." },
+    "accesos": { "label": "Accessos", "desc": "Gestió de permisos per càrrec i eina." },
+    "pipeline": { "label": "Pipeline", "desc": "Finançament, acords i lliuraments executius." },
+    "contactos": { "label": "Contactes d'emergència", "desc": "Telèfons i contactes clau per a urgències." },
+    "wrap": { "label": "Checklist de tancament", "desc": "Llista de control per al tancament del rodatge." }
+  },
+  "espacio": {
+    "title": "Espai de treball",
+    "subtitle": "Crea una eina personal.",
+    "typeTable": "Quadre de cel·les",
+    "typeDoc": "Document",
+    "styleTableHead": "Estil de quadre de cel·les",
+    "styleDocHead": "Estil de document",
+    "styleHint": "Toca'n una per crear-la. Comença amb aquesta estructura; ho pots editar tot després.",
+    "created": "✓ Creat. Posa-li nom des de dins i troba'l a la pestanya Exclusives.",
+    "errPickStyle": "Tria un estil abans de crear.",
+    "errCreate": "No s'ha pogut crear l'eina.",
+    "untitledTable": "Quadre sense títol",
+    "untitledDoc": "Document sense títol"
+  },
+  "cuadro": {
+    "loading": "Carregant…",
+    "kanbanTodo": "Per fer",
+    "kanbanDoing": "En curs",
+    "kanbanDone": "Fet",
+    "addCard": "+ Afegeix targeta",
+    "cardPlaceholder": "Escriu la tasca…",
+    "moveLeft": "Mou a l'esquerra",
+    "moveRight": "Mou a la dreta",
+    "delete": "Elimina",
+    "date": "Data",
+    "milestone": "Títol de la fita",
+    "detail": "Detall…",
+    "addMilestone": "+ Afegeix fita",
+    "tileTitle": "Títol",
+    "note": "Nota…",
+    "add": "+ Afegeix",
+    "newItem": "Nou element…",
+    "addItem": "+ Afegeix element",
+    "markDone": "Marca com a fet",
+    "markPending": "Marca com a pendent",
+    "shotDesc": "Descripció del pla…",
+    "shotDur": "Durada (p. ex. 6s)",
+    "addShot": "+ Afegeix pla",
+    "addShotLabel": "Afegeix pla"
+  },
+  "plantillas": {
+    "doc": {
+      "clasico": { "t": "Clàssic", "d": "Serif, centrat, marges amplis." },
+      "guion": { "t": "Guió", "d": "Monoespaiada, diàleg indentat." },
+      "manifiesto": { "t": "Manifest", "d": "Tipografia gran, frase declarativa." },
+      "diario": { "t": "Diari de rodatge", "d": "Data lateral, entrades tipus bitàcola." },
+      "tablon": { "t": "Tauler visual", "d": "Blocs de color intercalats amb text." },
+      "minimalista": { "t": "Minimalista", "d": "Una línia fina, tot l'aire possible." }
+    },
+    "tabla": {
+      "grid-clasico": { "t": "Graella clàssica", "d": "Files i columnes fines, sense ornaments." },
+      "kanban": { "t": "Tauler kanban", "d": "Columnes amb targetes de color." },
+      "timeline": { "t": "Línia de temps", "d": "Files horitzontals amb marca de color." },
+      "mosaico": { "t": "Mosaic de color", "d": "Cada cel·la és una mostra d'estat." },
+      "checklist-tabla": { "t": "Checklist", "d": "Files amb marca d'estat a l'esquerra." },
+      "storyboard": { "t": "Storyboard", "d": "Cel·les grans tipus fotograma." }
+    }
   }
 }

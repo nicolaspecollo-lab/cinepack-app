@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import HoyPanel from "./HoyPanel";
 import GeneralesPanel, { type Sub as GeneralesSub } from "./GeneralesPanel";
 import ModoRodajePanel from "./ModoRodajePanel";
@@ -31,6 +32,7 @@ export default function DepartmentDashboard({
   cargo?: string | null;
   avatarUrl?: string | null;
 }) {
+  const tNav = useTranslations("nav");
   const [tab, setTab] = useState<Tab>("pulso");
   const [pulsoPendientes, setPulsoPendientes] = useState(0);
   const [generalesJump, setGeneralesJump] = useState<{ sub: GeneralesSub; token: number } | null>(null);
@@ -297,16 +299,16 @@ export default function DepartmentDashboard({
         </div>
         <div className="cp-wtabs-nav">
           <button className={`wtab ${tab === "pulso" ? "active" : ""}`} onClick={() => setTab("pulso")}>
-            Pulso{pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
+            {tNav("pulso")}{pulsoPendientes > 0 && <span className="wtab-badge">{pulsoPendientes}</span>}
           </button>
           <button className={`wtab ${tab === "generales" ? "active" : ""}`} onClick={() => setTab("generales")}>
-            Generales{generalesPendientes > 0 && <span className="wtab-badge">{generalesPendientes}</span>}
+            {tNav("generales")}{generalesPendientes > 0 && <span className="wtab-badge">{generalesPendientes}</span>}
           </button>
-          <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>Departamentos</button>
-          <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>Exclusivas</button>
-          <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>Archivo</button>
+          <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>{tNav("departamentos")}</button>
+          <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>{tNav("exclusivas")}</button>
+          <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>{tNav("archivo")}</button>
           {nombre === "Ejecutivo" && (
-            <button className={`wtab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>Control</button>
+            <button className={`wtab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>{tNav("control")}</button>
           )}
           <div style={{ flex: 1 }} />
           <div id="cp-header-back" />

@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA, type PlantillaTabla } from "./plantillasEspacio";
 import Icon from "../components/Icon";
 
 type TipoHerramienta = "tabla" | "nota";
 
-const OPCIONES: { tipo: TipoHerramienta; titulo: string; icono: "table" | "file-text"; color: string }[] = [
-  { tipo: "tabla", titulo: "Cuadro de celdas", icono: "table", color: "var(--cyan)" },
-  { tipo: "nota", titulo: "Documento", icono: "file-text", color: "var(--lime)" },
+const OPCIONES: { tipo: TipoHerramienta; icono: "table" | "file-text"; color: string }[] = [
+  { tipo: "tabla", icono: "table", color: "var(--cyan)" },
+  { tipo: "nota", icono: "file-text", color: "var(--lime)" },
 ];
 
 export default function EspacioTrabajoPanel({
@@ -25,6 +26,8 @@ export default function EspacioTrabajoPanel({
   // Departamento/Exclusivas). En Generales se monta sin flush y aporta el suyo.
   flush?: boolean;
 }) {
+  const t = useTranslations("espacio");
+  const tp = useTranslations("plantillas");
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -38,7 +41,7 @@ export default function EspacioTrabajoPanel({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSending(false); return; }
 
-    const tituloPorDefecto = tipo === "tabla" ? "Cuadro sin título" : "Documento sin título";
+    const tituloPorDefecto = tipo === "tabla" ? t("untitledTable") : t("untitledDoc");
 
     const { data: nuevaHerramienta, error } = await supabase
       .from("personal_tools")
@@ -56,7 +59,7 @@ export default function EspacioTrabajoPanel({
 
     if (error || !nuevaHerramienta) {
       setSending(false);
-      setMsg({ type: "err", text: error?.message ?? "No se pudo crear la herramienta." });
+      setMsg({ type: "err", text: error?.message ?? t("errCreate") });
       return;
     }
 
@@ -87,10 +90,7 @@ export default function EspacioTrabajoPanel({
     }
 
     setSending(false);
-    setMsg({
-      type: "ok",
-      text: "✓ Creado. Ponele nombre desde adentro y encontralo en la pestaña Exclusivas.",
-    });
+    setMsg({ type: "ok", text: t("created") });
     setElegido(null);
     onCreated?.();
   }
@@ -100,8 +100,8 @@ export default function EspacioTrabajoPanel({
       <div className="esp-creator-header">
         <span className="hex esp-creator-hex" />
         <div>
-          <h4>Espacio de trabajo</h4>
-          <p>Creá una herramienta personal.</p>
+          <h4>{t("title")}</h4>
+          <p>{t("subtitle")}</p>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export default function EspacioTrabajoPanel({
             onClick={() => { setMsg(null); setElegido((cur) => (cur === op.tipo ? null : op.tipo)); }}
           >
             <span className="esp-tipo-icon"><Icon name={op.icono} size={15} /></span>
-            <strong>{op.titulo}</strong>
+            <strong>{op.tipo === "tabla" ? t("typeTable") : t("typeDoc")}</strong>
           </button>
         ))}
       </div>
@@ -128,16 +128,16 @@ export default function EspacioTrabajoPanel({
       {elegido && (
         <div className="esp-plantilla-box">
           <div className="esp-plantilla-box-head">
-            <strong>Estilo {elegido === "tabla" ? "de cuadro de celdas" : "de documento"}</strong>
-            <span>Tocá una para crearla. Empieza con esta estructura, podés editar todo después.</span>
+            <strong>{elegido === "tabla" ? t("styleTableHead") : t("styleDocHead")}</strong>
+            <span>{t("styleHint")}</span>
           </div>
           <div className={`esp-plantilla-cards${sending ? " sending" : ""}`}>
             {elegido === "tabla"
               ? PLANTILLAS_TABLA.map((p) => (
-                  <PlantillaTablaCard key={p.id} p={p} onClick={() => crear("tabla", p.id)} />
+                  <PlantillaTablaCard key={p.id} p={p} titulo={tp(`tabla.${p.id}.t`)} descripcion={tp(`tabla.${p.id}.d`)} onClick={() => crear("tabla", p.id)} />
                 ))
               : PLANTILLAS_DOCUMENTO.map((p) => (
-                  <PlantillaDocCard key={p.id} id={p.id} titulo={p.titulo} descripcion={p.descripcion} estiloDoc={p.estiloDoc} heading={p.previewLineas[0]} onClick={() => crear("nota", p.id)} />
+                  <PlantillaDocCard key={p.id} id={p.id} titulo={tp(`doc.${p.id}.t`)} descripcion={tp(`doc.${p.id}.d`)} estiloDoc={p.estiloDoc} heading={p.previewLineas[0]} onClick={() => crear("nota", p.id)} />
                 ))}
           </div>
         </div>
@@ -240,15 +240,15 @@ function DocPreview({ id, heading }: { id: string; heading: string }) {
   );
 }
 
-function PlantillaTablaCard({ p, onClick }: { p: PlantillaTabla; onClick: () => void }) {
+function PlantillaTablaCard({ p, titulo, descripcion, onClick }: { p: PlantillaTabla; titulo: string; descripcion: string; onClick: () => void }) {
   return (
     <button type="button" className="esp-plantilla-card" onClick={onClick}>
       <div className="esp-plantilla-tabla-wrap">
         <TablaPreview id={p.id} p={p} />
       </div>
       <div className="esp-plantilla-info">
-        <strong>{p.titulo}</strong>
-        <span>{p.descripcion}</span>
+        <strong>{titulo}</strong>
+        <span>{descripcion}</span>
       </div>
       <span className="esp-plantilla-go"><Icon name="arrow-right" size={15} /></span>
     </button>
