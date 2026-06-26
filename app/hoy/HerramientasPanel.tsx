@@ -221,7 +221,7 @@ export default function HerramientasPanel({
     const tools = deptTools(departamento);
     return (
       <div className="hp-index">
-        <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
+        <button className={`btn${creandoEspacio ? "" : " acc"}`} style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
           {creandoEspacio ? "✕ Cerrar" : "+ Espacio de trabajo"}
         </button>
         {creandoEspacio && (
@@ -277,7 +277,7 @@ export default function HerramientasPanel({
   if (groups.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
-        <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
+        <button className="btn acc" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
           + Espacio de trabajo
         </button>
         <div className="soon-box">
@@ -351,8 +351,13 @@ function EspacioTrabajoCreator({
   fullName: string;
   onCreated: () => void;
 }) {
+  // hp-index (el padre, ver dashboard.css) ya pone padding:20px 30px 36px.
+  // EspacioTrabajoPanel trae su propio gutter de 30px para poder montarse
+  // también "a piel" dentro de GeneralesPanel (sin padding ambiente). Si no
+  // se cancela el de hp-index acá, queda duplicado: insignificante en
+  // desktop, pero ~120px perdidos en un celular de 360px de ancho.
   return (
-    <div style={{ marginBottom: "20px" }}>
+    <div style={{ margin: "-20px -30px 0" }}>
       <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} />
     </div>
   );

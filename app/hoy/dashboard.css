@@ -507,12 +507,13 @@
   flex:1 1 110px; min-width:0; max-width:170px; box-sizing:border-box;
   display:flex; flex-direction:row; align-items:center; gap:8px;
   padding:10px 12px; background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--esp-tipo-color);
-  cursor:pointer; text-align:left; transition:border-color .15s, background .15s;
+  cursor:pointer; text-align:left; transition:border-color .15s, background .15s, transform .1s;
 }
 @media (max-width:480px){
   .cp-dash .esp-tipo-cards{ padding:0 16px 16px; }
 }
 .cp-dash .esp-tipo-card:hover{ border-color:var(--esp-tipo-color); background:var(--hl1); }
+.cp-dash .esp-tipo-card:active{ transform:scale(0.97); }
 .cp-dash .esp-tipo-card.selected{ border-color:var(--esp-tipo-color); background:var(--hl1); }
 .cp-dash .esp-tipo-icon{
   font-size:14px; line-height:1; flex-shrink:0; width:24px; height:24px; border-radius:50%;
@@ -533,12 +534,18 @@
 .cp-dash .esp-plantilla-card{
   display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box;
   padding:8px; background:var(--bg-2); border:1px solid var(--line);
-  cursor:pointer; text-align:left; transition:border-color .15s, background .15s;
+  cursor:pointer; text-align:left; transition:border-color .15s, background .15s, transform .1s;
 }
 .cp-dash .esp-plantilla-card:hover{ border-color:var(--acc); background:var(--hl1); }
+.cp-dash .esp-plantilla-card:hover .esp-plantilla-go{ opacity:1; transform:translateX(0); }
+.cp-dash .esp-plantilla-card:active{ transform:scale(0.985); }
 .cp-dash .esp-plantilla-info{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:0; }
 .cp-dash .esp-plantilla-info strong{ font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
 .cp-dash .esp-plantilla-info span{ font-size:11.5px; color:var(--muted); line-height:1.4; }
+.cp-dash .esp-plantilla-go{ flex-shrink:0; color:var(--acc); font-size:14px; opacity:0; transform:translateX(-4px); transition:opacity .15s, transform .15s; }
+@media (hover:none){
+  .cp-dash .esp-plantilla-go{ display:none; }
+}
 
 /* Mini A4 — proporción real de hoja (58x82, ratio 1:1.41), con barras en vez de texto agrandado */
 .cp-dash .esp-plantilla-a4-wrap{ flex-shrink:0; }

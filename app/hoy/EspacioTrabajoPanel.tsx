@@ -151,6 +151,7 @@ function PlantillaDocCard({
         <strong>{titulo}</strong>
         <span>{descripcion}</span>
       </div>
+      <span className="esp-plantilla-go">→</span>
     </button>
   );
 }
@@ -238,6 +239,7 @@ function PlantillaTablaCard({ p, onClick }: { p: PlantillaTabla; onClick: () => 
         <strong>{p.titulo}</strong>
         <span>{p.descripcion}</span>
       </div>
+      <span className="esp-plantilla-go">→</span>
     </button>
   );
 }
