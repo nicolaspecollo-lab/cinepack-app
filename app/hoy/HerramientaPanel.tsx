@@ -2039,6 +2039,8 @@ function NotaTool({
 }) {
   const editorRef = useRef<HTMLDivElement>(null);
   const initialised = useRef(false);
+  const barRef = useRef<HTMLDivElement>(null);
+  const [menu, setMenu] = useState<null | "color" | "highlight" | "size">(null);
 
   useEffect(() => {
     if (editorRef.current && (!initialised.current || fila?.id)) {
@@ -2046,6 +2048,16 @@ function NotaTool({
       initialised.current = true;
     }
   }, [fila?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cerrar el popover abierto al hacer clic fuera del toolbar.
+  useEffect(() => {
+    if (!menu) return;
+    function onDown(e: MouseEvent) {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) setMenu(null);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menu]);
 
   async function commit() {
     const html = editorRef.current?.innerHTML ?? "";
@@ -2069,65 +2081,76 @@ function NotaTool({
   return (
     <div className="hp-nota-wrap">
       {editable && (
-        <div className="hp-nota-toolbar">
+        <div className="hp-nota-toolbar" ref={barRef}>
           {/* Formato inline */}
-          <button type="button" title="Negrita (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><Icon name="bold" /></button>
-          <button type="button" title="Cursiva (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><Icon name="italic" /></button>
-          <button type="button" title="Subrayado (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><Icon name="underline" /></button>
-          <button type="button" title="Tachado" onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><Icon name="strikethrough" /></button>
-          <span className="hp-nota-sep"></span>
+          <div className="hp-tb-group">
+            <button type="button" title="Negrita (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><Icon name="bold" /></button>
+            <button type="button" title="Cursiva (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><Icon name="italic" /></button>
+            <button type="button" title="Subrayado (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><Icon name="underline" /></button>
+            <button type="button" title="Tachado" onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><Icon name="strikethrough" /></button>
+          </div>
           {/* Bloques */}
-          <button type="button" title="Título" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}><Icon name="heading" /></button>
-          <button type="button" title="Texto normal" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}><Icon name="paragraph" /></button>
-          <button type="button" title="Lista de viñetas" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}><Icon name="list" /></button>
-          <button type="button" title="Lista numerada" onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}><Icon name="list-ordered" /></button>
-          <span className="hp-nota-sep"></span>
+          <div className="hp-tb-group">
+            <button type="button" title="Título" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}><Icon name="heading" /></button>
+            <button type="button" title="Texto normal" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}><Icon name="paragraph" /></button>
+            <button type="button" title="Lista de viñetas" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}><Icon name="list" /></button>
+            <button type="button" title="Lista numerada" onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}><Icon name="list-ordered" /></button>
+          </div>
           {/* Alineación */}
-          <button type="button" title="Alinear a la izquierda" onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}><Icon name="align-left" /></button>
-          <button type="button" title="Centrar" onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}><Icon name="align-center" /></button>
-          <button type="button" title="Alinear a la derecha" onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}><Icon name="align-right" /></button>
-          <span className="hp-nota-sep"></span>
-          {/* Color de texto */}
-          <span className="hp-nota-colors">
-            {NOTA_COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                title={`Color texto ${c}`}
-                style={{ background: c }}
-                onMouseDown={(e) => { e.preventDefault(); exec("foreColor", c); }}
-              />
-            ))}
-          </span>
-          <span className="hp-nota-sep"></span>
-          {/* Resaltado */}
-          <span className="hp-nota-colors hp-nota-highlights">
-            {NOTA_HIGHLIGHT.map((c) => (
-              <button
-                key={c}
-                type="button"
-                title={c === "transparent" ? "Quitar resaltado" : `Resaltar ${c}`}
-                style={{ background: c === "transparent" ? "var(--hl1)" : c, border: c === "transparent" ? "1px dashed var(--muted)" : "2px solid transparent" }}
-                onMouseDown={(e) => { e.preventDefault(); highlight(c); }}
-              >
-                {c === "transparent" ? <Icon name="x" size={12} /> : ""}
+          <div className="hp-tb-group">
+            <button type="button" title="Alinear a la izquierda" onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}><Icon name="align-left" /></button>
+            <button type="button" title="Centrar" onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}><Icon name="align-center" /></button>
+            <button type="button" title="Alinear a la derecha" onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}><Icon name="align-right" /></button>
+          </div>
+          {/* Color, resaltado y tamaño: en popovers para no saturar el toolbar */}
+          <div className="hp-tb-group">
+            <div className="hp-tb-pop">
+              <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title="Color de texto"
+                onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "color" ? null : "color"); }}>
+                <Icon name="text-color" /><Icon name="chevron-down" size={9} />
               </button>
-            ))}
-          </span>
-          <span className="hp-nota-sep"></span>
-          {/* Tamaño */}
-          <select
-            title="Tamaño de letra"
-            onMouseDown={(e) => e.stopPropagation()}
-            onChange={(e) => { exec("fontSize", e.target.value); e.target.value = ""; }}
-            defaultValue=""
-          >
-            <option value="" disabled>Tamaño</option>
-            <option value="2">Pequeño</option>
-            <option value="3">Normal</option>
-            <option value="4">Grande</option>
-            <option value="5">Muy grande</option>
-          </select>
+              {menu === "color" && (
+                <div className="hp-tb-menu hp-tb-swatches">
+                  {NOTA_COLORS.map((c) => (
+                    <button key={c} type="button" title={c} style={{ background: c }}
+                      onMouseDown={(e) => { e.preventDefault(); exec("foreColor", c); setMenu(null); }} />
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="hp-tb-pop">
+              <button type="button" className={`hp-tb-trigger${menu === "highlight" ? " open" : ""}`} title="Resaltar"
+                onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "highlight" ? null : "highlight"); }}>
+                <Icon name="highlighter" /><Icon name="chevron-down" size={9} />
+              </button>
+              {menu === "highlight" && (
+                <div className="hp-tb-menu hp-tb-swatches">
+                  {NOTA_HIGHLIGHT.map((c) => (
+                    <button key={c} type="button" title={c === "transparent" ? "Sin resaltado" : c}
+                      className={c === "transparent" ? "hp-tb-swatch-none" : ""}
+                      style={{ background: c === "transparent" ? "transparent" : c }}
+                      onMouseDown={(e) => { e.preventDefault(); highlight(c); setMenu(null); }}>
+                      {c === "transparent" ? <Icon name="x" size={12} /> : ""}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="hp-tb-pop">
+              <button type="button" className={`hp-tb-trigger${menu === "size" ? " open" : ""}`} title="Tamaño de texto"
+                onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "size" ? null : "size"); }}>
+                <Icon name="type" /><Icon name="chevron-down" size={9} />
+              </button>
+              {menu === "size" && (
+                <div className="hp-tb-menu hp-tb-sizes">
+                  {([["2", "Pequeño"], ["3", "Normal"], ["4", "Grande"], ["5", "Muy grande"]] as const).map(([v, label]) => (
+                    <button key={v} type="button"
+                      onMouseDown={(e) => { e.preventDefault(); exec("fontSize", v); setMenu(null); }}>{label}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
       <div

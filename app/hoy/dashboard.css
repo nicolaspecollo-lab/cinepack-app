@@ -882,6 +882,7 @@
 .cp-dash .hp-savebadge.saving{ color:var(--muted); border-color:var(--line); }
 .cp-dash .hp-savebadge.saved{ color:var(--lime); border-color:rgba(159,232,112,0.4); background:rgba(159,232,112,0.08); }
 @keyframes hp-fadein{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+@keyframes fadein{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:translateY(0); } }
 .cp-dash .hp-td-reg{ text-align:center; white-space:nowrap; padding:0 6px; }
 .cp-dash .hp-reg-btn{
   display:inline-flex; align-items:center; gap:6px; font-family:'Poppins',sans-serif; font-weight:700; font-size:9.5px;
@@ -917,34 +918,53 @@
 .cp-dash .hp-firma{ font-size:11px; color:var(--muted); }
 .cp-dash .hp-single-foot{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:14px 30px 30px; }
 
-/* Nota — rich text */
+/* Nota — rich text. Toolbar compacto, agrupado, con popovers (color /
+   resaltado / tamaño) en vez de swatches y selects desplegados a la vista. */
 .cp-dash .hp-nota-wrap{ display:flex; flex-direction:column; }
 .cp-dash .hp-nota-toolbar{
-  display:flex; align-items:center; gap:4px; flex-wrap:wrap;
-  margin:14px 30px 0; background:var(--hl3); border:1px solid var(--line); border-bottom:none;
-  padding:6px 10px;
+  display:flex; align-items:center; gap:0; flex-wrap:wrap; row-gap:6px;
+  margin:14px var(--gutter) 0; background:var(--bg-2); border:1px solid var(--line); border-bottom:none;
+  padding:6px 8px;
 }
+/* Grupos separados por una línea fina (estilo Docs/Notion) */
+.cp-dash .hp-tb-group{ display:flex; align-items:center; gap:2px; padding:0 7px; }
+.cp-dash .hp-tb-group + .hp-tb-group{ border-left:1px solid var(--line); }
+.cp-dash .hp-tb-group:first-child{ padding-left:2px; }
 .cp-dash .hp-nota-toolbar button{
   display:flex; align-items:center; justify-content:center;
-  background:none; border:1px solid var(--line); color:var(--muted);
-  width:30px; height:30px; font-size:15px; cursor:pointer; border-radius:4px;
-  transition:background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+  background:none; border:1px solid transparent; color:var(--muted);
+  height:30px; min-width:30px; padding:0 5px; font-size:15px; cursor:pointer; border-radius:5px;
+  transition:background var(--dur-fast), color var(--dur-fast);
 }
-.cp-dash .hp-nota-toolbar button:hover{ background:var(--hl1); border-color:var(--acc); color:var(--acc); }
+.cp-dash .hp-nota-toolbar button:hover{ background:var(--hl2); color:var(--text); }
 .cp-dash .btn svg{ margin-right:5px; }
-.cp-dash .hp-nota-toolbar select{
-  background:var(--hl1); border:1px solid var(--line); color:var(--text);
-  font-family:inherit; font-size:11px; padding:4px 6px; border-radius:4px; cursor:pointer;
+
+/* Triggers de popover (color / resaltado / tamaño) */
+.cp-dash .hp-tb-pop{ position:relative; display:flex; }
+.cp-dash .hp-tb-trigger{ gap:1px; }
+.cp-dash .hp-tb-trigger.open{ background:var(--hl3); color:var(--text); }
+.cp-dash .hp-tb-trigger svg:last-child{ opacity:0.6; }
+.cp-dash .hp-tb-menu{
+  position:absolute; top:calc(100% + 5px); left:0; z-index:30;
+  background:var(--bg-2); border:1px solid var(--line); box-shadow:0 8px 24px var(--shadow);
+  padding:8px; animation:fadein var(--dur);
 }
-.cp-dash .hp-nota-sep{ width:1px; height:20px; background:var(--line); margin:0 4px; }
-.cp-dash .hp-nota-colors{ display:flex; gap:3px; }
-.cp-dash .hp-nota-colors button{
-  width:18px; height:18px; border-radius:50%; border:2px solid transparent; padding:0;
+.cp-dash .hp-tb-swatches{ display:grid; grid-template-columns:repeat(5, 20px); gap:6px; }
+.cp-dash .hp-tb-swatches button{
+  width:20px; height:20px; min-width:0; padding:0; border-radius:50%;
+  border:1px solid var(--line); cursor:pointer;
 }
-.cp-dash .hp-nota-colors button:hover{ border-color:var(--text); }
-.cp-dash .hp-nota-highlights button{ border-radius:4px; font-size:10px; line-height:1; }
+.cp-dash .hp-tb-swatches button:hover{ transform:scale(1.15); border-color:var(--text); }
+.cp-dash .hp-tb-swatch-none{ background:var(--hl1) !important; color:var(--muted); }
+.cp-dash .hp-tb-sizes{ display:flex; flex-direction:column; min-width:130px; padding:4px; }
+.cp-dash .hp-tb-sizes button{
+  justify-content:flex-start; height:auto; padding:8px 10px; width:100%;
+  font-family:'Poppins',sans-serif; font-size:12px; color:var(--text); border-radius:4px;
+}
+.cp-dash .hp-tb-sizes button:hover{ background:var(--hl2); color:var(--acc); }
+
 .cp-dash .hp-nota.hp-nota-editor{
-  margin:0 30px 0; background:var(--hl1); border:1px solid var(--line); color:var(--text);
+  margin:0 var(--gutter) 0; background:var(--hl1); border:1px solid var(--line); color:var(--text);
   font-family:inherit; font-size:13px; line-height:1.8; padding:16px 18px; min-height:220px;
   outline:none;
 }

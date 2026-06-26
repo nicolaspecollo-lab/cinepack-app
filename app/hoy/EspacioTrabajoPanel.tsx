@@ -60,24 +60,30 @@ export default function EspacioTrabajoPanel({
       return;
     }
 
-    // El documento arranca con la estructura real de la plantilla (no contenido
-    // de ejemplo): así el estilo elegido se nota desde el primer momento.
+    // Sembrar la estructura real de la plantilla para que se vea desde el
+    // primer momento (no un empty-state genérico).
+    const base = {
+      project_id: projectId,
+      departamento,
+      herramienta_id: nuevaHerramienta.id,
+      registro: [],
+      visionado_por: [],
+      created_by: user.id,
+      autor_nombre: fullName,
+      editor_nombre: fullName,
+    };
     if (tipo === "nota") {
+      // Documento: una fila con el esqueleto HTML del estilo elegido.
       const plantilla = PLANTILLAS_DOCUMENTO.find((p) => p.id === plantillaId);
       if (plantilla) {
-        await supabase.from("herramienta_filas").insert({
-          project_id: projectId,
-          departamento,
-          herramienta_id: nuevaHerramienta.id,
-          datos: { texto: plantilla.esqueletoHtml },
-          orden: 0,
-          registro: [],
-          visionado_por: [],
-          created_by: user.id,
-          autor_nombre: fullName,
-          editor_nombre: fullName,
-        });
+        await supabase.from("herramienta_filas").insert({ ...base, datos: { texto: plantilla.esqueletoHtml }, orden: 0 });
       }
+    } else {
+      // Cuadro de celdas: 3 filas vacías para que las columnas de la plantilla
+      // se vean de entrada como una tabla lista para completar (antes con 0
+      // filas se mostraba un empty-state que ocultaba la plantilla por completo).
+      const filasIniciales = [0, 1, 2].map((orden) => ({ ...base, datos: {}, orden }));
+      await supabase.from("herramienta_filas").insert(filasIniciales);
     }
 
     setSending(false);
