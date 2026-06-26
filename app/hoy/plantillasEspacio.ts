@@ -1,11 +1,13 @@
 // ===========================================================================
 // PLANTILLAS DE ESPACIO DE TRABAJO
 // ---------------------------------------------------------------------------
-// Estilos puramente estéticos para elegir al crear un Documento o un Cuadro
-// de celdas personal. No precargan contenido: solo definen presentación
-// (Documento) o estructura de columnas (Cuadro de celdas). El texto de
-// "previewLineas"/"previewFilas" se usa ÚNICAMENTE en la miniatura del modal
-// de selección — el documento o la tabla creada arranca vacía.
+// Estilos al elegir un Documento o un Cuadro de celdas personal. El Cuadro de
+// celdas arranca con las columnas reales de la plantilla, sin filas. El
+// Documento arranca con un esqueleto editable (encabezados/placeholders, sin
+// contenido real) para que el estilo elegido se note desde el primer momento
+// — no es contenido de ejemplo, es estructura para completar y se reemplaza
+// por completo al escribir. "previewLineas"/"previewFilas" son solo para la
+// miniatura del modal de selección.
 // ===========================================================================
 
 import type { Columna } from "../herramientas";
@@ -16,6 +18,7 @@ export type PlantillaDocumento = {
   descripcion: string;
   estiloDoc: string; // className aplicada al editor (hp-nota-estilo-*)
   previewLineas: string[]; // solo para la miniatura del modal
+  esqueletoHtml: string; // estructura inicial real del documento (HTML)
 };
 
 export type PlantillaTabla = {
@@ -38,6 +41,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Cada plano respira un segundo de más.",
       "No hay corte sin motivo dramático.",
     ],
+    esqueletoHtml: "<h3>Título del documento</h3><div>Escribí aquí el desarrollo de esta sección.</div>",
   },
   {
     id: "guion",
@@ -51,6 +55,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "      No es la primera vez que te espero así.",
       "CORTE A:",
     ],
+    esqueletoHtml: "<div style=\"text-align:center\"><b>INT. LUGAR — MOMENTO</b></div><div><br></div><div style=\"text-align:center\"><b>PERSONAJE</b></div><div style=\"margin-left:40px\">(Texto del diálogo.)</div>",
   },
   {
     id: "manifiesto",
@@ -62,6 +67,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "no se puede actuar.",
       "Lo demás es ruido.",
     ],
+    esqueletoHtml: "<h3>Tu frase central.</h3>",
   },
   {
     id: "diario",
@@ -75,6 +81,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "13 jun — Día 5",
       "Llueve. Pasamos al plan de interiores.",
     ],
+    esqueletoHtml: "<h3>Día 1</h3><ul><li>Anotá lo que pasó hoy.</li></ul>",
   },
   {
     id: "tablon",
@@ -87,6 +94,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Naranjas cálidos para el incendio final.",
       "Azules fríos para la escena del hospital.",
     ],
+    esqueletoHtml: "<h3>Referencias</h3><div>Sumá tus notas de paleta y estilo visual.</div>",
   },
   {
     id: "minimalista",
@@ -97,6 +105,7 @@ export const PLANTILLAS_DOCUMENTO: PlantillaDocumento[] = [
       "Notas sueltas",
       "Menos plano, más mirada.",
     ],
+    esqueletoHtml: "<div>Notas.</div>",
   },
 ];
 

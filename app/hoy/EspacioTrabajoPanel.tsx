@@ -43,22 +43,47 @@ export default function EspacioTrabajoPanel({
 
     const tituloPorDefecto = elegido === "tabla" ? "Cuadro sin título" : "Documento sin título";
 
-    const { error } = await supabase.from("personal_tools").insert({
-      project_id: projectId,
-      owner_id: user.id,
-      owner_name: fullName,
-      departamento,
-      titulo: tituloPorDefecto,
-      tipo: elegido,
-      plantilla_id: plantillaId,
-    });
+    const { data: nuevaHerramienta, error } = await supabase
+      .from("personal_tools")
+      .insert({
+        project_id: projectId,
+        owner_id: user.id,
+        owner_name: fullName,
+        departamento,
+        titulo: tituloPorDefecto,
+        tipo: elegido,
+        plantilla_id: plantillaId,
+      })
+      .select("id")
+      .single();
 
-    setSending(false);
-    if (error) {
-      setMsg({ type: "err", text: error.message });
+    if (error || !nuevaHerramienta) {
+      setSending(false);
+      setMsg({ type: "err", text: error?.message ?? "No se pudo crear la herramienta." });
       return;
     }
 
+    // El documento arranca con la estructura real de la plantilla (no contenido
+    // de ejemplo): así el estilo elegido se nota desde el primer momento.
+    if (elegido === "nota") {
+      const plantilla = PLANTILLAS_DOCUMENTO.find((p) => p.id === plantillaId);
+      if (plantilla) {
+        await supabase.from("herramienta_filas").insert({
+          project_id: projectId,
+          departamento,
+          herramienta_id: nuevaHerramienta.id,
+          datos: { texto: plantilla.esqueletoHtml },
+          orden: 0,
+          registro: [],
+          visionado_por: [],
+          created_by: user.id,
+          autor_nombre: fullName,
+          editor_nombre: fullName,
+        });
+      }
+    }
+
+    setSending(false);
     setMsg({
       type: "ok",
       text: "✓ Creado. Ponele nombre desde adentro y encontralo en la pestaña Exclusivas.",
