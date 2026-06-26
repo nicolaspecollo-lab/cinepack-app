@@ -1809,3 +1809,43 @@
 .cp-dash .pq-frame-dur{ border-top:1px solid var(--line); color:var(--muted) !important; font-size:11px !important; }
 .cp-dash .pq-frame-add{ align-items:center; justify-content:center; gap:8px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; cursor:pointer; background:none; border:1px dashed var(--line); min-height:120px; }
 .cp-dash .pq-frame-add:hover{ border-color:var(--acc); color:var(--acc); }
+
+/* ── Pulido de diseño de los cuadros (tipografía sans para contenido,
+      micro-interacciones, detalles) ──────────────────────────────────── */
+.cp-dash .pq-wrap{ --pq-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,"Helvetica Neue",sans-serif; }
+.cp-dash .pq-ta, .cp-dash .pq-wrap input,
+.cp-dash .pq-kcard, .cp-dash .pq-tile, .cp-dash .pq-frame, .cp-dash .pq-check-txt{ font-family:var(--pq-sans); }
+.cp-dash .pq-wrap input::placeholder, .cp-dash .pq-ta::placeholder{ font-family:var(--pq-sans); }
+
+/* Kanban: tarjetas con elevación al hover, acciones sutiles que aparecen */
+.cp-dash .pq-kcard{ transition:border-color var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast); padding:9px 10px; }
+.cp-dash .pq-kcard:hover{ transform:translateY(-1px); box-shadow:0 4px 12px var(--shadow); }
+.cp-dash .pq-kcard-actions{ opacity:0; transition:opacity var(--dur-fast); }
+.cp-dash .pq-kcard:hover .pq-kcard-actions, .cp-dash .pq-kcard:focus-within .pq-kcard-actions{ opacity:1; }
+.cp-dash .pq-kcol-body{ min-height:40px; }
+
+/* Mosaico: swatches en una sola fila, sutiles hasta el hover de la tile */
+.cp-dash .pq-tile{ transition:transform var(--dur-fast), box-shadow var(--dur-fast); }
+.cp-dash .pq-tile:hover{ transform:translateY(-2px); box-shadow:0 6px 16px var(--shadow); }
+.cp-dash .pq-swatches{ flex-wrap:nowrap; opacity:.45; transition:opacity var(--dur-fast); }
+.cp-dash .pq-tile:hover .pq-swatches, .cp-dash .pq-tile:focus-within .pq-swatches{ opacity:1; }
+.cp-dash .pq-swatches button{ width:13px; height:13px; }
+
+/* Storyboard: el fotograma vacío no es un hueco negro — patrón sutil + ratio */
+.cp-dash .pq-frame{ transition:border-color var(--dur-fast), box-shadow var(--dur-fast); }
+.cp-dash .pq-frame:hover{ box-shadow:0 6px 16px var(--shadow); }
+.cp-dash .pq-frame-img{
+  background:
+    repeating-linear-gradient(45deg, var(--hl1) 0 8px, transparent 8px 16px), var(--bg);
+}
+.cp-dash .pq-frame-del{ opacity:0; transition:opacity var(--dur-fast); }
+.cp-dash .pq-frame:hover .pq-frame-del{ opacity:1; }
+
+/* Timeline: tarjetas con un poco más de aire y jerarquía */
+.cp-dash .pq-tl-hito{ font-family:'Poppins',sans-serif; font-size:13px !important; }
+.cp-dash .pq-tl-card{ transition:border-color var(--dur-fast); }
+.cp-dash .pq-tl-card:hover{ border-color:var(--hl5); }
+
+/* Checklist: un pelín más de aire entre ítems */
+.cp-dash .pq-check-row{ padding:5px 0; border-bottom:1px solid transparent; }
+.cp-dash .pq-check-row:hover{ border-bottom-color:var(--line); }

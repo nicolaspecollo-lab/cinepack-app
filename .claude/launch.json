@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "cinepack-app",
-      "runtimeExecutable": "/Users/nicolaspecollo/Desktop/Desorden/cinepack/app/node_modules.nosync/.bin/next",
-      "runtimeArgs": ["dev", "--webpack"],
+      "runtimeExecutable": "/Users/nicolaspecollo/Projects/cinepack/app/node_modules/.bin/next",
+      "runtimeArgs": ["dev"],
       "port": 3000
     }
   ]

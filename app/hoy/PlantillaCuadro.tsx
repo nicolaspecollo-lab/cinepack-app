@@ -81,14 +81,10 @@ export default function PlantillaCuadro({
 
   if (loading) return <div className="pq-loading">Cargando…</div>;
 
-  const common = { rows, editable, addRow, patchRow, removeRow };
   return (
     <div className="pq-wrap">
-      {plantillaId === "kanban" && <KanbanView {...common} />}
-      {plantillaId === "timeline" && <TimelineView {...common} />}
-      {plantillaId === "mosaico" && <MosaicoView {...common} />}
-      {plantillaId === "checklist-tabla" && <ChecklistView {...common} />}
-      {plantillaId === "storyboard" && <StoryboardView {...common} />}
+      <PlantillaCuadroView plantillaId={plantillaId} rows={rows} editable={editable}
+        addRow={addRow} patchRow={patchRow} removeRow={removeRow} />
     </div>
   );
 }
@@ -100,6 +96,18 @@ type ViewProps = {
   patchRow: (id: string, parcial: Record<string, string>) => void;
   removeRow: (id: string) => void;
 };
+
+export function PlantillaCuadroView({ plantillaId, ...common }: ViewProps & { plantillaId: string }) {
+  return (
+    <>
+      {plantillaId === "kanban" && <KanbanView {...common} />}
+      {plantillaId === "timeline" && <TimelineView {...common} />}
+      {plantillaId === "mosaico" && <MosaicoView {...common} />}
+      {plantillaId === "checklist-tabla" && <ChecklistView {...common} />}
+      {plantillaId === "storyboard" && <StoryboardView {...common} />}
+    </>
+  );
+}
 
 // ── Kanban ──────────────────────────────────────────────────────────────
 const KANBAN_COLS = [
