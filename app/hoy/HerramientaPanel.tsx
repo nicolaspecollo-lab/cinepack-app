@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Herramienta, Columna } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
+import ToolMenu from "../components/ToolMenu";
 
 type Intervencion = { accion: string; usuario: string; fecha: string };
 type Visionado = { usuario: string; fecha: string };
@@ -734,38 +735,67 @@ function RichCell({
   );
 }
 
-// Barra de formato reutilizable (mismo aspecto que la de Nota). Actúa sobre el
-// elemento contentEditable que tenga el foco. Los controles son BOTONES con
-// preventDefault: así el foco no sale de la celda y no se dispara el commit.
+// Barra de formato reutilizable (mismo patrón compacto que la de Nota: B/I/U
+// + color y formato en popovers). Actúa sobre el contentEditable con foco;
+// todo con preventDefault para no perder la selección de la celda.
 function RichToolbar({ className = "", inline = false }: { className?: string; inline?: boolean }) {
   const cmd = (c: string, v?: string) => document.execCommand(c, false, v);
-  const btncls = inline ? "hp-rich-btn" : "";
+  const barRef = useRef<HTMLDivElement>(null);
+  const [menu, setMenu] = useState<null | "color" | "format">(null);
+
+  useEffect(() => {
+    if (!menu) return;
+    function onDown(e: MouseEvent) { if (barRef.current && !barRef.current.contains(e.target as Node)) setMenu(null); }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [menu]);
+
   const content = (
     <>
-      <button type="button" className={btncls} title="Negrita" onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><b>B</b></button>
-      <button type="button" className={btncls} title="Cursiva" onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><i>I</i></button>
-      <button type="button" className={btncls} title="Subrayado" onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><u>U</u></button>
-      <span className="hp-nota-sep" />
-      <span className="hp-nota-colors">
-        {CELL_TEXT_COLORS.map((c) => (
-          <button key={c} type="button" title={`Color ${c}`} style={{ background: c }}
-            onMouseDown={(e) => { e.preventDefault(); cmd("foreColor", c); }} />
-        ))}
-      </span>
-      <span className="hp-nota-sep" />
-      {([["2", "S"], ["3", "M"], ["4", "L"], ["5", "XL"]] as const).map(([size, label]) => (
-        <button key={size} type="button" className={btncls} title={`Tamaño ${label}`}
-          onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); }}>{label}</button>
-      ))}
-      <span className="hp-nota-sep" />
-      {CELL_FONTS.map((f) => (
-        <button key={f.label} type="button" className={btncls} title={`Fuente ${f.label}`} style={{ fontFamily: f.value, fontSize: 11 }}
-          onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); }}>{f.label}</button>
-      ))}
+      <div className="hp-tb-group">
+        <button type="button" title="Negrita" onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><Icon name="bold" /></button>
+        <button type="button" title="Cursiva" onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><Icon name="italic" /></button>
+        <button type="button" title="Subrayado" onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><Icon name="underline" /></button>
+      </div>
+      <div className="hp-tb-group">
+        <div className="hp-tb-pop">
+          <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title="Color de texto"
+            onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "color" ? null : "color"); }}>
+            <Icon name="text-color" /><Icon name="chevron-down" size={9} />
+          </button>
+          {menu === "color" && (
+            <div className="hp-tb-menu hp-tb-swatches">
+              {CELL_TEXT_COLORS.map((c) => (
+                <button key={c} type="button" title={c} style={{ background: c }}
+                  onMouseDown={(e) => { e.preventDefault(); cmd("foreColor", c); setMenu(null); }} />
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="hp-tb-pop">
+          <button type="button" className={`hp-tb-trigger${menu === "format" ? " open" : ""}`} title="Tamaño y fuente"
+            onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "format" ? null : "format"); }}>
+            <Icon name="type" /><Icon name="chevron-down" size={9} />
+          </button>
+          {menu === "format" && (
+            <div className="hp-tb-menu hp-tb-sizes">
+              <span className="tm-section-title">Tamaño</span>
+              {([["2", "Pequeño"], ["3", "Normal"], ["4", "Grande"], ["5", "Muy grande"]] as const).map(([size, label]) => (
+                <button key={size} type="button" onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); setMenu(null); }}>{label}</button>
+              ))}
+              <span className="tm-section-title" style={{ marginTop: 4 }}>Fuente</span>
+              {CELL_FONTS.map((f) => (
+                <button key={f.label} type="button" style={{ fontFamily: f.value }}
+                  onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); setMenu(null); }}>{f.label}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
-  if (inline) return content;
-  return <div className={`hp-nota-toolbar hp-richbar ${className}`}>{content}</div>;
+  if (inline) return <span className="hp-richbar-inline" ref={barRef}>{content}</span>;
+  return <div className={`hp-nota-toolbar hp-richbar ${className}`} ref={barRef}>{content}</div>;
 }
 
 // Celda con soporte de autocomplete via datalist
@@ -788,7 +818,7 @@ function CeldaConAutocomp({
 // ---- Tabla con registro de intervenciones ----
 const ITEMS_POR_PAG = 50;
 
-function TablaTool({
+export function TablaTool({
   columnas,
   filas,
   editable,
@@ -840,8 +870,6 @@ function TablaTool({
   const [findReemplazar, setFindReemplazar] = useState("");
   const [condRules, setCondRules] = useState<Array<{id: string; colKey: string; op: string; value: string; color: string}>>([]);
   const [condOpen, setCondOpen] = useState(false);
-  const [colMenuOpen, setColMenuOpen] = useState(false);
-  const [pdfMenuOpen, setPdfMenuOpen] = useState(false);
   const [localOrder, setLocalOrder] = useState<string[] | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -853,20 +881,8 @@ function TablaTool({
   const [showLastEdit, setShowLastEdit] = useState(false);
 
   const tableRef = useRef<HTMLTableElement>(null);
-  const colMenuRef = useRef<HTMLDivElement>(null);
-  const pdfMenuRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const resizingRef = useRef<{key: string; startX: number; startW: number} | null>(null);
-
-  // Cierre col menu y pdf menu al hacer click fuera
-  useEffect(() => {
-    function onDown(e: MouseEvent) {
-      if (colMenuRef.current && !colMenuRef.current.contains(e.target as Node)) setColMenuOpen(false);
-      if (pdfMenuRef.current && !pdfMenuRef.current.contains(e.target as Node)) setPdfMenuOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, []);
 
   // Columnas visibles (sin ocultas)
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
@@ -1247,17 +1263,102 @@ function TablaTool({
           value={busqueda}
           onChange={e => { setBusqueda(e.target.value); setPagina(0); }}
         />
-        {colsEstado.map(c => (
-          <select
-            key={c.key}
-            className="hp-tabla-filter"
-            value={filtros[c.key] ?? ""}
-            onChange={e => { setFiltros(f => ({ ...f, [c.key]: e.target.value })); setPagina(0); }}
-          >
-            <option value="">— {c.label}</option>
-            {(c.opciones ?? []).map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
-        ))}
+        {/* Filtrar (selects por columna de estado, antes sueltos en el toolbar) */}
+        {colsEstado.length > 0 && (
+          <ToolMenu label="Filtrar" icon="filter" width={230}
+            badge={colsEstado.filter(c => filtros[c.key]).length || undefined}>
+            <div className="tm-section">
+              {colsEstado.map(c => (
+                <label key={c.key} className="tm-field">
+                  <span>{c.label}</span>
+                  <select value={filtros[c.key] ?? ""}
+                    onChange={e => { setFiltros(f => ({ ...f, [c.key]: e.target.value })); setPagina(0); }}>
+                    <option value="">Todos</option>
+                    {(c.opciones ?? []).map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </ToolMenu>
+        )}
+
+        {/* Ordenar (orden secundario) */}
+        <ToolMenu label="Ordenar" icon="sort" width={230}>
+          <div className="tm-section">
+            <label className="tm-field">
+              <span>2° orden por</span>
+              <select value={sortKey2 ?? ""} onChange={e => setSortKey2(e.target.value || null)}>
+                <option value="">Ninguno</option>
+                {columnas.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+            </label>
+            {sortKey2 && (
+              <button className="tm-item" onClick={() => setSortDir2(d => d === "asc" ? "desc" : "asc")}>
+                Dirección: {sortDir2 === "asc" ? "ascendente ↑" : "descendente ↓"}
+              </button>
+            )}
+          </div>
+        </ToolMenu>
+
+        {/* Vista (toggles + columnas visibles) */}
+        <ToolMenu label="Vista" icon="sliders" width={230}>
+          <div className="tm-section">
+            <button className={`tm-item${compacto ? " active" : ""}`} onClick={() => setCompacto(v => !v)}>
+              {compacto && <Icon name="check" size={13} />}<span>Filas compactas</span>
+            </button>
+            <button className={`tm-item${showExtStats ? " active" : ""}`} onClick={() => setShowExtStats(v => !v)}>
+              {showExtStats && <Icon name="check" size={13} />}<span>Estadísticas extendidas</span>
+            </button>
+            <button className={`tm-item${showLastEdit ? " active" : ""}`} onClick={() => setShowLastEdit(v => !v)}>
+              {showLastEdit && <Icon name="check" size={13} />}<span>Mostrar última edición</span>
+            </button>
+          </div>
+          <div className="tm-section tm-section-bordered">
+            <span className="tm-section-title">Columnas visibles</span>
+            {columnas.map(c => (
+              <label key={c.key} className="tm-check">
+                <input type="checkbox" checked={!hiddenCols.has(c.key)}
+                  onChange={() => setHiddenCols(prev => { const next = new Set(prev); if (next.has(c.key)) next.delete(c.key); else next.add(c.key); return next; })} />
+                <span>{c.label}</span>
+              </label>
+            ))}
+          </div>
+        </ToolMenu>
+
+        {/* Herramientas de datos */}
+        <ToolMenu label="Herramientas" icon="replace" width={220}>
+          {editable && (
+            <button className="tm-item" onClick={pedirColumna}><Icon name="plus" size={13} /><span>Agregar columna</span></button>
+          )}
+          <button className={`tm-item${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)}>
+            <Icon name="replace" size={13} /><span>Buscar y reemplazar</span>
+          </button>
+          <button className={`tm-item${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)}>
+            <Icon name="filter" size={13} /><span>Formato condicional</span>
+          </button>
+        </ToolMenu>
+
+        {/* Exportar / importar */}
+        <ToolMenu label="Exportar" icon="download" align="right" width={210}>
+          {(close) => (<>
+            <button className="tm-item" onClick={() => { exportarCSV(); close(); }}><Icon name="download" size={13} /><span>Descargar CSV</span></button>
+            <button className="tm-item" onClick={() => { exportarPDF(); close(); }}><Icon name="download" size={13} /><span>Descargar PDF</span></button>
+            <button className="tm-item" onClick={() => { window.print(); close(); }}><Icon name="file-text" size={13} /><span>Imprimir</span></button>
+            {onImportarCSV && (
+              <button className="tm-item" disabled={importando} onClick={() => { importInputRef.current?.click(); close(); }}>
+                <Icon name="plus" size={13} /><span>{importando ? "Importando…" : "Importar CSV"}</span>
+              </button>
+            )}
+          </>)}
+        </ToolMenu>
+        {onImportarCSV && <input ref={importInputRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleImportCSV} />}
+
+        {columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
+          <>
+            <span className="hp-nota-sep" />
+            <RichToolbar inline />
+          </>
+        )}
 
         <div className="hp-tabla-toolbar-spacer" />
 
@@ -1265,91 +1366,20 @@ function TablaTool({
         {seleccionadas.size > 0 && (
           <>
             <span className="hp-sel-label">{seleccionadas.size} sel.</span>
-            <button className="btn" onClick={autoFillDown} title="Copiar valores de la primera fila seleccionada al resto">↓ Fill</button>
+            <button className="btn" onClick={autoFillDown} title="Copiar valores de la primera fila seleccionada al resto"><Icon name="sort" size={13} /> Rellenar</button>
             {onDuplicar && (
-              <button className="btn" onClick={() => { for (const id of seleccionadas) { const f = filas.find(x => x.id === id); if (f) onDuplicar(f); } setSeleccionadas(new Set()); }}>⧉ Dup.</button>
+              <button className="btn" onClick={() => { for (const id of seleccionadas) { const f = filas.find(x => x.id === id); if (f) onDuplicar(f); } setSeleccionadas(new Set()); }}><Icon name="columns" size={13} /> Duplicar</button>
             )}
-            <button className="btn hp-btn-danger" onClick={borrarSeleccionadas}>✕ Elim.</button>
+            <button className="btn hp-btn-danger" onClick={borrarSeleccionadas}><Icon name="trash" size={13} /> Eliminar</button>
           </>
         )}
 
-        {/* Botones de función */}
-        {editable && <button className="btn" onClick={pedirColumna} title="Añadir columna">+ Col</button>}
-        <button className={`btn${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)} title="Buscar y reemplazar">⌦ F&R</button>
-        <button className={`btn${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)} title="Formato condicional">◈ Cond.</button>
-        <button className={`btn${showExtStats ? " active" : ""}`} onClick={() => setShowExtStats(v => !v)} title="Estadísticas extendidas">∑ Stats</button>
-        <button className={`btn${compacto ? " active" : ""}`} onClick={() => setCompacto(v => !v)} title="Altura de fila compacta"><Icon name="rows" size={13} /> Compacto</button>
-        <button className={`btn${showLastEdit ? " active" : ""}`} onClick={() => setShowLastEdit(v => !v)} title="Mostrar última edición">⏱</button>
-
-        {/* Columnas visibles */}
-        <div className="hp-col-menu-wrap" ref={colMenuRef}>
-          <button className="btn" onClick={() => setColMenuOpen(v => !v)} title="Mostrar/ocultar columnas"><Icon name="columns" size={13} /> Columnas</button>
-          {colMenuOpen && (
-            <div className="hp-col-menu-drop">
-              {columnas.map(c => (
-                <label key={c.key} className="hp-col-menu-item">
-                  <input
-                    type="checkbox"
-                    checked={!hiddenCols.has(c.key)}
-                    onChange={() => setHiddenCols(prev => {
-                      const next = new Set(prev);
-                      if (next.has(c.key)) next.delete(c.key); else next.add(c.key);
-                      return next;
-                    })}
-                  />
-                  {c.label}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Orden secundario */}
-        <select
-          className="hp-tabla-filter"
-          value={sortKey2 ?? ""}
-          onChange={e => setSortKey2(e.target.value || null)}
-          title="Orden secundario"
-        >
-          <option value="">2° orden…</option>
-          {columnas.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-        </select>
-        {sortKey2 && (
-          <button className="btn" onClick={() => setSortDir2(d => d === "asc" ? "desc" : "asc")}>
-            {sortDir2 === "asc" ? "↑" : "↓"}
-          </button>
-        )}
-
-        <button className="btn" onClick={exportarCSV} title="Exportar CSV">CSV</button>
-        <div className="hp-pdf-menu-wrap" ref={pdfMenuRef}>
-          <button className="btn" onClick={() => setPdfMenuOpen(v => !v)} title="PDF">PDF ▾</button>
-          {pdfMenuOpen && (
-            <div className="hp-pdf-menu-drop">
-              <button onClick={() => { exportarPDF(); setPdfMenuOpen(false); }}>⬇ Descargar PDF</button>
-              <button onClick={() => { window.print(); setPdfMenuOpen(false); }}>🖨 Imprimir</button>
-            </div>
-          )}
-        </div>
-        {onImportarCSV && (
-          <>
-            <button className="btn" onClick={() => importInputRef.current?.click()} disabled={importando} title="Importar CSV">
-              {importando ? "…" : "⬆ CSV"}
-            </button>
-            <input ref={importInputRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleImportCSV} />
-          </>
-        )}
-        {columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
-          <>
-            <span className="hp-nota-sep" />
-            <RichToolbar inline />
-          </>
-        )}
         <button
           className="hp-expand-btn"
           onClick={() => setExpandida(v => !v)}
           title={expandida ? "Reducir" : "Pantalla completa"}
         >
-          {expandida ? "⊡" : "⤢"}
+          <Icon name={expandida ? "minimize" : "maximize"} size={15} />
         </button>
       </div>
 

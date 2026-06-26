@@ -1849,3 +1849,71 @@
 /* Checklist: un pelín más de aire entre ítems */
 .cp-dash .pq-check-row{ padding:5px 0; border-bottom:1px solid transparent; }
 .cp-dash .pq-check-row:hover{ border-bottom-color:var(--line); }
+
+/* ===========================================================================
+   ToolMenu — dropdowns de toolbar (agrupan funciones secundarias)
+   =========================================================================== */
+.cp-dash .tm-wrap{ position:relative; display:inline-flex; }
+.cp-dash .tm-trigger{ display:inline-flex; align-items:center; gap:6px; }
+.cp-dash .tm-trigger svg:last-child{ opacity:.55; }
+.cp-dash .tm-trigger.active{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .tm-badge{
+  display:inline-flex; align-items:center; justify-content:center; min-width:15px; height:15px;
+  padding:0 4px; background:var(--acc); color:var(--bg); font-size:9px; font-weight:800; border-radius:0;
+}
+.cp-dash .tm-menu{
+  position:absolute; top:calc(100% + 5px); left:0; z-index:40; min-width:180px;
+  background:var(--bg-2); border:1px solid var(--line); box-shadow:0 10px 28px var(--shadow);
+  padding:6px; animation:fadein var(--dur); max-height:60vh; overflow-y:auto;
+}
+.cp-dash .tm-menu-right{ left:auto; right:0; }
+.cp-dash .tm-section{ display:flex; flex-direction:column; gap:2px; }
+.cp-dash .tm-section-bordered{ border-top:1px solid var(--line); margin-top:6px; padding-top:6px; }
+.cp-dash .tm-section-title{ font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:4px 8px 2px; }
+.cp-dash .tm-item{
+  display:flex; align-items:center; gap:9px; width:100%; text-align:left;
+  background:none; border:none; color:var(--text); cursor:pointer;
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:12px; padding:8px 9px;
+  transition:background var(--dur-fast), color var(--dur-fast);
+}
+.cp-dash .tm-item:hover:not(:disabled){ background:var(--hl2); }
+.cp-dash .tm-item:disabled{ opacity:.5; cursor:default; }
+.cp-dash .tm-item.active{ color:var(--acc); }
+.cp-dash .tm-item svg{ flex-shrink:0; }
+.cp-dash .tm-item > span{ flex:1; min-width:0; }
+.cp-dash .tm-field{ display:flex; flex-direction:column; gap:4px; padding:6px 8px; }
+.cp-dash .tm-field > span{ font-size:10.5px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+.cp-dash .tm-field select{
+  width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text);
+  padding:6px 8px; font-size:12px; font-family:'Poppins',sans-serif; cursor:pointer; outline:none;
+}
+.cp-dash .tm-field select:focus{ border-color:var(--acc); }
+.cp-dash .tm-check{ display:flex; align-items:center; gap:9px; padding:6px 9px; cursor:pointer; font-size:12px; font-family:'Poppins',sans-serif; }
+.cp-dash .tm-check:hover{ background:var(--hl2); }
+.cp-dash .tm-check input{ accent-color:var(--acc); width:15px; height:15px; flex-shrink:0; }
+
+/* Toolbar de tabla en móvil: gutter coherente, no se desborda */
+@media (max-width:640px){
+  .cp-dash .hp-tabla-toolbar{ padding:8px var(--gutter); gap:5px; }
+  .cp-dash .hp-tabla-search-wrap{ flex:1 1 100%; max-width:none; order:-1; }
+  .cp-dash .tm-trigger .tm-label{ display:none; }
+  .cp-dash .tm-menu{ min-width:200px; }
+}
+
+/* RichToolbar inline (formato de celda) dentro del toolbar de tabla:
+   mismos botones compactos que el editor, no la fila de letras suelta. */
+.cp-dash .hp-richbar-inline{ display:inline-flex; align-items:center; gap:0; }
+.cp-dash .hp-richbar-inline .hp-tb-group{ display:flex; align-items:center; gap:2px; padding:0 6px; }
+.cp-dash .hp-richbar-inline .hp-tb-group + .hp-tb-group{ border-left:1px solid var(--line); }
+.cp-dash .hp-richbar-inline button{
+  display:flex; align-items:center; justify-content:center; gap:1px;
+  background:none; border:1px solid transparent; color:var(--muted);
+  height:30px; min-width:28px; padding:0 5px; font-size:15px; cursor:pointer; border-radius:5px;
+  transition:background var(--dur-fast), color var(--dur-fast);
+}
+.cp-dash .hp-richbar-inline button:hover{ background:var(--hl2); color:var(--text); }
+.cp-dash .hp-richbar-inline .hp-tb-trigger.open{ background:var(--hl3); color:var(--text); }
+
+/* Contenido de tabla en sans (legible, moderno) en vez de monoespaciada */
+.cp-dash table.hp-table td, .cp-dash .hp-cell-input, .cp-dash .hp-cell-area,
+.cp-dash .hp-cell-select{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; }
