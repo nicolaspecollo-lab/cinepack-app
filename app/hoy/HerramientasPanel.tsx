@@ -351,14 +351,11 @@ function EspacioTrabajoCreator({
   fullName: string;
   onCreated: () => void;
 }) {
-  // hp-index (el padre, ver dashboard.css) ya pone padding:20px 30px 36px.
-  // EspacioTrabajoPanel trae su propio gutter de 30px para poder montarse
-  // también "a piel" dentro de GeneralesPanel (sin padding ambiente). Si no
-  // se cancela el de hp-index acá, queda duplicado: insignificante en
-  // desktop, pero ~120px perdidos en un celular de 360px de ancho.
+  // flush: hp-index (el padre) ya aporta el gutter lateral, así que el panel
+  // no agrega el suyo y no se duplica el padding (clave en mobile).
   return (
-    <div style={{ margin: "-20px -30px 0" }}>
-      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} />
+    <div style={{ marginBottom: 4 }}>
+      <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} flush />
     </div>
   );
 }

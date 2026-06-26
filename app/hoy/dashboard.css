@@ -493,24 +493,26 @@
 }
 
 
-/* Espacio de trabajo — creador */
-.cp-dash .esp-creator{ display:flex; flex-direction:column; gap:0; width:100%; box-sizing:border-box; }
-.cp-dash .esp-creator-header{ display:flex; align-items:flex-start; gap:14px; padding:24px 30px 20px; }
+/* Espacio de trabajo — creador.
+   El gutter lateral es UN solo valor (--esp-gutter) usado por todos los
+   bloques, así nada se desalinea. flush = el padre ya aporta gutter. */
+.cp-dash .esp-creator{ --esp-gutter:30px; display:flex; flex-direction:column; gap:0; width:100%; box-sizing:border-box; }
+.cp-dash .esp-creator.flush{ --esp-gutter:0px; }
+@media (max-width:640px){ .cp-dash .esp-creator{ --esp-gutter:16px; } }
+.cp-dash .esp-creator-header{ display:flex; align-items:flex-start; gap:14px; padding:22px var(--esp-gutter) 16px; }
+.cp-dash .esp-creator.flush .esp-creator-header{ padding-top:4px; }
 .cp-dash .esp-creator-hex{ width:14px; height:12px; background:var(--acc); flex-shrink:0; margin-top:4px; }
 .cp-dash .esp-creator-header h4{ font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; margin:0 0 4px; }
 .cp-dash .esp-creator-header p{ font-size:12px; color:var(--muted); margin:0; }
 
 /* Tipo: Documento / Cuadro de celdas — chicas, con color, una al lado de la otra siempre */
-.cp-dash .esp-tipo-cards{ display:flex; gap:8px; padding:0 30px 20px; flex-wrap:wrap; align-items:center; }
+.cp-dash .esp-tipo-cards{ display:flex; gap:8px; padding:0 var(--esp-gutter) 18px; flex-wrap:wrap; align-items:center; }
 .cp-dash .esp-tipo-card{
   --esp-tipo-color: var(--acc);
-  flex:1 1 110px; min-width:0; max-width:170px; box-sizing:border-box;
+  flex:1 1 110px; min-width:0; max-width:180px; box-sizing:border-box;
   display:flex; flex-direction:row; align-items:center; gap:8px;
   padding:10px 12px; background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--esp-tipo-color);
   cursor:pointer; text-align:left; transition:border-color .15s, background .15s, transform .1s;
-}
-@media (max-width:480px){
-  .cp-dash .esp-tipo-cards{ padding:0 16px 16px; }
 }
 .cp-dash .esp-tipo-card:hover{ border-color:var(--esp-tipo-color); background:var(--hl1); }
 .cp-dash .esp-tipo-card:active{ transform:scale(0.97); }
@@ -523,7 +525,7 @@
 .cp-dash .esp-tipo-card strong{ font-family:'Poppins',sans-serif; font-size:12px; font-weight:700; color:var(--text); }
 
 /* Selector de plantilla, agrupado en una sola tarjeta */
-.cp-dash .esp-plantilla-box{ border:1px solid var(--line); background:var(--panel); padding:16px; box-sizing:border-box; width:100%; margin:0 30px 24px; max-width:calc(100% - 60px); }
+.cp-dash .esp-plantilla-box{ border:1px solid var(--line); background:var(--panel); padding:16px; box-sizing:border-box; margin:0 var(--esp-gutter) 24px; }
 .cp-dash .esp-plantilla-box-head{ display:flex; flex-direction:column; gap:2px; margin-bottom:14px; }
 .cp-dash .esp-plantilla-box-head strong{ font-family:'Poppins',sans-serif; font-size:12px; font-weight:700; color:var(--text); }
 .cp-dash .esp-plantilla-box-head span{ font-size:11px; color:var(--muted); }
@@ -580,8 +582,8 @@
 .cp-dash .esp-plantilla-tabla-wrap{ flex-shrink:0; }
 .cp-dash .esp-tp{ width:84px; height:60px; background:var(--bg); border:1px solid var(--line); box-sizing:border-box; overflow:hidden; }
 @media (max-width:480px){
-  .cp-dash .esp-plantilla-box{ margin:0 16px 20px; max-width:calc(100% - 32px); padding:10px; }
-  .cp-dash .esp-plantilla-card{ padding:7px; gap:10px; }
+  .cp-dash .esp-plantilla-box{ padding:12px; }
+  .cp-dash .esp-plantilla-card{ padding:8px; gap:10px; }
 }
 
 .cp-dash .esp-tp-grid{ display:flex; flex-direction:column; padding:6px; gap:3px; }
@@ -704,6 +706,7 @@
    MOTOR DE HERRAMIENTAS CINE PACK
    =========================================================================== */
 .cp-dash .hp-index{ padding:20px 30px 36px; display:flex; flex-direction:column; gap:26px; }
+@media (max-width:640px){ .cp-dash .hp-index{ padding:16px 16px 28px; gap:18px; } }
 .cp-dash .hp-group{ display:flex; flex-direction:column; gap:12px; }
 .cp-dash .hp-group-label{
   font-size:9px; font-family:'Poppins',sans-serif; font-weight:700;

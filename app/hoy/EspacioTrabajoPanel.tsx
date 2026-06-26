@@ -15,10 +15,14 @@ export default function EspacioTrabajoPanel({
   departamento,
   fullName,
   onCreated,
+  flush = false,
 }: {
   departamento: string;
   fullName: string;
   onCreated?: () => void;
+  // flush = el contenedor padre ya aporta el gutter lateral (ej. hp-index en
+  // Departamento/Exclusivas). En Generales se monta sin flush y aporta el suyo.
+  flush?: boolean;
 }) {
   const [elegido, setElegido] = useState<TipoHerramienta | null>(null);
   const [sending, setSending] = useState(false);
@@ -85,7 +89,7 @@ export default function EspacioTrabajoPanel({
   }
 
   return (
-    <div className="esp-creator">
+    <div className={`esp-creator${flush ? " flush" : ""}`}>
       <div className="esp-creator-header">
         <span className="hex esp-creator-hex" />
         <div>
