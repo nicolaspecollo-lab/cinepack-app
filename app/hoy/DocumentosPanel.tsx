@@ -38,6 +38,7 @@ export default function DocumentosPanel({
   readOnly?: boolean;
 }) {
   const t = useTranslations("documentos");
+  const tc = useTranslations("documentosCatalogo");
   const grupos = DOCUMENTOS_POR_DEPARTAMENTO[departamento] ?? [];
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +136,7 @@ export default function DocumentosPanel({
 
   const total = grupos.reduce((acc, g) => acc + g.docs.length, 0);
   const completados = grupos.reduce(
-    (acc, g) => acc + g.docs.filter((d) => docs.some((row) => row.categoria === g.titulo && row.nombre === d.nombre)).length,
+    (acc, g) => acc + g.docs.filter((d) => docs.some((row) => row.categoria === g.id && row.nombre === d.id)).length,
     0
   );
 
@@ -154,25 +155,25 @@ export default function DocumentosPanel({
 
       {!loading &&
         grupos.map((g) => (
-          <div key={g.titulo} style={{ padding: "0 30px 8px" }}>
+          <div key={g.id} style={{ padding: "0 30px 8px" }}>
             <div
               className="mbsection-title"
               style={{ display: "flex", alignItems: "center", gap: "8px", margin: "18px 0 12px" }}
             >
               <span className="hex" style={{ width: "12px", height: "10px", background: g.color }}></span>
-              {g.titulo}
+              {tc(`${departamento}.${g.id}.titulo`)}
             </div>
             <div className="com-list" style={{ padding: 0, gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
               {g.docs.map((d) => {
-                const subido = docs.find((row) => row.categoria === g.titulo && row.nombre === d.nombre);
-                const key = `${g.titulo}::${d.nombre}`;
+                const subido = docs.find((row) => row.categoria === g.id && row.nombre === d.id);
+                const key = `${g.id}::${d.id}`;
                 return (
-                  <div className="com" key={d.nombre} style={{ borderLeft: `3px solid ${g.color}` }}>
+                  <div className="com" key={d.id} style={{ borderLeft: `3px solid ${g.color}` }}>
                     <div className="com-top">
-                      <div className="com-title">{d.nombre}</div>
+                      <div className="com-title">{tc(`${departamento}.${g.id}.docs.${d.id}.nombre`)}</div>
                       <span className={`pill ${subido ? "p-ok" : "p-warn"}`}>{subido ? t("uploaded") : t("empty")}</span>
                     </div>
-                    <div className="com-text">{d.desc}</div>
+                    <div className="com-text">{tc(`${departamento}.${g.id}.docs.${d.id}.desc`)}</div>
                     {subido ? (
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px", alignItems: "center" }}>
                         <span className="cons-meta">
@@ -195,7 +196,7 @@ export default function DocumentosPanel({
                             disabled={subiendo !== null}
                             onChange={(e) => {
                               const file = e.target.files?.[0];
-                              if (file) subir(g.titulo, d.nombre, file);
+                              if (file) subir(g.id, d.id, file);
                               e.target.value = "";
                             }}
                           />

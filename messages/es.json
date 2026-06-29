@@ -1269,5 +1269,707 @@
     "rodaje": "Rodaje",
     "postproduccion": "Postproducción",
     "distribucion": "Distribución"
+  },
+  "documentosCatalogo": {
+    "Dirección": {
+      "guion-y-desarrollo": {
+        "titulo": "Guion y desarrollo",
+        "docs": {
+          "guion-definitivo": {
+            "nombre": "Guion definitivo",
+            "desc": "Última versión bloqueada del guion."
+          },
+          "biblia-de-personajes": {
+            "nombre": "Biblia de personajes",
+            "desc": "Arcos, motivaciones y relaciones de cada personaje."
+          },
+          "referencias-visuales-moodboard": {
+            "nombre": "Referencias visuales (moodboard)",
+            "desc": "Tono, fotografía y referencias de puesta en escena."
+          }
+        }
+      },
+      "planificacion": {
+        "titulo": "Planificación",
+        "docs": {
+          "plan-de-rodaje-maestro": {
+            "nombre": "Plan de rodaje maestro",
+            "desc": "Calendario día a día de todo el rodaje."
+          },
+          "shot-list-general": {
+            "nombre": "Shot list general",
+            "desc": "Desglose de planos previstos por jornada."
+          },
+          "calendario-de-ensayos": {
+            "nombre": "Calendario de ensayos",
+            "desc": "Sesiones de lectura y ensayo con el reparto."
+          }
+        }
+      },
+      "continuidad": {
+        "titulo": "Continuidad",
+        "docs": {
+          "partes-de-script": {
+            "nombre": "Partes de script",
+            "desc": "Registro diario de continuidad y raccords."
+          },
+          "notas-de-direccion-por-escena": {
+            "nombre": "Notas de dirección por escena",
+            "desc": "Indicaciones y ajustes escena a escena."
+          }
+        }
+      }
+    },
+    "Producción": {
+      "planificacion": {
+        "titulo": "Planificación",
+        "docs": {
+          "plan-de-rodaje-maestro": {
+            "nombre": "Plan de rodaje maestro",
+            "desc": "Versión de producción del calendario de rodaje."
+          },
+          "stripboard": {
+            "nombre": "Stripboard",
+            "desc": "Orden de escenas por día y localización."
+          },
+          "calendario-general-del-proyecto": {
+            "nombre": "Calendario general del proyecto",
+            "desc": "Hitos de preproducción, rodaje y postproducción."
+          }
+        }
+      },
+      "logistica": {
+        "titulo": "Logística",
+        "docs": {
+          "localizaciones-y-permisos": {
+            "nombre": "Localizaciones y permisos",
+            "desc": "Fichas de localización y permisos de rodaje."
+          },
+          "hojas-de-ruta-y-transporte": {
+            "nombre": "Hojas de ruta y transporte",
+            "desc": "Desplazamientos del equipo y materiales."
+          },
+          "catering-y-dietas": {
+            "nombre": "Catering y dietas",
+            "desc": "Planificación de comidas y dietas por jornada."
+          }
+        }
+      },
+      "coordinacion": {
+        "titulo": "Coordinación",
+        "docs": {
+          "ordenes-de-rodaje-callsheets": {
+            "nombre": "Órdenes de rodaje (callsheets)",
+            "desc": "Citación diaria de todo el equipo."
+          },
+          "partes-de-produccion-diarios": {
+            "nombre": "Partes de producción diarios",
+            "desc": "Resumen de lo rodado y lo pendiente cada día."
+          }
+        }
+      }
+    },
+    "Fotografía": {
+      "plan-tecnico-de-camara": {
+        "titulo": "Plan técnico de cámara",
+        "docs": {
+          "shot-list-desglose-de-planos": {
+            "nombre": "Shot list / desglose de planos",
+            "desc": "Planos previstos por escena, tipo y movimiento."
+          },
+          "plan-de-iluminacion": {
+            "nombre": "Plan de iluminación",
+            "desc": "Esquemas de luz por escena y localización."
+          },
+          "esquemas-de-set": {
+            "nombre": "Esquemas de set",
+            "desc": "Distribución de cámara, luces y equipo en plató."
+          }
+        }
+      },
+      "equipo": {
+        "titulo": "Equipo",
+        "docs": {
+          "inventario-de-camara-y-optica": {
+            "nombre": "Inventario de cámara y óptica",
+            "desc": "Cuerpos, ópticas y accesorios disponibles."
+          },
+          "inventario-de-iluminacion": {
+            "nombre": "Inventario de iluminación",
+            "desc": "Focos, paneles y soportes disponibles."
+          },
+          "hoja-de-alquiler-de-equipo": {
+            "nombre": "Hoja de alquiler de equipo",
+            "desc": "Material alquilado, proveedor y fechas."
+          }
+        }
+      },
+      "referencias": {
+        "titulo": "Referencias",
+        "docs": {
+          "look-book-referencias-de-fotografia": {
+            "nombre": "Look book / referencias de fotografía",
+            "desc": "Referencias visuales de look y color."
+          },
+          "luts-y-pruebas-de-camara": {
+            "nombre": "LUTs y pruebas de cámara",
+            "desc": "Pruebas de imagen y LUTs de referencia."
+          }
+        }
+      }
+    },
+    "Arte": {
+      "direccion-de-arte": {
+        "titulo": "Dirección de arte",
+        "docs": {
+          "moodboard-de-arte": {
+            "nombre": "Moodboard de arte",
+            "desc": "Referencias visuales de dirección de arte."
+          },
+          "paleta-de-color-por-escena": {
+            "nombre": "Paleta de color por escena",
+            "desc": "Paletas y referencias cromáticas."
+          },
+          "planos-de-decorado": {
+            "nombre": "Planos de decorado",
+            "desc": "Planos y distribución de los decorados."
+          }
+        }
+      },
+      "atrezzo-y-vestuario": {
+        "titulo": "Atrezzo y vestuario",
+        "docs": {
+          "desglose-de-atrezzo-por-escena": {
+            "nombre": "Desglose de atrezzo por escena",
+            "desc": "Objetos de atrezzo necesarios por escena."
+          },
+          "desglose-de-vestuario-por-personaje": {
+            "nombre": "Desglose de vestuario por personaje",
+            "desc": "Vestuario por personaje y escena."
+          },
+          "continuidad-de-vestuario": {
+            "nombre": "Continuidad de vestuario",
+            "desc": "Registro fotográfico de continuidad de vestuario."
+          }
+        }
+      },
+      "produccion-de-arte": {
+        "titulo": "Producción de arte",
+        "docs": {
+          "presupuesto-de-arte": {
+            "nombre": "Presupuesto de arte",
+            "desc": "Presupuesto asignado al departamento de arte."
+          },
+          "proveedores-y-compras": {
+            "nombre": "Proveedores y compras",
+            "desc": "Listado de proveedores, compras y alquileres."
+          }
+        }
+      }
+    },
+    "Guion": {
+      "versiones": {
+        "titulo": "Versiones",
+        "docs": {
+          "guion-literario-ultima-version": {
+            "nombre": "Guion literario (última versión)",
+            "desc": "Versión vigente del guion literario."
+          },
+          "historial-de-versiones-y-cambios": {
+            "nombre": "Historial de versiones y cambios",
+            "desc": "Registro de versiones (blanca, azul, rosa...)."
+          },
+          "sinopsis-y-escaleta": {
+            "nombre": "Sinopsis y escaleta",
+            "desc": "Sinopsis general y escaleta por secuencias."
+          }
+        }
+      },
+      "desglose": {
+        "titulo": "Desglose",
+        "docs": {
+          "desglose-de-escenas-ia": {
+            "nombre": "Desglose de escenas (IA)",
+            "desc": "Escenas extraídas automáticamente del guion."
+          },
+          "desglose-tecnico-planos": {
+            "nombre": "Desglose técnico (planos)",
+            "desc": "Planos asociados a cada escena."
+          }
+        }
+      },
+      "derechos": {
+        "titulo": "Derechos",
+        "docs": {
+          "cesion-de-derechos-de-guion": {
+            "nombre": "Cesión de derechos de guion",
+            "desc": "Acuerdo de cesión de derechos de autoría."
+          }
+        }
+      }
+    },
+    "Ejecutivo": {
+      "presupuesto-y-costos": {
+        "titulo": "Presupuesto y costos",
+        "docs": {
+          "presupuesto-general": {
+            "nombre": "Presupuesto general",
+            "desc": "Top sheet y desglose por capítulos del proyecto."
+          },
+          "presupuesto-por-departamento": {
+            "nombre": "Presupuesto por departamento",
+            "desc": "Asignación y límite de gasto de cada depto."
+          },
+          "control-de-costos-cost-report": {
+            "nombre": "Control de costos (cost report)",
+            "desc": "Presupuestado vs. real, semana a semana."
+          },
+          "flujo-de-caja-cashflow": {
+            "nombre": "Flujo de caja (cashflow)",
+            "desc": "Entradas y salidas previstas por fecha."
+          }
+        }
+      },
+      "facturacion": {
+        "titulo": "Facturación",
+        "docs": {
+          "facturas-emitidas": {
+            "nombre": "Facturas emitidas",
+            "desc": "Facturas que emite la productora."
+          },
+          "facturas-de-proveedores": {
+            "nombre": "Facturas de proveedores",
+            "desc": "Facturas recibidas pendientes de validar."
+          },
+          "pendientes-de-pago": {
+            "nombre": "Pendientes de pago",
+            "desc": "Facturas aprobadas a la espera de abono."
+          }
+        }
+      },
+      "pagos-y-rendiciones": {
+        "titulo": "Pagos y rendiciones",
+        "docs": {
+          "comprobantes-de-pago": {
+            "nombre": "Comprobantes de pago",
+            "desc": "Justificantes de transferencia y recibos."
+          },
+          "nominas-del-equipo": {
+            "nombre": "Nóminas del equipo",
+            "desc": "Pagos al crew y al reparto."
+          },
+          "caja-chica-petty-cash": {
+            "nombre": "Caja chica (petty cash)",
+            "desc": "Gastos menores con su justificación."
+          },
+          "rendicion-de-gastos": {
+            "nombre": "Rendición de gastos",
+            "desc": "Liquidación de adelantos y dietas."
+          }
+        }
+      },
+      "contratos-y-legal": {
+        "titulo": "Contratos y legal",
+        "docs": {
+          "contratos-de-equipo": {
+            "nombre": "Contratos de equipo",
+            "desc": "Contratación del crew por departamento."
+          },
+          "contratos-de-reparto": {
+            "nombre": "Contratos de reparto",
+            "desc": "Actores y figuración, con cesión de imagen."
+          },
+          "contratos-de-proveedores": {
+            "nombre": "Contratos de proveedores",
+            "desc": "Localizaciones, alquileres, servicios."
+          },
+          "cesion-de-derechos": {
+            "nombre": "Cesión de derechos",
+            "desc": "Guion, música, marcas y derechos de autor."
+          },
+          "acuerdos-de-confidencialidad-nda": {
+            "nombre": "Acuerdos de confidencialidad (NDA)",
+            "desc": "Protección de información del proyecto."
+          }
+        }
+      },
+      "financiacion-y-seguros": {
+        "titulo": "Financiación y seguros",
+        "docs": {
+          "plan-de-financiacion": {
+            "nombre": "Plan de financiación",
+            "desc": "Estructura de financiación del proyecto."
+          },
+          "ayudas-y-subvenciones": {
+            "nombre": "Ayudas y subvenciones",
+            "desc": "Convocatorias, solicitudes y justificación."
+          },
+          "inversores-y-coproduccion": {
+            "nombre": "Inversores y coproducción",
+            "desc": "Acuerdos con inversores y coproductores."
+          },
+          "polizas-de-seguro": {
+            "nombre": "Pólizas de seguro",
+            "desc": "RC, accidentes, negativo y equipos."
+          },
+          "permisos-de-rodaje": {
+            "nombre": "Permisos de rodaje",
+            "desc": "Licencias de localización y vía pública."
+          }
+        }
+      }
+    },
+    "Casting": {
+      "procesos-de-seleccion": {
+        "titulo": "Procesos de selección",
+        "docs": {
+          "listado-de-candidatos": {
+            "nombre": "Listado de candidatos",
+            "desc": "Candidatos por personaje y estado del proceso."
+          },
+          "convocatoria-de-casting": {
+            "nombre": "Convocatoria de casting",
+            "desc": "Bases y convocatoria publicada."
+          },
+          "resultados-de-audiciones": {
+            "nombre": "Resultados de audiciones",
+            "desc": "Notas y decisiones de cada audición."
+          }
+        }
+      },
+      "reparto-confirmado": {
+        "titulo": "Reparto confirmado",
+        "docs": {
+          "ficha-de-reparto": {
+            "nombre": "Ficha de reparto",
+            "desc": "Reparto confirmado por personaje."
+          },
+          "contratos-de-reparto": {
+            "nombre": "Contratos de reparto",
+            "desc": "Contratos firmados, pendiente validación del Ejecutivo."
+          },
+          "cesion-de-imagen": {
+            "nombre": "Cesión de imagen",
+            "desc": "Acuerdos de cesión de imagen del reparto."
+          }
+        }
+      }
+    },
+    "Reparto": {
+      "ficha-de-personaje": {
+        "titulo": "Ficha de personaje",
+        "docs": {
+          "ficha-de-personaje-y-arco": {
+            "nombre": "Ficha de personaje y arco",
+            "desc": "Descripción del personaje y su arco narrativo."
+          },
+          "guion-con-escenas-marcadas": {
+            "nombre": "Guion con escenas marcadas",
+            "desc": "Guion con las escenas propias señaladas."
+          }
+        }
+      },
+      "logistica-personal": {
+        "titulo": "Logística personal",
+        "docs": {
+          "calendario-de-citaciones": {
+            "nombre": "Calendario de citaciones",
+            "desc": "Fechas y horarios de citación por actor."
+          },
+          "vestuario-y-maquillaje-asignado": {
+            "nombre": "Vestuario y maquillaje asignado",
+            "desc": "Looks asignados por escena."
+          }
+        }
+      },
+      "contractual": {
+        "titulo": "Contractual",
+        "docs": {
+          "contrato-individual": {
+            "nombre": "Contrato individual",
+            "desc": "Contrato de interpretación del actor."
+          },
+          "cesion-de-imagen": {
+            "nombre": "Cesión de imagen",
+            "desc": "Acuerdo de cesión de imagen firmado."
+          }
+        }
+      }
+    },
+    "Making of": {
+      "planificacion-de-contenido": {
+        "titulo": "Planificación de contenido",
+        "docs": {
+          "calendario-editorial": {
+            "nombre": "Calendario editorial",
+            "desc": "Planificación de contenidos a generar."
+          },
+          "plan-de-cobertura-bts": {
+            "nombre": "Plan de cobertura BTS",
+            "desc": "Qué jornadas y momentos cubrir."
+          }
+        }
+      },
+      "material": {
+        "titulo": "Material",
+        "docs": {
+          "listado-de-material-grabado": {
+            "nombre": "Listado de material grabado",
+            "desc": "Registro de material behind-the-scenes."
+          },
+          "seleccion-para-redes": {
+            "nombre": "Selección para redes",
+            "desc": "Material seleccionado para publicación."
+          }
+        }
+      },
+      "publicacion": {
+        "titulo": "Publicación",
+        "docs": {
+          "calendario-de-publicaciones": {
+            "nombre": "Calendario de publicaciones",
+            "desc": "Fechas y canales de publicación."
+          },
+          "derechos-de-uso-de-material-bts": {
+            "nombre": "Derechos de uso de material BTS",
+            "desc": "Autorizaciones de uso del material."
+          }
+        }
+      }
+    },
+    "Sonido": {
+      "plan-de-sonido": {
+        "titulo": "Plan de sonido",
+        "docs": {
+          "plan-de-sonido-directo": {
+            "nombre": "Plan de sonido directo",
+            "desc": "Estrategia de captación por escena."
+          },
+          "lista-de-microfonos-por-escena": {
+            "nombre": "Lista de micrófonos por escena",
+            "desc": "Asignación de microfonía por escena."
+          }
+        }
+      },
+      "equipo": {
+        "titulo": "Equipo",
+        "docs": {
+          "inventario-de-equipo-de-sonido": {
+            "nombre": "Inventario de equipo de sonido",
+            "desc": "Grabadoras, micros y accesorios disponibles."
+          },
+          "hoja-de-alquiler-de-equipo": {
+            "nombre": "Hoja de alquiler de equipo",
+            "desc": "Material alquilado, proveedor y fechas."
+          }
+        }
+      },
+      "reportes": {
+        "titulo": "Reportes",
+        "docs": {
+          "reportes-de-sonido-por-toma": {
+            "nombre": "Reportes de sonido por toma",
+            "desc": "Niveles, notas y tomas válidas por escena."
+          },
+          "notas-de-postsincronizacion": {
+            "nombre": "Notas de postsincronización",
+            "desc": "Diálogos a regrabar en ADR."
+          }
+        }
+      }
+    },
+    "Postproducción": {
+      "montaje": {
+        "titulo": "Montaje",
+        "docs": {
+          "plan-de-montaje": {
+            "nombre": "Plan de montaje",
+            "desc": "Calendario y criterios de montaje."
+          },
+          "versiones-de-corte-edl": {
+            "nombre": "Versiones de corte (EDL)",
+            "desc": "Historial de versiones de montaje."
+          },
+          "notas-de-visionado-dailies": {
+            "nombre": "Notas de visionado / dailies",
+            "desc": "Notas de dirección sobre el material rodado."
+          }
+        }
+      },
+      "vfx-y-color": {
+        "titulo": "VFX y color",
+        "docs": {
+          "lista-de-planos-vfx": {
+            "nombre": "Lista de planos VFX",
+            "desc": "Planos que requieren efectos visuales."
+          },
+          "guia-de-color-lut-final": {
+            "nombre": "Guía de color / LUT final",
+            "desc": "Look final acordado con Fotografía."
+          }
+        }
+      },
+      "entregas": {
+        "titulo": "Entregas",
+        "docs": {
+          "plan-de-entregas-masters": {
+            "nombre": "Plan de entregas (masters)",
+            "desc": "Formatos y fechas de entrega final."
+          },
+          "checklist-de-entrega-final": {
+            "nombre": "Checklist de entrega final",
+            "desc": "Verificación previa a la entrega."
+          }
+        }
+      }
+    },
+    "RRHH": {
+      "personal": {
+        "titulo": "Personal",
+        "docs": {
+          "listado-de-equipo-y-contactos": {
+            "nombre": "Listado de equipo y contactos",
+            "desc": "Directorio del equipo del proyecto."
+          },
+          "altas-y-bajas": {
+            "nombre": "Altas y bajas",
+            "desc": "Incorporaciones y bajas del equipo."
+          }
+        }
+      },
+      "jornada-y-descansos": {
+        "titulo": "Jornada y descansos",
+        "docs": {
+          "control-de-horas": {
+            "nombre": "Control de horas",
+            "desc": "Registro de jornada del equipo."
+          },
+          "registro-de-descansos-legales": {
+            "nombre": "Registro de descansos legales",
+            "desc": "Cumplimiento de descansos del convenio."
+          }
+        }
+      },
+      "bienestar": {
+        "titulo": "Bienestar",
+        "docs": {
+          "protocolo-de-prevencion-de-riesgos": {
+            "nombre": "Protocolo de prevención de riesgos",
+            "desc": "Protocolo de seguridad y salud del rodaje."
+          },
+          "canal-de-incidencias": {
+            "nombre": "Canal de incidencias",
+            "desc": "Registro de incidencias y resolución."
+          }
+        }
+      }
+    },
+    "Sostenibilidad": {
+      "medicion": {
+        "titulo": "Medición",
+        "docs": {
+          "huella-de-carbono-del-proyecto": {
+            "nombre": "Huella de carbono del proyecto",
+            "desc": "Cálculo y seguimiento de emisiones."
+          },
+          "consumo-energetico": {
+            "nombre": "Consumo energético",
+            "desc": "Consumo energético de rodaje y oficinas."
+          }
+        }
+      },
+      "gestion": {
+        "titulo": "Gestión",
+        "docs": {
+          "plan-de-gestion-de-residuos": {
+            "nombre": "Plan de gestión de residuos",
+            "desc": "Reducción, reciclaje y gestión de residuos."
+          },
+          "proveedores-sostenibles": {
+            "nombre": "Proveedores sostenibles",
+            "desc": "Catering, transporte y materiales sostenibles."
+          }
+        }
+      },
+      "certificacion": {
+        "titulo": "Certificación",
+        "docs": {
+          "checklist-produccion-verde": {
+            "nombre": "Checklist producción verde",
+            "desc": "Cumplimiento de criterios de producción sostenible."
+          },
+          "memoria-de-sostenibilidad": {
+            "nombre": "Memoria de sostenibilidad",
+            "desc": "Informe final de impacto y medidas tomadas."
+          }
+        }
+      }
+    },
+    "Marketing": {
+      "estrategia": {
+        "titulo": "Estrategia",
+        "docs": {
+          "plan-de-marketing": {
+            "nombre": "Plan de marketing",
+            "desc": "Estrategia, objetivos y calendario de campañas."
+          },
+          "identidad-grafica": {
+            "nombre": "Identidad gráfica",
+            "desc": "Logotipos, tipografías y guía de marca del proyecto."
+          }
+        }
+      },
+      "contenido": {
+        "titulo": "Contenido",
+        "docs": {
+          "calendario-de-redes-sociales": {
+            "nombre": "Calendario de redes sociales",
+            "desc": "Publicaciones planificadas por canal."
+          },
+          "banco-de-assets": {
+            "nombre": "Banco de assets",
+            "desc": "Imágenes, videos y artes para campañas."
+          }
+        }
+      }
+    },
+    "Difusión": {
+      "prensa": {
+        "titulo": "Prensa",
+        "docs": {
+          "dossier-de-prensa": {
+            "nombre": "Dossier de prensa",
+            "desc": "Material de prensa del proyecto."
+          },
+          "listado-de-medios-y-contactos": {
+            "nombre": "Listado de medios y contactos",
+            "desc": "Medios y periodistas de interés para el proyecto."
+          },
+          "notas-de-prensa": {
+            "nombre": "Notas de prensa",
+            "desc": "Comunicados publicados o programados."
+          }
+        }
+      }
+    },
+    "Distribución": {
+      "estrategia-de-distribucion": {
+        "titulo": "Estrategia de distribución",
+        "docs": {
+          "plan-de-distribucion": {
+            "nombre": "Plan de distribución",
+            "desc": "Festivales, plataformas y ventanas previstas."
+          },
+          "listado-de-festivales": {
+            "nombre": "Listado de festivales",
+            "desc": "Festivales objetivo y plazos de inscripción."
+          },
+          "acuerdos-de-distribucion": {
+            "nombre": "Acuerdos de distribución",
+            "desc": "Contratos con distribuidoras y plataformas."
+          }
+        }
+      }
+    }
   }
 }

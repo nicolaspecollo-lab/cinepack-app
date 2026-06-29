@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleGenAI } from "@google/genai";
 import { JERARQUIA_POR_DEPARTAMENTO, DOCUMENTOS_POR_DEPARTAMENTO } from "@/app/constants";
+import mensajesEs from "@/messages/es.json";
+
+// Texto en español del catálogo de documentos, solo para armar el contexto del asistente IA.
+const DOCUMENTOS_CATALOGO_ES = (
+  mensajesEs as { documentosCatalogo: Record<string, Record<string, { titulo: string; docs: Record<string, { nombre: string }> }>> }
+).documentosCatalogo;
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -69,9 +75,10 @@ export async function POST(req: Request) {
       contexto += `\nJerarquía de cargos del departamento "${departamento}": ${jerarquia.join(" > ")}.`;
     }
     const docs = DOCUMENTOS_POR_DEPARTAMENTO[departamento];
-    if (docs) {
+    const docsTextos = DOCUMENTOS_CATALOGO_ES[departamento];
+    if (docs && docsTextos) {
       const resumenDocs = docs
-        .map((g) => `${g.titulo}: ${g.docs.map((d) => d.nombre).join(", ")}`)
+        .map((g) => `${docsTextos[g.id]?.titulo ?? g.id}: ${g.docs.map((d) => docsTextos[g.id]?.docs[d.id]?.nombre ?? d.id).join(", ")}`)
         .join(" | ");
       contexto += `\nDocumentos y herramientas disponibles para "${departamento}": ${resumenDocs}.`;
     }

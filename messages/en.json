@@ -1269,5 +1269,707 @@
     "rodaje": "Shooting",
     "postproduccion": "Post-production",
     "distribucion": "Distribution"
+  },
+  "documentosCatalogo": {
+    "Dirección": {
+      "guion-y-desarrollo": {
+        "titulo": "Script & development",
+        "docs": {
+          "guion-definitivo": {
+            "nombre": "Final script",
+            "desc": "Last locked version of the script."
+          },
+          "biblia-de-personajes": {
+            "nombre": "Character bible",
+            "desc": "Arcs, motivations and relationships of each character."
+          },
+          "referencias-visuales-moodboard": {
+            "nombre": "Visual references (moodboard)",
+            "desc": "Tone, photography and staging references."
+          }
+        }
+      },
+      "planificacion": {
+        "titulo": "Planning",
+        "docs": {
+          "plan-de-rodaje-maestro": {
+            "nombre": "Master shooting schedule",
+            "desc": "Day-by-day calendar of the whole shoot."
+          },
+          "shot-list-general": {
+            "nombre": "General shot list",
+            "desc": "Breakdown of planned shots per day."
+          },
+          "calendario-de-ensayos": {
+            "nombre": "Rehearsal calendar",
+            "desc": "Read-through and rehearsal sessions with the cast."
+          }
+        }
+      },
+      "continuidad": {
+        "titulo": "Continuity",
+        "docs": {
+          "partes-de-script": {
+            "nombre": "Script reports",
+            "desc": "Daily continuity and matching-shot log."
+          },
+          "notas-de-direccion-por-escena": {
+            "nombre": "Directing notes per scene",
+            "desc": "Scene-by-scene directions and adjustments."
+          }
+        }
+      }
+    },
+    "Producción": {
+      "planificacion": {
+        "titulo": "Planning",
+        "docs": {
+          "plan-de-rodaje-maestro": {
+            "nombre": "Master shooting schedule",
+            "desc": "Production version of the shooting calendar."
+          },
+          "stripboard": {
+            "nombre": "Stripboard",
+            "desc": "Scene order by day and location."
+          },
+          "calendario-general-del-proyecto": {
+            "nombre": "General project calendar",
+            "desc": "Pre-production, shooting and post-production milestones."
+          }
+        }
+      },
+      "logistica": {
+        "titulo": "Logistics",
+        "docs": {
+          "localizaciones-y-permisos": {
+            "nombre": "Locations & permits",
+            "desc": "Location sheets and shooting permits."
+          },
+          "hojas-de-ruta-y-transporte": {
+            "nombre": "Route sheets & transport",
+            "desc": "Crew and equipment travel arrangements."
+          },
+          "catering-y-dietas": {
+            "nombre": "Catering & per diems",
+            "desc": "Meal and per-diem planning per shooting day."
+          }
+        }
+      },
+      "coordinacion": {
+        "titulo": "Coordination",
+        "docs": {
+          "ordenes-de-rodaje-callsheets": {
+            "nombre": "Call sheets",
+            "desc": "Daily call for the whole crew."
+          },
+          "partes-de-produccion-diarios": {
+            "nombre": "Daily production reports",
+            "desc": "Summary of what was shot and what's pending each day."
+          }
+        }
+      }
+    },
+    "Fotografía": {
+      "plan-tecnico-de-camara": {
+        "titulo": "Camera technical plan",
+        "docs": {
+          "shot-list-desglose-de-planos": {
+            "nombre": "Shot list / shot breakdown",
+            "desc": "Planned shots per scene, type and movement."
+          },
+          "plan-de-iluminacion": {
+            "nombre": "Lighting plan",
+            "desc": "Lighting diagrams per scene and location."
+          },
+          "esquemas-de-set": {
+            "nombre": "Set diagrams",
+            "desc": "Camera, lights and equipment layout on set."
+          }
+        }
+      },
+      "equipo": {
+        "titulo": "Equipment",
+        "docs": {
+          "inventario-de-camara-y-optica": {
+            "nombre": "Camera & lens inventory",
+            "desc": "Available bodies, lenses and accessories."
+          },
+          "inventario-de-iluminacion": {
+            "nombre": "Lighting inventory",
+            "desc": "Available lights, panels and stands."
+          },
+          "hoja-de-alquiler-de-equipo": {
+            "nombre": "Equipment rental sheet",
+            "desc": "Rented gear, supplier and dates."
+          }
+        }
+      },
+      "referencias": {
+        "titulo": "References",
+        "docs": {
+          "look-book-referencias-de-fotografia": {
+            "nombre": "Look book / cinematography references",
+            "desc": "Visual references for look and color."
+          },
+          "luts-y-pruebas-de-camara": {
+            "nombre": "LUTs & camera tests",
+            "desc": "Image tests and reference LUTs."
+          }
+        }
+      }
+    },
+    "Arte": {
+      "direccion-de-arte": {
+        "titulo": "Art direction",
+        "docs": {
+          "moodboard-de-arte": {
+            "nombre": "Art moodboard",
+            "desc": "Visual references for art direction."
+          },
+          "paleta-de-color-por-escena": {
+            "nombre": "Color palette per scene",
+            "desc": "Palettes and color references."
+          },
+          "planos-de-decorado": {
+            "nombre": "Set blueprints",
+            "desc": "Set layout and floor plans."
+          }
+        }
+      },
+      "atrezzo-y-vestuario": {
+        "titulo": "Props & wardrobe",
+        "docs": {
+          "desglose-de-atrezzo-por-escena": {
+            "nombre": "Props breakdown per scene",
+            "desc": "Props needed per scene."
+          },
+          "desglose-de-vestuario-por-personaje": {
+            "nombre": "Wardrobe breakdown per character",
+            "desc": "Wardrobe per character and scene."
+          },
+          "continuidad-de-vestuario": {
+            "nombre": "Wardrobe continuity",
+            "desc": "Photographic record of wardrobe continuity."
+          }
+        }
+      },
+      "produccion-de-arte": {
+        "titulo": "Art production",
+        "docs": {
+          "presupuesto-de-arte": {
+            "nombre": "Art budget",
+            "desc": "Budget assigned to the art department."
+          },
+          "proveedores-y-compras": {
+            "nombre": "Suppliers & purchases",
+            "desc": "List of suppliers, purchases and rentals."
+          }
+        }
+      }
+    },
+    "Guion": {
+      "versiones": {
+        "titulo": "Versions",
+        "docs": {
+          "guion-literario-ultima-version": {
+            "nombre": "Literary script (latest version)",
+            "desc": "Current version of the literary script."
+          },
+          "historial-de-versiones-y-cambios": {
+            "nombre": "Version & changes history",
+            "desc": "Log of script revisions (white, blue, pink...)."
+          },
+          "sinopsis-y-escaleta": {
+            "nombre": "Synopsis & outline",
+            "desc": "General synopsis and sequence outline."
+          }
+        }
+      },
+      "desglose": {
+        "titulo": "Breakdown",
+        "docs": {
+          "desglose-de-escenas-ia": {
+            "nombre": "Scene breakdown (AI)",
+            "desc": "Scenes automatically extracted from the script."
+          },
+          "desglose-tecnico-planos": {
+            "nombre": "Technical breakdown (shots)",
+            "desc": "Shots associated with each scene."
+          }
+        }
+      },
+      "derechos": {
+        "titulo": "Rights",
+        "docs": {
+          "cesion-de-derechos-de-guion": {
+            "nombre": "Script rights assignment",
+            "desc": "Authorship rights assignment agreement."
+          }
+        }
+      }
+    },
+    "Ejecutivo": {
+      "presupuesto-y-costos": {
+        "titulo": "Budget & costs",
+        "docs": {
+          "presupuesto-general": {
+            "nombre": "General budget",
+            "desc": "Top sheet and chapter breakdown of the project."
+          },
+          "presupuesto-por-departamento": {
+            "nombre": "Budget by department",
+            "desc": "Spending allocation and limit for each department."
+          },
+          "control-de-costos-cost-report": {
+            "nombre": "Cost control (cost report)",
+            "desc": "Budgeted vs. actual, week by week."
+          },
+          "flujo-de-caja-cashflow": {
+            "nombre": "Cash flow",
+            "desc": "Projected income and expenses by date."
+          }
+        }
+      },
+      "facturacion": {
+        "titulo": "Invoicing",
+        "docs": {
+          "facturas-emitidas": {
+            "nombre": "Issued invoices",
+            "desc": "Invoices issued by the production company."
+          },
+          "facturas-de-proveedores": {
+            "nombre": "Supplier invoices",
+            "desc": "Received invoices pending validation."
+          },
+          "pendientes-de-pago": {
+            "nombre": "Pending payments",
+            "desc": "Approved invoices awaiting payment."
+          }
+        }
+      },
+      "pagos-y-rendiciones": {
+        "titulo": "Payments & expense reports",
+        "docs": {
+          "comprobantes-de-pago": {
+            "nombre": "Payment receipts",
+            "desc": "Transfer proofs and receipts."
+          },
+          "nominas-del-equipo": {
+            "nombre": "Crew payroll",
+            "desc": "Payments to crew and cast."
+          },
+          "caja-chica-petty-cash": {
+            "nombre": "Petty cash",
+            "desc": "Minor expenses with their supporting documentation."
+          },
+          "rendicion-de-gastos": {
+            "nombre": "Expense report",
+            "desc": "Settlement of advances and per diems."
+          }
+        }
+      },
+      "contratos-y-legal": {
+        "titulo": "Contracts & legal",
+        "docs": {
+          "contratos-de-equipo": {
+            "nombre": "Crew contracts",
+            "desc": "Crew hiring per department."
+          },
+          "contratos-de-reparto": {
+            "nombre": "Cast contracts",
+            "desc": "Actors and extras, including image rights assignment."
+          },
+          "contratos-de-proveedores": {
+            "nombre": "Supplier contracts",
+            "desc": "Locations, rentals, services."
+          },
+          "cesion-de-derechos": {
+            "nombre": "Rights assignment",
+            "desc": "Script, music, trademarks and copyright."
+          },
+          "acuerdos-de-confidencialidad-nda": {
+            "nombre": "Non-disclosure agreements (NDA)",
+            "desc": "Protection of project information."
+          }
+        }
+      },
+      "financiacion-y-seguros": {
+        "titulo": "Financing & insurance",
+        "docs": {
+          "plan-de-financiacion": {
+            "nombre": "Financing plan",
+            "desc": "Project financing structure."
+          },
+          "ayudas-y-subvenciones": {
+            "nombre": "Grants & subsidies",
+            "desc": "Calls, applications and justification."
+          },
+          "inversores-y-coproduccion": {
+            "nombre": "Investors & co-production",
+            "desc": "Agreements with investors and co-producers."
+          },
+          "polizas-de-seguro": {
+            "nombre": "Insurance policies",
+            "desc": "Liability, accident, negative and equipment coverage."
+          },
+          "permisos-de-rodaje": {
+            "nombre": "Shooting permits",
+            "desc": "Location and public-way licenses."
+          }
+        }
+      }
+    },
+    "Casting": {
+      "procesos-de-seleccion": {
+        "titulo": "Selection process",
+        "docs": {
+          "listado-de-candidatos": {
+            "nombre": "Candidate list",
+            "desc": "Candidates per character and process status."
+          },
+          "convocatoria-de-casting": {
+            "nombre": "Casting call",
+            "desc": "Published rules and casting call."
+          },
+          "resultados-de-audiciones": {
+            "nombre": "Audition results",
+            "desc": "Notes and decisions for each audition."
+          }
+        }
+      },
+      "reparto-confirmado": {
+        "titulo": "Confirmed cast",
+        "docs": {
+          "ficha-de-reparto": {
+            "nombre": "Cast sheet",
+            "desc": "Confirmed cast per character."
+          },
+          "contratos-de-reparto": {
+            "nombre": "Cast contracts",
+            "desc": "Signed contracts, pending Executive validation."
+          },
+          "cesion-de-imagen": {
+            "nombre": "Image rights assignment",
+            "desc": "Cast image rights assignment agreements."
+          }
+        }
+      }
+    },
+    "Reparto": {
+      "ficha-de-personaje": {
+        "titulo": "Character sheet",
+        "docs": {
+          "ficha-de-personaje-y-arco": {
+            "nombre": "Character sheet & arc",
+            "desc": "Character description and narrative arc."
+          },
+          "guion-con-escenas-marcadas": {
+            "nombre": "Script with marked scenes",
+            "desc": "Script with the actor's own scenes highlighted."
+          }
+        }
+      },
+      "logistica-personal": {
+        "titulo": "Personal logistics",
+        "docs": {
+          "calendario-de-citaciones": {
+            "nombre": "Call calendar",
+            "desc": "Call dates and times per actor."
+          },
+          "vestuario-y-maquillaje-asignado": {
+            "nombre": "Assigned wardrobe & makeup",
+            "desc": "Looks assigned per scene."
+          }
+        }
+      },
+      "contractual": {
+        "titulo": "Contractual",
+        "docs": {
+          "contrato-individual": {
+            "nombre": "Individual contract",
+            "desc": "Actor's performance contract."
+          },
+          "cesion-de-imagen": {
+            "nombre": "Image rights assignment",
+            "desc": "Signed image rights assignment agreement."
+          }
+        }
+      }
+    },
+    "Making of": {
+      "planificacion-de-contenido": {
+        "titulo": "Content planning",
+        "docs": {
+          "calendario-editorial": {
+            "nombre": "Editorial calendar",
+            "desc": "Planning of content to be created."
+          },
+          "plan-de-cobertura-bts": {
+            "nombre": "BTS coverage plan",
+            "desc": "Which days and moments to cover."
+          }
+        }
+      },
+      "material": {
+        "titulo": "Footage",
+        "docs": {
+          "listado-de-material-grabado": {
+            "nombre": "Recorded footage list",
+            "desc": "Log of behind-the-scenes footage."
+          },
+          "seleccion-para-redes": {
+            "nombre": "Selection for social media",
+            "desc": "Material selected for publication."
+          }
+        }
+      },
+      "publicacion": {
+        "titulo": "Publishing",
+        "docs": {
+          "calendario-de-publicaciones": {
+            "nombre": "Publishing calendar",
+            "desc": "Publication dates and channels."
+          },
+          "derechos-de-uso-de-material-bts": {
+            "nombre": "BTS footage usage rights",
+            "desc": "Authorizations for material usage."
+          }
+        }
+      }
+    },
+    "Sonido": {
+      "plan-de-sonido": {
+        "titulo": "Sound plan",
+        "docs": {
+          "plan-de-sonido-directo": {
+            "nombre": "Live sound plan",
+            "desc": "Sound capture strategy per scene."
+          },
+          "lista-de-microfonos-por-escena": {
+            "nombre": "Microphone list per scene",
+            "desc": "Microphone assignment per scene."
+          }
+        }
+      },
+      "equipo": {
+        "titulo": "Equipment",
+        "docs": {
+          "inventario-de-equipo-de-sonido": {
+            "nombre": "Sound equipment inventory",
+            "desc": "Available recorders, mics and accessories."
+          },
+          "hoja-de-alquiler-de-equipo": {
+            "nombre": "Equipment rental sheet",
+            "desc": "Rented gear, supplier and dates."
+          }
+        }
+      },
+      "reportes": {
+        "titulo": "Reports",
+        "docs": {
+          "reportes-de-sonido-por-toma": {
+            "nombre": "Sound reports per take",
+            "desc": "Levels, notes and valid takes per scene."
+          },
+          "notas-de-postsincronizacion": {
+            "nombre": "Post-sync notes",
+            "desc": "Dialogue lines to re-record in ADR."
+          }
+        }
+      }
+    },
+    "Postproducción": {
+      "montaje": {
+        "titulo": "Editing",
+        "docs": {
+          "plan-de-montaje": {
+            "nombre": "Editing plan",
+            "desc": "Editing schedule and criteria."
+          },
+          "versiones-de-corte-edl": {
+            "nombre": "Cut versions (EDL)",
+            "desc": "History of editing versions."
+          },
+          "notas-de-visionado-dailies": {
+            "nombre": "Dailies notes",
+            "desc": "Director's notes on the shot footage."
+          }
+        }
+      },
+      "vfx-y-color": {
+        "titulo": "VFX & color",
+        "docs": {
+          "lista-de-planos-vfx": {
+            "nombre": "VFX shot list",
+            "desc": "Shots requiring visual effects."
+          },
+          "guia-de-color-lut-final": {
+            "nombre": "Color guide / final LUT",
+            "desc": "Final look agreed with Cinematography."
+          }
+        }
+      },
+      "entregas": {
+        "titulo": "Deliverables",
+        "docs": {
+          "plan-de-entregas-masters": {
+            "nombre": "Deliverables plan (masters)",
+            "desc": "Final delivery formats and dates."
+          },
+          "checklist-de-entrega-final": {
+            "nombre": "Final delivery checklist",
+            "desc": "Verification prior to delivery."
+          }
+        }
+      }
+    },
+    "RRHH": {
+      "personal": {
+        "titulo": "Staff",
+        "docs": {
+          "listado-de-equipo-y-contactos": {
+            "nombre": "Crew list & contacts",
+            "desc": "Project crew directory."
+          },
+          "altas-y-bajas": {
+            "nombre": "Hires & departures",
+            "desc": "Crew onboarding and departures."
+          }
+        }
+      },
+      "jornada-y-descansos": {
+        "titulo": "Work hours & rest",
+        "docs": {
+          "control-de-horas": {
+            "nombre": "Time tracking",
+            "desc": "Crew work-hours log."
+          },
+          "registro-de-descansos-legales": {
+            "nombre": "Legal rest log",
+            "desc": "Compliance with collective-agreement rest periods."
+          }
+        }
+      },
+      "bienestar": {
+        "titulo": "Wellbeing",
+        "docs": {
+          "protocolo-de-prevencion-de-riesgos": {
+            "nombre": "Risk prevention protocol",
+            "desc": "Shoot health & safety protocol."
+          },
+          "canal-de-incidencias": {
+            "nombre": "Incident channel",
+            "desc": "Incident log and resolution."
+          }
+        }
+      }
+    },
+    "Sostenibilidad": {
+      "medicion": {
+        "titulo": "Measurement",
+        "docs": {
+          "huella-de-carbono-del-proyecto": {
+            "nombre": "Project carbon footprint",
+            "desc": "Emissions calculation and tracking."
+          },
+          "consumo-energetico": {
+            "nombre": "Energy consumption",
+            "desc": "Shoot and office energy consumption."
+          }
+        }
+      },
+      "gestion": {
+        "titulo": "Management",
+        "docs": {
+          "plan-de-gestion-de-residuos": {
+            "nombre": "Waste management plan",
+            "desc": "Waste reduction, recycling and management."
+          },
+          "proveedores-sostenibles": {
+            "nombre": "Sustainable suppliers",
+            "desc": "Sustainable catering, transport and materials."
+          }
+        }
+      },
+      "certificacion": {
+        "titulo": "Certification",
+        "docs": {
+          "checklist-produccion-verde": {
+            "nombre": "Green production checklist",
+            "desc": "Compliance with sustainable production criteria."
+          },
+          "memoria-de-sostenibilidad": {
+            "nombre": "Sustainability report",
+            "desc": "Final report on impact and measures taken."
+          }
+        }
+      }
+    },
+    "Marketing": {
+      "estrategia": {
+        "titulo": "Strategy",
+        "docs": {
+          "plan-de-marketing": {
+            "nombre": "Marketing plan",
+            "desc": "Strategy, goals and campaign calendar."
+          },
+          "identidad-grafica": {
+            "nombre": "Visual identity",
+            "desc": "Logos, typefaces and brand guide for the project."
+          }
+        }
+      },
+      "contenido": {
+        "titulo": "Content",
+        "docs": {
+          "calendario-de-redes-sociales": {
+            "nombre": "Social media calendar",
+            "desc": "Planned posts per channel."
+          },
+          "banco-de-assets": {
+            "nombre": "Asset bank",
+            "desc": "Images, videos and artwork for campaigns."
+          }
+        }
+      }
+    },
+    "Difusión": {
+      "prensa": {
+        "titulo": "Press",
+        "docs": {
+          "dossier-de-prensa": {
+            "nombre": "Press kit",
+            "desc": "Project press material."
+          },
+          "listado-de-medios-y-contactos": {
+            "nombre": "Media & contacts list",
+            "desc": "Outlets and journalists of interest for the project."
+          },
+          "notas-de-prensa": {
+            "nombre": "Press releases",
+            "desc": "Published or scheduled press releases."
+          }
+        }
+      }
+    },
+    "Distribución": {
+      "estrategia-de-distribucion": {
+        "titulo": "Distribution strategy",
+        "docs": {
+          "plan-de-distribucion": {
+            "nombre": "Distribution plan",
+            "desc": "Planned festivals, platforms and release windows."
+          },
+          "listado-de-festivales": {
+            "nombre": "Festival list",
+            "desc": "Target festivals and submission deadlines."
+          },
+          "acuerdos-de-distribucion": {
+            "nombre": "Distribution agreements",
+            "desc": "Contracts with distributors and platforms."
+          }
+        }
+      }
+    }
   }
 }

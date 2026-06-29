@@ -1269,5 +1269,707 @@
     "rodaje": "Rodatge",
     "postproduccion": "Postproducció",
     "distribucion": "Distribució"
+  },
+  "documentosCatalogo": {
+    "Dirección": {
+      "guion-y-desarrollo": {
+        "titulo": "Guió i desenvolupament",
+        "docs": {
+          "guion-definitivo": {
+            "nombre": "Guió definitiu",
+            "desc": "Última versió bloquejada del guió."
+          },
+          "biblia-de-personajes": {
+            "nombre": "Bíblia de personatges",
+            "desc": "Arcs, motivacions i relacions de cada personatge."
+          },
+          "referencias-visuales-moodboard": {
+            "nombre": "Referències visuals (moodboard)",
+            "desc": "To, fotografia i referències de posada en escena."
+          }
+        }
+      },
+      "planificacion": {
+        "titulo": "Planificació",
+        "docs": {
+          "plan-de-rodaje-maestro": {
+            "nombre": "Pla de rodatge mestre",
+            "desc": "Calendari dia a dia de tot el rodatge."
+          },
+          "shot-list-general": {
+            "nombre": "Shot list general",
+            "desc": "Desglossament de plans previstos per jornada."
+          },
+          "calendario-de-ensayos": {
+            "nombre": "Calendari d'assajos",
+            "desc": "Sessions de lectura i assaig amb el repartiment."
+          }
+        }
+      },
+      "continuidad": {
+        "titulo": "Continuïtat",
+        "docs": {
+          "partes-de-script": {
+            "nombre": "Partes de script",
+            "desc": "Registre diari de continuïtat i raccords."
+          },
+          "notas-de-direccion-por-escena": {
+            "nombre": "Notes de direcció per escena",
+            "desc": "Indicacions i ajustos escena a escena."
+          }
+        }
+      }
+    },
+    "Producción": {
+      "planificacion": {
+        "titulo": "Planificació",
+        "docs": {
+          "plan-de-rodaje-maestro": {
+            "nombre": "Pla de rodatge mestre",
+            "desc": "Versió de producció del calendari de rodatge."
+          },
+          "stripboard": {
+            "nombre": "Stripboard",
+            "desc": "Ordre d'escenes per dia i localització."
+          },
+          "calendario-general-del-proyecto": {
+            "nombre": "Calendari general del projecte",
+            "desc": "Fites de preproducció, rodatge i postproducció."
+          }
+        }
+      },
+      "logistica": {
+        "titulo": "Logística",
+        "docs": {
+          "localizaciones-y-permisos": {
+            "nombre": "Localitzacions i permisos",
+            "desc": "Fitxes de localització i permisos de rodatge."
+          },
+          "hojas-de-ruta-y-transporte": {
+            "nombre": "Fulls de ruta i transport",
+            "desc": "Desplaçaments de l'equip i materials."
+          },
+          "catering-y-dietas": {
+            "nombre": "Càtering i dietes",
+            "desc": "Planificació d'àpats i dietes per jornada."
+          }
+        }
+      },
+      "coordinacion": {
+        "titulo": "Coordinació",
+        "docs": {
+          "ordenes-de-rodaje-callsheets": {
+            "nombre": "Ordres de rodatge (callsheets)",
+            "desc": "Citació diària de tot l'equip."
+          },
+          "partes-de-produccion-diarios": {
+            "nombre": "Partes de producció diaris",
+            "desc": "Resum del rodat i el pendent cada dia."
+          }
+        }
+      }
+    },
+    "Fotografía": {
+      "plan-tecnico-de-camara": {
+        "titulo": "Pla tècnic de càmera",
+        "docs": {
+          "shot-list-desglose-de-planos": {
+            "nombre": "Shot list / desglossament de plans",
+            "desc": "Plans previstos per escena, tipus i moviment."
+          },
+          "plan-de-iluminacion": {
+            "nombre": "Pla d'il·luminació",
+            "desc": "Esquemes de llum per escena i localització."
+          },
+          "esquemas-de-set": {
+            "nombre": "Esquemes de set",
+            "desc": "Distribució de càmera, llums i equip al plató."
+          }
+        }
+      },
+      "equipo": {
+        "titulo": "Equip",
+        "docs": {
+          "inventario-de-camara-y-optica": {
+            "nombre": "Inventari de càmera i òptica",
+            "desc": "Cossos, òptiques i accessoris disponibles."
+          },
+          "inventario-de-iluminacion": {
+            "nombre": "Inventari d'il·luminació",
+            "desc": "Focus, panells i suports disponibles."
+          },
+          "hoja-de-alquiler-de-equipo": {
+            "nombre": "Full de lloguer d'equip",
+            "desc": "Material llogat, proveïdor i dates."
+          }
+        }
+      },
+      "referencias": {
+        "titulo": "Referències",
+        "docs": {
+          "look-book-referencias-de-fotografia": {
+            "nombre": "Look book / referències de fotografia",
+            "desc": "Referències visuals de look i color."
+          },
+          "luts-y-pruebas-de-camara": {
+            "nombre": "LUTs i proves de càmera",
+            "desc": "Proves d'imatge i LUTs de referència."
+          }
+        }
+      }
+    },
+    "Arte": {
+      "direccion-de-arte": {
+        "titulo": "Direcció d'art",
+        "docs": {
+          "moodboard-de-arte": {
+            "nombre": "Moodboard d'art",
+            "desc": "Referències visuals de direcció d'art."
+          },
+          "paleta-de-color-por-escena": {
+            "nombre": "Paleta de color per escena",
+            "desc": "Paletes i referències cromàtiques."
+          },
+          "planos-de-decorado": {
+            "nombre": "Plànols de decorat",
+            "desc": "Plànols i distribució dels decorats."
+          }
+        }
+      },
+      "atrezzo-y-vestuario": {
+        "titulo": "Atrezzo i vestuari",
+        "docs": {
+          "desglose-de-atrezzo-por-escena": {
+            "nombre": "Desglossament d'atrezzo per escena",
+            "desc": "Objectes d'atrezzo necessaris per escena."
+          },
+          "desglose-de-vestuario-por-personaje": {
+            "nombre": "Desglossament de vestuari per personatge",
+            "desc": "Vestuari per personatge i escena."
+          },
+          "continuidad-de-vestuario": {
+            "nombre": "Continuïtat de vestuari",
+            "desc": "Registre fotogràfic de continuïtat de vestuari."
+          }
+        }
+      },
+      "produccion-de-arte": {
+        "titulo": "Producció d'art",
+        "docs": {
+          "presupuesto-de-arte": {
+            "nombre": "Pressupost d'art",
+            "desc": "Pressupost assignat al departament d'art."
+          },
+          "proveedores-y-compras": {
+            "nombre": "Proveïdors i compres",
+            "desc": "Llistat de proveïdors, compres i lloguers."
+          }
+        }
+      }
+    },
+    "Guion": {
+      "versiones": {
+        "titulo": "Versions",
+        "docs": {
+          "guion-literario-ultima-version": {
+            "nombre": "Guió literari (última versió)",
+            "desc": "Versió vigent del guió literari."
+          },
+          "historial-de-versiones-y-cambios": {
+            "nombre": "Historial de versions i canvis",
+            "desc": "Registre de versions (blanca, blava, rosa...)."
+          },
+          "sinopsis-y-escaleta": {
+            "nombre": "Sinopsi i escaleta",
+            "desc": "Sinopsi general i escaleta per seqüències."
+          }
+        }
+      },
+      "desglose": {
+        "titulo": "Desglossament",
+        "docs": {
+          "desglose-de-escenas-ia": {
+            "nombre": "Desglossament d'escenes (IA)",
+            "desc": "Escenes extretes automàticament del guió."
+          },
+          "desglose-tecnico-planos": {
+            "nombre": "Desglossament tècnic (plans)",
+            "desc": "Plans associats a cada escena."
+          }
+        }
+      },
+      "derechos": {
+        "titulo": "Drets",
+        "docs": {
+          "cesion-de-derechos-de-guion": {
+            "nombre": "Cessió de drets de guió",
+            "desc": "Acord de cessió de drets d'autoria."
+          }
+        }
+      }
+    },
+    "Ejecutivo": {
+      "presupuesto-y-costos": {
+        "titulo": "Pressupost i costos",
+        "docs": {
+          "presupuesto-general": {
+            "nombre": "Pressupost general",
+            "desc": "Top sheet i desglossament per capítols del projecte."
+          },
+          "presupuesto-por-departamento": {
+            "nombre": "Pressupost per departament",
+            "desc": "Assignació i límit de despesa de cada departament."
+          },
+          "control-de-costos-cost-report": {
+            "nombre": "Control de costos (cost report)",
+            "desc": "Pressupostat vs. real, setmana a setmana."
+          },
+          "flujo-de-caja-cashflow": {
+            "nombre": "Flux de caixa (cashflow)",
+            "desc": "Entrades i sortides previstes per data."
+          }
+        }
+      },
+      "facturacion": {
+        "titulo": "Facturació",
+        "docs": {
+          "facturas-emitidas": {
+            "nombre": "Factures emeses",
+            "desc": "Factures que emet la productora."
+          },
+          "facturas-de-proveedores": {
+            "nombre": "Factures de proveïdors",
+            "desc": "Factures rebudes pendents de validar."
+          },
+          "pendientes-de-pago": {
+            "nombre": "Pendents de pagament",
+            "desc": "Factures aprovades a l'espera de pagament."
+          }
+        }
+      },
+      "pagos-y-rendiciones": {
+        "titulo": "Pagaments i rendicions",
+        "docs": {
+          "comprobantes-de-pago": {
+            "nombre": "Comprovants de pagament",
+            "desc": "Justificants de transferència i rebuts."
+          },
+          "nominas-del-equipo": {
+            "nombre": "Nòmines de l'equip",
+            "desc": "Pagaments al crew i al repartiment."
+          },
+          "caja-chica-petty-cash": {
+            "nombre": "Caixa petita (petty cash)",
+            "desc": "Despeses menors amb la seva justificació."
+          },
+          "rendicion-de-gastos": {
+            "nombre": "Rendició de despeses",
+            "desc": "Liquidació de bestretes i dietes."
+          }
+        }
+      },
+      "contratos-y-legal": {
+        "titulo": "Contractes i legal",
+        "docs": {
+          "contratos-de-equipo": {
+            "nombre": "Contractes d'equip",
+            "desc": "Contractació del crew per departament."
+          },
+          "contratos-de-reparto": {
+            "nombre": "Contractes de repartiment",
+            "desc": "Actors i figuració, amb cessió d'imatge."
+          },
+          "contratos-de-proveedores": {
+            "nombre": "Contractes de proveïdors",
+            "desc": "Localitzacions, lloguers, serveis."
+          },
+          "cesion-de-derechos": {
+            "nombre": "Cessió de drets",
+            "desc": "Guió, música, marques i drets d'autor."
+          },
+          "acuerdos-de-confidencialidad-nda": {
+            "nombre": "Acords de confidencialitat (NDA)",
+            "desc": "Protecció d'informació del projecte."
+          }
+        }
+      },
+      "financiacion-y-seguros": {
+        "titulo": "Finançament i assegurances",
+        "docs": {
+          "plan-de-financiacion": {
+            "nombre": "Pla de finançament",
+            "desc": "Estructura de finançament del projecte."
+          },
+          "ayudas-y-subvenciones": {
+            "nombre": "Ajuts i subvencions",
+            "desc": "Convocatòries, sol·licituds i justificació."
+          },
+          "inversores-y-coproduccion": {
+            "nombre": "Inversors i coproducció",
+            "desc": "Acords amb inversors i coproductors."
+          },
+          "polizas-de-seguro": {
+            "nombre": "Pòlisses d'assegurança",
+            "desc": "RC, accidents, negatiu i equips."
+          },
+          "permisos-de-rodaje": {
+            "nombre": "Permisos de rodatge",
+            "desc": "Llicències de localització i via pública."
+          }
+        }
+      }
+    },
+    "Casting": {
+      "procesos-de-seleccion": {
+        "titulo": "Processos de selecció",
+        "docs": {
+          "listado-de-candidatos": {
+            "nombre": "Llistat de candidats",
+            "desc": "Candidats per personatge i estat del procés."
+          },
+          "convocatoria-de-casting": {
+            "nombre": "Convocatòria de càsting",
+            "desc": "Bases i convocatòria publicada."
+          },
+          "resultados-de-audiciones": {
+            "nombre": "Resultats d'audicions",
+            "desc": "Notes i decisions de cada audició."
+          }
+        }
+      },
+      "reparto-confirmado": {
+        "titulo": "Repartiment confirmat",
+        "docs": {
+          "ficha-de-reparto": {
+            "nombre": "Fitxa de repartiment",
+            "desc": "Repartiment confirmat per personatge."
+          },
+          "contratos-de-reparto": {
+            "nombre": "Contractes de repartiment",
+            "desc": "Contractes signats, pendent de validació de l'Executiu."
+          },
+          "cesion-de-imagen": {
+            "nombre": "Cessió d'imatge",
+            "desc": "Acords de cessió d'imatge del repartiment."
+          }
+        }
+      }
+    },
+    "Reparto": {
+      "ficha-de-personaje": {
+        "titulo": "Fitxa de personatge",
+        "docs": {
+          "ficha-de-personaje-y-arco": {
+            "nombre": "Fitxa de personatge i arc",
+            "desc": "Descripció del personatge i el seu arc narratiu."
+          },
+          "guion-con-escenas-marcadas": {
+            "nombre": "Guió amb escenes marcades",
+            "desc": "Guió amb les escenes pròpies assenyalades."
+          }
+        }
+      },
+      "logistica-personal": {
+        "titulo": "Logística personal",
+        "docs": {
+          "calendario-de-citaciones": {
+            "nombre": "Calendari de citacions",
+            "desc": "Dates i horaris de citació per actor."
+          },
+          "vestuario-y-maquillaje-asignado": {
+            "nombre": "Vestuari i maquillatge assignat",
+            "desc": "Looks assignats per escena."
+          }
+        }
+      },
+      "contractual": {
+        "titulo": "Contractual",
+        "docs": {
+          "contrato-individual": {
+            "nombre": "Contracte individual",
+            "desc": "Contracte d'interpretació de l'actor."
+          },
+          "cesion-de-imagen": {
+            "nombre": "Cessió d'imatge",
+            "desc": "Acord de cessió d'imatge signat."
+          }
+        }
+      }
+    },
+    "Making of": {
+      "planificacion-de-contenido": {
+        "titulo": "Planificació de contingut",
+        "docs": {
+          "calendario-editorial": {
+            "nombre": "Calendari editorial",
+            "desc": "Planificació de continguts a generar."
+          },
+          "plan-de-cobertura-bts": {
+            "nombre": "Pla de cobertura BTS",
+            "desc": "Quines jornades i moments cobrir."
+          }
+        }
+      },
+      "material": {
+        "titulo": "Material",
+        "docs": {
+          "listado-de-material-grabado": {
+            "nombre": "Llistat de material gravat",
+            "desc": "Registre de material behind-the-scenes."
+          },
+          "seleccion-para-redes": {
+            "nombre": "Selecció per a xarxes",
+            "desc": "Material seleccionat per a publicació."
+          }
+        }
+      },
+      "publicacion": {
+        "titulo": "Publicació",
+        "docs": {
+          "calendario-de-publicaciones": {
+            "nombre": "Calendari de publicacions",
+            "desc": "Dates i canals de publicació."
+          },
+          "derechos-de-uso-de-material-bts": {
+            "nombre": "Drets d'ús de material BTS",
+            "desc": "Autoritzacions d'ús del material."
+          }
+        }
+      }
+    },
+    "Sonido": {
+      "plan-de-sonido": {
+        "titulo": "Pla de so",
+        "docs": {
+          "plan-de-sonido-directo": {
+            "nombre": "Pla de so directe",
+            "desc": "Estratègia de captació per escena."
+          },
+          "lista-de-microfonos-por-escena": {
+            "nombre": "Llista de micròfons per escena",
+            "desc": "Assignació de microfonia per escena."
+          }
+        }
+      },
+      "equipo": {
+        "titulo": "Equip",
+        "docs": {
+          "inventario-de-equipo-de-sonido": {
+            "nombre": "Inventari d'equip de so",
+            "desc": "Gravadores, micros i accessoris disponibles."
+          },
+          "hoja-de-alquiler-de-equipo": {
+            "nombre": "Full de lloguer d'equip",
+            "desc": "Material llogat, proveïdor i dates."
+          }
+        }
+      },
+      "reportes": {
+        "titulo": "Informes",
+        "docs": {
+          "reportes-de-sonido-por-toma": {
+            "nombre": "Informes de so per presa",
+            "desc": "Nivells, notes i preses vàlides per escena."
+          },
+          "notas-de-postsincronizacion": {
+            "nombre": "Notes de postsincronització",
+            "desc": "Diàlegs a regravar en ADR."
+          }
+        }
+      }
+    },
+    "Postproducción": {
+      "montaje": {
+        "titulo": "Muntatge",
+        "docs": {
+          "plan-de-montaje": {
+            "nombre": "Pla de muntatge",
+            "desc": "Calendari i criteris de muntatge."
+          },
+          "versiones-de-corte-edl": {
+            "nombre": "Versions de tall (EDL)",
+            "desc": "Historial de versions de muntatge."
+          },
+          "notas-de-visionado-dailies": {
+            "nombre": "Notes de visionat / dailies",
+            "desc": "Notes de direcció sobre el material rodat."
+          }
+        }
+      },
+      "vfx-y-color": {
+        "titulo": "VFX i color",
+        "docs": {
+          "lista-de-planos-vfx": {
+            "nombre": "Llista de plans VFX",
+            "desc": "Plans que requereixen efectes visuals."
+          },
+          "guia-de-color-lut-final": {
+            "nombre": "Guia de color / LUT final",
+            "desc": "Look final acordat amb Fotografia."
+          }
+        }
+      },
+      "entregas": {
+        "titulo": "Lliuraments",
+        "docs": {
+          "plan-de-entregas-masters": {
+            "nombre": "Pla de lliuraments (masters)",
+            "desc": "Formats i dates de lliurament final."
+          },
+          "checklist-de-entrega-final": {
+            "nombre": "Checklist de lliurament final",
+            "desc": "Verificació prèvia al lliurament."
+          }
+        }
+      }
+    },
+    "RRHH": {
+      "personal": {
+        "titulo": "Personal",
+        "docs": {
+          "listado-de-equipo-y-contactos": {
+            "nombre": "Llistat d'equip i contactes",
+            "desc": "Directori de l'equip del projecte."
+          },
+          "altas-y-bajas": {
+            "nombre": "Altes i baixes",
+            "desc": "Incorporacions i baixes de l'equip."
+          }
+        }
+      },
+      "jornada-y-descansos": {
+        "titulo": "Jornada i descansos",
+        "docs": {
+          "control-de-horas": {
+            "nombre": "Control d'hores",
+            "desc": "Registre de jornada de l'equip."
+          },
+          "registro-de-descansos-legales": {
+            "nombre": "Registre de descansos legals",
+            "desc": "Compliment de descansos del conveni."
+          }
+        }
+      },
+      "bienestar": {
+        "titulo": "Benestar",
+        "docs": {
+          "protocolo-de-prevencion-de-riesgos": {
+            "nombre": "Protocol de prevenció de riscos",
+            "desc": "Protocol de seguretat i salut del rodatge."
+          },
+          "canal-de-incidencias": {
+            "nombre": "Canal d'incidències",
+            "desc": "Registre d'incidències i resolució."
+          }
+        }
+      }
+    },
+    "Sostenibilidad": {
+      "medicion": {
+        "titulo": "Mesura",
+        "docs": {
+          "huella-de-carbono-del-proyecto": {
+            "nombre": "Petjada de carboni del projecte",
+            "desc": "Càlcul i seguiment d'emissions."
+          },
+          "consumo-energetico": {
+            "nombre": "Consum energètic",
+            "desc": "Consum energètic de rodatge i oficines."
+          }
+        }
+      },
+      "gestion": {
+        "titulo": "Gestió",
+        "docs": {
+          "plan-de-gestion-de-residuos": {
+            "nombre": "Pla de gestió de residus",
+            "desc": "Reducció, reciclatge i gestió de residus."
+          },
+          "proveedores-sostenibles": {
+            "nombre": "Proveïdors sostenibles",
+            "desc": "Càtering, transport i materials sostenibles."
+          }
+        }
+      },
+      "certificacion": {
+        "titulo": "Certificació",
+        "docs": {
+          "checklist-produccion-verde": {
+            "nombre": "Checklist producció verda",
+            "desc": "Compliment de criteris de producció sostenible."
+          },
+          "memoria-de-sostenibilidad": {
+            "nombre": "Memòria de sostenibilitat",
+            "desc": "Informe final d'impacte i mesures preses."
+          }
+        }
+      }
+    },
+    "Marketing": {
+      "estrategia": {
+        "titulo": "Estratègia",
+        "docs": {
+          "plan-de-marketing": {
+            "nombre": "Pla de màrqueting",
+            "desc": "Estratègia, objectius i calendari de campanyes."
+          },
+          "identidad-grafica": {
+            "nombre": "Identitat gràfica",
+            "desc": "Logotips, tipografies i guia de marca del projecte."
+          }
+        }
+      },
+      "contenido": {
+        "titulo": "Contingut",
+        "docs": {
+          "calendario-de-redes-sociales": {
+            "nombre": "Calendari de xarxes socials",
+            "desc": "Publicacions planificades per canal."
+          },
+          "banco-de-assets": {
+            "nombre": "Banc d'assets",
+            "desc": "Imatges, vídeos i arts per a campanyes."
+          }
+        }
+      }
+    },
+    "Difusión": {
+      "prensa": {
+        "titulo": "Premsa",
+        "docs": {
+          "dossier-de-prensa": {
+            "nombre": "Dossier de premsa",
+            "desc": "Material de premsa del projecte."
+          },
+          "listado-de-medios-y-contactos": {
+            "nombre": "Llistat de mitjans i contactes",
+            "desc": "Mitjans i periodistes d'interès per al projecte."
+          },
+          "notas-de-prensa": {
+            "nombre": "Notes de premsa",
+            "desc": "Comunicats publicats o programats."
+          }
+        }
+      }
+    },
+    "Distribución": {
+      "estrategia-de-distribucion": {
+        "titulo": "Estratègia de distribució",
+        "docs": {
+          "plan-de-distribucion": {
+            "nombre": "Pla de distribució",
+            "desc": "Festivals, plataformes i finestres previstes."
+          },
+          "listado-de-festivales": {
+            "nombre": "Llistat de festivals",
+            "desc": "Festivals objectiu i terminis d'inscripció."
+          },
+          "acuerdos-de-distribucion": {
+            "nombre": "Acords de distribució",
+            "desc": "Contractes amb distribuïdores i plataformes."
+          }
+        }
+      }
+    }
   }
 }
