@@ -1,15 +1,17 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEquipo } from "./useEquipo";
 
 export default function EquipoPanel({ departamento }: { departamento: string }) {
+  const t = useTranslations("equipo");
   const { miembros, loading } = useEquipo(departamento);
 
   if (loading) {
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Cargando equipo…</h4>
+        <h4>{t("loading")}</h4>
       </div>
     );
   }
@@ -18,8 +20,8 @@ export default function EquipoPanel({ departamento }: { departamento: string }) 
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Sin integrantes todavía</h4>
-        <p>Cuando se sumen personas a este departamento en el proyecto, aparecerán aquí ordenadas por jerarquía.</p>
+        <h4>{t("noMembersTitle")}</h4>
+        <p>{t("noMembersDesc")}</p>
       </div>
     );
   }
@@ -39,7 +41,7 @@ export default function EquipoPanel({ departamento }: { departamento: string }) 
             </span>
           )}
           <span className="cp-team-name">{m.full_name}</span>
-          <span className="cp-team-cargo">{m.cargo ?? "Sin cargo asignado"}</span>
+          <span className="cp-team-cargo">{m.cargo ?? t("noRole")}</span>
         </div>
       ))}
     </div>

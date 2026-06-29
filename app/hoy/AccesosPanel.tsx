@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS } from "../constants";
 
@@ -20,16 +21,16 @@ type Solicitud = {
   created_at: string;
 };
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return t("timeHoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
+  if (days === 1) return t("timeYesterday");
+  return t("timeDaysAgo", { n: days });
 }
 
 export default function AccesosPanel({
@@ -39,6 +40,7 @@ export default function AccesosPanel({
   deDepartamento: string;
   fullName: string;
 }) {
+  const t = useTranslations("accesos");
   const [userId, setUserId] = useState<string | null>(null);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +78,11 @@ export default function AccesosPanel({
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("errNoProject") });
       return;
     }
     if (!paraDepartamento) {
-      setMsg({ type: "err", text: "Selecciona el departamento al que pides acceso." });
+      setMsg({ type: "err", text: t("errSelectDept") });
       return;
     }
 
@@ -134,12 +136,12 @@ export default function AccesosPanel({
   return (
     <>
       <div className="cons-list">
-        {loading && <p className="cons-text">Cargando solicitudes…</p>}
+        {loading && <p className="cons-text">{t("loading")}</p>}
         {!loading && solicitudes.length === 0 && (
           <div className="soon-box">
             <span className="hex"></span>
-            <h4>Sin solicitudes de acceso</h4>
-            <p>Pide a otro departamento acceso de visionado o edición a una de sus herramientas, o gestiona las que recibas.</p>
+            <h4>{t("noRequestsTitle")}</h4>
+            <p>{t("noRequestsDesc")}</p>
           </div>
         )}
         {solicitudes.map((s) => {
@@ -149,7 +151,7 @@ export default function AccesosPanel({
           const pillClass =
             s.estado === "aprobada" ? "p-ok" : s.estado === "rechazada" ? "p-bad" : "p-warn";
           const pillLabel =
-            s.estado === "aprobada" ? "Aprobada" : s.estado === "rechazada" ? "Rechazada" : "Pendiente";
+            s.estado === "aprobada" ? t("approved") : s.estado === "rechazada" ? t("rejected") : t("pending");
           return (
             <div className="cons" key={s.id}>
               <div className="cons-top">
@@ -157,12 +159,12 @@ export default function AccesosPanel({
                   <div className="cons-title">
                     {s.de_departamento} → {s.para_departamento} · {s.herramienta}{" "}
                     <span className={`pill ${s.tipo_acceso === "edicion" ? "tag-con" : "tag-info"}`}>
-                      {s.tipo_acceso === "edicion" ? "Edición" : "Visionado"}
+                      {s.tipo_acceso === "edicion" ? t("edit") : t("view")}
                     </span>
                   </div>
                   <span className="cons-meta">
-                    {s.solicitante_nombre} · {timeAgo(s.created_at)}
-                    {s.resuelto_por ? ` · ${pillLabel.toLowerCase()} por ${s.resuelto_por}` : ""}
+                    {s.solicitante_nombre} · {timeAgo(s.created_at, t)}
+                    {s.resuelto_por ? t("resolvedBy", { verb: pillLabel.toLowerCase(), name: s.resuelto_por }) : ""}
                   </span>
                 </div>
                 <span className={`pill ${pillClass}`}>
@@ -175,10 +177,10 @@ export default function AccesosPanel({
               {puedeResolver && (
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "4px" }}>
                   <button className="btn acc" onClick={() => resolver(s.id, "aprobada")}>
-                    Aprobar
+                    {t("approve")}
                   </button>
                   <button className="btn" onClick={() => resolver(s.id, "rechazada")}>
-                    Rechazar
+                    {t("reject")}
                   </button>
                 </div>
               )}
@@ -189,16 +191,16 @@ export default function AccesosPanel({
 
       <div className="cons-new">
         <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Solicitar acceso"}
+          {showForm ? t("cancel") : t("requestAccess")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleCreate} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
           <label className="afield">
-            <span>Solicitar a (departamento)</span>
+            <span>{t("fieldRequestTo")}</span>
             <select value={paraDepartamento} onChange={(e) => setParaDepartamento(e.target.value)}>
-              <option value="">Selecciona un departamento…</option>
+              <option value="">{t("selectDept")}</option>
               {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
                 <option key={d} value={d}>
                   {d}
@@ -207,7 +209,7 @@ export default function AccesosPanel({
             </select>
           </label>
           <label className="afield">
-            <span>Herramienta</span>
+            <span>{t("fieldTool")}</span>
             <select value={herramienta} onChange={(e) => setHerramienta(e.target.value)}>
               {HERRAMIENTAS.map((h) => (
                 <option key={h} value={h}>
@@ -217,26 +219,26 @@ export default function AccesosPanel({
             </select>
           </label>
           <label className="afield">
-            <span>Tipo de acceso</span>
+            <span>{t("fieldAccessType")}</span>
             <select value={tipoAcceso} onChange={(e) => setTipoAcceso(e.target.value as "visionado" | "edicion")}>
-              <option value="visionado">Visionado (solo ver)</option>
-              <option value="edicion">Edición (ver y editar)</option>
+              <option value="visionado">{t("viewOnly")}</option>
+              <option value="edicion">{t("editAccess")}</option>
             </select>
           </label>
           <label className="afield">
-            <span>Motivo (opcional)</span>
+            <span>{t("fieldReason")}</span>
             <textarea
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               rows={2}
-              placeholder="¿Para qué necesitas este acceso?"
+              placeholder={t("reasonPlaceholder")}
             />
           </label>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Enviando…" : "Enviar solicitud"}
+            {sending ? t("sending") : t("sendRequest")}
           </button>
         </form>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useEquipo } from "./useEquipo";
 import { deptTools, cargoGroups } from "../herramientas";
@@ -51,6 +52,8 @@ function WebhookSettingsPanel() {
     })();
   }, []);
 
+  const t = useTranslations("gestionAccesos");
+
   async function guardar() {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) return;
@@ -59,7 +62,7 @@ function WebhookSettingsPanel() {
     const supabase = createClient();
     const { error } = await supabase.from("proyectos").update({ webhook_url: url.trim() || null }).eq("id", projectId);
     setSaving(false);
-    setMsg(error ? error.message : "Guardado.");
+    setMsg(error ? error.message : t("saved"));
     setTimeout(() => setMsg(null), 2500);
   }
 
@@ -68,11 +71,10 @@ function WebhookSettingsPanel() {
   return (
     <div className="tcard" style={{ margin: "20px 30px 0" }}>
       <h4>
-        <span className="hex"></span>Webhook de alertas críticas
+        <span className="hex"></span>{t("webhookTitle")}
       </h4>
       <p className="cons-text" style={{ margin: "0 0 10px" }}>
-        Cuando se cree una alerta marcada como <b>crítica</b>, se enviará un mensaje a esta URL (compatible con
-        Slack/Discord incoming webhooks). Dejá el campo vacío para desactivar.
+        {t("webhookDesc", { critical: t("critical") })}
       </p>
       <div className="cp-share-form">
         <input
@@ -82,7 +84,7 @@ function WebhookSettingsPanel() {
           onChange={(e) => setUrl(e.target.value)}
         />
         <button type="button" className="btn acc" onClick={guardar} disabled={saving}>
-          {saving ? "Guardando…" : "Guardar"}
+          {saving ? t("saving") : t("save")}
         </button>
       </div>
       {msg && <p className="hp-error" style={{ color: "var(--lime)" }}>{msg}</p>}
@@ -105,6 +107,7 @@ export default function GestionAccesosPanel({
       ]
     : HERRAMIENTAS_GENERALES;
 
+  const t = useTranslations("gestionAccesos");
   const { miembros, loading: loadingEquipo } = useEquipo(departamento);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,7 +173,7 @@ export default function GestionAccesosPanel({
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Cargando accesos del equipo…</h4>
+        <h4>{t("loading")}</h4>
       </div>
     );
   }
@@ -179,8 +182,8 @@ export default function GestionAccesosPanel({
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Sin integrantes todavía</h4>
-        <p>Cuando se sumen personas a {departamento}, vas a poder asignarles herramientas y dar el ok de Editor/Visionario aquí.</p>
+        <h4>{t("noMembersTitle")}</h4>
+        <p>{t("noMembersDesc", { dept: departamento })}</p>
       </div>
     );
   }
@@ -191,8 +194,8 @@ export default function GestionAccesosPanel({
 
       <p className="cons-text" style={{ padding: "20px 30px 0", margin: 0 }}>
         {scope === "departamento"
-          ? <>Definí, por herramienta de <b>{departamento}</b>, quién puede <b>editar</b> y quién solo <b>visionar</b>. Los cambios aplican al instante.</>
-          : <>Confirmá, por herramienta, quién de {departamento} puede <b>editar</b> (Editor) y quién solo <b>visionar</b> (Visionario).</>
+          ? t("descDept", { dept: departamento, edit: t("edit"), view: t("view") })
+          : t("descGeneral", { dept: departamento, edit: t("edit"), view: t("view") })
         }
       </p>
 
@@ -205,20 +208,20 @@ export default function GestionAccesosPanel({
           </select>
           <span className="cp-select-arrow"></span>
         </div>
-        {saving && <span className="acc-saving">Guardando…</span>}
+        {saving && <span className="acc-saving">{t("saving")}</span>}
       </div>
 
       <div className="acc-table-wrap">
         <table className="acc-table">
           <thead>
             <tr>
-              <th>Integrante</th>
-              <th>Cargo</th>
+              <th>{t("colMember")}</th>
+              <th>{t("colRole")}</th>
               <th className="acc-th-role">
-                <span className="acc-role-label acc-role-editor"><Icon name="pencil" size={12} /> Editor</span>
+                <span className="acc-role-label acc-role-editor"><Icon name="pencil" size={12} /> {t("editor")}</span>
               </th>
               <th className="acc-th-role">
-                <span className="acc-role-label acc-role-veedor"><Icon name="eye" size={12} /> Veedor</span>
+                <span className="acc-role-label acc-role-veedor"><Icon name="eye" size={12} /> {t("viewer")}</span>
               </th>
             </tr>
           </thead>
@@ -229,13 +232,13 @@ export default function GestionAccesosPanel({
               return (
                 <tr key={m.user_id} className={busy ? "acc-row-busy" : ""}>
                   <td className="acc-td-name">{m.full_name}</td>
-                  <td className="acc-cargo">{m.cargo ?? "Sin cargo"}</td>
+                  <td className="acc-cargo">{m.cargo ?? t("noRole")}</td>
                   <td className="acc-td-check">
                     <button
                       className={`acc-toggle ${val?.editor ? "on" : ""}`}
                       disabled={busy}
                       onClick={() => toggle(m.user_id, m.full_name, herramienta, "editor")}
-                      title={val?.editor ? "Quitar editor" : "Dar editor"}
+                      title={val?.editor ? t("removeEditor") : t("grantEditor")}
                     >
                       {val?.editor ? "✓" : "—"}
                     </button>
@@ -245,7 +248,7 @@ export default function GestionAccesosPanel({
                       className={`acc-toggle ${val?.visionario ? "on veedor" : ""}`}
                       disabled={busy}
                       onClick={() => toggle(m.user_id, m.full_name, herramienta, "visionario")}
-                      title={val?.visionario ? "Quitar veedor" : "Dar veedor"}
+                      title={val?.visionario ? t("removeViewer") : t("grantViewer")}
                     >
                       {val?.visionario ? "✓" : "—"}
                     </button>
