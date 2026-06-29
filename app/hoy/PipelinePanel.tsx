@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS } from "../constants";
 
@@ -19,17 +20,18 @@ function hoyISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function estadoVisual(h: Hito) {
+function estadoVisual(h: Hito, t: ReturnType<typeof useTranslations>) {
   if (h.fecha_real) {
-    if (h.fecha_real <= h.fecha_prevista) return { cls: "p-ok", label: "Cumplido a tiempo" };
-    return { cls: "p-warn", label: "Cumplido con retraso" };
+    if (h.fecha_real <= h.fecha_prevista) return { cls: "p-ok", label: t("onTime") };
+    return { cls: "p-warn", label: t("lateCompleted") };
   }
-  if (h.fecha_prevista < hoyISO()) return { cls: "p-bad", label: "Retrasado" };
-  if (h.estado === "en_curso") return { cls: "p-info", label: "En curso" };
-  return { cls: "p-mut", label: "Pendiente" };
+  if (h.fecha_prevista < hoyISO()) return { cls: "p-bad", label: t("late") };
+  if (h.estado === "en_curso") return { cls: "p-info", label: t("inProgress") };
+  return { cls: "p-mut", label: t("pending") };
 }
 
 export default function PipelinePanel({ fullName }: { fullName: string }) {
+  const t = useTranslations("pipeline");
   const [hitos, setHitos] = useState<Hito[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -64,11 +66,11 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("errNoProject") });
       return;
     }
     if (!titulo || !fechaPrevista) {
-      setMsg({ type: "err", text: "Completa al menos el título y la fecha prevista." });
+      setMsg({ type: "err", text: t("errRequired") });
       return;
     }
     setSending(true);
@@ -115,7 +117,7 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
     await load();
   }
 
-  if (loading) return <p className="cons-text">Cargando pipeline…</p>;
+  if (loading) return <p className="cons-text">{t("loading")}</p>;
 
   const total = hitos.length;
   const cumplidosTiempo = hitos.filter((h) => h.fecha_real && h.fecha_real <= h.fecha_prevista).length;
@@ -128,12 +130,12 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
       <div className="tool">
         <div className="tool-head">
           <span className="hex"></span>
-          <h3>Line-up · cumplimiento de fechas</h3>
-          <div className="right">{total} hitos</div>
+          <h3>{t("lineupTitle")}</h3>
+          <div className="right">{t("milestonesCount", { n: total })}</div>
         </div>
         <div className="grid2" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
           <div className="mini">
-            <h4>A tiempo</h4>
+            <h4>{t("onTimeCol")}</h4>
             <ul>
               <li>
                 <span className="pill p-ok">{cumplidosTiempo}</span>
@@ -141,7 +143,7 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
             </ul>
           </div>
           <div className="mini">
-            <h4>Con retraso</h4>
+            <h4>{t("lateCol")}</h4>
             <ul>
               <li>
                 <span className="pill p-warn">{cumplidosTarde}</span>
@@ -149,7 +151,7 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
             </ul>
           </div>
           <div className="mini">
-            <h4>Retrasados</h4>
+            <h4>{t("lateCol2")}</h4>
             <ul>
               <li>
                 <span className="pill p-bad">{retrasados}</span>
@@ -157,7 +159,7 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
             </ul>
           </div>
           <div className="mini">
-            <h4>Pendientes</h4>
+            <h4>{t("pendingCol")}</h4>
             <ul>
               <li>
                 <span className="pill p-mut">{pendientes}</span>
@@ -170,28 +172,28 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
       <div className="tool">
         <div className="tool-head">
           <span className="hex"></span>
-          <h3>Hitos por departamento</h3>
+          <h3>{t("milestonesByDept")}</h3>
         </div>
         {hitos.length === 0 ? (
           <div className="soon-box">
             <span className="hex"></span>
-            <h4>Sin hitos todavía</h4>
-            <p>Añade los hitos clave de cada departamento (entregas, plan de rodaje, contratos, etc.) con su fecha prevista para controlar el cumplimiento.</p>
+            <h4>{t("noMilestonesTitle")}</h4>
+            <p>{t("noMilestonesDesc")}</p>
           </div>
         ) : (
           <div className="twrap">
             <table className="t">
               <tbody>
                 <tr>
-                  <th>Departamento</th>
-                  <th>Hito</th>
-                  <th>Prevista</th>
-                  <th>Real</th>
-                  <th>Estado</th>
+                  <th>{t("colDept")}</th>
+                  <th>{t("colMilestone")}</th>
+                  <th>{t("colExpected")}</th>
+                  <th>{t("colActual")}</th>
+                  <th>{t("colStatus")}</th>
                   <th></th>
                 </tr>
                 {hitos.map((h) => {
-                  const ev = estadoVisual(h);
+                  const ev = estadoVisual(h, t);
                   return (
                     <tr key={h.id}>
                       <td>{h.departamento}</td>
@@ -212,11 +214,11 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
                           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                             {h.estado !== "en_curso" && (
                               <button className="btn" onClick={() => marcarEnCurso(h)}>
-                                En curso
+                                {t("markInProgress")}
                               </button>
                             )}
                             <button className="btn acc" onClick={() => marcarCumplido(h)}>
-                              Marcar cumplido
+                              {t("markDone")}
                             </button>
                           </div>
                         )}
@@ -232,14 +234,14 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
 
       <div className="cons-new">
         <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Añadir hito"}
+          {showForm ? t("cancel") : t("addMilestone")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={crear} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
           <label className="afield">
-            <span>Departamento</span>
+            <span>{t("fieldDept")}</span>
             <select value={dep} onChange={(e) => setDep(e.target.value)}>
               {DEPARTAMENTOS.map((d) => (
                 <option key={d} value={d}>
@@ -249,29 +251,28 @@ export default function PipelinePanel({ fullName }: { fullName: string }) {
             </select>
           </label>
           <label className="afield">
-            <span>Hito</span>
-            <input type="text" required value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej. Entrega del plan de rodaje" />
+            <span>{t("fieldMilestone")}</span>
+            <input type="text" required value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder={t("milestonePlaceholder")} />
           </label>
           <label className="afield">
-            <span>Descripción (opcional)</span>
-            <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={2} placeholder="Detalle del hito" />
+            <span>{t("fieldDesc")}</span>
+            <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} rows={2} placeholder={t("descPlaceholder")} />
           </label>
           <label className="afield">
-            <span>Fecha prevista</span>
+            <span>{t("fieldExpected")}</span>
             <input type="date" required value={fechaPrevista} onChange={(e) => setFechaPrevista(e.target.value)} />
           </label>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Guardando…" : "Añadir hito"}
+            {sending ? t("saving") : t("submitAdd")}
           </button>
         </form>
       )}
 
       <div className="note">
-        <b>Line-up de Producción Ejecutiva:</b> controla si cada departamento cumple sus fechas previstas. Un
-        hito sin fecha real cuya fecha prevista ya pasó se marca automáticamente como <b>Retrasado</b>.
+        <b>{t("noteTitle")}</b>{t("noteDesc")}<b>{t("noteBad")}</b>{t("noteEnd")}
       </div>
     </div>
   );

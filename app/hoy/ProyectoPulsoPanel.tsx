@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { CLIENTE_DEPT } from "../constants";
 import TareasKanbanPanel from "./TareasKanbanPanel";
@@ -31,7 +32,7 @@ function semaforo(tareas: number, alertas: number): "ok" | "warn" | "bad" {
   return "bad";
 }
 
-const SEMAFORO_LABEL: Record<string, string> = { ok: "OK", warn: "Atención", bad: "Crítico" };
+const SEMAFORO_LABEL_KEY: Record<string, string> = { ok: "statusOk", warn: "statusWarn", bad: "statusBad" };
 
 type Actividad = {
   id: string;
@@ -41,16 +42,16 @@ type Actividad = {
   fecha: string;
 };
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return t("timeHoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
+  if (days === 1) return t("timeYesterday");
+  return t("timeDaysAgo", { n: days });
 }
 
 const fmtMoney = (n: number) =>
@@ -68,6 +69,7 @@ function agrupar(rows: { para_departamento: string | null }[]): Conteo[] {
 }
 
 export default function ProyectoPulsoPanel() {
+  const t = useTranslations("pulso");
   const [pulso, setPulso] = useState<Pulso | null>(null);
   const [actividad, setActividad] = useState<Actividad[]>([]);
   const [vista, setVista] = useState<"resumen" | "kanban">("resumen");
@@ -132,23 +134,23 @@ export default function ProyectoPulsoPanel() {
         ]);
 
       const items: Actividad[] = [
-        ...(tareasRecientes ?? []).map((t) => ({
-          id: `tarea-${t.id}`,
-          texto: `Nueva tarea: ${t.titulo}`,
-          autor: t.autor_nombre,
-          depto: t.para_departamento,
-          fecha: t.created_at,
+        ...(tareasRecientes ?? []).map((tarea) => ({
+          id: `tarea-${tarea.id}`,
+          texto: t("newTask", { title: tarea.titulo }),
+          autor: tarea.autor_nombre,
+          depto: tarea.para_departamento,
+          fecha: tarea.created_at,
         })),
         ...(alertasRecientes ?? []).map((a) => ({
           id: `alerta-${a.id}`,
-          texto: `Nueva alerta: ${a.texto}`,
+          texto: t("newAlert", { text: a.texto }),
           autor: a.autor_nombre,
           depto: a.para_departamento,
           fecha: a.created_at,
         })),
         ...(filasRecientes ?? []).map((f) => ({
           id: `fila-${f.id}`,
-          texto: `Actualización en ${f.herramienta_id}`,
+          texto: t("toolUpdate", { tool: f.herramienta_id }),
           autor: f.editor_nombre,
           depto: f.departamento,
           fecha: f.updated_at,
@@ -244,15 +246,15 @@ export default function ProyectoPulsoPanel() {
   }, []);
 
   if (loading) {
-    return <p className="pulso-loading">Cargando el pulso del proyecto…</p>;
+    return <p className="pulso-loading">{t("loading")}</p>;
   }
 
   if (!pulso) {
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Sin proyecto activo</h4>
-        <p>Volvé a iniciar sesión o elegí un proyecto para ver su pulso.</p>
+        <h4>{t("noProjectTitle")}</h4>
+        <p>{t("noProjectDesc")}</p>
       </div>
     );
   }
@@ -265,10 +267,10 @@ export default function ProyectoPulsoPanel() {
     <div className="pulso">
       <div className="cp-pulso-tabs">
         <button className={`cp-pulso-tab ${vista === "resumen" ? "active" : ""}`} onClick={() => setVista("resumen")}>
-          Resumen
+          {t("tabSummary")}
         </button>
         <button className={`cp-pulso-tab ${vista === "kanban" ? "active" : ""}`} onClick={() => setVista("kanban")}>
-          Kanban
+          {t("tabKanban")}
         </button>
       </div>
 
@@ -282,13 +284,13 @@ export default function ProyectoPulsoPanel() {
           <h4><span className="hex"></span>{creditos.nombre}</h4>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
             {creditos.dirigido_por.length > 0 && (
-              <li><span style={{ color: "var(--muted)" }}>Dirigido por</span> {creditos.dirigido_por.join(", ")}</li>
+              <li><span style={{ color: "var(--muted)" }}>{t("directedBy")}</span> {creditos.dirigido_por.join(", ")}</li>
             )}
             {creditos.escrito_por.length > 0 && (
-              <li><span style={{ color: "var(--muted)" }}>Escrito por</span> {creditos.escrito_por.join(", ")}</li>
+              <li><span style={{ color: "var(--muted)" }}>{t("writtenBy")}</span> {creditos.escrito_por.join(", ")}</li>
             )}
             {creditos.producido_por.length > 0 && (
-              <li><span style={{ color: "var(--muted)" }}>Producido por</span> {creditos.producido_por.join(", ")}</li>
+              <li><span style={{ color: "var(--muted)" }}>{t("producedBy")}</span> {creditos.producido_por.join(", ")}</li>
             )}
           </ul>
         </div>
@@ -296,23 +298,23 @@ export default function ProyectoPulsoPanel() {
 
       {esEjecutivo && (
         <div className="tcard pulso-card cp-ej-briefing">
-          <h4><span className="hex"></span>Briefing ejecutivo</h4>
+          <h4><span className="hex"></span>{t("execBriefing")}</h4>
           <div className="cp-ej-briefing-grid">
             <div className="cp-ej-briefing-item">
-              <span className="cp-ej-briefing-label">Tareas abiertas</span>
+              <span className="cp-ej-briefing-label">{t("openTasks")}</span>
               <span className={`cp-ej-briefing-val ${pulso.tareasTotal > 5 ? "tono-bad" : pulso.tareasTotal > 2 ? "tono-warn" : "tono-ok"}`}>{pulso.tareasTotal}</span>
             </div>
             <div className="cp-ej-briefing-item">
-              <span className="cp-ej-briefing-label">Alertas activas</span>
+              <span className="cp-ej-briefing-label">{t("activeAlerts")}</span>
               <span className={`cp-ej-briefing-val ${pulso.alertasTotal > 3 ? "tono-bad" : pulso.alertasTotal > 0 ? "tono-warn" : "tono-ok"}`}>{pulso.alertasTotal}</span>
             </div>
             <div className="cp-ej-briefing-item">
-              <span className="cp-ej-briefing-label">Contratos por vencer</span>
+              <span className="cp-ej-briefing-label">{t("expiringContracts")}</span>
               <span className={`cp-ej-briefing-val ${contratosVencen.length > 0 ? "tono-warn" : "tono-ok"}`}>{contratosVencen.length}</span>
             </div>
             {presupuestoPct !== null && (
               <div className="cp-ej-briefing-item">
-                <span className="cp-ej-briefing-label">Presupuesto ejecutado</span>
+                <span className="cp-ej-briefing-label">{t("budgetExecuted")}</span>
                 <span className={`cp-ej-briefing-val ${presupuestoPct > 90 ? "tono-bad" : presupuestoPct > 70 ? "tono-warn" : "tono-ok"}`}>{presupuestoPct}%</span>
               </div>
             )}
@@ -322,16 +324,16 @@ export default function ProyectoPulsoPanel() {
 
       {esEjecutivo && contratosVencen.length > 0 && (
         <div className="tcard pulso-card cp-contratos-vencen">
-          <h4><span className="hex"></span>Contratos por vencer en &lt;30 días</h4>
+          <h4><span className="hex"></span>{t("contractsExpiring")}</h4>
           <ul className="cp-contratos-list">
             {contratosVencen.map((c, i) => (
               <li key={i}>
                 <div className="cp-contratos-info">
                   <b>{c.empresa}</b>
-                  <span className="muted">{c.tipo} · vence {c.fecha_fin}</span>
+                  <span className="muted">{c.tipo} · {t("expiresOn", { date: c.fecha_fin })}</span>
                 </div>
                 <span className={`cp-contratos-badge ${c.diasRestantes <= 7 ? "tono-bad" : "tono-warn"}`}>
-                  {c.diasRestantes === 0 ? "Hoy" : `${c.diasRestantes}d`}
+                  {c.diasRestantes === 0 ? t("today") : `${c.diasRestantes}d`}
                 </span>
               </li>
             ))}
@@ -341,20 +343,20 @@ export default function ProyectoPulsoPanel() {
 
       {esEjecutivo && (pulso.tareasPorDepto.length > 0 || pulso.alertasPorDepto.length > 0) && (
         <div className="tcard pulso-card cp-semaforo-card">
-          <h4><span className="hex"></span>Semáforo por departamento</h4>
+          <h4><span className="hex"></span>{t("deptSemaphore")}</h4>
           <div className="cp-semaforo-grid">
             {Array.from(new Set([...pulso.tareasPorDepto.map(d => d.nombre), ...pulso.alertasPorDepto.map(d => d.nombre)])).map((dept) => {
-              const t = pulso.tareasPorDepto.find(d => d.nombre === dept)?.total ?? 0;
+              const numTareas = pulso.tareasPorDepto.find(d => d.nombre === dept)?.total ?? 0;
               const a = pulso.alertasPorDepto.find(d => d.nombre === dept)?.total ?? 0;
-              const s = semaforo(t, a);
+              const s = semaforo(numTareas, a);
               return (
                 <div key={dept} className={`cp-semaforo-item tono-${s}`}>
                   <span className="cp-semaforo-dot"></span>
                   <div className="cp-semaforo-info">
                     <b>{dept}</b>
-                    <span>{t > 0 ? `${t} tareas` : ""}{t > 0 && a > 0 ? " · " : ""}{a > 0 ? `${a} alertas` : ""}</span>
+                    <span>{numTareas > 0 ? t("tasksCount", { n: numTareas }) : ""}{numTareas > 0 && a > 0 ? " · " : ""}{a > 0 ? t("alertsCount", { n: a }) : ""}</span>
                   </div>
-                  <span className="cp-semaforo-label">{SEMAFORO_LABEL[s]}</span>
+                  <span className="cp-semaforo-label">{t(SEMAFORO_LABEL_KEY[s])}</span>
                 </div>
               );
             })}
@@ -365,10 +367,10 @@ export default function ProyectoPulsoPanel() {
       <div className="pulso-grid">
         <div className="tcard pulso-card">
           <h4>
-            <span className="hex"></span>Tareas pendientes
+            <span className="hex"></span>{t("pendingTasks")}
           </h4>
           <div className="pulso-big-num">{pulso.tareasTotal}</div>
-          {pulso.tareasPorDepto.length === 0 && <p>No hay tareas pendientes en el proyecto.</p>}
+          {pulso.tareasPorDepto.length === 0 && <p>{t("noPendingTasks")}</p>}
           {pulso.tareasPorDepto.length > 0 && (
             <ul>
               {pulso.tareasPorDepto.slice(0, 6).map((c) => (
@@ -380,10 +382,10 @@ export default function ProyectoPulsoPanel() {
 
         <div className="tcard pulso-card">
           <h4>
-            <span className="hex"></span>Alertas activas
+            <span className="hex"></span>{t("activeAlertsTitle")}
           </h4>
           <div className="pulso-big-num">{pulso.alertasTotal}</div>
-          {pulso.alertasPorDepto.length === 0 && <p>Sin alertas activas en el proyecto.</p>}
+          {pulso.alertasPorDepto.length === 0 && <p>{t("noActiveAlerts")}</p>}
           {pulso.alertasPorDepto.length > 0 && (
             <ul>
               {pulso.alertasPorDepto.slice(0, 6).map((c) => (
@@ -395,15 +397,15 @@ export default function ProyectoPulsoPanel() {
 
         <div className="tcard pulso-card">
           <h4>
-            <span className="hex"></span>Checklists del proyecto
+            <span className="hex"></span>{t("checklists")}
           </h4>
           {checklistPct === null ? (
-            <p>Todavía no hay items de checklist cargados.</p>
+            <p>{t("noChecklistItems")}</p>
           ) : (
             <>
               <div className="hp-check-bar pulso-bar"><span style={{ width: `${checklistPct}%` }}></span></div>
               <div className="pulso-bar-label">
-                {pulso.checklistItemsHechos}/{pulso.checklistItemsTotal} items · {checklistPct}% completado en {pulso.checklistsTotal} checklist{pulso.checklistsTotal !== 1 ? "s" : ""}
+                {t("checklistProgress", { done: pulso.checklistItemsHechos, total: pulso.checklistItemsTotal, pct: checklistPct, n: pulso.checklistsTotal })}
               </div>
             </>
           )}
@@ -411,18 +413,18 @@ export default function ProyectoPulsoPanel() {
 
         <div className="tcard pulso-card">
           <h4>
-            <span className="hex"></span>Presupuesto general
+            <span className="hex"></span>{t("generalBudget")}
           </h4>
           {presupuestoPct === null ? (
-            <p>Todavía no hay datos en el presupuesto general (top sheet).</p>
+            <p>{t("noBudgetData")}</p>
           ) : (
             <>
               <div className="hp-check-bar pulso-bar"><span style={{ width: `${presupuestoPct}%` }}></span></div>
-              <div className="pulso-bar-label">{presupuestoPct}% del presupuesto ejecutado</div>
+              <div className="pulso-bar-label">{t("budgetExecutedPct", { pct: presupuestoPct })}</div>
               <ul>
-                <li><span>Presupuestado</span><span>{fmtMoney(pulso.presupuestado)} €</span></li>
-                <li><span>Comprometido</span><span>{fmtMoney(pulso.comprometido)} €</span></li>
-                <li><span>Real</span><span>{fmtMoney(pulso.real)} €</span></li>
+                <li><span>{t("budgeted")}</span><span>{fmtMoney(pulso.presupuestado)} €</span></li>
+                <li><span>{t("committed")}</span><span>{fmtMoney(pulso.comprometido)} €</span></li>
+                <li><span>{t("actual")}</span><span>{fmtMoney(pulso.real)} €</span></li>
               </ul>
             </>
           )}
@@ -432,14 +434,14 @@ export default function ProyectoPulsoPanel() {
       {actividad.length > 0 && (
         <div className="tcard pulso-card cp-activity-card">
           <h4>
-            <span className="hex"></span>Actividad reciente
+            <span className="hex"></span>{t("recentActivity")}
           </h4>
           <ul className="cp-activity-list">
             {actividad.map((a) => (
               <li key={a.id}>
                 <span className="cp-activity-texto">{a.texto}</span>
                 <span className="cp-activity-meta">
-                  {a.autor ? `${a.autor}` : "Alguien"}{a.depto ? ` · ${a.depto}` : ""} · {timeAgo(a.fecha)}
+                  {a.autor ? `${a.autor}` : t("someone")}{a.depto ? ` · ${a.depto}` : ""} · {timeAgo(a.fecha, t)}
                 </span>
               </li>
             ))}
@@ -457,6 +459,7 @@ export default function ProyectoPulsoPanel() {
 type InvitacionCliente = { full_name: string; email: string; token: string; used: boolean };
 
 function CompartirClientePanel({ projectId }: { projectId: string }) {
+  const t = useTranslations("pulso");
   const [invitaciones, setInvitaciones] = useState<InvitacionCliente[]>([]);
   const [nombre, setNombreInv] = useState("");
   const [email, setEmail] = useState("");
@@ -497,7 +500,7 @@ function CompartirClientePanel({ projectId }: { projectId: string }) {
 
     setCreando(false);
     if (errInv || !data) {
-      setError(errInv?.message ?? "No se pudo generar el link.");
+      setError(errInv?.message ?? t("errNoLink"));
       return;
     }
     setInvitaciones((prev) => [...prev, data as InvitacionCliente]);
@@ -515,11 +518,10 @@ function CompartirClientePanel({ projectId }: { projectId: string }) {
   return (
     <div className="tcard pulso-card cp-share-cliente">
       <h4>
-        <span className="hex"></span>Compartir vista de solo lectura
+        <span className="hex"></span>{t("shareReadOnly")}
       </h4>
       <p>
-        Generá un link de acceso para que un cliente o productora vea el Pulso del proyecto, sin acceso a las
-        herramientas internas.
+        {t("shareDesc")}
       </p>
 
       {invitaciones.length > 0 && (
@@ -527,10 +529,10 @@ function CompartirClientePanel({ projectId }: { projectId: string }) {
           {invitaciones.map((inv) => (
             <li key={inv.token}>
               <span>
-                <b>{inv.full_name}</b> · {inv.email} {inv.used ? "· cuenta activa" : "· pendiente"}
+                <b>{inv.full_name}</b> · {inv.email} {inv.used ? t("activeAccount") : t("pendingAccount")}
               </span>
               <button type="button" className="btn" onClick={() => copiar(inv.token)}>
-                {copiado === inv.token ? "¡Copiado!" : "Copiar link"}
+                {copiado === inv.token ? t("copied") : t("copyLink")}
               </button>
             </li>
           ))}
@@ -540,20 +542,20 @@ function CompartirClientePanel({ projectId }: { projectId: string }) {
       <form onSubmit={generarLink} className="cp-share-form">
         <input
           type="text"
-          placeholder="Nombre del cliente/productora"
+          placeholder={t("clientNamePlaceholder")}
           value={nombre}
           onChange={(e) => setNombreInv(e.target.value)}
           required
         />
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t("emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <button type="submit" className="btn acc" disabled={creando}>
-          {creando ? "Generando…" : "Generar link"}
+          {creando ? t("generating") : t("generateLink")}
         </button>
       </form>
       {error && <p className="hp-error">{error}</p>}

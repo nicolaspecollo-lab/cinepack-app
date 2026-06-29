@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import * as pdfjsLib from "pdfjs-dist";
 
@@ -11,15 +12,15 @@ type Archivo = {
   created_at: string | null;
 };
 
-function timeAgo(iso: string | null) {
+function timeAgo(iso: string | null, t: ReturnType<typeof useTranslations>) {
   if (!iso) return "—";
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const h = Math.floor(mins / 60);
-  if (h < 24) return `hace ${h} h`;
+  if (h < 24) return t("timeHoursAgo", { n: h });
   const d = Math.floor(h / 24);
-  return d === 1 ? "ayer" : `hace ${d} días`;
+  return d === 1 ? t("timeYesterday") : t("timeDaysAgo", { n: d });
 }
 
 function fmtBytes(b: number) {
@@ -51,6 +52,7 @@ function safeKey(s: string) {
 }
 
 export default function ArchivosPanel({ departamento }: { departamento: string }) {
+  const t = useTranslations("archivos");
   const [pathStack, setPathStack] = useState<string[]>([]);
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<Archivo[]>([]);
@@ -182,7 +184,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     });
     setCarpetaLoading(false);
     if (error) {
-      setCarpetaError(error.code === "23505" ? "Ya existe una carpeta con ese nombre" : error.message);
+      setCarpetaError(error.code === "23505" ? t("folderExists") : error.message);
       return;
     }
     setNuevaCarpeta("");
@@ -191,7 +193,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   }
 
   async function eliminarCarpeta(nombre: string) {
-    if (!confirm(`¿Eliminar la carpeta "${nombre}" y todos sus archivos?`)) return;
+    if (!confirm(t("confirmDeleteFolder", { name: nombre }))) return;
     if (!projectId) return;
     const supabase = createClient();
     // Eliminar carpeta de DB
@@ -212,7 +214,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
 
   async function subirArchivos(files: FileList | null) {
     if (!files || files.length === 0) return;
-    if (!projectId) { setUploadError("No hay proyecto activo (cinepack-proyecto-id vacío)"); return; }
+    if (!projectId) { setUploadError(t("noActiveProject")); return; }
     const supabase = createClient();
     setUploading(true);
     setUploadError(null);
@@ -244,7 +246,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   }
 
   async function eliminar(path: string) {
-    if (!confirm("¿Eliminar este archivo?")) return;
+    if (!confirm(t("confirmDeleteFile"))) return;
     const supabase = createClient();
     await supabase.storage.from(BUCKET).remove([path]);
     setArchivos((prev) => prev.filter((f) => f.path !== path));
@@ -276,7 +278,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     setPreviewLoading(false);
   }
 
-  const breadcrumb = ["Archivos", ...pathStack];
+  const breadcrumb = [t("rootLabel"), ...pathStack];
   const isRoot = pathStack.length === 0;
   const isEmpty = carpetas.length === 0 && archivos.length === 0;
 
@@ -291,16 +293,16 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
           if (e.key === "Enter") crearCarpeta();
           if (e.key === "Escape") { setCreandoCarpeta(false); setCarpetaError(null); }
         }}
-        placeholder="Nombre de carpeta…"
+        placeholder={t("newFolderPlaceholder")}
       />
       <button className="arc-btn" onClick={crearCarpeta} disabled={carpetaLoading}>
-        {carpetaLoading ? "…" : "Crear"}
+        {carpetaLoading ? t("creating") : t("create")}
       </button>
       <button className="arc-btn" onClick={() => { setCreandoCarpeta(false); setCarpetaError(null); }}>✕</button>
     </span>
   ) : (
     <button className="arc-btn-outline" onClick={() => { setCreandoCarpeta(true); setCarpetaError(null); }}>
-      + Nueva carpeta
+      {t("newFolder")}
     </button>
   );
 
@@ -326,7 +328,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
           {formCarpeta}
           {!isRoot && (
             <label className={`arc-btn-acc${uploading ? " disabled" : ""}`} style={{ cursor: uploading ? "wait" : "pointer" }}>
-              {uploading ? "Subiendo…" : "⬆ Subir archivo"}
+              {uploading ? t("uploading") : t("uploadFile")}
               <input ref={fileRef} type="file" multiple style={{ display: "none" }}
                 onChange={(e) => subirArchivos(e.target.files)} />
             </label>
@@ -335,10 +337,10 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
       </div>
 
       {carpetaError && <div className="arc-error">⚠ {carpetaError}</div>}
-      {uploadError && <div className="arc-error">⚠ Error al subir: {uploadError}</div>}
+      {uploadError && <div className="arc-error">⚠ {t("uploadErrorPrefix")}{uploadError}</div>}
 
       {loading ? (
-        <div className="soon-box"><span className="hex"></span><h4>Cargando…</h4></div>
+        <div className="soon-box"><span className="hex"></span><h4>{t("loading")}</h4></div>
       ) : (
         <>
           {carpetas.length > 0 && (
@@ -392,7 +394,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
                       <span className="arc-file-icon">{fileIcon(f.nombre)}</span>
                     )}
                     <span className="arc-file-name">{f.nombre}</span>
-                    <span className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at)}</span>
+                    <span className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at, t)}</span>
                     <div className="arc-file-actions">
                       <button className="arc-btn" onClick={() => descargar(f.path, f.nombre)}>⬇</button>
                       <button className="arc-btn arc-btn-del" onClick={() => eliminar(f.path)}>✕</button>
@@ -409,14 +411,14 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
               onDrop={(e) => { e.preventDefault(); subirArchivos(e.dataTransfer.files); }}
               onClick={() => fileRef.current?.click()}>
               <span className="hex" style={{ width: 28, height: 24 }} />
-              <p>Arrastrá archivos acá o hacé clic para subir</p>
+              <p>{t("dropHere")}</p>
             </div>
           )}
 
           {isRoot && isEmpty && (
             <div className="arc-dropzone" style={{ cursor: "default" }}>
               <span className="hex" style={{ width: 28, height: 24 }} />
-              <p>Creá una carpeta para empezar a organizar tus archivos</p>
+              <p>{t("createFolderToStart")}</p>
             </div>
           )}
         </>
@@ -470,13 +472,13 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
             </div>
             {previewLoading ? (
               <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>
-                Cargando preview…
+                {t("loadingPreview")}
               </div>
             ) : previewUrl ? (
               <img src={previewUrl} alt={previewFile.nombre} style={{ maxWidth: "100%", maxHeight: "calc(90vh - 60px)", borderRadius: "4px" }} />
             ) : (
               <div style={{ textAlign: "center", padding: "40px", color: "var(--muted)" }}>
-                No se puede mostrar una vista previa de este archivo
+                {t("noPreview")}
               </div>
             )}
           </div>

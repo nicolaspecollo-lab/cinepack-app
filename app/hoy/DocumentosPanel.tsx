@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { DOCUMENTOS_POR_DEPARTAMENTO } from "../constants";
 
@@ -15,16 +16,16 @@ type DocRow = {
   created_at: string;
 };
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return t("timeHoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
+  if (days === 1) return t("timeYesterday");
+  return t("timeDaysAgo", { n: days });
 }
 
 export default function DocumentosPanel({
@@ -36,6 +37,7 @@ export default function DocumentosPanel({
   fullName: string;
   readOnly?: boolean;
 }) {
+  const t = useTranslations("documentos");
   const grupos = DOCUMENTOS_POR_DEPARTAMENTO[departamento] ?? [];
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function DocumentosPanel({
   async function subir(categoria: string, nombre: string, file: File) {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("errNoProject") });
       return;
     }
     setSubiendo(`${categoria}::${nombre}`);
@@ -110,7 +112,7 @@ export default function DocumentosPanel({
     const supabase = createClient();
     const { data, error } = await supabase.storage.from("documentos").createSignedUrl(path, 60);
     if (error || !data) {
-      setMsg({ type: "err", text: error?.message ?? "No se pudo generar el enlace." });
+      setMsg({ type: "err", text: error?.message ?? t("errNoLink") });
       return;
     }
     const a = document.createElement("a");
@@ -125,8 +127,8 @@ export default function DocumentosPanel({
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Documentos de {departamento}</h4>
-        <p>Todavía no hay un catálogo de documentos definido para este departamento.</p>
+        <h4>{t("noDeptTitle", { dept: departamento })}</h4>
+        <p>{t("noDeptDesc")}</p>
       </div>
     );
   }
@@ -141,24 +143,14 @@ export default function DocumentosPanel({
     <>
       <div className="doc-status">
         <span className={`spill ${completados === 0 ? "pub" : "pub"}`}>
-          ● {completados}/{total} documentos
+          ● {t("countDocs", { n: completados, total })}
         </span>
         <span className="txt">
-          {readOnly ? (
-            <>
-              Visionado de documentos de <b>{departamento}</b> — solo lectura. Tu equipo edita y publica
-              estos documentos desde su propio panel.
-            </>
-          ) : (
-            <>
-              Espacio de trabajo de documentos de <b>{departamento}</b>. Sube cada documento cuando esté listo;
-              el resto del equipo lo verá publicado aquí.
-            </>
-          )}
+          {readOnly ? t("readOnlyDesc", { dept: departamento }) : t("editDesc", { dept: departamento })}
         </span>
       </div>
 
-      {loading && <p className="cons-text">Cargando documentos…</p>}
+      {loading && <p className="cons-text">{t("loading")}</p>}
 
       {!loading &&
         grupos.map((g) => (
@@ -178,25 +170,25 @@ export default function DocumentosPanel({
                   <div className="com" key={d.nombre} style={{ borderLeft: `3px solid ${g.color}` }}>
                     <div className="com-top">
                       <div className="com-title">{d.nombre}</div>
-                      <span className={`pill ${subido ? "p-ok" : "p-warn"}`}>{subido ? "Subido" : "Vacío"}</span>
+                      <span className={`pill ${subido ? "p-ok" : "p-warn"}`}>{subido ? t("uploaded") : t("empty")}</span>
                     </div>
                     <div className="com-text">{d.desc}</div>
                     {subido ? (
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px", alignItems: "center" }}>
                         <span className="cons-meta">
-                          {subido.file_name} · {subido.subido_por} · {timeAgo(subido.created_at)}
+                          {subido.file_name} · {subido.subido_por} · {timeAgo(subido.created_at, t)}
                         </span>
                       </div>
                     ) : null}
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
                       {subido && (
                         <button className="btn" onClick={() => descargar(subido.file_path, subido.file_name)}>
-                          Descargar
+                          {t("download")}
                         </button>
                       )}
                       {!readOnly && (
                         <label className="btn" style={{ cursor: "pointer" }}>
-                          {subiendo === key ? "Subiendo…" : subido ? "Reemplazar" : "Subir archivo"}
+                          {subiendo === key ? t("uploading") : subido ? t("replace") : t("uploadFile")}
                           <input
                             type="file"
                             style={{ display: "none" }}
@@ -224,8 +216,7 @@ export default function DocumentosPanel({
       )}
 
       <div className="note" style={{ marginTop: "20px" }}>
-        El resto del equipo puede pedir acceso de visionado a un documento concreto desde la pestaña{" "}
-        <b>Accesos</b>.
+        {t("accessNote", { tab: "Accesos" })}
       </div>
     </>
   );
