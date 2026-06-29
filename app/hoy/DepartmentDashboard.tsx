@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import HoyPanel from "./HoyPanel";
 import GeneralesPanel, { type Sub as GeneralesSub } from "./GeneralesPanel";
 import ModoRodajePanel from "./ModoRodajePanel";
-import HerramientasPanel from "./HerramientasPanel";
+import HerramientasPanel, { useNombreHerramienta } from "./HerramientasPanel";
 import ArchivosPanel from "./ArchivosPanel";
 import AdminPanel from "./AdminPanel";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
@@ -33,6 +33,7 @@ export default function DepartmentDashboard({
   avatarUrl?: string | null;
 }) {
   const tNav = useTranslations("nav");
+  const nombreDe = useNombreHerramienta();
   const [tab, setTab] = useState<Tab>("pulso");
   const [pulsoPendientes, setPulsoPendientes] = useState(0);
   const [generalesJump, setGeneralesJump] = useState<{ sub: GeneralesSub; token: number } | null>(null);
@@ -165,43 +166,41 @@ export default function DepartmentDashboard({
   }
 
   function onAskIA(_texto: string) {
-    alert(
-      "¡Hola! Al estar en la versión BETA de CINEPACK, estamos desarrollando esta función para brindarte un servicio más completo en este entorno de trabajo. Espero pronto estar a tu disposición y poder ayudarte a optimizar tu tiempo. ¡Nos vemos pronto!"
-    );
+    alert(tNav("askIaPlaceholder"));
   }
 
   const paletteItems = useMemo<PaletteItem[]>(() => {
     const items: PaletteItem[] = [
-      { id: "tab-pulso", label: "Pulso", group: "Sección", onSelect: () => setTab("pulso") },
-      { id: "tab-generales", label: "Generales", group: "Sección", onSelect: () => setTab("generales") },
-      { id: "tab-departamento", label: "Departamento", group: "Sección", onSelect: () => setTab("departamento") },
-      { id: "tab-exclusivas", label: "Exclusivas", group: "Sección", onSelect: () => setTab("exclusivas") },
-      { id: "tab-archivos", label: "Archivos", group: "Sección", onSelect: () => setTab("archivos") },
+      { id: "tab-pulso", label: tNav("pulso"), group: tNav("palSection"), onSelect: () => setTab("pulso") },
+      { id: "tab-generales", label: tNav("generales"), group: tNav("palSection"), onSelect: () => setTab("generales") },
+      { id: "tab-departamento", label: tNav("departamentos"), group: tNav("palSection"), onSelect: () => setTab("departamento") },
+      { id: "tab-exclusivas", label: tNav("exclusivas"), group: tNav("palSection"), onSelect: () => setTab("exclusivas") },
+      { id: "tab-archivos", label: tNav("archivo"), group: tNav("palSection"), onSelect: () => setTab("archivos") },
     ];
     if (nombre === "Ejecutivo") {
-      items.push({ id: "tab-control", label: "Control", group: "Sección", onSelect: () => setTab("admin") });
+      items.push({ id: "tab-control", label: tNav("control"), group: tNav("palSection"), onSelect: () => setTab("admin") });
     }
     for (const h of deptTools(nombre)) {
-      items.push({ id: `dept-${h.id}`, label: h.nombre, hint: h.hint, group: "Departamento", onSelect: () => setTab("departamento") });
+      items.push({ id: `dept-${h.id}`, label: nombreDe(h), hint: h.hint, group: tNav("palDept"), onSelect: () => setTab("departamento") });
     }
     for (const g of cargoGroups(nombre)) {
       for (const h of g.tools) {
-        items.push({ id: `cargo-${g.cargo}-${h.id}`, label: h.nombre, hint: g.cargo, group: "Exclusivas", onSelect: () => setTab("exclusivas") });
+        items.push({ id: `cargo-${g.cargo}-${h.id}`, label: nombreDe(h), hint: g.cargo, group: tNav("palExclusive"), onSelect: () => setTab("exclusivas") });
       }
     }
     for (const t of misTareas) {
       items.push({
         id: `completar-${t.id}`,
-        label: `✓ Completar: ${t.titulo}`,
-        group: "Tareas",
+        label: tNav("palComplete", { name: t.titulo }),
+        group: tNav("palTasks"),
         onSelect: () => completarTareaPalette(t.id),
       });
     }
     for (const a of misAlertas) {
       items.push({
         id: `descartar-${a.id}`,
-        label: `✓ Descartar: ${a.texto}`,
-        group: "Alertas",
+        label: tNav("palDismiss", { name: a.texto }),
+        group: tNav("palAlerts"),
         onSelect: () => descartarAlertaPalette(a.id),
       });
     }
@@ -209,8 +208,8 @@ export default function DepartmentDashboard({
       items.push({
         id: `archivo-${f.path}`,
         label: `📎 ${f.nombre}`,
-        hint: "Archivos",
-        group: "Archivos",
+        hint: tNav("palFiles"),
+        group: tNav("palFiles"),
         onSelect: () => setTab("archivos"),
       });
     }

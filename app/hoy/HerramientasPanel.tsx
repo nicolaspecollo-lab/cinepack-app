@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
 import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
@@ -30,17 +31,26 @@ function personalToHerramienta(pt: PersonalTool): Herramienta {
   return { id: pt.id, nombre: pt.titulo, tipo: pt.tipo, estiloDoc: plantilla?.estiloDoc };
 }
 
-const TIPO_TAG: Record<Herramienta["tipo"], string> = {
-  tabla: "Tabla",
-  nota: "Documento",
-  checklist: "Checklist",
-  ficha: "Ficha",
-  galeria: "Galería",
-  accesos: "Accesos",
+const TIPO_TAG_KEY: Record<Herramienta["tipo"], string> = {
+  tabla: "tipoTabla",
+  nota: "tipoDoc",
+  checklist: "tipoChecklist",
+  ficha: "tipoFicha",
+  galeria: "tipoGaleria",
+  accesos: "tipoAccesos",
 };
 
 const openKey = (dept: string, seccion: string) => `cinepack-open-tool-${dept}-${seccion}`;
 const openPersonalKey = (dept: string) => `cinepack-open-personal-${dept}`;
+
+// Nombre de herramienta ESTÁTICA (catálogo herramientas.ts) traducido por id,
+// con fallback al español si todavía no tiene entrada (herramienta nueva).
+// Las herramientas PERSONALES (Espacio de trabajo) no pasan por acá: su
+// nombre lo escribe el usuario y se muestra literal.
+export function useNombreHerramienta() {
+  const tHerr = useTranslations("herr");
+  return (h: Herramienta) => (tHerr.has(h.id) ? tHerr(h.id) : h.nombre);
+}
 
 export default function HerramientasPanel({
   departamento,
@@ -53,6 +63,10 @@ export default function HerramientasPanel({
   fullName: string;
   seccion: "departamento" | "cargo";
 }) {
+  const t = useTranslations("hp");
+  const tNav = useTranslations("nav");
+  const tEsp = useTranslations("espacio");
+  const nombreDe = useNombreHerramienta();
   const [abierta, setAbierta] = useState<Herramienta | null>(null);
   const [vista, setVista] = useState<"tabla" | "personajes">("tabla");
   const [conteos, setConteos] = useState<Record<string, number>>({});
@@ -162,31 +176,31 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         <div className="hp-open-head">
-          <button className="btn" onClick={cerrarPersonal}><Icon name="arrow-left" size={14} /> Volver</button>
+          <button className="btn" onClick={cerrarPersonal}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
           <h3 className="hp-open-title-edit">
             <span className="hex"></span>
             <input
               key={abiertaPersonal.id}
               className="hp-open-title-input"
               defaultValue={abiertaPersonal.titulo}
-              placeholder={h.tipo === "tabla" ? "Cuadro sin título" : "Documento sin título"}
+              placeholder={h.tipo === "tabla" ? tEsp("untitledTable") : tEsp("untitledDoc")}
               onBlur={(e) => renombrarPersonal(abiertaPersonal.id, e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
             />
           </h3>
-          <span className="hp-open-tag">{TIPO_TAG[h.tipo]}</span>
+          <span className="hp-open-tag">{t(TIPO_TAG_KEY[h.tipo])}</span>
           <button
             className="btn hp-btn-danger"
             style={{ marginLeft: "auto" }}
             onClick={async () => {
-              if (!confirm("¿Eliminar esta herramienta personal y todos sus datos?")) return;
+              if (!confirm(t("confirmDeletePersonal"))) return;
               const supabase = createClient();
               await supabase.from("personal_tools").delete().eq("id", abiertaPersonal.id);
               setPersonalTools((prev) => prev.filter((p) => p.id !== abiertaPersonal.id));
               cerrarPersonal();
             }}
           >
-            <Icon name="trash" size={13} /> Eliminar
+            <Icon name="trash" size={13} /> {t("delete")}
           </button>
         </div>
         {abiertaPersonal.tipo === "tabla" && abiertaPersonal.plantilla_id && VISTAS_CUADRO.has(abiertaPersonal.plantilla_id) ? (
@@ -209,17 +223,17 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         <div className="hp-open-head">
-          <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> Volver</button>
-          <h3><span className="hex"></span> {abierta.nombre}</h3>
-          <span className="hp-open-tag">{TIPO_TAG[abierta.tipo]}</span>
+          <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
+          <h3><span className="hex"></span> {nombreDe(abierta)}</h3>
+          <span className="hp-open-tag">{t(TIPO_TAG_KEY[abierta.tipo])}</span>
         </div>
         {esCasting && (
           <div className="dsubtabs">
             <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
-              Tabla
+              {t("table")}
             </button>
             <button className={`dsubtab ${vista === "personajes" ? "active" : ""}`} onClick={() => setVista("personajes")}>
-              Por personaje
+              {t("byCharacter")}
             </button>
           </div>
         )}
@@ -237,7 +251,7 @@ export default function HerramientasPanel({
     return (
       <div className="hp-index">
         <button className={`btn${creandoEspacio ? "" : " acc"}`} style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
-          {creandoEspacio ? "✕ Cerrar" : "+ Espacio de trabajo"}
+          {creandoEspacio ? t("closeWorkspace") : t("openWorkspace")}
         </button>
         {creandoEspacio && (
           <EspacioTrabajoCreator
@@ -249,16 +263,16 @@ export default function HerramientasPanel({
         {tools.length === 0 && personalTools.length === 0 && (
           <div className="soon-box">
             <span className="hex"></span>
-            <h4>Sin herramientas de departamento</h4>
-            <p>Este departamento todavía no tiene herramientas compartidas en el mapa de trabajo.</p>
+            <h4>{t("noDeptTools")}</h4>
+            <p>{t("noDeptToolsDesc")}</p>
           </div>
         )}
         {personalTools.length > 0 && (
           <section className="hp-group hp-group-personal">
             <span className="hp-group-label">
               <span className="hex" style={{ width: "8px", height: "7px" }} />
-              Mis herramientas
-              <span className="hp-mine">personales</span>
+              {t("myTools")}
+              <span className="hp-mine">{t("personalBadge")}</span>
             </span>
             <div className="hp-cards">
               {personalTools.map((pt) => (
@@ -266,7 +280,7 @@ export default function HerramientasPanel({
                   <div className="hcard-accent" />
                   <div className="hcard-title">{pt.titulo}</div>
                   <div className="hcard-meta">
-                    <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Documento"}</span>
+                    <span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>
                   </div>
                 </button>
               ))}
@@ -275,7 +289,7 @@ export default function HerramientasPanel({
         )}
         {tools.length > 0 && (
           <section className="hp-group">
-            <span className="hp-group-label">Herramientas de {departamento}</span>
+            <span className="hp-group-label">{t("toolsOf", { dept: departamento })}</span>
             <div className="hp-cards">
               {tools.map((h) => (
                 <ToolCard key={h.id} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
@@ -293,12 +307,12 @@ export default function HerramientasPanel({
     return (
       <div className="hp-index">
         <button className="btn acc" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
-          + Espacio de trabajo
+          {t("openWorkspace")}
         </button>
         <div className="soon-box">
           <span className="hex"></span>
-          <h4>Sin herramientas exclusivas</h4>
-          <p>Este departamento todavía no tiene herramientas exclusivas de cargo en el mapa.</p>
+          <h4>{t("noExclusiveTools")}</h4>
+          <p>{t("noExclusiveToolsDesc")}</p>
         </div>
       </div>
     );
@@ -307,7 +321,7 @@ export default function HerramientasPanel({
   return (
     <div className="hp-index hp-index-cols">
       <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
-        {creandoEspacio ? "✕ Cerrar" : "+ Espacio de trabajo"}
+        {creandoEspacio ? t("closeWorkspace") : t("openWorkspace")}
       </button>
       {creandoEspacio && (
         <EspacioTrabajoCreator
@@ -320,8 +334,8 @@ export default function HerramientasPanel({
         <section className="hp-group hp-group-personal">
           <span className="hp-group-label">
             <span className="hex" style={{ width: "8px", height: "7px" }} />
-            Mis herramientas
-            <span className="hp-mine">personales</span>
+            {t("myTools")}
+            <span className="hp-mine">{t("personalBadge")}</span>
           </span>
           <div className="hp-cards">
             {personalTools.map((pt) => (
@@ -329,7 +343,7 @@ export default function HerramientasPanel({
                 <div className="hcard-accent" />
                 <div className="hcard-title">{pt.titulo}</div>
                 <div className="hcard-meta">
-                  <span className="hcard-badge">{pt.tipo === "tabla" ? "Cuadro de celdas" : "Documento"}</span>
+                  <span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>
                 </div>
               </button>
             ))}
@@ -343,7 +357,7 @@ export default function HerramientasPanel({
             <span className="hp-group-label">
               <span className="hex" style={{ width: "8px", height: "7px" }} />
               {g.cargo}
-              {esMio && <span className="hp-mine">tu cargo</span>}
+              {esMio && <span className="hp-mine">{t("yourRole")}</span>}
             </span>
             <div className="hp-cards">
               {g.tools.map((h) => (
@@ -385,19 +399,21 @@ function ToolCard({
   cargo?: boolean;
   conteo?: number;
 }) {
-  const unidad = h.tipo === "checklist" ? "items" : h.tipo === "galeria" ? "fotos" : "filas";
+  const t = useTranslations("hp");
+  const nombreDe = useNombreHerramienta();
+  const unidad = t(h.tipo === "checklist" ? "unitItems" : h.tipo === "galeria" ? "unitPhotos" : "unitRows");
   return (
     <button className="hcard" onClick={onClick}>
       <div className="hcard-accent" />
-      <div className="hcard-title">{h.nombre}</div>
+      <div className="hcard-title">{nombreDe(h)}</div>
       {h.hint && <div className="hcard-desc">{h.hint}</div>}
       <div className="hcard-meta">
-        <span className="hcard-badge">{TIPO_TAG[h.tipo]}</span>
+        <span className="hcard-badge">{t(TIPO_TAG_KEY[h.tipo])}</span>
         {conteo != null && conteo > 0 && (
           <span className="hcard-count">{conteo} {unidad}</span>
         )}
         {(conteo == null || conteo === 0) && h.tipo === "tabla" && (
-          <span className="hcard-badge">vacía</span>
+          <span className="hcard-badge">{t("emptyBadge")}</span>
         )}
       </div>
     </button>
