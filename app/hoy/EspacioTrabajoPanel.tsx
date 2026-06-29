@@ -256,20 +256,21 @@ function PlantillaTablaCard({ p, titulo, descripcion, onClick }: { p: PlantillaT
 }
 
 function TablaPreview({ id, p }: { id: string; p: PlantillaTabla }) {
+  const tp = useTranslations("plantillas");
   if (id === "kanban") {
     return (
       <div className="esp-tp esp-tp-kanban">
         <div className="esp-tp-kcol">
-          <span className="esp-tp-khead">Por hacer</span>
+          <span className="esp-tp-khead">{tp("previewTodo")}</span>
           <span className="esp-tp-kcard" style={{ background: "rgba(31,125,226,0.16)", borderColor: "#1F7DE2" }} />
           <span className="esp-tp-kcard" style={{ background: "rgba(31,125,226,0.16)", borderColor: "#1F7DE2", height: 22 }} />
         </div>
         <div className="esp-tp-kcol">
-          <span className="esp-tp-khead">En curso</span>
+          <span className="esp-tp-khead">{tp("previewInProgress")}</span>
           <span className="esp-tp-kcard" style={{ background: "rgba(158,238,106,0.18)", borderColor: "#9EEE6A", height: 30 }} />
         </div>
         <div className="esp-tp-kcol">
-          <span className="esp-tp-khead">Hecho</span>
+          <span className="esp-tp-khead">{tp("previewDone")}</span>
           <span className="esp-tp-kcard" style={{ background: "rgba(243,127,181,0.16)", borderColor: "#F37FB5" }} />
           <span className="esp-tp-kcard" style={{ background: "rgba(243,127,181,0.16)", borderColor: "#F37FB5", height: 18 }} />
         </div>
@@ -310,7 +311,7 @@ function TablaPreview({ id, p }: { id: string; p: PlantillaTabla }) {
         ))}
         <div className="esp-tp-crow">
           <span className="esp-tp-cdot" />
-          <span className="esp-tp-ctxt esp-tp-ctxt-muted">Liberación de derechos de imagen</span>
+          <span className="esp-tp-ctxt esp-tp-ctxt-muted">{tp("previewReleaseForm")}</span>
         </div>
       </div>
     );

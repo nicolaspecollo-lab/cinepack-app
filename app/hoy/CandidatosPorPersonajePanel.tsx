@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 type Fila = {
@@ -33,6 +34,7 @@ function FotoCandidato({ path }: { path: string }) {
 }
 
 export default function CandidatosPorPersonajePanel({ departamento }: { departamento: string }) {
+  const t = useTranslations("candidatos");
   const [filas, setFilas] = useState<Fila[]>([]);
   const [loading, setLoading] = useState(true);
   const [personaje, setPersonaje] = useState<string>("todos");
@@ -59,7 +61,7 @@ export default function CandidatosPorPersonajePanel({ departamento }: { departam
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Cargando candidatos…</h4>
+        <h4>{t("loading")}</h4>
       </div>
     );
   }
@@ -71,8 +73,8 @@ export default function CandidatosPorPersonajePanel({ departamento }: { departam
     return (
       <div className="soon-box" style={{ marginTop: 0 }}>
         <span className="hex"></span>
-        <h4>Aún no hay candidatos cargados</h4>
-        <p>Cargá candidatos desde la pestaña &quot;Tabla&quot; para verlos acá agrupados por personaje.</p>
+        <h4>{t("noCandidatesTitle")}</h4>
+        <p>{t("noCandidatesDesc")}</p>
       </div>
     );
   }
@@ -81,7 +83,7 @@ export default function CandidatosPorPersonajePanel({ departamento }: { departam
     <>
       <div className="dsubtabs" style={{ padding: "0 30px" }}>
         <button className={`dsubtab ${personaje === "todos" ? "active" : ""}`} onClick={() => setPersonaje("todos")}>
-          Todos los personajes
+          {t("allCharacters")}
         </button>
         {personajes.map((p) => (
           <button key={p} className={`dsubtab ${personaje === p ? "active" : ""}`} onClick={() => setPersonaje(p)}>
@@ -95,23 +97,23 @@ export default function CandidatosPorPersonajePanel({ departamento }: { departam
           <div className="hp-gcard" key={f.id}>
             <FotoCandidato path={f.datos.foto ?? ""} />
             <label className="hp-gfield">
-              <span>Personaje</span>
+              <span>{t("character")}</span>
               <input defaultValue={f.datos.personaje ?? ""} readOnly />
             </label>
             <label className="hp-gfield">
-              <span>Candidato/a</span>
+              <span>{t("candidate")}</span>
               <input defaultValue={f.datos.candidato ?? ""} readOnly />
             </label>
             <label className="hp-gfield">
-              <span>Agencia / Contacto</span>
+              <span>{t("agency")}</span>
               <input defaultValue={f.datos.agencia ?? ""} readOnly />
             </label>
             <label className="hp-gfield">
-              <span>Fase</span>
+              <span>{t("phase")}</span>
               <input defaultValue={f.datos.fase ?? ""} readOnly />
             </label>
             {f.datos.reel && (
-              <a className="hp-link-ext" href={f.datos.reel} target="_blank" rel="noopener noreferrer">Ver reel / material ↗</a>
+              <a className="hp-link-ext" href={f.datos.reel} target="_blank" rel="noopener noreferrer">{t("viewReel")}</a>
             )}
           </div>
         ))}

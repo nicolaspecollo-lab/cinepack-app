@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import DocumentosPanel from "./DocumentosPanel";
 import EscenasPanel from "./EscenasPanel";
 import { ACCENTS, PERMISOS_VISIONADO } from "../constants";
@@ -12,6 +13,7 @@ export default function VisionadoPanel({
   departamento: string;
   fullName: string;
 }) {
+  const t = useTranslations("visionado");
   const permitidos = PERMISOS_VISIONADO[departamento] ?? [];
   const [activo, setActivo] = useState<string | null>(permitidos[0] ?? null);
 
@@ -19,8 +21,8 @@ export default function VisionadoPanel({
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Sin visionado configurado</h4>
-        <p>Este departamento todavía no tiene departamentos asignados para visionar.</p>
+        <h4>{t("noViewingTitle")}</h4>
+        <p>{t("noViewingDesc")}</p>
       </div>
     );
   }
@@ -28,10 +30,9 @@ export default function VisionadoPanel({
   return (
     <>
       <div className="doc-status">
-        <span className="spill pub">● Visionado</span>
+        <span className="spill pub">● {t("viewing")}</span>
         <span className="txt">
-          Consulta en solo lectura los documentos y escenas de los departamentos con los que{" "}
-          <b>{departamento}</b> trabaja más de cerca.
+          {t("readOnlyDesc", { dept: departamento })}
         </span>
       </div>
 
@@ -51,12 +52,12 @@ export default function VisionadoPanel({
       {activo && (
         <div style={{ "--acc": `var(--${ACCENTS[activo] ?? "lime"})` } as React.CSSProperties}>
           <div className="mbsection-title" style={{ margin: "18px 30px 12px" }}>
-            Documentos de {activo}
+            {t("docsOf", { dept: activo })}
           </div>
           <DocumentosPanel departamento={activo} fullName={fullName} readOnly />
 
           <div className="mbsection-title" style={{ margin: "24px 30px 12px" }}>
-            Escenas — vista de {activo}
+            {t("scenesViewOf", { dept: activo })}
           </div>
           <div style={{ padding: "0 30px" }}>
             <EscenasPanel departamento={activo} />

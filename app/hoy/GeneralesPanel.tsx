@@ -87,11 +87,12 @@ function deptColor(dept: string) {
 }
 
 function DeptHexes({ label, depts }: { label: React.ReactNode; depts: string[] | null | "todos" }) {
+  const tG = useTranslations("generales");
   if (depts === null) {
     return (
       <span className="hcard-perm-group">
         <span className="hcard-perm-label">{label}</span>
-        <span className="hcard-badge">Todos</span>
+        <span className="hcard-badge">{tG("all")}</span>
       </span>
     );
   }
@@ -99,7 +100,7 @@ function DeptHexes({ label, depts }: { label: React.ReactNode; depts: string[] |
     return (
       <span className="hcard-perm-group">
         <span className="hcard-perm-label">{label}</span>
-        <span className="hcard-badge">Todos</span>
+        <span className="hcard-badge">{tG("all")}</span>
       </span>
     );
   }
@@ -195,7 +196,7 @@ export default function GeneralesPanel({
   return (
     <div className="gen">
       {backMounted && createPortal(
-        <button className="cp-header-back-btn" onClick={() => setSub(null)}><Icon name="arrow-left" size={14} /> Volver</button>,
+        <button className="cp-header-back-btn" onClick={() => setSub(null)}><Icon name="arrow-left" size={14} /> {tG("back")}</button>,
         document.getElementById("cp-header-back")!
       )}
 

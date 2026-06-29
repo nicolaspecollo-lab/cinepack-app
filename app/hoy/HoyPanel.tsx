@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS, ESTADO_COLOR } from "../constants";
 import { CICLO_SELECT, fechasCicloDesdeFila, resumenCiclo, type EtapaResumen } from "./cicloVida";
@@ -36,22 +37,24 @@ type Alerta = {
   leida: boolean;
 };
 
-const PILL_LABEL: Record<Pill, string> = {
-  warn: "Hoy",
-  mut: "Pendiente",
-  bad: "Sin leer",
-  info: "Info",
-  ok: "OK",
+const PILL_LABEL_KEY: Record<Pill, string> = {
+  warn: "pillToday",
+  mut: "pillPending",
+  bad: "pillUnread",
+  info: "pillInfo",
+  ok: "pillOk",
 };
 
 type GestionTipo = "tarea" | "alerta" | "jornada";
 
-const ETAPA_ESTADO_LABEL: Record<EtapaResumen["estado"], (dias: number | null) => string> = {
-  completada: (dias) => `${dias} día${dias === 1 ? "" : "s"} completado${dias === 1 ? "" : "s"}`,
-  pendiente: (dias) => `${dias} día${dias === 1 ? "" : "s"} pendiente${dias === 1 ? "" : "s"}`,
-  en_curso: (dias) => `${dias} día${dias === 1 ? "" : "s"} (en curso)`,
-  sin_fecha: () => "Sin fecha definida",
-};
+function etapaEstadoLabel(estado: EtapaResumen["estado"], dias: number | null, t: ReturnType<typeof useTranslations>): string {
+  switch (estado) {
+    case "completada": return t("stageCompleted", { n: dias ?? 0 });
+    case "pendiente": return t("stagePending", { n: dias ?? 0 });
+    case "en_curso": return t("stageInProgress", { n: dias ?? 0 });
+    case "sin_fecha": return t("stageNoDate");
+  }
+}
 
 export default function HoyPanel({
   deDepartamento,
@@ -60,6 +63,8 @@ export default function HoyPanel({
   deDepartamento: string;
   fullName: string;
 }) {
+  const t = useTranslations("hoyPanel");
+  const tEtapas = useTranslations("etapas");
   const [jornada, setJornada] = useState<Jornada | null>(null);
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
@@ -173,7 +178,7 @@ export default function HoyPanel({
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("errNoProject") });
       return;
     }
 
@@ -254,18 +259,18 @@ export default function HoyPanel({
       <div className="today">
         <div className="tcard">
           <h4>
-            <span className="hex"></span>Ciclo de vida del proyecto
+            <span className="hex"></span>{t("lifecycleTitle")}
           </h4>
-          {loading && <p>Cargando…</p>}
+          {loading && <p>{t("loading")}</p>}
           {!loading && ciclo.every((e) => e.estado === "sin_fecha") && (
-            <p>El Ejecutivo todavía no definió las fechas de las etapas en el Admin.</p>
+            <p>{t("noDatesYet")}</p>
           )}
           {!loading && ciclo.some((e) => e.estado !== "sin_fecha") && (
             <ul>
               {ciclo.map((e) => (
                 <li key={e.key} className={e.enCurso ? "etapa-actual" : undefined}>
-                  <span>{e.label}</span>
-                  <span>{ETAPA_ESTADO_LABEL[e.estado](e.dias)}</span>
+                  <span>{tEtapas(e.key)}</span>
+                  <span>{etapaEstadoLabel(e.estado, e.dias, t)}</span>
                 </li>
               ))}
             </ul>
@@ -274,15 +279,15 @@ export default function HoyPanel({
 
         <div className="tcard">
           <h4>
-            <span className="hex"></span>Pendiente de mí
+            <span className="hex"></span>{t("pendingForMe")}
           </h4>
-          {!loading && tareas.length === 0 && <p>No tienes tareas pendientes por ahora.</p>}
+          {!loading && tareas.length === 0 && <p>{t("noPendingTasks")}</p>}
           {tareas.length > 0 && (
             <ul>
-              {tareas.map((t) => (
-                <li key={t.id} style={{ cursor: "pointer" }} onClick={() => completarTarea(t.id)} title="Marcar como hecha">
-                  <span><span className="cp-estado-dot" style={{ background: ESTADO_COLOR.pendiente }}></span>{t.titulo}</span>
-                  <span className={`pill p-${t.tipo}`}>{t.etiqueta}</span>
+              {tareas.map((tarea) => (
+                <li key={tarea.id} style={{ cursor: "pointer" }} onClick={() => completarTarea(tarea.id)} title={t("markDone")}>
+                  <span><span className="cp-estado-dot" style={{ background: ESTADO_COLOR.pendiente }}></span>{tarea.titulo}</span>
+                  <span className={`pill p-${tarea.tipo}`}>{tarea.etiqueta}</span>
                 </li>
               ))}
             </ul>
@@ -291,15 +296,15 @@ export default function HoyPanel({
 
         <div className="tcard">
           <h4>
-            <span className="hex"></span>Alertas
+            <span className="hex"></span>{t("alertsTitle")}
           </h4>
-          {!loading && alertas.length === 0 && <p>Sin alertas activas.</p>}
+          {!loading && alertas.length === 0 && <p>{t("noActiveAlerts")}</p>}
           {alertas.length > 0 && (
             <ul>
               {alertas.map((a) => (
-                <li key={a.id} style={{ cursor: "pointer" }} onClick={() => descartarAlerta(a.id)} title="Descartar alerta">
+                <li key={a.id} style={{ cursor: "pointer" }} onClick={() => descartarAlerta(a.id)} title={t("dismissAlert")}>
                   <span>{a.texto}</span>
-                  <span className={`pill p-${a.tipo}`}>{a.accion_label || PILL_LABEL[a.tipo]}</span>
+                  <span className={`pill p-${a.tipo}`}>{a.accion_label || t(PILL_LABEL_KEY[a.tipo])}</span>
                 </li>
               ))}
             </ul>
@@ -309,40 +314,40 @@ export default function HoyPanel({
 
       <div className="cons-new" style={{ paddingTop: 0 }}>
         <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Gestionar Hoy"}
+          {showForm ? t("cancel") : t("manageToday")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
           <label className="afield">
-            <span>Tipo</span>
+            <span>{t("fieldType")}</span>
             <select value={gestionTipo} onChange={(e) => setGestionTipo(e.target.value as GestionTipo)}>
-              <option value="tarea">Nueva tarea</option>
-              <option value="alerta">Nueva alerta</option>
-              <option value="jornada">Editar jornada del día</option>
+              <option value="tarea">{t("newTask")}</option>
+              <option value="alerta">{t("newAlert")}</option>
+              <option value="jornada">{t("editDayShoot")}</option>
             </select>
           </label>
 
           {gestionTipo !== "jornada" && (
             <>
               <label className="afield">
-                <span>Para</span>
+                <span>{t("fieldFor")}</span>
                 <select value={para} onChange={(e) => setPara(e.target.value)}>
-                  <option value="">Todos</option>
+                  <option value="">{t("all")}</option>
                   {DEPARTAMENTOS.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
               </label>
               <label className="afield">
-                <span>Estilo</span>
+                <span>{t("fieldStyle")}</span>
                 <select value={tipo} onChange={(e) => setTipo(e.target.value as Pill)}>
-                  <option value="warn">Aviso (amarillo)</option>
-                  <option value="bad">Urgente (rojo)</option>
-                  <option value="info">Información (cian)</option>
-                  <option value="ok">OK (verde)</option>
-                  <option value="mut">Neutro (gris)</option>
+                  <option value="warn">{t("styleWarn")}</option>
+                  <option value="bad">{t("styleBad")}</option>
+                  <option value="info">{t("styleInfo")}</option>
+                  <option value="ok">{t("styleOk")}</option>
+                  <option value="mut">{t("styleMut")}</option>
                 </select>
               </label>
             </>
@@ -351,12 +356,12 @@ export default function HoyPanel({
           {gestionTipo === "tarea" && (
             <>
               <label className="afield">
-                <span>Título</span>
-                <input type="text" required value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Qué hay que hacer" />
+                <span>{t("fieldTitle")}</span>
+                <input type="text" required value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder={t("titlePlaceholder")} />
               </label>
               <label className="afield">
-                <span>Etiqueta</span>
-                <input type="text" required value={etiqueta} onChange={(e) => setEtiqueta(e.target.value)} placeholder="Hoy, Antes D3…" />
+                <span>{t("fieldLabel")}</span>
+                <input type="text" required value={etiqueta} onChange={(e) => setEtiqueta(e.target.value)} placeholder={t("labelPlaceholder")} />
               </label>
             </>
           )}
@@ -364,12 +369,12 @@ export default function HoyPanel({
           {gestionTipo === "alerta" && (
             <>
               <label className="afield">
-                <span>Texto</span>
-                <textarea required value={texto} onChange={(e) => setTexto(e.target.value)} rows={2} placeholder="Descripción de la alerta" />
+                <span>{t("fieldText")}</span>
+                <textarea required value={texto} onChange={(e) => setTexto(e.target.value)} rows={2} placeholder={t("textPlaceholder")} />
               </label>
               <label className="afield">
-                <span>Etiqueta del botón (opcional)</span>
-                <input type="text" value={accionLabel} onChange={(e) => setAccionLabel(e.target.value)} placeholder="Agenda, Sin leer…" />
+                <span>{t("fieldButtonLabel")}</span>
+                <input type="text" value={accionLabel} onChange={(e) => setAccionLabel(e.target.value)} placeholder={t("buttonLabelPlaceholder")} />
               </label>
             </>
           )}
@@ -377,31 +382,31 @@ export default function HoyPanel({
           {gestionTipo === "jornada" && (
             <>
               <label className="afield">
-                <span>Día (número)</span>
+                <span>{t("fieldDayNumber")}</span>
                 <input type="number" required min="1" value={diaNumero} onChange={(e) => setDiaNumero(e.target.value)} />
               </label>
               <label className="afield">
-                <span>Días totales del rodaje</span>
+                <span>{t("fieldTotalDays")}</span>
                 <input type="number" required min="1" value={diaTotal} onChange={(e) => setDiaTotal(e.target.value)} />
               </label>
               <label className="afield">
-                <span>Fecha</span>
+                <span>{t("fieldDate")}</span>
                 <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
               </label>
               <label className="afield">
-                <span>Ubicación</span>
-                <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Localización del día" />
+                <span>{t("fieldLocation")}</span>
+                <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder={t("locationPlaceholder")} />
               </label>
               <label className="afield">
-                <span>Citación</span>
+                <span>{t("fieldCallTime")}</span>
                 <input type="text" value={citacion} onChange={(e) => setCitacion(e.target.value)} placeholder="07:00" />
               </label>
               <label className="afield">
-                <span>Escenas del día</span>
-                <input type="text" value={escenasDia} onChange={(e) => setEscenasDia(e.target.value)} placeholder="1, 2, 3, 7, 8, 9" />
+                <span>{t("fieldDayScenes")}</span>
+                <input type="text" value={escenasDia} onChange={(e) => setEscenasDia(e.target.value)} placeholder={t("scenesPlaceholder")} />
               </label>
               <label className="afield">
-                <span>Visionado dailies</span>
+                <span>{t("fieldDailies")}</span>
                 <input type="text" value={visionado} onChange={(e) => setVisionado(e.target.value)} placeholder="20:00" />
               </label>
             </>
@@ -410,7 +415,7 @@ export default function HoyPanel({
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Guardando…" : "Guardar"}
+            {sending ? t("saving") : t("save")}
           </button>
         </form>
       )}

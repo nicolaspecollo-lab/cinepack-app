@@ -7,11 +7,13 @@ export default function CreditosChips({
   placeholder,
   valores,
   onChange,
+  addLabel = "+ Agregar",
 }: {
   label: string;
   placeholder: string;
   valores: string[];
   onChange: (next: string[]) => void;
+  addLabel?: string;
 }) {
   const [input, setInput] = useState("");
 
@@ -48,7 +50,7 @@ export default function CreditosChips({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregar(); } }}
         />
-        <button type="button" className="abtn" onClick={agregar}>+ Agregar</button>
+        <button type="button" className="abtn" onClick={agregar}>{addLabel}</button>
       </div>
     </div>
   );

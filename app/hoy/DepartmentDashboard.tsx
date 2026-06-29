@@ -248,8 +248,8 @@ export default function DepartmentDashboard({
           <div className="dhead-top">
             <span className="hex"></span>
             <div className="dhead-info">
-              <span className="proj">Vista de cliente / productora · Solo lectura</span>
-              <h2>Resumen del proyecto</h2>
+              <span className="proj">{tNav("clientView")}</span>
+              <h2>{tNav("projectSummary")}</h2>
             </div>
             <div className="dhead-user">
               {avatarUrl ? (
@@ -267,8 +267,7 @@ export default function DepartmentDashboard({
         <div className="tpanel active">
           <ProyectoPulsoPanel />
           <div className="note">
-            Esta es una vista de solo lectura pensada para compartir el estado del proyecto con clientes y
-            productoras. No incluye herramientas internas de los departamentos ni opciones de edición.
+            {tNav("clientNote")}
           </div>
         </div>
       </div>
@@ -293,7 +292,7 @@ export default function DepartmentDashboard({
           )}
           <div className="cp-wuser-info">
             <b>{fullName}</b>
-            <span>{cargo ?? "Sin asignar"}</span>
+            <span>{cargo ?? tNav("unassigned")}</span>
           </div>
         </div>
         <div className="cp-wtabs-nav">
@@ -320,10 +319,7 @@ export default function DepartmentDashboard({
           <HoyPanel deDepartamento={nombre} fullName={fullName} />
           <ProyectoPulsoPanel />
           <div className="note">
-            <b>Pulso</b> es tu jornada y lo que el equipo espera de ti, más el resumen general del proyecto: tareas y
-            alertas pendientes de todos los departamentos, avance global de checklists y estado del presupuesto. Las{" "}
-            <b>Generales</b> son las herramientas compartidas por todo el proyecto; en{" "}
-            <b>Departamento</b> y <b>Exclusivas</b> tenés las tuyas según tu cargo.
+            {tNav("pulsoNote", { pulso: "Pulso", generales: "Generales", departamento: "Departamento", exclusivas: "Exclusivas" })}
           </div>
         </div>
       )}

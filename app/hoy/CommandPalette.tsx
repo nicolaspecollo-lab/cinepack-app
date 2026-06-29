@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 export type PaletteItem = {
   id: string;
@@ -19,6 +20,7 @@ export default function CommandPalette({
   onCrearTarea?: (texto: string) => void;
   onAskIA?: (texto: string) => void;
 }) {
+  const t = useTranslations("cmdk");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
@@ -94,7 +96,7 @@ export default function CommandPalette({
         <input
           ref={inputRef}
           className="cmdk-inline-input"
-          placeholder="Buscar…"
+          placeholder={t("searchPlaceholder")}
           value={query}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
@@ -105,7 +107,7 @@ export default function CommandPalette({
       {showDropdown && (
         <div className="cmdk-drop">
           <div className="cmdk-list">
-            {filtered.length === 0 && <div className="cmdk-empty">Sin resultados.</div>}
+            {filtered.length === 0 && <div className="cmdk-empty">{t("noResults")}</div>}
             {filtered.map((item, idx) => (
               <button
                 key={item.id}
@@ -122,8 +124,8 @@ export default function CommandPalette({
                 className="cmdk-item cmdk-item-action"
                 onMouseDown={(e) => { e.preventDefault(); onCrearTarea(query.trim()); setOpen(false); setQuery(""); }}
               >
-                <span className="cmdk-item-label">+ Crear tarea: &quot;{query.trim()}&quot;</span>
-                <span className="cmdk-item-group">Acción</span>
+                <span className="cmdk-item-label">{t("createTask", { q: query.trim() })}</span>
+                <span className="cmdk-item-group">{t("action")}</span>
               </button>
             )}
             {query.trim().length > 1 && onAskIA && (
@@ -131,8 +133,8 @@ export default function CommandPalette({
                 className="cmdk-item cmdk-item-action"
                 onMouseDown={(e) => { e.preventDefault(); onAskIA(query.trim()); setOpen(false); setQuery(""); }}
               >
-                <span className="cmdk-item-label">IA: &quot;{query.trim()}&quot;</span>
-                <span className="cmdk-item-group">Asistente</span>
+                <span className="cmdk-item-label">{t("askAI", { q: query.trim() })}</span>
+                <span className="cmdk-item-group">{t("assistant")}</span>
               </button>
             )}
           </div>

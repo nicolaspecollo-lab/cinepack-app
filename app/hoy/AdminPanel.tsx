@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { CICLO_SELECT, ETAPAS, fechasCicloDesdeFila, type FechasCiclo } from "./cicloVida";
@@ -17,6 +18,8 @@ type Cambio = {
 type Miembro = { user_id: string; full_name: string; departamento: string };
 
 export default function AdminPanel() {
+  const t = useTranslations("admin");
+  const tEtapas = useTranslations("etapas");
   const [loading, setLoading] = useState(true);
   const [proyectoId, setProyectoId] = useState<string | null>(null);
 
@@ -58,12 +61,12 @@ export default function AdminPanel() {
 
   function timeAgo(iso: string) {
     const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-    if (mins < 1) return "ahora";
-    if (mins < 60) return `hace ${mins} min`;
+    if (mins < 1) return t("timeNow");
+    if (mins < 60) return t("timeMinsAgo", { n: mins });
     const h = Math.floor(mins / 60);
-    if (h < 24) return `hace ${h} h`;
+    if (h < 24) return t("timeHoursAgo", { n: h });
     const d = Math.floor(h / 24);
-    return d === 1 ? "ayer" : `hace ${d} días`;
+    return d === 1 ? t("timeYesterday") : t("timeDaysAgo", { n: d });
   }
 
   async function load() {
@@ -157,7 +160,7 @@ export default function AdminPanel() {
       setCicloMsg({ type: "err", text: error.message });
       return;
     }
-    setCicloMsg({ type: "ok", text: "Ciclo de vida actualizado." });
+    setCicloMsg({ type: "ok", text: t("lifecycleUpdated") });
   }
 
   async function asignarCargoCompartido(e: React.FormEvent) {
@@ -169,10 +172,10 @@ export default function AdminPanel() {
     const { error } = await supabase.from("user_roles").insert({ user_id: asignarUserId, cargo: asignarCargo });
     setAsignando(false);
     if (error) {
-      setAsignarMsg({ type: "err", text: error.code === "23505" ? "Ese usuario ya tiene ese cargo." : error.message });
+      setAsignarMsg({ type: "err", text: error.code === "23505" ? t("roleExists") : error.message });
       return;
     }
-    setAsignarMsg({ type: "ok", text: "Cargo asignado correctamente." });
+    setAsignarMsg({ type: "ok", text: t("roleAssigned") });
     setAsignarCargo("");
     await load();
   }
@@ -192,7 +195,7 @@ export default function AdminPanel() {
       setCreditosMsg({ type: "err", text: error.message });
       return;
     }
-    setCreditosMsg({ type: "ok", text: "Créditos actualizados. Ya se ven en el Pulso del proyecto." });
+    setCreditosMsg({ type: "ok", text: t("creditsUpdated") });
   }
 
   async function agregarDepartamento(e: React.FormEvent) {
@@ -234,7 +237,7 @@ export default function AdminPanel() {
       .single();
     setInvitando(false);
     if (error || !data) {
-      setInviteMsg({ type: "err", text: error?.message ?? "No se pudo generar la invitación." });
+      setInviteMsg({ type: "err", text: error?.message ?? t("errNoInvite") });
       return;
     }
     if (!departamentosProyecto.some((d) => d.toLowerCase() === inviteDepto.toLowerCase())) {
@@ -243,7 +246,7 @@ export default function AdminPanel() {
       setDepartamentosProyecto(nuevos);
     }
     setInviteLink(`${window.location.origin}/invitacion/${data.token}`);
-    setInviteMsg({ type: "ok", text: "Invitación creada. Copiá el link y envíaselo." });
+    setInviteMsg({ type: "ok", text: t("inviteCreated") });
     setInviteNombre("");
     setInviteEmail("");
     setInviteCargo("");
@@ -253,7 +256,7 @@ export default function AdminPanel() {
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Cargando panel…</h4>
+        <h4>{t("loading")}</h4>
       </div>
     );
   }
@@ -261,12 +264,12 @@ export default function AdminPanel() {
   return (
     <div className="admin-wrap">
       <section className="apanel">
-        <h3><span className="hex"></span>Ciclo de vida del proyecto</h3>
-        <p className="asub">Definí la fecha de inicio de cada etapa. El fin de una etapa es el inicio de la siguiente; la app calcula sola la etapa actual y cuántos días lleva.</p>
+        <h3><span className="hex"></span>{t("lifecycleTitle")}</h3>
+        <p className="asub">{t("lifecycleDesc")}</p>
         <form onSubmit={guardarCiclo} className="afields-grid">
           {ETAPAS.map((etapa) => (
             <label className="afield" key={etapa.key}>
-              <span>{etapa.label}</span>
+              <span>{tEtapas(etapa.key)}</span>
               <input
                 type="date"
                 value={fechasCiclo[etapa.key] ?? ""}
@@ -277,14 +280,14 @@ export default function AdminPanel() {
           <div className="afield-span2">
             {cicloMsg && <p className={`amsg ${cicloMsg.type === "err" ? "err" : "ok"}`}>{cicloMsg.text}</p>}
             <button type="submit" className="btn acc" disabled={savingCiclo}>
-              {savingCiclo ? "Guardando…" : "Guardar ciclo de vida"}
+              {savingCiclo ? t("saving") : t("saveLifecycle")}
             </button>
           </div>
         </form>
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Supervisión general — miembros por departamento</h3>
+        <h3><span className="hex"></span>{t("oversightTitle")}</h3>
         <div className="akpi-grid">
           {Object.entries(conteosDepto).map(([depto, count]) => (
             <div key={depto} className="akpi">
@@ -296,10 +299,10 @@ export default function AdminPanel() {
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Estadísticas de cargos</h3>
+        <h3><span className="hex"></span>{t("rolesStatsTitle")}</h3>
         <div className="acargo-chips">
           {Object.entries(conteosCargo).length === 0 ? (
-            <span className="acargo-empty">Sin cargos asignados todavía</span>
+            <span className="acargo-empty">{t("noRolesYet")}</span>
           ) : (
             Object.entries(conteosCargo).map(([cargo, count]) => (
               <span key={cargo} className="acargo-chip">
@@ -311,31 +314,31 @@ export default function AdminPanel() {
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Asignar cargo compartido</h3>
-        <p className="asub">Suma un cargo adicional a un usuario que ya cumple más de un rol en el equipo.</p>
+        <h3><span className="hex"></span>{t("sharedRoleTitle")}</h3>
+        <p className="asub">{t("sharedRoleDesc")}</p>
         <form onSubmit={asignarCargoCompartido} className="afields-grid">
           <label className="afield">
-            <span>Usuario</span>
+            <span>{t("fieldUser")}</span>
             <select value={asignarUserId} onChange={(e) => setAsignarUserId(e.target.value)}>
-              <option value="">Selecciona…</option>
+              <option value="">{t("select")}</option>
               {miembros.map((m) => (
                 <option key={m.user_id} value={m.user_id}>{m.full_name} ({m.departamento})</option>
               ))}
             </select>
           </label>
           <label className="afield">
-            <span>Departamento del cargo</span>
+            <span>{t("fieldRoleDept")}</span>
             <select value={asignarDepto} onChange={(e) => { setAsignarDepto(e.target.value); setAsignarCargo(""); }}>
-              <option value="">Selecciona…</option>
+              <option value="">{t("select")}</option>
               {Object.keys(JERARQUIA_POR_DEPARTAMENTO).map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
           </label>
           <label className="afield">
-            <span>Cargo</span>
+            <span>{t("fieldRole")}</span>
             <select value={asignarCargo} onChange={(e) => setAsignarCargo(e.target.value)} disabled={!asignarDepto}>
-              <option value="">Selecciona…</option>
+              <option value="">{t("select")}</option>
               {(JERARQUIA_POR_DEPARTAMENTO[asignarDepto] ?? []).map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -344,68 +347,68 @@ export default function AdminPanel() {
           <div className="afield-span2">
             {asignarMsg && <p className={`amsg ${asignarMsg.type === "err" ? "err" : "ok"}`}>{asignarMsg.text}</p>}
             <button type="submit" className="btn acc" disabled={asignando || !asignarUserId || !asignarCargo}>
-              {asignando ? "Asignando…" : "Asignar cargo"}
+              {asignando ? t("assigning") : t("assignRole")}
             </button>
           </div>
         </form>
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Créditos del proyecto</h3>
-        <p className="asub">Se muestran en el Pulso, visibles para todo el equipo.</p>
+        <h3><span className="hex"></span>{t("creditsTitle")}</h3>
+        <p className="asub">{t("creditsDesc")}</p>
         <form onSubmit={guardarCreditos}>
-          <CreditosChips label="Escrito por" placeholder="Nombre del guionista" valores={escritoPor} onChange={setEscritoPor} />
-          <CreditosChips label="Dirigido por" placeholder="Nombre del director/a" valores={dirigidoPor} onChange={setDirigidoPor} />
-          <CreditosChips label="Producido por" placeholder="Nombre de la productora" valores={producidoPor} onChange={setProducidoPor} />
+          <CreditosChips label={t("writtenBy")} placeholder={t("writtenByPh")} valores={escritoPor} onChange={setEscritoPor} addLabel={t("addCredit")} />
+          <CreditosChips label={t("directedBy")} placeholder={t("directedByPh")} valores={dirigidoPor} onChange={setDirigidoPor} addLabel={t("addCredit")} />
+          <CreditosChips label={t("producedBy")} placeholder={t("producedByPh")} valores={producidoPor} onChange={setProducidoPor} addLabel={t("addCredit")} />
           {creditosMsg && <p className={`amsg ${creditosMsg.type === "err" ? "err" : "ok"}`}>{creditosMsg.text}</p>}
           <button type="submit" className="btn acc" disabled={savingCreditos} style={{ marginTop: "10px" }}>
-            {savingCreditos ? "Guardando…" : "Guardar créditos"}
+            {savingCreditos ? t("saving") : t("saveCredits")}
           </button>
         </form>
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Agregar departamento al proyecto</h3>
-        <p className="asub">Departamentos actuales: {departamentosProyecto.length > 0 ? departamentosProyecto.join(", ") : "ninguno todavía"}.</p>
+        <h3><span className="hex"></span>{t("addDeptTitle")}</h3>
+        <p className="asub">{t("currentDepts", { list: departamentosProyecto.length > 0 ? departamentosProyecto.join(", ") : t("noneYet") })}</p>
         <form onSubmit={agregarDepartamento} style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <input
             type="text"
-            placeholder="Nombre del departamento nuevo"
+            placeholder={t("newDeptPlaceholder")}
             value={deptoNuevoInput}
             onChange={(e) => setDeptoNuevoInput(e.target.value)}
             style={{ flex: 1, minWidth: "220px", padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}
           />
           <button type="submit" className="btn acc" disabled={agregandoDepto || !deptoNuevoInput.trim()}>
-            {agregandoDepto ? "Agregando…" : "+ Agregar departamento"}
+            {agregandoDepto ? t("adding") : t("addDept")}
           </button>
         </form>
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Agregar usuario nuevo al proyecto</h3>
-        <p className="asub">Genera un link de invitación. La persona elige su propia contraseña al abrirlo.</p>
+        <h3><span className="hex"></span>{t("addUserTitle")}</h3>
+        <p className="asub">{t("addUserDesc")}</p>
         <form onSubmit={enviarInvitacion} className="afields-grid">
           <label className="afield">
-            <span>Nombre completo</span>
+            <span>{t("fieldFullName")}</span>
             <input type="text" required value={inviteNombre} onChange={(e) => setInviteNombre(e.target.value)} />
           </label>
           <label className="afield">
-            <span>Email</span>
+            <span>{t("fieldEmail")}</span>
             <input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
           </label>
           <label className="afield">
-            <span>Departamento</span>
+            <span>{t("fieldDept")}</span>
             <select required value={inviteDepto} onChange={(e) => { setInviteDepto(e.target.value); setInviteCargo(""); }}>
-              <option value="">Selecciona…</option>
+              <option value="">{t("select")}</option>
               {Array.from(new Set([...DEPARTAMENTOS, ...departamentosProyecto])).map((d) => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
           </label>
           <label className="afield">
-            <span>Cargo (opcional)</span>
+            <span>{t("fieldRoleOptional")}</span>
             <select value={inviteCargo} onChange={(e) => setInviteCargo(e.target.value)} disabled={!inviteDepto}>
-              <option value="">Sin cargo</option>
+              <option value="">{t("noRole")}</option>
               {(JERARQUIA_POR_DEPARTAMENTO[inviteDepto] ?? []).map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -425,26 +428,26 @@ export default function AdminPanel() {
                     setTimeout(() => setLinkCopiado(false), 2000);
                   }}
                 >
-                  {linkCopiado ? "Copiado ✓" : "Copiar link"}
+                  {linkCopiado ? t("copied") : t("copyLink")}
                 </button>
               </div>
             )}
             <button type="submit" className="btn acc" disabled={invitando}>
-              {invitando ? "Generando…" : "Generar invitación"}
+              {invitando ? t("generating") : t("generateInvite")}
             </button>
           </div>
         </form>
       </section>
 
       <section className="apanel">
-        <h3><span className="hex"></span>Acciones de cambios — log de ediciones recientes</h3>
+        <h3><span className="hex"></span>{t("changeLogTitle")}</h3>
         <div className="alog">
           {cambios.length === 0 ? (
-            <span className="alog-empty">Sin cambios registrados</span>
+            <span className="alog-empty">{t("noChanges")}</span>
           ) : (
             cambios.map((c, i) => (
               <div key={i} className="alog-item">
-                <b>{c.user_nombre}</b> cambió {c.campo}
+                <b>{c.user_nombre}</b> {t("changed")} {c.campo}
                 <div className="alog-detail">
                   {c.valor_anterior} → {c.valor_nuevo} · {timeAgo(c.created_at)}
                 </div>

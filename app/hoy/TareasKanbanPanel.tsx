@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { ESTADOS_TAREA, ESTADO_LABEL, ESTADO_COLOR, type EstadoTarea } from "../constants";
+import { ESTADOS_TAREA, ESTADO_COLOR, type EstadoTarea } from "../constants";
 
 type TareaKanban = {
   id: string;
@@ -13,6 +14,7 @@ type TareaKanban = {
 };
 
 export default function TareasKanbanPanel({ projectId }: { projectId: string }) {
+  const t = useTranslations("kanban");
   const [tareas, setTareas] = useState<TareaKanban[]>([]);
   const [loading, setLoading] = useState(true);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -26,12 +28,12 @@ export default function TareasKanbanPanel({ projectId }: { projectId: string }) 
         .eq("project_id", projectId)
         .eq("completada", false);
       setTareas(
-        (data ?? []).map((t) => ({
-          id: t.id,
-          titulo: t.titulo,
-          para_departamento: t.para_departamento,
-          etiqueta: t.etiqueta,
-          estado: (t.estado as EstadoTarea) || "pendiente",
+        (data ?? []).map((tarea) => ({
+          id: tarea.id,
+          titulo: tarea.titulo,
+          para_departamento: tarea.para_departamento,
+          etiqueta: tarea.etiqueta,
+          estado: (tarea.estado as EstadoTarea) || "pendiente",
         }))
       );
       setLoading(false);
@@ -50,7 +52,7 @@ export default function TareasKanbanPanel({ projectId }: { projectId: string }) 
   }
 
   if (loading) {
-    return <p className="pulso-loading">Cargando tareas…</p>;
+    return <p className="pulso-loading">{t("loading")}</p>;
   }
 
   return (
@@ -67,26 +69,26 @@ export default function TareasKanbanPanel({ projectId }: { projectId: string }) 
         >
           <h4>
             <span className="cp-estado-dot" style={{ background: ESTADO_COLOR[estado] }}></span>
-            {ESTADO_LABEL[estado]}
+            {t(`estados.${estado}`)}
             <span className="cp-kanban-count">{tareas.filter((t) => t.estado === estado).length}</span>
           </h4>
           <div className="cp-kanban-cards">
             {tareas
-              .filter((t) => t.estado === estado)
-              .map((t) => (
+              .filter((tarea) => tarea.estado === estado)
+              .map((tarea) => (
                 <div
-                  key={t.id}
+                  key={tarea.id}
                   className="cp-kanban-card"
                   draggable
-                  onDragStart={() => setDragId(t.id)}
+                  onDragStart={() => setDragId(tarea.id)}
                   onDragEnd={() => setDragId(null)}
                 >
-                  <span>{t.titulo}</span>
-                  <span className="cp-kanban-meta">{t.para_departamento ?? "Todos"} · {t.etiqueta}</span>
+                  <span>{tarea.titulo}</span>
+                  <span className="cp-kanban-meta">{tarea.para_departamento ?? t("all")} · {tarea.etiqueta}</span>
                 </div>
               ))}
-            {tareas.filter((t) => t.estado === estado).length === 0 && (
-              <p className="cp-kanban-empty">Sin tareas.</p>
+            {tareas.filter((tarea) => tarea.estado === estado).length === 0 && (
+              <p className="cp-kanban-empty">{t("noTasks")}</p>
             )}
           </div>
         </div>
