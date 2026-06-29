@@ -36,22 +36,70 @@
   },
   "generales": {
     "sharedTools": "Shared tools",
-    "comunicados": { "label": "Announcements", "desc": "Internal notices and messages for the team." },
-    "notificaciones": { "label": "Notifications", "desc": "Global alert center for the project." },
-    "consultas": { "label": "Queries", "desc": "Channel for questions between departments." },
-    "calendario": { "label": "General calendar", "desc": "Global milestones and project dates." },
-    "guion": { "label": "Script", "desc": "Literary script shared with the team." },
-    "guiontec": { "label": "Shooting script", "desc": "Breakdown by sequence and technical shot." },
-    "plan": { "label": "Shooting schedule", "desc": "Daily schedule of scenes and locations." },
-    "orden": { "label": "Shooting order", "desc": "Sequence optimized by location and resources." },
-    "escena3d": { "label": "3D scene", "desc": "Aggregated, in-depth view of scenes." },
-    "espacio": { "label": "Workspace", "desc": "Notes and work blocks by department." },
-    "visionado": { "label": "Screening", "desc": "Gallery of materials and visual references." },
-    "equipo": { "label": "Crew", "desc": "Full list of technical and artistic crew." },
-    "accesos": { "label": "Access", "desc": "Manage permissions by role and tool." },
-    "pipeline": { "label": "Pipeline", "desc": "Financing, agreements and executive deliverables." },
-    "contactos": { "label": "Emergency contacts", "desc": "Key phone numbers and contacts for emergencies." },
-    "wrap": { "label": "Wrap checklist", "desc": "Control list for closing out the shoot." }
+    "comunicados": {
+      "label": "Announcements",
+      "desc": "Internal notices and messages for the team."
+    },
+    "notificaciones": {
+      "label": "Notifications",
+      "desc": "Global alert center for the project."
+    },
+    "consultas": {
+      "label": "Queries",
+      "desc": "Channel for questions between departments."
+    },
+    "calendario": {
+      "label": "General calendar",
+      "desc": "Global milestones and project dates."
+    },
+    "guion": {
+      "label": "Script",
+      "desc": "Literary script shared with the team."
+    },
+    "guiontec": {
+      "label": "Shooting script",
+      "desc": "Breakdown by sequence and technical shot."
+    },
+    "plan": {
+      "label": "Shooting schedule",
+      "desc": "Daily schedule of scenes and locations."
+    },
+    "orden": {
+      "label": "Shooting order",
+      "desc": "Sequence optimized by location and resources."
+    },
+    "escena3d": {
+      "label": "3D scene",
+      "desc": "Aggregated, in-depth view of scenes."
+    },
+    "espacio": {
+      "label": "Workspace",
+      "desc": "Notes and work blocks by department."
+    },
+    "visionado": {
+      "label": "Screening",
+      "desc": "Gallery of materials and visual references."
+    },
+    "equipo": {
+      "label": "Crew",
+      "desc": "Full list of technical and artistic crew."
+    },
+    "accesos": {
+      "label": "Access",
+      "desc": "Manage permissions by role and tool."
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "desc": "Financing, agreements and executive deliverables."
+    },
+    "contactos": {
+      "label": "Emergency contacts",
+      "desc": "Key phone numbers and contacts for emergencies."
+    },
+    "wrap": {
+      "label": "Wrap checklist",
+      "desc": "Control list for closing out the shoot."
+    }
   },
   "espacio": {
     "title": "Workspace",
@@ -95,20 +143,183 @@
   },
   "plantillas": {
     "doc": {
-      "clasico": { "t": "Classic", "d": "Serif, centered, wide margins." },
-      "guion": { "t": "Script", "d": "Monospaced, indented dialogue." },
-      "manifiesto": { "t": "Manifesto", "d": "Large type, declarative statement." },
-      "diario": { "t": "Shoot diary", "d": "Side date, logbook-style entries." },
-      "tablon": { "t": "Visual board", "d": "Color blocks interleaved with text." },
-      "minimalista": { "t": "Minimalist", "d": "One thin line, all the air possible." }
+      "clasico": {
+        "t": "Classic",
+        "d": "Serif, centered, wide margins."
+      },
+      "guion": {
+        "t": "Script",
+        "d": "Monospaced, indented dialogue."
+      },
+      "manifiesto": {
+        "t": "Manifesto",
+        "d": "Large type, declarative statement."
+      },
+      "diario": {
+        "t": "Shoot diary",
+        "d": "Side date, logbook-style entries."
+      },
+      "tablon": {
+        "t": "Visual board",
+        "d": "Color blocks interleaved with text."
+      },
+      "minimalista": {
+        "t": "Minimalist",
+        "d": "One thin line, all the air possible."
+      }
     },
     "tabla": {
-      "grid-clasico": { "t": "Classic grid", "d": "Thin rows and columns, no frills." },
-      "kanban": { "t": "Kanban board", "d": "Columns with color cards." },
-      "timeline": { "t": "Timeline", "d": "Horizontal rows with a color marker." },
-      "mosaico": { "t": "Color mosaic", "d": "Each cell is a status swatch." },
-      "checklist-tabla": { "t": "Checklist", "d": "Rows with a status mark on the left." },
-      "storyboard": { "t": "Storyboard", "d": "Large frame-like cells." }
+      "grid-clasico": {
+        "t": "Classic grid",
+        "d": "Thin rows and columns, no frills."
+      },
+      "kanban": {
+        "t": "Kanban board",
+        "d": "Columns with color cards."
+      },
+      "timeline": {
+        "t": "Timeline",
+        "d": "Horizontal rows with a color marker."
+      },
+      "mosaico": {
+        "t": "Color mosaic",
+        "d": "Each cell is a status swatch."
+      },
+      "checklist-tabla": {
+        "t": "Checklist",
+        "d": "Rows with a status mark on the left."
+      },
+      "storyboard": {
+        "t": "Storyboard",
+        "d": "Large frame-like cells."
+      }
     }
+  },
+  "hp": {
+    "saving": "Saving…",
+    "noRecordsYet": "No records yet",
+    "recentChanges": "Recent changes",
+    "undo": "Undo",
+    "emptyTitle": "This table is empty",
+    "emptyHint": "Use \"{name}\" to log your department's info. Each row is an entry with the defined fields.",
+    "addFirstRow": "+ Add first row",
+    "addColumn": "+ Add column",
+    "addRow": "+ Add row",
+    "addCard": "+ Add card",
+    "addField": "+ Add field",
+    "importCsv": "⬆ Import CSV",
+    "importing": "Importing…",
+    "resetOrder": "↺ Reset order",
+    "change": "Change",
+    "upload": "Upload",
+    "newColumnPrompt": "Title of the new column:",
+    "newFieldPrompt": "Title of the new field:",
+    "confirmDeleteRows": "Delete {n, plural, one {# row} other {# rows}}?",
+    "noStatus": "No status",
+    "search": "Search…",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "tools": "Tools",
+    "export": "Export",
+    "all": "All",
+    "secondarySort": "2nd sort by",
+    "none": "None",
+    "sortDirAsc": "Direction: ascending ↑",
+    "sortDirDesc": "Direction: descending ↓",
+    "compactRows": "Compact rows",
+    "extendedStats": "Extended statistics",
+    "showLastEdit": "Show last edit",
+    "visibleColumns": "Visible columns",
+    "downloadCsv": "Download CSV",
+    "downloadPdf": "Download PDF",
+    "print": "Print",
+    "selected": "{n} sel.",
+    "fillDown": "Fill down",
+    "fillDownHint": "Copy values from the first selected row to the rest",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "collapse": "Collapse",
+    "expand": "Full screen",
+    "newValue": "New value…",
+    "apply": "Apply",
+    "replace": "Find and replace",
+    "replacePlaceholder": "Replace…",
+    "replaceAll": "Replace all",
+    "conditionalFormat": "Conditional format",
+    "newRule": "New rule:",
+    "column": "Column…",
+    "opGreater": "is greater than",
+    "opLess": "is less than",
+    "opEquals": "is equal to",
+    "opContains": "contains",
+    "value": "Value…",
+    "addRule": "+ Add",
+    "selectAll": "Select all",
+    "filterPlaceholder": "Filter…",
+    "rowColor": "Row color",
+    "removeColor": "Remove color",
+    "viewHistory": "View change log",
+    "copyClipboard": "Copy to clipboard",
+    "duplicateRow": "Duplicate row",
+    "deleteRow": "Delete row",
+    "actionCreated": "Created",
+    "actionEdited": "Edited",
+    "markVisited": "Mark as viewed",
+    "unmarkVisited": "Remove my viewing",
+    "uploading": "Uploading…",
+    "changeImage": "Change image",
+    "uploadImage": "Upload image",
+    "visionar": "View",
+    "writeHere": "Write here…",
+    "newPoint": "New item…",
+    "add": "Add",
+    "noInterventions": "No interventions.",
+    "noOneYet": "No one yet.",
+    "clear": "✕ Clear",
+    "recordsCount": "{n, plural, one {# record} other {# records}}",
+    "recordsFiltered": "{n} / {total} records",
+    "total": "Total ({n})",
+    "timeNow": "now",
+    "timeMinsAgo": "{n} min ago",
+    "timeHoursAgo": "{n} h ago",
+    "timeYesterday": "yesterday",
+    "timeDaysAgo": "{n} days ago",
+    "addColumnItem": "Add column",
+    "importCsvItem": "Import CSV",
+    "editRows": "Edit {n, plural, one {# row} other {# rows}}:",
+    "selectField": "Select field…",
+    "regCol": "Log",
+    "editedCol": "Edited",
+    "viewShort": "view",
+    "interventionsLog": "Change log",
+    "viewedBy": "Viewed by",
+    "bold": "Bold (Ctrl+B)",
+    "italic": "Italic (Ctrl+I)",
+    "underline": "Underline (Ctrl+U)",
+    "strike": "Strikethrough",
+    "titleBlock": "Title",
+    "normalText": "Normal text",
+    "bulletList": "Bulleted list",
+    "numberList": "Numbered list",
+    "alignLeft": "Align left",
+    "alignCenter": "Center",
+    "alignRight": "Align right",
+    "textColor": "Text color",
+    "highlight": "Highlight",
+    "noHighlight": "No highlight",
+    "textSize": "Text size",
+    "sizeSmall": "Small",
+    "sizeNormal": "Normal",
+    "sizeLarge": "Large",
+    "sizeXLarge": "Extra large",
+    "loadingTool": "Loading {name}…",
+    "saved": "✓ Saved",
+    "startAddingRow": "Add the first row to get started.",
+    "waitForData": "Data will appear here once the department adds it.",
+    "rowCreated": "Row created",
+    "rowDeleted": "Row deleted",
+    "editAction": "Edit",
+    "fontLabel": "Font"
   }
 }

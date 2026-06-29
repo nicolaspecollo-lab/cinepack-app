@@ -36,22 +36,70 @@
   },
   "generales": {
     "sharedTools": "Herramientas compartidas",
-    "comunicados": { "label": "Comunicados", "desc": "Avisos y mensajes internos para el equipo." },
-    "notificaciones": { "label": "Notificaciones", "desc": "Centro de alertas globales del proyecto." },
-    "consultas": { "label": "Consultas", "desc": "Canal de preguntas entre departamentos." },
-    "calendario": { "label": "Calendario general", "desc": "Hitos globales y fechas del proyecto." },
-    "guion": { "label": "Guion", "desc": "Guion literario compartido con el equipo." },
-    "guiontec": { "label": "Guion Técnico", "desc": "Desglose por secuencia y plano técnico." },
-    "plan": { "label": "Plan de rodaje", "desc": "Cronograma diario de escenas y locaciones." },
-    "orden": { "label": "Orden de rodaje", "desc": "Secuencia optimizada por locación y recursos." },
-    "escena3d": { "label": "Escena 3D", "desc": "Vista agregada de escenas en profundidad." },
-    "espacio": { "label": "Espacio de trabajo", "desc": "Notas y bloques de trabajo por departamento." },
-    "visionado": { "label": "Visionado", "desc": "Galería de materiales y referencias visuales." },
-    "equipo": { "label": "Equipo", "desc": "Listado completo del equipo técnico y artístico." },
-    "accesos": { "label": "Accesos", "desc": "Gestión de permisos por cargo y herramienta." },
-    "pipeline": { "label": "Pipeline", "desc": "Financiación, acuerdos y entregables ejecutivos." },
-    "contactos": { "label": "Contactos emergencia", "desc": "Teléfonos y contactos clave para urgencias." },
-    "wrap": { "label": "Checklist wrap", "desc": "Lista de control para el cierre del rodaje." }
+    "comunicados": {
+      "label": "Comunicados",
+      "desc": "Avisos y mensajes internos para el equipo."
+    },
+    "notificaciones": {
+      "label": "Notificaciones",
+      "desc": "Centro de alertas globales del proyecto."
+    },
+    "consultas": {
+      "label": "Consultas",
+      "desc": "Canal de preguntas entre departamentos."
+    },
+    "calendario": {
+      "label": "Calendario general",
+      "desc": "Hitos globales y fechas del proyecto."
+    },
+    "guion": {
+      "label": "Guion",
+      "desc": "Guion literario compartido con el equipo."
+    },
+    "guiontec": {
+      "label": "Guion Técnico",
+      "desc": "Desglose por secuencia y plano técnico."
+    },
+    "plan": {
+      "label": "Plan de rodaje",
+      "desc": "Cronograma diario de escenas y locaciones."
+    },
+    "orden": {
+      "label": "Orden de rodaje",
+      "desc": "Secuencia optimizada por locación y recursos."
+    },
+    "escena3d": {
+      "label": "Escena 3D",
+      "desc": "Vista agregada de escenas en profundidad."
+    },
+    "espacio": {
+      "label": "Espacio de trabajo",
+      "desc": "Notas y bloques de trabajo por departamento."
+    },
+    "visionado": {
+      "label": "Visionado",
+      "desc": "Galería de materiales y referencias visuales."
+    },
+    "equipo": {
+      "label": "Equipo",
+      "desc": "Listado completo del equipo técnico y artístico."
+    },
+    "accesos": {
+      "label": "Accesos",
+      "desc": "Gestión de permisos por cargo y herramienta."
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "desc": "Financiación, acuerdos y entregables ejecutivos."
+    },
+    "contactos": {
+      "label": "Contactos emergencia",
+      "desc": "Teléfonos y contactos clave para urgencias."
+    },
+    "wrap": {
+      "label": "Checklist wrap",
+      "desc": "Lista de control para el cierre del rodaje."
+    }
   },
   "espacio": {
     "title": "Espacio de trabajo",
@@ -95,20 +143,183 @@
   },
   "plantillas": {
     "doc": {
-      "clasico": { "t": "Clásico", "d": "Serif, centrado, márgenes amplios." },
-      "guion": { "t": "Guion", "d": "Monoespaciada, diálogo indentado." },
-      "manifiesto": { "t": "Manifiesto", "d": "Tipografía grande, frase declarativa." },
-      "diario": { "t": "Diario de rodaje", "d": "Fecha lateral, entradas tipo bitácora." },
-      "tablon": { "t": "Tablón visual", "d": "Bloques de color intercalados con texto." },
-      "minimalista": { "t": "Minimalista", "d": "Una línea fina, todo el aire posible." }
+      "clasico": {
+        "t": "Clásico",
+        "d": "Serif, centrado, márgenes amplios."
+      },
+      "guion": {
+        "t": "Guion",
+        "d": "Monoespaciada, diálogo indentado."
+      },
+      "manifiesto": {
+        "t": "Manifiesto",
+        "d": "Tipografía grande, frase declarativa."
+      },
+      "diario": {
+        "t": "Diario de rodaje",
+        "d": "Fecha lateral, entradas tipo bitácora."
+      },
+      "tablon": {
+        "t": "Tablón visual",
+        "d": "Bloques de color intercalados con texto."
+      },
+      "minimalista": {
+        "t": "Minimalista",
+        "d": "Una línea fina, todo el aire posible."
+      }
     },
     "tabla": {
-      "grid-clasico": { "t": "Grid clásico", "d": "Filas y columnas finas, sin adornos." },
-      "kanban": { "t": "Tablero kanban", "d": "Columnas con tarjetas de color." },
-      "timeline": { "t": "Línea de tiempo", "d": "Filas horizontales con marca de color." },
-      "mosaico": { "t": "Mosaico de color", "d": "Cada celda es un swatch de estado." },
-      "checklist-tabla": { "t": "Checklist", "d": "Filas con marca de estado a la izquierda." },
-      "storyboard": { "t": "Storyboard", "d": "Celdas grandes tipo fotograma." }
+      "grid-clasico": {
+        "t": "Grid clásico",
+        "d": "Filas y columnas finas, sin adornos."
+      },
+      "kanban": {
+        "t": "Tablero kanban",
+        "d": "Columnas con tarjetas de color."
+      },
+      "timeline": {
+        "t": "Línea de tiempo",
+        "d": "Filas horizontales con marca de color."
+      },
+      "mosaico": {
+        "t": "Mosaico de color",
+        "d": "Cada celda es un swatch de estado."
+      },
+      "checklist-tabla": {
+        "t": "Checklist",
+        "d": "Filas con marca de estado a la izquierda."
+      },
+      "storyboard": {
+        "t": "Storyboard",
+        "d": "Celdas grandes tipo fotograma."
+      }
     }
+  },
+  "hp": {
+    "saving": "Guardando…",
+    "noRecordsYet": "Aún no hay registros",
+    "recentChanges": "Cambios recientes",
+    "undo": "Deshacer",
+    "emptyTitle": "Esta tabla está vacía",
+    "emptyHint": "Usá \"{name}\" para registrar la info de tu departamento. Cada fila es una entrada con los campos definidos.",
+    "addFirstRow": "+ Agregar primera fila",
+    "addColumn": "+ Agregar columna",
+    "addRow": "+ Agregar fila",
+    "addCard": "+ Agregar tarjeta",
+    "addField": "+ Agregar campo",
+    "importCsv": "⬆ Importar CSV",
+    "importing": "Importando…",
+    "resetOrder": "↺ Restablecer orden",
+    "change": "Cambiar",
+    "upload": "Subir",
+    "newColumnPrompt": "Título de la nueva columna:",
+    "newFieldPrompt": "Título del nuevo campo:",
+    "confirmDeleteRows": "¿Eliminar {n, plural, one {# fila} other {# filas}}?",
+    "noStatus": "Sin estado",
+    "search": "Buscar…",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "view": "Vista",
+    "tools": "Herramientas",
+    "export": "Exportar",
+    "all": "Todos",
+    "secondarySort": "2° orden por",
+    "none": "Ninguno",
+    "sortDirAsc": "Dirección: ascendente ↑",
+    "sortDirDesc": "Dirección: descendente ↓",
+    "compactRows": "Filas compactas",
+    "extendedStats": "Estadísticas extendidas",
+    "showLastEdit": "Mostrar última edición",
+    "visibleColumns": "Columnas visibles",
+    "downloadCsv": "Descargar CSV",
+    "downloadPdf": "Descargar PDF",
+    "print": "Imprimir",
+    "selected": "{n} sel.",
+    "fillDown": "Rellenar",
+    "fillDownHint": "Copiar valores de la primera fila seleccionada al resto",
+    "duplicate": "Duplicar",
+    "delete": "Eliminar",
+    "collapse": "Reducir",
+    "expand": "Pantalla completa",
+    "newValue": "Nuevo valor…",
+    "apply": "Aplicar",
+    "replace": "Buscar y reemplazar",
+    "replacePlaceholder": "Reemplazar…",
+    "replaceAll": "Reemplazar todo",
+    "conditionalFormat": "Formato condicional",
+    "newRule": "Nueva regla:",
+    "column": "Columna…",
+    "opGreater": "es mayor que",
+    "opLess": "es menor que",
+    "opEquals": "es igual a",
+    "opContains": "contiene",
+    "value": "Valor…",
+    "addRule": "+ Agregar",
+    "selectAll": "Seleccionar todo",
+    "filterPlaceholder": "Filtrar…",
+    "rowColor": "Color de fila",
+    "removeColor": "Quitar color",
+    "viewHistory": "Ver registro de intervenciones",
+    "copyClipboard": "Copiar al portapapeles",
+    "duplicateRow": "Duplicar fila",
+    "deleteRow": "Eliminar fila",
+    "actionCreated": "Creó",
+    "actionEdited": "Editó",
+    "markVisited": "Marcar como visionado",
+    "unmarkVisited": "Quitar mi visionado",
+    "uploading": "Subiendo…",
+    "changeImage": "Cambiar imagen",
+    "uploadImage": "Subir imagen",
+    "visionar": "Visionar",
+    "writeHere": "Escribí aquí…",
+    "newPoint": "Nuevo punto…",
+    "add": "Añadir",
+    "noInterventions": "Sin intervenciones.",
+    "noOneYet": "Nadie aún.",
+    "clear": "✕ Limpiar",
+    "recordsCount": "{n, plural, one {# registro} other {# registros}}",
+    "recordsFiltered": "{n} / {total} registros",
+    "total": "Total ({n})",
+    "timeNow": "ahora",
+    "timeMinsAgo": "hace {n} min",
+    "timeHoursAgo": "hace {n} h",
+    "timeYesterday": "ayer",
+    "timeDaysAgo": "hace {n} días",
+    "addColumnItem": "Agregar columna",
+    "importCsvItem": "Importar CSV",
+    "editRows": "Editar {n, plural, one {# fila} other {# filas}}:",
+    "selectField": "Seleccionar campo…",
+    "regCol": "Reg.",
+    "editedCol": "Editado",
+    "viewShort": "ver",
+    "interventionsLog": "Registro de intervenciones",
+    "viewedBy": "Visionado por",
+    "bold": "Negrita (Ctrl+B)",
+    "italic": "Cursiva (Ctrl+I)",
+    "underline": "Subrayado (Ctrl+U)",
+    "strike": "Tachado",
+    "titleBlock": "Título",
+    "normalText": "Texto normal",
+    "bulletList": "Lista de viñetas",
+    "numberList": "Lista numerada",
+    "alignLeft": "Alinear a la izquierda",
+    "alignCenter": "Centrar",
+    "alignRight": "Alinear a la derecha",
+    "textColor": "Color de texto",
+    "highlight": "Resaltar",
+    "noHighlight": "Sin resaltado",
+    "textSize": "Tamaño de texto",
+    "sizeSmall": "Pequeño",
+    "sizeNormal": "Normal",
+    "sizeLarge": "Grande",
+    "sizeXLarge": "Muy grande",
+    "loadingTool": "Cargando {name}…",
+    "saved": "✓ Guardado",
+    "startAddingRow": "Agregá la primera fila para empezar.",
+    "waitForData": "Cuando el departamento cargue datos, aparecerán aquí.",
+    "rowCreated": "Fila creada",
+    "rowDeleted": "Fila eliminada",
+    "editAction": "Edición",
+    "fontLabel": "Fuente"
   }
 }

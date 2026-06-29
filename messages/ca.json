@@ -36,22 +36,70 @@
   },
   "generales": {
     "sharedTools": "Eines compartides",
-    "comunicados": { "label": "Comunicats", "desc": "Avisos i missatges interns per a l'equip." },
-    "notificaciones": { "label": "Notificacions", "desc": "Centre d'alertes globals del projecte." },
-    "consultas": { "label": "Consultes", "desc": "Canal de preguntes entre departaments." },
-    "calendario": { "label": "Calendari general", "desc": "Fites globals i dates del projecte." },
-    "guion": { "label": "Guió", "desc": "Guió literari compartit amb l'equip." },
-    "guiontec": { "label": "Guió tècnic", "desc": "Desglossament per seqüència i pla tècnic." },
-    "plan": { "label": "Pla de rodatge", "desc": "Cronograma diari d'escenes i localitzacions." },
-    "orden": { "label": "Ordre de rodatge", "desc": "Seqüència optimitzada per localització i recursos." },
-    "escena3d": { "label": "Escena 3D", "desc": "Vista agregada d'escenes en profunditat." },
-    "espacio": { "label": "Espai de treball", "desc": "Notes i blocs de treball per departament." },
-    "visionado": { "label": "Visionat", "desc": "Galeria de materials i referències visuals." },
-    "equipo": { "label": "Equip", "desc": "Llistat complet de l'equip tècnic i artístic." },
-    "accesos": { "label": "Accessos", "desc": "Gestió de permisos per càrrec i eina." },
-    "pipeline": { "label": "Pipeline", "desc": "Finançament, acords i lliuraments executius." },
-    "contactos": { "label": "Contactes d'emergència", "desc": "Telèfons i contactes clau per a urgències." },
-    "wrap": { "label": "Checklist de tancament", "desc": "Llista de control per al tancament del rodatge." }
+    "comunicados": {
+      "label": "Comunicats",
+      "desc": "Avisos i missatges interns per a l'equip."
+    },
+    "notificaciones": {
+      "label": "Notificacions",
+      "desc": "Centre d'alertes globals del projecte."
+    },
+    "consultas": {
+      "label": "Consultes",
+      "desc": "Canal de preguntes entre departaments."
+    },
+    "calendario": {
+      "label": "Calendari general",
+      "desc": "Fites globals i dates del projecte."
+    },
+    "guion": {
+      "label": "Guió",
+      "desc": "Guió literari compartit amb l'equip."
+    },
+    "guiontec": {
+      "label": "Guió tècnic",
+      "desc": "Desglossament per seqüència i pla tècnic."
+    },
+    "plan": {
+      "label": "Pla de rodatge",
+      "desc": "Cronograma diari d'escenes i localitzacions."
+    },
+    "orden": {
+      "label": "Ordre de rodatge",
+      "desc": "Seqüència optimitzada per localització i recursos."
+    },
+    "escena3d": {
+      "label": "Escena 3D",
+      "desc": "Vista agregada d'escenes en profunditat."
+    },
+    "espacio": {
+      "label": "Espai de treball",
+      "desc": "Notes i blocs de treball per departament."
+    },
+    "visionado": {
+      "label": "Visionat",
+      "desc": "Galeria de materials i referències visuals."
+    },
+    "equipo": {
+      "label": "Equip",
+      "desc": "Llistat complet de l'equip tècnic i artístic."
+    },
+    "accesos": {
+      "label": "Accessos",
+      "desc": "Gestió de permisos per càrrec i eina."
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "desc": "Finançament, acords i lliuraments executius."
+    },
+    "contactos": {
+      "label": "Contactes d'emergència",
+      "desc": "Telèfons i contactes clau per a urgències."
+    },
+    "wrap": {
+      "label": "Checklist de tancament",
+      "desc": "Llista de control per al tancament del rodatge."
+    }
   },
   "espacio": {
     "title": "Espai de treball",
@@ -95,20 +143,183 @@
   },
   "plantillas": {
     "doc": {
-      "clasico": { "t": "Clàssic", "d": "Serif, centrat, marges amplis." },
-      "guion": { "t": "Guió", "d": "Monoespaiada, diàleg indentat." },
-      "manifiesto": { "t": "Manifest", "d": "Tipografia gran, frase declarativa." },
-      "diario": { "t": "Diari de rodatge", "d": "Data lateral, entrades tipus bitàcola." },
-      "tablon": { "t": "Tauler visual", "d": "Blocs de color intercalats amb text." },
-      "minimalista": { "t": "Minimalista", "d": "Una línia fina, tot l'aire possible." }
+      "clasico": {
+        "t": "Clàssic",
+        "d": "Serif, centrat, marges amplis."
+      },
+      "guion": {
+        "t": "Guió",
+        "d": "Monoespaiada, diàleg indentat."
+      },
+      "manifiesto": {
+        "t": "Manifest",
+        "d": "Tipografia gran, frase declarativa."
+      },
+      "diario": {
+        "t": "Diari de rodatge",
+        "d": "Data lateral, entrades tipus bitàcola."
+      },
+      "tablon": {
+        "t": "Tauler visual",
+        "d": "Blocs de color intercalats amb text."
+      },
+      "minimalista": {
+        "t": "Minimalista",
+        "d": "Una línia fina, tot l'aire possible."
+      }
     },
     "tabla": {
-      "grid-clasico": { "t": "Graella clàssica", "d": "Files i columnes fines, sense ornaments." },
-      "kanban": { "t": "Tauler kanban", "d": "Columnes amb targetes de color." },
-      "timeline": { "t": "Línia de temps", "d": "Files horitzontals amb marca de color." },
-      "mosaico": { "t": "Mosaic de color", "d": "Cada cel·la és una mostra d'estat." },
-      "checklist-tabla": { "t": "Checklist", "d": "Files amb marca d'estat a l'esquerra." },
-      "storyboard": { "t": "Storyboard", "d": "Cel·les grans tipus fotograma." }
+      "grid-clasico": {
+        "t": "Graella clàssica",
+        "d": "Files i columnes fines, sense ornaments."
+      },
+      "kanban": {
+        "t": "Tauler kanban",
+        "d": "Columnes amb targetes de color."
+      },
+      "timeline": {
+        "t": "Línia de temps",
+        "d": "Files horitzontals amb marca de color."
+      },
+      "mosaico": {
+        "t": "Mosaic de color",
+        "d": "Cada cel·la és una mostra d'estat."
+      },
+      "checklist-tabla": {
+        "t": "Checklist",
+        "d": "Files amb marca d'estat a l'esquerra."
+      },
+      "storyboard": {
+        "t": "Storyboard",
+        "d": "Cel·les grans tipus fotograma."
+      }
     }
+  },
+  "hp": {
+    "saving": "Desant…",
+    "noRecordsYet": "Encara no hi ha registres",
+    "recentChanges": "Canvis recents",
+    "undo": "Desfés",
+    "emptyTitle": "Aquesta taula està buida",
+    "emptyHint": "Fes servir \"{name}\" per registrar la informació del teu departament. Cada fila és una entrada amb els camps definits.",
+    "addFirstRow": "+ Afegeix la primera fila",
+    "addColumn": "+ Afegeix columna",
+    "addRow": "+ Afegeix fila",
+    "addCard": "+ Afegeix targeta",
+    "addField": "+ Afegeix camp",
+    "importCsv": "⬆ Importa CSV",
+    "importing": "Important…",
+    "resetOrder": "↺ Restableix l'ordre",
+    "change": "Canvia",
+    "upload": "Puja",
+    "newColumnPrompt": "Títol de la columna nova:",
+    "newFieldPrompt": "Títol del camp nou:",
+    "confirmDeleteRows": "Vols eliminar {n, plural, one {# fila} other {# files}}?",
+    "noStatus": "Sense estat",
+    "search": "Cerca…",
+    "filter": "Filtra",
+    "sort": "Ordena",
+    "view": "Vista",
+    "tools": "Eines",
+    "export": "Exporta",
+    "all": "Tots",
+    "secondarySort": "2n ordre per",
+    "none": "Cap",
+    "sortDirAsc": "Direcció: ascendent ↑",
+    "sortDirDesc": "Direcció: descendent ↓",
+    "compactRows": "Files compactes",
+    "extendedStats": "Estadístiques esteses",
+    "showLastEdit": "Mostra l'última edició",
+    "visibleColumns": "Columnes visibles",
+    "downloadCsv": "Descarrega CSV",
+    "downloadPdf": "Descarrega PDF",
+    "print": "Imprimeix",
+    "selected": "{n} sel.",
+    "fillDown": "Omple avall",
+    "fillDownHint": "Copia els valors de la primera fila seleccionada a la resta",
+    "duplicate": "Duplica",
+    "delete": "Elimina",
+    "collapse": "Redueix",
+    "expand": "Pantalla completa",
+    "newValue": "Valor nou…",
+    "apply": "Aplica",
+    "replace": "Cerca i substitueix",
+    "replacePlaceholder": "Substitueix…",
+    "replaceAll": "Substitueix tot",
+    "conditionalFormat": "Format condicional",
+    "newRule": "Regla nova:",
+    "column": "Columna…",
+    "opGreater": "és més gran que",
+    "opLess": "és més petit que",
+    "opEquals": "és igual a",
+    "opContains": "conté",
+    "value": "Valor…",
+    "addRule": "+ Afegeix",
+    "selectAll": "Selecciona tot",
+    "filterPlaceholder": "Filtra…",
+    "rowColor": "Color de fila",
+    "removeColor": "Treu el color",
+    "viewHistory": "Veure el registre d'intervencions",
+    "copyClipboard": "Copia al porta-retalls",
+    "duplicateRow": "Duplica la fila",
+    "deleteRow": "Elimina la fila",
+    "actionCreated": "Va crear",
+    "actionEdited": "Va editar",
+    "markVisited": "Marca com a visionat",
+    "unmarkVisited": "Treu el meu visionat",
+    "uploading": "Pujant…",
+    "changeImage": "Canvia la imatge",
+    "uploadImage": "Puja una imatge",
+    "visionar": "Visiona",
+    "writeHere": "Escriu aquí…",
+    "newPoint": "Element nou…",
+    "add": "Afegeix",
+    "noInterventions": "Sense intervencions.",
+    "noOneYet": "Ningú encara.",
+    "clear": "✕ Neteja",
+    "recordsCount": "{n, plural, one {# registre} other {# registres}}",
+    "recordsFiltered": "{n} / {total} registres",
+    "total": "Total ({n})",
+    "timeNow": "ara",
+    "timeMinsAgo": "fa {n} min",
+    "timeHoursAgo": "fa {n} h",
+    "timeYesterday": "ahir",
+    "timeDaysAgo": "fa {n} dies",
+    "addColumnItem": "Afegeix columna",
+    "importCsvItem": "Importa CSV",
+    "editRows": "Edita {n, plural, one {# fila} other {# files}}:",
+    "selectField": "Selecciona el camp…",
+    "regCol": "Reg.",
+    "editedCol": "Editat",
+    "viewShort": "veure",
+    "interventionsLog": "Registre d'intervencions",
+    "viewedBy": "Visionat per",
+    "bold": "Negreta (Ctrl+B)",
+    "italic": "Cursiva (Ctrl+I)",
+    "underline": "Subratllat (Ctrl+U)",
+    "strike": "Ratllat",
+    "titleBlock": "Títol",
+    "normalText": "Text normal",
+    "bulletList": "Llista de pics",
+    "numberList": "Llista numerada",
+    "alignLeft": "Alinea a l'esquerra",
+    "alignCenter": "Centra",
+    "alignRight": "Alinea a la dreta",
+    "textColor": "Color de text",
+    "highlight": "Resalta",
+    "noHighlight": "Sense ressalt",
+    "textSize": "Mida del text",
+    "sizeSmall": "Petit",
+    "sizeNormal": "Normal",
+    "sizeLarge": "Gran",
+    "sizeXLarge": "Molt gran",
+    "loadingTool": "Carregant {name}…",
+    "saved": "✓ Desat",
+    "startAddingRow": "Afegeix la primera fila per començar.",
+    "waitForData": "Les dades apareixeran aquí quan el departament les carregui.",
+    "rowCreated": "Fila creada",
+    "rowDeleted": "Fila eliminada",
+    "editAction": "Edició",
+    "fontLabel": "Tipus de lletra"
   }
 }

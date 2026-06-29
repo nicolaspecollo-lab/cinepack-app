@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { Herramienta, Columna } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
@@ -36,16 +37,16 @@ function estadoTono(valor: string): "ok" | "warn" | "bad" | "info" | "neutral" {
   return "info";
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return t("timeHoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
+  if (days === 1) return t("timeYesterday");
+  return t("timeDaysAgo", { n: days });
 }
 
 // Las celdas de tipo "largo" guardan HTML (rich text). Para que búsqueda,
@@ -121,6 +122,7 @@ function HerramientaData({
   fullName: string;
   editable: boolean;
 }) {
+  const t = useTranslations("hp");
   const [filas, setFilas] = useState<Fila[]>([]);
   const [meta, setMeta] = useState<Fila | null>(null);
   const filasRef = useRef<Fila[]>(filas);
@@ -308,9 +310,9 @@ function HerramientaData({
   }
 
   function describirHistorial(entry: HistEntry): string {
-    if (entry.tipo === "crea") return "Fila creada";
-    if (entry.tipo === "borra") return "Fila eliminada";
-    return "Edición";
+    if (entry.tipo === "crea") return t("rowCreated");
+    if (entry.tipo === "borra") return t("rowDeleted");
+    return t("editAction");
   }
 
   async function visionar(id: string) {
@@ -367,7 +369,7 @@ function HerramientaData({
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Cargando {herramienta.nombre.toLowerCase()}…</h4>
+        <h4>{t("loadingTool", { name: herramienta.nombre.toLowerCase() })}</h4>
       </div>
     );
   }
@@ -379,7 +381,7 @@ function HerramientaData({
     <div className="hp">
       {saveState !== "idle" && (
         <div className={`hp-savebadge ${saveState}`}>
-          {saveState === "saving" ? "Guardando…" : "✓ Guardado"}
+          {saveState === "saving" ? t("saving") : t("saved")}
         </div>
       )}
       {error && (
@@ -469,8 +471,8 @@ function HerramientaData({
       {esMulti && filas.length === 0 && (
         <div className="soon-box" style={{ marginTop: 0 }}>
           <span className="hex"></span>
-          <h4>Aún no hay registros</h4>
-          <p>{editable ? "Agregá la primera fila para empezar." : "Cuando el departamento cargue datos, aparecerán aquí."}</p>
+          <h4>{t("noRecordsYet")}</h4>
+          <p>{editable ? t("startAddingRow") : t("waitForData")}</p>
         </div>
       )}
 
@@ -482,12 +484,12 @@ function HerramientaData({
 
       {editable && historial.length > 0 && (
         <div className="hp-historial">
-          <span className="hp-historial-label">Cambios recientes</span>
+          <span className="hp-historial-label">{t("recentChanges")}</span>
           <ul>
             {historial.map((h) => (
               <li key={h.id}>
                 <span>{describirHistorial(h)}</span>
-                <button className="btn" onClick={() => deshacer(h)}>Deshacer</button>
+                <button className="btn" onClick={() => deshacer(h)}>{t("undo")}</button>
               </li>
             ))}
           </ul>
@@ -528,6 +530,7 @@ function ArchivoCell({
   colKey: string;
   onSave: (v: string) => void;
 }) {
+  const t = useTranslations("hp");
   const [busy, setBusy] = useState(false);
   const fileName = path ? path.split("/").pop()?.replace(/^\d+-/, "") ?? path : "";
 
@@ -562,7 +565,7 @@ function ArchivoCell({
       )}
       {editable && (
         <label className="hp-archivo-up">
-          {busy ? "…" : path ? "Cambiar" : "Subir"}
+          {busy ? "…" : path ? t("change") : t("upload")}
           <input
             type="file"
             style={{ display: "none" }}
@@ -739,6 +742,7 @@ function RichCell({
 // + color y formato en popovers). Actúa sobre el contentEditable con foco;
 // todo con preventDefault para no perder la selección de la celda.
 function RichToolbar({ className = "", inline = false }: { className?: string; inline?: boolean }) {
+  const t = useTranslations("hp");
   const cmd = (c: string, v?: string) => document.execCommand(c, false, v);
   const barRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<null | "color" | "format">(null);
@@ -753,13 +757,13 @@ function RichToolbar({ className = "", inline = false }: { className?: string; i
   const content = (
     <>
       <div className="hp-tb-group">
-        <button type="button" title="Negrita" onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><Icon name="bold" /></button>
-        <button type="button" title="Cursiva" onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><Icon name="italic" /></button>
-        <button type="button" title="Subrayado" onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><Icon name="underline" /></button>
+        <button type="button" title={t("bold")} onMouseDown={(e) => { e.preventDefault(); cmd("bold"); }}><Icon name="bold" /></button>
+        <button type="button" title={t("italic")} onMouseDown={(e) => { e.preventDefault(); cmd("italic"); }}><Icon name="italic" /></button>
+        <button type="button" title={t("underline")} onMouseDown={(e) => { e.preventDefault(); cmd("underline"); }}><Icon name="underline" /></button>
       </div>
       <div className="hp-tb-group">
         <div className="hp-tb-pop">
-          <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title="Color de texto"
+          <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title={t("textColor")}
             onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "color" ? null : "color"); }}>
             <Icon name="text-color" /><Icon name="chevron-down" size={9} />
           </button>
@@ -773,17 +777,17 @@ function RichToolbar({ className = "", inline = false }: { className?: string; i
           )}
         </div>
         <div className="hp-tb-pop">
-          <button type="button" className={`hp-tb-trigger${menu === "format" ? " open" : ""}`} title="Tamaño y fuente"
+          <button type="button" className={`hp-tb-trigger${menu === "format" ? " open" : ""}`} title={t("textSize")}
             onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "format" ? null : "format"); }}>
             <Icon name="type" /><Icon name="chevron-down" size={9} />
           </button>
           {menu === "format" && (
             <div className="hp-tb-menu hp-tb-sizes">
-              <span className="tm-section-title">Tamaño</span>
-              {([["2", "Pequeño"], ["3", "Normal"], ["4", "Grande"], ["5", "Muy grande"]] as const).map(([size, label]) => (
+              <span className="tm-section-title">{t("textSize")}</span>
+              {([["2", t("sizeSmall")], ["3", t("sizeNormal")], ["4", t("sizeLarge")], ["5", t("sizeXLarge")]] as const).map(([size, label]) => (
                 <button key={size} type="button" onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); setMenu(null); }}>{label}</button>
               ))}
-              <span className="tm-section-title" style={{ marginTop: 4 }}>Fuente</span>
+              <span className="tm-section-title" style={{ marginTop: 4 }}>{t("fontLabel")}</span>
               {CELL_FONTS.map((f) => (
                 <button key={f.label} type="button" style={{ fontFamily: f.value }}
                   onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); setMenu(null); }}>{f.label}</button>
@@ -849,6 +853,7 @@ export function TablaTool({
   onAgregarColumna: (label: string) => void;
   onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
 }) {
+  const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
   const [draft, setDraft] = useState<Record<string, Record<string, string>>>({});
   const [abierta, setAbierta] = useState<string | null>(null);
@@ -970,7 +975,7 @@ export function TablaTool({
     }
   }
   function pedirColumna() {
-    const label = window.prompt("Título de la nueva columna:");
+    const label = window.prompt(t("newColumnPrompt"));
     if (label && label.trim()) onAgregarColumna(label.trim());
   }
   function toggleSort(key: string) {
@@ -989,7 +994,7 @@ export function TablaTool({
     else setSeleccionadas(new Set(filasFiltradas.map(f => f.id)));
   }
   function borrarSeleccionadas() {
-    if (!window.confirm(`¿Eliminar ${seleccionadas.size} fila${seleccionadas.size !== 1 ? "s" : ""}?`)) return;
+    if (!window.confirm(t("confirmDeleteRows", { n: seleccionadas.size }))) return;
     for (const id of seleccionadas) onBorrar(id);
     setSeleccionadas(new Set());
   }
@@ -1198,7 +1203,7 @@ export function TablaTool({
     const entries = colEstado
       ? Object.entries(
           filasFiltradas.reduce<Record<string, number>>((acc, f) => {
-            const v = (f.datos?.[colEstado.key] ?? "").trim() || "Sin estado";
+            const v = (f.datos?.[colEstado.key] ?? "").trim() || t("noStatus");
             acc[v] = (acc[v] ?? 0) + 1;
             return acc;
           }, {})
@@ -1208,14 +1213,14 @@ export function TablaTool({
       <div className="hp-stats-bar">
         <span className="hp-stats-total">
           {hayFiltroActivo
-            ? `${filasFiltradas.length} / ${filas.length} registros`
-            : `${filas.length} ${filas.length === 1 ? "registro" : "registros"}`}
+            ? t("recordsFiltered", { n: filasFiltradas.length, total: filas.length })
+            : t("recordsCount", { n: filas.length })}
         </span>
         {entries.map(([v, n]) => (
           <span key={v} className={`hp-stats-pill tono-${estadoTono(v)}`}>{v} <b>{n}</b></span>
         ))}
         {hayFiltroActivo && (
-          <button className="hp-stats-clear" onClick={() => { setBusqueda(""); setFiltros({}); setColHeaderFilter({}); }}>✕ Limpiar</button>
+          <button className="hp-stats-clear" onClick={() => { setBusqueda(""); setFiltros({}); setColHeaderFilter({}); }}>{t("clear")}</button>
         )}
       </div>
     );
@@ -1225,16 +1230,16 @@ export function TablaTool({
     return (
       <div className="hp-tabla-empty">
         <span className="hex"></span>
-        <p>Esta tabla está vacía</p>
-        {herramientaNombre && <p className="hp-tabla-empty-hint">Usá "{herramientaNombre}" para registrar la info de tu departamento. Cada fila es una entrada con los campos definidos.</p>}
+        <p>{t("emptyTitle")}</p>
+        {herramientaNombre && <p className="hp-tabla-empty-hint">{t("emptyHint", { name: herramientaNombre })}</p>}
         {editable && (
           <div className="hp-actions">
-            <button className="btn acc" onClick={onCrear}>+ Agregar primera fila</button>
-            <button className="btn" onClick={pedirColumna}>+ Agregar columna</button>
+            <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
+            <button className="btn" onClick={pedirColumna}>{t("addColumn")}</button>
             {onImportarCSV && (
               <>
                 <button className="btn" onClick={() => importInputRef.current?.click()} disabled={importando}>
-                  {importando ? "Importando…" : "⬆ Importar CSV"}
+                  {importando ? t("importing") : t("importCsv")}
                 </button>
                 <input ref={importInputRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleImportCSV} />
               </>
@@ -1259,13 +1264,13 @@ export function TablaTool({
         <input
           className="hp-tabla-search"
           type="search"
-          placeholder="Buscar…"
+          placeholder={t("search")}
           value={busqueda}
           onChange={e => { setBusqueda(e.target.value); setPagina(0); }}
         />
         {/* Filtrar (selects por columna de estado, antes sueltos en el toolbar) */}
         {colsEstado.length > 0 && (
-          <ToolMenu label="Filtrar" icon="filter" width={230}
+          <ToolMenu label={t("filter")} icon="filter" width={230}
             badge={colsEstado.filter(c => filtros[c.key]).length || undefined}>
             <div className="tm-section">
               {colsEstado.map(c => (
@@ -1273,7 +1278,7 @@ export function TablaTool({
                   <span>{c.label}</span>
                   <select value={filtros[c.key] ?? ""}
                     onChange={e => { setFiltros(f => ({ ...f, [c.key]: e.target.value })); setPagina(0); }}>
-                    <option value="">Todos</option>
+                    <option value="">{t("all")}</option>
                     {(c.opciones ?? []).map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </label>
@@ -1283,38 +1288,38 @@ export function TablaTool({
         )}
 
         {/* Ordenar (orden secundario) */}
-        <ToolMenu label="Ordenar" icon="sort" width={230}>
+        <ToolMenu label={t("sort")} icon="sort" width={230}>
           <div className="tm-section">
             <label className="tm-field">
-              <span>2° orden por</span>
+              <span>{t("secondarySort")}</span>
               <select value={sortKey2 ?? ""} onChange={e => setSortKey2(e.target.value || null)}>
-                <option value="">Ninguno</option>
+                <option value="">{t("none")}</option>
                 {columnas.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
             </label>
             {sortKey2 && (
               <button className="tm-item" onClick={() => setSortDir2(d => d === "asc" ? "desc" : "asc")}>
-                Dirección: {sortDir2 === "asc" ? "ascendente ↑" : "descendente ↓"}
+                {sortDir2 === "asc" ? t("sortDirAsc") : t("sortDirDesc")}
               </button>
             )}
           </div>
         </ToolMenu>
 
         {/* Vista (toggles + columnas visibles) */}
-        <ToolMenu label="Vista" icon="sliders" width={230}>
+        <ToolMenu label={t("view")} icon="sliders" width={230}>
           <div className="tm-section">
             <button className={`tm-item${compacto ? " active" : ""}`} onClick={() => setCompacto(v => !v)}>
-              {compacto && <Icon name="check" size={13} />}<span>Filas compactas</span>
+              {compacto && <Icon name="check" size={13} />}<span>{t("compactRows")}</span>
             </button>
             <button className={`tm-item${showExtStats ? " active" : ""}`} onClick={() => setShowExtStats(v => !v)}>
-              {showExtStats && <Icon name="check" size={13} />}<span>Estadísticas extendidas</span>
+              {showExtStats && <Icon name="check" size={13} />}<span>{t("extendedStats")}</span>
             </button>
             <button className={`tm-item${showLastEdit ? " active" : ""}`} onClick={() => setShowLastEdit(v => !v)}>
-              {showLastEdit && <Icon name="check" size={13} />}<span>Mostrar última edición</span>
+              {showLastEdit && <Icon name="check" size={13} />}<span>{t("showLastEdit")}</span>
             </button>
           </div>
           <div className="tm-section tm-section-bordered">
-            <span className="tm-section-title">Columnas visibles</span>
+            <span className="tm-section-title">{t("visibleColumns")}</span>
             {columnas.map(c => (
               <label key={c.key} className="tm-check">
                 <input type="checkbox" checked={!hiddenCols.has(c.key)}
@@ -1326,27 +1331,27 @@ export function TablaTool({
         </ToolMenu>
 
         {/* Herramientas de datos */}
-        <ToolMenu label="Herramientas" icon="replace" width={220}>
+        <ToolMenu label={t("tools")} icon="replace" width={220}>
           {editable && (
-            <button className="tm-item" onClick={pedirColumna}><Icon name="plus" size={13} /><span>Agregar columna</span></button>
+            <button className="tm-item" onClick={pedirColumna}><Icon name="plus" size={13} /><span>{t("addColumnItem")}</span></button>
           )}
           <button className={`tm-item${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)}>
-            <Icon name="replace" size={13} /><span>Buscar y reemplazar</span>
+            <Icon name="replace" size={13} /><span>{t("replace")}</span>
           </button>
           <button className={`tm-item${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)}>
-            <Icon name="filter" size={13} /><span>Formato condicional</span>
+            <Icon name="filter" size={13} /><span>{t("conditionalFormat")}</span>
           </button>
         </ToolMenu>
 
         {/* Exportar / importar */}
-        <ToolMenu label="Exportar" icon="download" align="right" width={210}>
+        <ToolMenu label={t("export")} icon="download" align="right" width={210}>
           {(close) => (<>
-            <button className="tm-item" onClick={() => { exportarCSV(); close(); }}><Icon name="download" size={13} /><span>Descargar CSV</span></button>
-            <button className="tm-item" onClick={() => { exportarPDF(); close(); }}><Icon name="download" size={13} /><span>Descargar PDF</span></button>
-            <button className="tm-item" onClick={() => { window.print(); close(); }}><Icon name="file-text" size={13} /><span>Imprimir</span></button>
+            <button className="tm-item" onClick={() => { exportarCSV(); close(); }}><Icon name="download" size={13} /><span>{t("downloadCsv")}</span></button>
+            <button className="tm-item" onClick={() => { exportarPDF(); close(); }}><Icon name="download" size={13} /><span>{t("downloadPdf")}</span></button>
+            <button className="tm-item" onClick={() => { window.print(); close(); }}><Icon name="file-text" size={13} /><span>{t("print")}</span></button>
             {onImportarCSV && (
               <button className="tm-item" disabled={importando} onClick={() => { importInputRef.current?.click(); close(); }}>
-                <Icon name="plus" size={13} /><span>{importando ? "Importando…" : "Importar CSV"}</span>
+                <Icon name="plus" size={13} /><span>{importando ? t("importing") : t("importCsvItem")}</span>
               </button>
             )}
           </>)}
@@ -1365,19 +1370,19 @@ export function TablaTool({
         {/* Seleccionadas: acciones en batch */}
         {seleccionadas.size > 0 && (
           <>
-            <span className="hp-sel-label">{seleccionadas.size} sel.</span>
-            <button className="btn" onClick={autoFillDown} title="Copiar valores de la primera fila seleccionada al resto"><Icon name="sort" size={13} /> Rellenar</button>
+            <span className="hp-sel-label">{t("selected", { n: seleccionadas.size })}</span>
+            <button className="btn" onClick={autoFillDown} title={t("fillDownHint")}><Icon name="sort" size={13} /> {t("fillDown")}</button>
             {onDuplicar && (
-              <button className="btn" onClick={() => { for (const id of seleccionadas) { const f = filas.find(x => x.id === id); if (f) onDuplicar(f); } setSeleccionadas(new Set()); }}><Icon name="columns" size={13} /> Duplicar</button>
+              <button className="btn" onClick={() => { for (const id of seleccionadas) { const f = filas.find(x => x.id === id); if (f) onDuplicar(f); } setSeleccionadas(new Set()); }}><Icon name="columns" size={13} /> {t("duplicate")}</button>
             )}
-            <button className="btn hp-btn-danger" onClick={borrarSeleccionadas}><Icon name="trash" size={13} /> Eliminar</button>
+            <button className="btn hp-btn-danger" onClick={borrarSeleccionadas}><Icon name="trash" size={13} /> {t("delete")}</button>
           </>
         )}
 
         <button
           className="hp-expand-btn"
           onClick={() => setExpandida(v => !v)}
-          title={expandida ? "Reducir" : "Pantalla completa"}
+          title={expandida ? t("collapse") : t("expand")}
         >
           <Icon name={expandida ? "minimize" : "maximize"} size={15} />
         </button>
@@ -1386,28 +1391,28 @@ export function TablaTool({
       {/* ── Batch edit bar ───────────────────────────────────────────── */}
       {seleccionadas.size > 0 && (
         <div className="hp-batch-bar">
-          <span>Editar {seleccionadas.size} filas:</span>
+          <span>{t("editRows", { n: seleccionadas.size })}</span>
           <select className="hp-tabla-filter" value={batchCol} onChange={e => setBatchCol(e.target.value)}>
-            <option value="">Seleccionar campo…</option>
+            <option value="">{t("selectField")}</option>
             {columnas.filter(c => c.tipo !== "archivo").map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
           </select>
           <input
             className="hp-tabla-search"
-            placeholder="Nuevo valor…"
+            placeholder={t("newValue")}
             value={batchVal}
             onChange={e => setBatchVal(e.target.value)}
           />
-          <button className="btn acc" onClick={aplicarBatchEdit} disabled={!batchCol}>Aplicar</button>
+          <button className="btn acc" onClick={aplicarBatchEdit} disabled={!batchCol}>{t("apply")}</button>
         </div>
       )}
 
       {/* ── Find & Replace ───────────────────────────────────────────── */}
       {findOpen && (
         <div className="hp-find-bar">
-          <input className="hp-tabla-search" placeholder="Buscar…" value={findBuscar} onChange={e => setFindBuscar(e.target.value)} />
+          <input className="hp-tabla-search" placeholder={t("search")} value={findBuscar} onChange={e => setFindBuscar(e.target.value)} />
           <span>→</span>
-          <input className="hp-tabla-search" placeholder="Reemplazar…" value={findReemplazar} onChange={e => setFindReemplazar(e.target.value)} />
-          <button className="btn acc" onClick={reemplazarTodo} disabled={!findBuscar}>Reemplazar todo</button>
+          <input className="hp-tabla-search" placeholder={t("replacePlaceholder")} value={findReemplazar} onChange={e => setFindReemplazar(e.target.value)} />
+          <button className="btn acc" onClick={reemplazarTodo} disabled={!findBuscar}>{t("replaceAll")}</button>
           <button className="btn" onClick={() => setFindOpen(false)}>✕</button>
         </div>
       )}
@@ -1416,18 +1421,18 @@ export function TablaTool({
       {condOpen && (
         <div className="hp-cond-panel">
           <div className="hp-cond-add">
-            <span>Nueva regla:</span>
+            <span>{t("newRule")}</span>
             <select className="hp-tabla-filter" id="cp-cond-col">
-              <option value="">Columna…</option>
+              <option value="">{t("column")}</option>
               {columnas.filter(c => c.tipo !== "archivo" && c.tipo !== "link").map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
             <select className="hp-tabla-filter" id="cp-cond-op">
-              <option value=">">es mayor que</option>
-              <option value="<">es menor que</option>
-              <option value="=">es igual a</option>
-              <option value="contiene">contiene</option>
+              <option value=">">{t("opGreater")}</option>
+              <option value="<">{t("opLess")}</option>
+              <option value="=">{t("opEquals")}</option>
+              <option value="contiene">{t("opContains")}</option>
             </select>
-            <input className="hp-tabla-search" placeholder="Valor…" id="cp-cond-val" style={{width:80}} />
+            <input className="hp-tabla-search" placeholder={t("value")} id="cp-cond-val" style={{width:80}} />
             <input type="color" id="cp-cond-color" defaultValue="#ffd600" style={{width:36,height:30,border:"none",cursor:"pointer"}} />
             <button className="btn acc" onClick={() => {
               const col = (document.getElementById("cp-cond-col") as HTMLSelectElement)?.value;
@@ -1435,7 +1440,7 @@ export function TablaTool({
               const val2 = (document.getElementById("cp-cond-val") as HTMLInputElement)?.value;
               const color = (document.getElementById("cp-cond-color") as HTMLInputElement)?.value;
               if (col && op && val2) setCondRules(r => [...r, {id: crypto.randomUUID(), colKey: col, op, value: val2, color}]);
-            }}>+ Agregar</button>
+            }}>{t("addRule")}</button>
           </div>
           {condRules.map(r => {
             const colName = columnas.find(c => c.key === r.colKey)?.label ?? r.colKey;
@@ -1468,7 +1473,7 @@ export function TablaTool({
               <tr>
                 {editable && (
                   <th className="hp-th-check">
-                    <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} title="Seleccionar todo" />
+                    <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} title={t("selectAll")} />
                   </th>
                 )}
                 {visibleCols.map((c, ci) => (
@@ -1488,17 +1493,17 @@ export function TablaTool({
                     {/* Filtro por columna */}
                     <input
                       className="hp-col-filter-input"
-                      placeholder="Filtrar…"
+                      placeholder={t("filterPlaceholder")}
                       value={colHeaderFilter[c.key] ?? ""}
                       onChange={e => { setColHeaderFilter(f => ({ ...f, [c.key]: e.target.value })); setPagina(0); }}
                       onClick={e => e.stopPropagation()}
                     />
                   </th>
                 ))}
-                <th className="hp-th-reg">Reg.</th>
-                {editable && <th className="hp-th-color" title="Color de fila"></th>}
+                <th className="hp-th-reg">{t("regCol")}</th>
+                {editable && <th className="hp-th-color" title={t("rowColor")}></th>}
                 {editable && <th></th>}
-                {showLastEdit && <th className="hp-th-edit">Editado</th>}
+                {showLastEdit && <th className="hp-th-edit">{t("editedCol")}</th>}
               </tr>
             </thead>
             <tbody>
@@ -1567,10 +1572,10 @@ export function TablaTool({
                         <button
                           className={`hp-reg-btn ${visto ? "visto" : ""}`}
                           onClick={() => setAbierta(abierta === f.id ? null : f.id)}
-                          title="Ver registro de intervenciones"
+                          title={t("viewHistory")}
                         >
                           <span className="hex"></span>
-                          {visto ? `${(f.visionado_por ?? []).length}✓` : "ver"}
+                          {visto ? `${(f.visionado_por ?? []).length}✓` : t("viewShort")}
                         </button>
                       </td>
                       {editable && (
@@ -1581,26 +1586,26 @@ export function TablaTool({
                               className="hp-row-color-picker"
                               value={rowColor || "#9eee6a"}
                               onChange={(e) => cambiarColorFila(f, e.target.value)}
-                              title="Color de fila"
+                              title={t("rowColor")}
                             />
                             {rowColor && (
-                              <button className="hp-color-clear" onClick={() => limpiarColorFila(f)} title="Quitar color">✕</button>
+                              <button className="hp-color-clear" onClick={() => limpiarColorFila(f)} title={t("removeColor")}>✕</button>
                             )}
                           </div>
                         </td>
                       )}
                       {editable && (
                         <td className="hp-td-acciones">
-                          <button className="hp-dup" onClick={() => copiarFila(f)} title="Copiar al portapapeles">⎘</button>
+                          <button className="hp-dup" onClick={() => copiarFila(f)} title={t("copyClipboard")}>⎘</button>
                           {onDuplicar && (
-                            <button className="hp-dup" onClick={() => onDuplicar(f)} title="Duplicar fila">⧉</button>
+                            <button className="hp-dup" onClick={() => onDuplicar(f)} title={t("duplicateRow")}>⧉</button>
                           )}
-                          <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar fila">✕</button>
+                          <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("deleteRow")}>✕</button>
                         </td>
                       )}
                       {showLastEdit && (
                         <td className="hp-td-edit" title={f.updated_at ? new Date(f.updated_at).toLocaleString("es-ES") : ""}>
-                          {f.updated_at ? timeAgo(f.updated_at) : "—"}
+                          {f.updated_at ? timeAgo(f.updated_at, t) : "—"}
                         </td>
                       )}
                     </tr>
@@ -1654,7 +1659,7 @@ export function TablaTool({
                         </td>
                       );
                     }
-                    return <td key={c.key}>{i === 0 ? `Total (${filasFiltradas.length})` : ""}</td>;
+                    return <td key={c.key}>{i === 0 ? t("total", { n: filasFiltradas.length }) : ""}</td>;
                   })}
                   <td></td>
                   {editable && <td></td>}
@@ -1679,9 +1684,9 @@ export function TablaTool({
       )}
 
       <div className="hp-actions">
-        {editable && <button className="btn acc" onClick={onCrear}>+ Agregar fila</button>}
-        {editable && <button className="btn" onClick={pedirColumna}>+ Agregar columna</button>}
-        {localOrder && <button className="btn" onClick={() => setLocalOrder(null)}>↺ Restablecer orden</button>}
+        {editable && <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>}
+        {editable && <button className="btn" onClick={pedirColumna}>{t("addColumn")}</button>}
+        {localOrder && <button className="btn" onClick={() => setLocalOrder(null)}>{t("resetOrder")}</button>}
       </div>
     </>
   );
@@ -1719,31 +1724,32 @@ function RegistroDetalle({
   fullName: string;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
 }) {
+  const t = useTranslations("hp");
   const reg = [...(fila.registro ?? [])].reverse().slice(0, 8);
   const vis = fila.visionado_por ?? [];
   return (
     <div className="hp-detail">
       <div className="hp-detail-col">
-        <h6><span className="hex"></span> Registro de intervenciones</h6>
-        {reg.length === 0 && <p className="hp-empty">Sin intervenciones.</p>}
+        <h6><span className="hex"></span> {t("interventionsLog")}</h6>
+        {reg.length === 0 && <p className="hp-empty">{t("noInterventions")}</p>}
         <ul className="hp-timeline">
           {reg.map((r, i) => (
             <li key={i}>
-              <b>{r.accion === "crea" ? "Creó" : "Editó"}</b> {r.usuario} · {timeAgo(r.fecha)}
+              <b>{r.accion === "crea" ? t("actionCreated") : t("actionEdited")}</b> {r.usuario} · {timeAgo(r.fecha, t)}
             </li>
           ))}
         </ul>
       </div>
       <div className="hp-detail-col">
-        <h6><span className="hex"></span> Visionado por</h6>
-        {vis.length === 0 && <p className="hp-empty">Nadie aún.</p>}
+        <h6><span className="hex"></span> {t("viewedBy")}</h6>
+        {vis.length === 0 && <p className="hp-empty">{t("noOneYet")}</p>}
         <div className="hp-vis-chips">
           {vis.map((v, i) => (
             <span className="hp-vis-chip" key={i}>{v.usuario}</span>
           ))}
         </div>
         <button className={`btn ${yoVi ? "" : "acc"}`} style={{ marginTop: 8 }} onClick={onVisionar}>
-          {yoVi ? "Quitar mi visionado" : "Marcar como visionado"}
+          {yoVi ? t("unmarkVisited") : t("markVisited")}
         </button>
       </div>
     </div>
@@ -1847,11 +1853,12 @@ function GaleriaTool({
   onVisionar: (id: string) => void;
   onAgregarColumna: (label: string) => void;
 }) {
+  const t = useTranslations("hp");
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v });
   }
   function pedirColumna() {
-    const label = window.prompt("Título del nuevo campo:");
+    const label = window.prompt(t("newFieldPrompt"));
     if (label && label.trim()) onAgregarColumna(label.trim());
   }
   return (
@@ -1912,8 +1919,8 @@ function GaleriaTool({
       </div>
       {editable && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>+ Agregar tarjeta</button>
-          <button className="btn" onClick={pedirColumna}>+ Agregar campo</button>
+          <button className="btn acc" onClick={onCrear}>{t("addCard")}</button>
+          <button className="btn" onClick={pedirColumna}>{t("addField")}</button>
         </div>
       )}
     </>
@@ -1946,12 +1953,13 @@ function FichaTool({
   onVisionar: (id: string) => void;
   onAgregarCampo: (label: string) => void;
 }) {
+  const t = useTranslations("hp");
   async function set(key: string, v: string) {
     const f = fila ?? (await asegurar());
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
   }
   function pedirCampo() {
-    const label = window.prompt("Título del nuevo campo:");
+    const label = window.prompt(t("newFieldPrompt"));
     if (label && label.trim()) onAgregarCampo(label.trim());
   }
   const yoVi = !!fila && (fila.visionado_por ?? []).some((v) => v.usuario === fullName);
@@ -2025,14 +2033,14 @@ function FichaTool({
       ))}
       {editable && (
         <div className="hp-ficha-add">
-          <button className="btn" onClick={pedirCampo}>+ Agregar campo</button>
+          <button className="btn" onClick={pedirCampo}>{t("addField")}</button>
         </div>
       )}
       {fila && (
         <div className="hp-single-foot">
           <Firma fila={fila} />
           <button className={`btn ${yoVi ? "" : "acc"}`} onClick={() => onVisionar(fila.id)}>
-            {yoVi ? "Quitar mi visionado" : "Marcar como visionado"}
+            {yoVi ? t("unmarkVisited") : t("markVisited")}
           </button>
         </div>
       )}
@@ -2067,6 +2075,7 @@ function NotaTool({
   onVisionar: (id: string) => void;
   estiloDoc?: string;
 }) {
+  const t = useTranslations("hp");
   const editorRef = useRef<HTMLDivElement>(null);
   const initialised = useRef(false);
   const barRef = useRef<HTMLDivElement>(null);
@@ -2114,28 +2123,28 @@ function NotaTool({
         <div className="hp-nota-toolbar" ref={barRef}>
           {/* Formato inline */}
           <div className="hp-tb-group">
-            <button type="button" title="Negrita (Ctrl+B)" onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><Icon name="bold" /></button>
-            <button type="button" title="Cursiva (Ctrl+I)" onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><Icon name="italic" /></button>
-            <button type="button" title="Subrayado (Ctrl+U)" onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><Icon name="underline" /></button>
-            <button type="button" title="Tachado" onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><Icon name="strikethrough" /></button>
+            <button type="button" title={t("bold")} onMouseDown={(e) => { e.preventDefault(); exec("bold"); }}><Icon name="bold" /></button>
+            <button type="button" title={t("italic")} onMouseDown={(e) => { e.preventDefault(); exec("italic"); }}><Icon name="italic" /></button>
+            <button type="button" title={t("underline")} onMouseDown={(e) => { e.preventDefault(); exec("underline"); }}><Icon name="underline" /></button>
+            <button type="button" title={t("strike")} onMouseDown={(e) => { e.preventDefault(); exec("strikeThrough"); }}><Icon name="strikethrough" /></button>
           </div>
           {/* Bloques */}
           <div className="hp-tb-group">
-            <button type="button" title="Título" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}><Icon name="heading" /></button>
-            <button type="button" title="Texto normal" onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}><Icon name="paragraph" /></button>
-            <button type="button" title="Lista de viñetas" onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}><Icon name="list" /></button>
-            <button type="button" title="Lista numerada" onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}><Icon name="list-ordered" /></button>
+            <button type="button" title={t("titleBlock")} onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "H3"); }}><Icon name="heading" /></button>
+            <button type="button" title={t("normalText")} onMouseDown={(e) => { e.preventDefault(); exec("formatBlock", "DIV"); }}><Icon name="paragraph" /></button>
+            <button type="button" title={t("bulletList")} onMouseDown={(e) => { e.preventDefault(); exec("insertUnorderedList"); }}><Icon name="list" /></button>
+            <button type="button" title={t("numberList")} onMouseDown={(e) => { e.preventDefault(); exec("insertOrderedList"); }}><Icon name="list-ordered" /></button>
           </div>
           {/* Alineación */}
           <div className="hp-tb-group">
-            <button type="button" title="Alinear a la izquierda" onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}><Icon name="align-left" /></button>
-            <button type="button" title="Centrar" onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}><Icon name="align-center" /></button>
-            <button type="button" title="Alinear a la derecha" onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}><Icon name="align-right" /></button>
+            <button type="button" title={t("alignLeft")} onMouseDown={(e) => { e.preventDefault(); exec("justifyLeft"); }}><Icon name="align-left" /></button>
+            <button type="button" title={t("alignCenter")} onMouseDown={(e) => { e.preventDefault(); exec("justifyCenter"); }}><Icon name="align-center" /></button>
+            <button type="button" title={t("alignRight")} onMouseDown={(e) => { e.preventDefault(); exec("justifyRight"); }}><Icon name="align-right" /></button>
           </div>
           {/* Color, resaltado y tamaño: en popovers para no saturar el toolbar */}
           <div className="hp-tb-group">
             <div className="hp-tb-pop">
-              <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title="Color de texto"
+              <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title={t("textColor")}
                 onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "color" ? null : "color"); }}>
                 <Icon name="text-color" /><Icon name="chevron-down" size={9} />
               </button>
@@ -2149,14 +2158,14 @@ function NotaTool({
               )}
             </div>
             <div className="hp-tb-pop">
-              <button type="button" className={`hp-tb-trigger${menu === "highlight" ? " open" : ""}`} title="Resaltar"
+              <button type="button" className={`hp-tb-trigger${menu === "highlight" ? " open" : ""}`} title={t("highlight")}
                 onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "highlight" ? null : "highlight"); }}>
                 <Icon name="highlighter" /><Icon name="chevron-down" size={9} />
               </button>
               {menu === "highlight" && (
                 <div className="hp-tb-menu hp-tb-swatches">
                   {NOTA_HIGHLIGHT.map((c) => (
-                    <button key={c} type="button" title={c === "transparent" ? "Sin resaltado" : c}
+                    <button key={c} type="button" title={c === "transparent" ? t("noHighlight") : c}
                       className={c === "transparent" ? "hp-tb-swatch-none" : ""}
                       style={{ background: c === "transparent" ? "transparent" : c }}
                       onMouseDown={(e) => { e.preventDefault(); highlight(c); setMenu(null); }}>
@@ -2167,13 +2176,13 @@ function NotaTool({
               )}
             </div>
             <div className="hp-tb-pop">
-              <button type="button" className={`hp-tb-trigger${menu === "size" ? " open" : ""}`} title="Tamaño de texto"
+              <button type="button" className={`hp-tb-trigger${menu === "size" ? " open" : ""}`} title={t("textSize")}
                 onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "size" ? null : "size"); }}>
                 <Icon name="type" /><Icon name="chevron-down" size={9} />
               </button>
               {menu === "size" && (
                 <div className="hp-tb-menu hp-tb-sizes">
-                  {([["2", "Pequeño"], ["3", "Normal"], ["4", "Grande"], ["5", "Muy grande"]] as const).map(([v, label]) => (
+                  {([["2", t("sizeSmall")], ["3", t("sizeNormal")], ["4", t("sizeLarge")], ["5", t("sizeXLarge")]] as const).map(([v, label]) => (
                     <button key={v} type="button"
                       onMouseDown={(e) => { e.preventDefault(); exec("fontSize", v); setMenu(null); }}>{label}</button>
                   ))}
@@ -2189,13 +2198,13 @@ function NotaTool({
         contentEditable={editable}
         suppressContentEditableWarning
         onBlur={commit}
-        data-placeholder="Escribí aquí…"
+        data-placeholder={t("writeHere")}
       />
       {fila && (
         <div className="hp-single-foot">
           <Firma fila={fila} />
           <button className={`btn ${yoVi ? "" : "acc"}`} onClick={() => onVisionar(fila.id)}>
-            {yoVi ? "Quitar mi visionado" : "Marcar como visionado"}
+            {yoVi ? t("unmarkVisited") : t("markVisited")}
           </button>
         </div>
       )}
@@ -2220,6 +2229,7 @@ function ChecklistTool({
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onVisionar: (id: string) => void;
 }) {
+  const t = useTranslations("hp");
   const items: Item[] = (() => {
     try { return JSON.parse(fila?.datos?.items ?? "[]"); } catch { return []; }
   })();
@@ -2258,16 +2268,16 @@ function ChecklistTool({
             value={nuevo}
             onChange={(e) => setNuevo(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && nuevo.trim()) { e.preventDefault(); persist([...items, { texto: nuevo.trim(), hecho: false }]); setNuevo(""); } }}
-            placeholder="Nuevo punto…"
+            placeholder={t("newPoint")}
           />
-          <button className="btn" onClick={() => { if (nuevo.trim()) { persist([...items, { texto: nuevo.trim(), hecho: false }]); setNuevo(""); } }}>Añadir</button>
+          <button className="btn" onClick={() => { if (nuevo.trim()) { persist([...items, { texto: nuevo.trim(), hecho: false }]); setNuevo(""); } }}>{t("add")}</button>
         </div>
       )}
       {fila && (
         <div className="hp-single-foot">
           <Firma fila={fila} />
           <button className={`btn ${yoVi ? "" : "acc"}`} onClick={() => onVisionar(fila.id)}>
-            {yoVi ? "Quitar mi visionado" : "Marcar como visionado"}
+            {yoVi ? t("unmarkVisited") : t("markVisited")}
           </button>
         </div>
       )}
@@ -2276,10 +2286,11 @@ function ChecklistTool({
 }
 
 function Firma({ fila }: { fila: Fila }) {
+  const t = useTranslations("hp");
   const vis = fila.visionado_por ?? [];
   return (
     <span className="hp-firma">
-      <Icon name="pencil" size={12} /> {fila.editor_nombre ?? fila.autor_nombre ?? "—"} · {timeAgo(fila.updated_at)}
+      <Icon name="pencil" size={12} /> {fila.editor_nombre ?? fila.autor_nombre ?? "—"} · {timeAgo(fila.updated_at, t)}
       {vis.length > 0 && <> · <Icon name="eye" size={12} /> {vis.map((v) => v.usuario).join(", ")}</>}
     </span>
   );
