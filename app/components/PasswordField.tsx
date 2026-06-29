@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export default function PasswordField({
   label,
@@ -19,6 +20,7 @@ export default function PasswordField({
   minLength?: number;
   autoFocus?: boolean;
 }) {
+  const t = useTranslations("common");
   const [visible, setVisible] = useState(false);
 
   return (
@@ -38,8 +40,8 @@ export default function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-          title={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+          aria-label={visible ? t("hidePassword") : t("showPassword")}
+          title={visible ? t("hidePassword") : t("showPassword")}
           style={{
             position: "absolute",
             right: "10px",

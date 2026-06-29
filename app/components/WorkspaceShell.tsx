@@ -120,7 +120,7 @@ export default function WorkspaceShell({
           <button
             className="cp-topbar-theme-btn"
             onClick={toggleTheme}
-            title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
+            title={theme === "dark" ? t("lightMode") : t("darkMode")}
           >◑</button>
           <div className="cp-menu" ref={menuRef}>
             <button
@@ -163,22 +163,20 @@ export default function WorkspaceShell({
               <button
                 className="cp-menu-item"
                 onClick={() => {
-                  alert(
-                    "¡Hola! Al estar en la versión BETA de CINEPACK, estamos desarrollando una nueva sección con novedades, consejos, blog y un lugar para brindarte un servicio más completo en este entorno de trabajo. Esperamos que pronto estés disfrutando de esta sección. ¡Nos vemos pronto!"
-                  );
+                  alert(t("newsAlert"));
                   setOpen(false);
                 }}
               >
-                <span>Novedades CINE PACK</span>
-                <span className="muted">Próximamente</span>
+                <span>{t("newsTitle")}</span>
+                <span className="muted">{t("comingSoon")}</span>
               </button>
 
               {isAdmin && (
                 <>
                   <div className="cp-menu-div"></div>
                   <Link href="/admin" className="cp-menu-item" onClick={() => setOpen(false)}>
-                    <span>Panel de administrador</span>
-                    <span className="muted">Usuarios, proyectos, feedback</span>
+                    <span>{t("adminPanel")}</span>
+                    <span className="muted">{t("adminPanelSub")}</span>
                   </Link>
                 </>
               )}
@@ -186,10 +184,10 @@ export default function WorkspaceShell({
               {isAdmin && onDeptChange && (
                 <>
                   <div className="cp-menu-div"></div>
-                  <div className="cp-menu-section">Modo de prueba</div>
+                  <div className="cp-menu-section">{t("testMode")}</div>
                   <button className="cp-menu-item" onClick={() => setDeptOpen((v) => !v)}>
-                    <span>Cambiar de departamento</span>
-                    <span className="muted">{deptOpen ? "Ocultar ▲" : "Elegir ▼"}</span>
+                    <span>{t("changeDept")}</span>
+                    <span className="muted">{deptOpen ? `${t("hide")} ▲` : `${t("choose")} ▼`}</span>
                   </button>
                   {deptOpen && (
                     <div className="cp-menu-deptlist">
@@ -204,7 +202,7 @@ export default function WorkspaceShell({
                           }}
                         >
                           <span>{d}</span>
-                          {d === departamento && <span className="muted">Viendo ahora</span>}
+                          {d === departamento && <span className="muted">{t("viewingNow")}</span>}
                         </button>
                       ))}
                       {homeDept && departamento !== homeDept && (
@@ -217,7 +215,7 @@ export default function WorkspaceShell({
                           }}
                           style={{ color: "var(--lime)" }}
                         >
-                          ← Volver a mi departamento ({homeDept})
+                          ← {t("backToMyDept", { dept: homeDept })}
                         </button>
                       )}
                     </div>
@@ -251,10 +249,10 @@ export default function WorkspaceShell({
               )}
 
               <div className="cp-menu-div"></div>
-              <div className="cp-menu-section">Contacta con nosotros</div>
+              <div className="cp-menu-section">{t("contactUs")}</div>
               <Link className="cp-menu-item" href="/sugerencias" onClick={() => setOpen(false)}>
-                <span>Sugiérenos</span>
-                <span className="muted">Cuéntanos tu experiencia</span>
+                <span>{t("suggest")}</span>
+                <span className="muted">{t("suggestSub")}</span>
               </Link>
               <a
                 className="cp-menu-item"

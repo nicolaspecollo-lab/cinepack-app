@@ -23,7 +23,23 @@
     "light": "Clar",
     "language": "Idioma",
     "support": "Contacte amb suport",
-    "logout": "Tanca la sessió"
+    "logout": "Tanca la sessió",
+    "newsTitle": "Novetats CINE PACK",
+    "comingSoon": "Properament",
+    "newsAlert": "Hola! Com que CINEPACK està en versió BETA, estem desenvolupant una nova secció amb novetats, consells, blog i un lloc per oferir-te un servei encara més complet en aquest entorn de treball. Esperem que aviat en puguis gaudir. Ens veiem aviat!",
+    "adminPanel": "Panell d'administrador",
+    "adminPanelSub": "Usuaris, projectes, feedback",
+    "testMode": "Mode de prova",
+    "changeDept": "Canvia de departament",
+    "hide": "Amaga",
+    "choose": "Tria",
+    "viewingNow": "Veient ara",
+    "backToMyDept": "Torna al meu departament ({dept})",
+    "contactUs": "Contacta amb nosaltres",
+    "suggest": "Suggereix-nos",
+    "suggestSub": "Explica'ns la teva experiència",
+    "lightMode": "Mode clar",
+    "darkMode": "Mode fosc"
   },
   "nav": {
     "pulso": "Pols",
@@ -1971,5 +1987,21 @@
         }
       }
     }
+  },
+  "common": {
+    "switchToLight": "Canvia a mode clar",
+    "switchToDark": "Canvia a mode fosc",
+    "changeTheme": "Canvia el tema",
+    "dark": "Fosc",
+    "light": "Clar",
+    "showPassword": "Mostra la contrasenya",
+    "hidePassword": "Amaga la contrasenya",
+    "countryPh": "País…",
+    "provincePh": "Provincia…",
+    "chooseCountryFirst": "Tria primer un país",
+    "themeChooserTitle": "Quin mode prefereixes?",
+    "themeChooserDesc": "Més endavant el pots canviar quan vulguis des del menú del teu compte.",
+    "darkMode": "Mode fosc",
+    "lightMode": "Mode clar"
   }
 }

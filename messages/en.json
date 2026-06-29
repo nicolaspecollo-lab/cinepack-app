@@ -23,7 +23,23 @@
     "light": "Light",
     "language": "Language",
     "support": "Contact support",
-    "logout": "Log out"
+    "logout": "Log out",
+    "newsTitle": "CINE PACK news",
+    "comingSoon": "Coming soon",
+    "newsAlert": "Hi! Since CINEPACK is in BETA, we are building a new section with news, tips, a blog and a place to give you an even more complete service in this workspace. We hope you can enjoy it soon. See you there!",
+    "adminPanel": "Admin panel",
+    "adminPanelSub": "Users, projects, feedback",
+    "testMode": "Test mode",
+    "changeDept": "Switch department",
+    "hide": "Hide",
+    "choose": "Choose",
+    "viewingNow": "Viewing now",
+    "backToMyDept": "Back to my department ({dept})",
+    "contactUs": "Contact us",
+    "suggest": "Suggest something",
+    "suggestSub": "Tell us about your experience",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
   },
   "nav": {
     "pulso": "Pulse",
@@ -1971,5 +1987,21 @@
         }
       }
     }
+  },
+  "common": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "changeTheme": "Change theme",
+    "dark": "Dark",
+    "light": "Light",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "countryPh": "Country…",
+    "provincePh": "Province…",
+    "chooseCountryFirst": "Choose a country first",
+    "themeChooserTitle": "Which mode do you prefer?",
+    "themeChooserDesc": "You can change it later anytime from your account menu.",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   }
 }

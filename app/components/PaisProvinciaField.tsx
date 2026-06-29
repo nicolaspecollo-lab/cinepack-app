@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { PAISES, provinciasDe } from "../lib/geo";
 
 // Selects dependientes (no redactables) en vez de texto libre: evita
@@ -19,6 +20,7 @@ export default function PaisProvinciaField({
   onChangeProvincia: (v: string) => void;
   required?: boolean;
 }) {
+  const t = useTranslations("common");
   const provincias = provinciasDe(pais);
 
   return (
@@ -34,7 +36,7 @@ export default function PaisProvinciaField({
           }}
           style={{ flex: 1, minWidth: "160px", padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}
         >
-          <option value="">País…</option>
+          <option value="">{t("countryPh")}</option>
           {PAISES.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
@@ -46,7 +48,7 @@ export default function PaisProvinciaField({
           disabled={!pais}
           style={{ flex: 1, minWidth: "160px", padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px", opacity: pais ? 1 : 0.6 }}
         >
-          <option value="">{pais ? "Provincia…" : "Elegí un país primero"}</option>
+          <option value="">{pais ? t("provincePh") : t("chooseCountryFirst")}</option>
           {provincias.map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 export default function ThemeToggle({
   theme,
   onToggle,
@@ -7,13 +9,14 @@ export default function ThemeToggle({
   theme: "dark" | "light";
   onToggle: () => void;
 }) {
+  const t = useTranslations("common");
   return (
     <button
       type="button"
       className="cp-theme-toggle"
       onClick={onToggle}
-      title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-      aria-label="Cambiar tema"
+      title={theme === "dark" ? t("switchToLight") : t("switchToDark")}
+      aria-label={t("changeTheme")}
     >
       <span className="hex"></span>
       {theme === "dark" ? (
@@ -26,7 +29,7 @@ export default function ThemeToggle({
           <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />
         </svg>
       )}
-      <span className="cp-theme-toggle-label">{theme === "dark" ? "Oscuro" : "Claro"}</span>
+      <span className="cp-theme-toggle-label">{theme === "dark" ? t("dark") : t("light")}</span>
     </button>
   );
 }

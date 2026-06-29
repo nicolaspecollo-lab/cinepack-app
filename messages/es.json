@@ -23,7 +23,23 @@
     "light": "Claro",
     "language": "Idioma",
     "support": "Contacto con soporte",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "newsTitle": "Novedades CINE PACK",
+    "comingSoon": "Próximamente",
+    "newsAlert": "¡Hola! Al estar en la versión BETA de CINEPACK, estamos desarrollando una nueva sección con novedades, consejos, blog y un lugar para brindarte un servicio más completo en este entorno de trabajo. Esperamos que pronto estés disfrutando de esta sección. ¡Nos vemos pronto!",
+    "adminPanel": "Panel de administrador",
+    "adminPanelSub": "Usuarios, proyectos, feedback",
+    "testMode": "Modo de prueba",
+    "changeDept": "Cambiar de departamento",
+    "hide": "Ocultar",
+    "choose": "Elegir",
+    "viewingNow": "Viendo ahora",
+    "backToMyDept": "Volver a mi departamento ({dept})",
+    "contactUs": "Contacta con nosotros",
+    "suggest": "Sugiérenos",
+    "suggestSub": "Cuéntanos tu experiencia",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro"
   },
   "nav": {
     "pulso": "Pulso",
@@ -1971,5 +1987,21 @@
         }
       }
     }
+  },
+  "common": {
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro",
+    "changeTheme": "Cambiar tema",
+    "dark": "Oscuro",
+    "light": "Claro",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "countryPh": "País…",
+    "provincePh": "Provincia…",
+    "chooseCountryFirst": "Elegí un país primero",
+    "themeChooserTitle": "¿Qué modo prefieres?",
+    "themeChooserDesc": "Luego puedes cambiarlo cuando quieras desde el menú de tu cuenta.",
+    "darkMode": "Modo oscuro",
+    "lightMode": "Modo claro"
   }
 }
