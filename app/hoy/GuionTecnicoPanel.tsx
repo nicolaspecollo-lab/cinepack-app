@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 type GTEstado = "procesando" | "listo" | "error";
@@ -45,6 +46,7 @@ const MOV_OPCIONES = [
 ];
 
 export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullName?: string; canEdit?: boolean }) {
+  const t = useTranslations("guiontec");
   const [guiones, setGuiones] = useState<GuionTecnico[]>([]);
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [edits, setEdits] = useState<Record<string, Plano>>({});
@@ -104,7 +106,7 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
     e.preventDefault();
     if (!file) return;
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) { setMsg({ type: "err", text: "No se encontró el proyecto activo." }); return; }
+    if (!projectId) { setMsg({ type: "err", text: t("noProject") }); return; }
 
     setUploading(true);
     setMsg(null);
@@ -136,7 +138,7 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
 
     if (insertError || !gt) {
       setUploading(false);
-      setMsg({ type: "err", text: insertError?.message ?? "No se pudo registrar el guion técnico." });
+      setMsg({ type: "err", text: insertError?.message ?? t("couldNotRegister") });
       return;
     }
 
@@ -151,9 +153,9 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
     setUploading(false);
 
     if (!res.ok) {
-      setMsg({ type: "err", text: result.error ?? "Error al procesar el guion técnico con IA." });
+      setMsg({ type: "err", text: result.error ?? t("aiError") });
     } else {
-      setMsg({ type: "ok", text: `La IA detectó ${result.count} planos. Revisalos y confirmalos uno por uno.` });
+      setMsg({ type: "ok", text: t("aiDetected", { count: result.count }) });
       setFile(null);
       setTab("revision");
     }
@@ -187,7 +189,7 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
   async function handleManual(e: React.FormEvent) {
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) { setMsg({ type: "err", text: "No se encontró el proyecto activo." }); return; }
+    if (!projectId) { setMsg({ type: "err", text: t("noProject") }); return; }
     setSending(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -224,19 +226,19 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
       {!canEdit && (
         <div className="gen-readonly-banner">
           <span className="hex"></span>
-          Solo visionado — solo <strong>Dirección</strong> y <strong>Guion</strong> pueden editar el guion técnico. Solicitá cambios a través de Producción Ejecutiva.
+          {t("readonlyBanner", { d1: "Dirección", d2: "Guion" })}
         </div>
       )}
       {/* Upload */}
       <form onSubmit={handleUpload} className="gup" style={!canEdit ? { pointerEvents: "none", opacity: 0.45 } : undefined}>
         <div className="gup-row">
           <label className="gfile">
-            {file ? file.name : "Elegir guion técnico en PDF…"}
+            {file ? file.name : t("choosePdf")}
             <input type="file" accept="application/pdf" style={{ display: "none" }}
               onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </label>
           <button type="submit" className="abtn" disabled={!file || uploading} style={{ width: "auto" }}>
-            {uploading ? "Procesando con IA…" : "Subir y procesar"}
+            {uploading ? t("processing") : t("upload")}
           </button>
         </div>
         {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
@@ -248,9 +250,9 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
           {guiones.map((g) => (
             <div className="gitem" key={g.id}>
               <span className="name">{g.nombre}</span>
-              {g.estado === "procesando" && <span className="pill p-warn">Procesando…</span>}
-              {g.estado === "listo" && <span className="pill p-ok">Listo</span>}
-              {g.estado === "error" && <span className="pill p-bad" title={g.error_msg ?? ""}>Error</span>}
+              {g.estado === "procesando" && <span className="pill p-warn">{t("statusProcessing")}</span>}
+              {g.estado === "listo" && <span className="pill p-ok">{t("statusReady")}</span>}
+              {g.estado === "error" && <span className="pill p-bad" title={g.error_msg ?? ""}>{t("statusError")}</span>}
               <span className="meta">{new Date(g.created_at).toLocaleString("es-AR")}</span>
             </div>
           ))}
@@ -260,28 +262,28 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
       {/* Tabs */}
       <div className="gtabs">
         <button className={`gtab ${tab === "revision" ? "active" : ""}`} onClick={() => setTab("revision")}>
-          Revisión {borradores.length > 0 ? `(${borradores.length})` : ""}
+          {t("tabRevision")} {borradores.length > 0 ? `(${borradores.length})` : ""}
         </button>
         <button className={`gtab ${tab === "guion" ? "active" : ""}`} onClick={() => setTab("guion")}>
-          Desglose técnico {confirmados.length > 0 ? `(${confirmados.length})` : ""}
+          {t("tabBreakdown")} {confirmados.length > 0 ? `(${confirmados.length})` : ""}
         </button>
         <button className={`gtab ${tab === "manual" ? "active" : ""}`} onClick={() => setTab("manual")}>
-          + Manual
+          {t("tabManual")}
         </button>
       </div>
 
       {/* Tab: Revisión */}
       {tab === "revision" && (
         <div className="gcards">
-          {loading && <p style={{ fontSize: 12, color: "var(--muted)" }}>Cargando…</p>}
+          {loading && <p style={{ fontSize: 12, color: "var(--muted)" }}>{t("loading")}</p>}
           {!loading && procesando && (
             <p style={{ fontSize: 12, color: "var(--muted)" }}>
-              La IA está analizando el guion técnico y extrayendo los planos. Puede tardar un par de minutos…
+              {t("aiReading")}
             </p>
           )}
           {!loading && !procesando && borradores.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--muted)" }}>
-              No hay planos pendientes de revisión. Subí un PDF para que la IA lo desglose automáticamente.
+              {t("noPendingShots")}
             </p>
           )}
           {borradores.map((p) => {
@@ -289,43 +291,43 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
             return (
               <div className="gcard" key={p.id}>
                 <div className="gcard-top">
-                  <span className="num">Esc. {ed.escena} · Plano {ed.plano}</span>
-                  {ed.pagina_pdf && <span className="pag">Pág. {ed.pagina_pdf} del PDF</span>}
+                  <span className="num">{t("sceneShot", { esc: ed.escena, plano: ed.plano })}</span>
+                  {ed.pagina_pdf && <span className="pag">{t("pdfPage", { n: ed.pagina_pdf })}</span>}
                 </div>
 
                 <div className="gfields">
                   <label className="afield">
-                    <span>Escena</span>
+                    <span>{t("scene")}</span>
                     <input type="text" value={ed.escena}
                       onChange={(ev) => updateField(p.id, "escena", ev.target.value)} />
                   </label>
                   <label className="afield">
-                    <span>Plano</span>
+                    <span>{t("shot")}</span>
                     <input type="text" value={ed.plano}
                       onChange={(ev) => updateField(p.id, "plano", ev.target.value)} />
                   </label>
                   <label className="afield">
-                    <span>Tipo</span>
+                    <span>{t("type")}</span>
                     <select value={ed.tipo ?? ""} onChange={(ev) => updateField(p.id, "tipo", ev.target.value || null)}>
                       <option value="">—</option>
-                      {TIPO_OPCIONES.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {TIPO_OPCIONES.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
                     </select>
                   </label>
                   <label className="afield">
-                    <span>Mov. cámara</span>
+                    <span>{t("camMove")}</span>
                     <select value={ed.mov_camara ?? ""} onChange={(ev) => updateField(p.id, "mov_camara", ev.target.value || null)}>
                       <option value="">—</option>
                       {MOV_OPCIONES.map((m) => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </label>
                   <label className="afield">
-                    <span>Lente / Focal</span>
+                    <span>{t("lens")}</span>
                     <input type="text" value={ed.lente ?? ""}
                       onChange={(ev) => updateField(p.id, "lente", ev.target.value || null)}
                       placeholder="35mm, 50mm…" />
                   </label>
                   <label className="afield">
-                    <span>Eje / Ángulo</span>
+                    <span>{t("axis")}</span>
                     <input type="text" value={ed.eje ?? ""}
                       onChange={(ev) => updateField(p.id, "eje", ev.target.value || null)}
                       placeholder="frontal, picado…" />
@@ -333,21 +335,21 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
                 </div>
 
                 <label className="afield">
-                  <span>Descripción del encuadre</span>
+                  <span>{t("frameDesc")}</span>
                   <textarea rows={3} value={ed.descripcion}
                     onChange={(ev) => updateField(p.id, "descripcion", ev.target.value)} />
                 </label>
 
                 <div className="gfields">
                   <label className="afield">
-                    <span>Personajes</span>
+                    <span>{t("characters")}</span>
                     <input type="text"
                       value={ed.personajes.join(", ")}
                       onChange={(ev) => updateField(p.id, "personajes", ev.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
                       placeholder="ELENA, MARCOS" />
                   </label>
                   <label className="afield">
-                    <span>Duración estimada (seg)</span>
+                    <span>{t("estDuration")}</span>
                     <input type="number" value={ed.duracion_seg ?? ""}
                       onChange={(ev) => updateField(p.id, "duracion_seg", ev.target.value ? Number(ev.target.value) : null)}
                       placeholder="ej: 8" />
@@ -355,7 +357,7 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
                 </div>
 
                 <label className="afield">
-                  <span>Notas técnicas</span>
+                  <span>{t("techNotes")}</span>
                   <input type="text" value={ed.notas ?? ""}
                     onChange={(ev) => updateField(p.id, "notas", ev.target.value || null)}
                     placeholder="Iluminación, VFX, audio especial…" />
@@ -363,13 +365,13 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
 
                 <div className="gcard-actions">
                   <button type="button" className="btn acc" onClick={() => persistPlano(p.id, "confirmado")}>
-                    Confirmar plano
+                    {t("confirmShot")}
                   </button>
                   <button type="button" className="btn" onClick={() => persistPlano(p.id, "borrador")}>
-                    Guardar cambios
+                    {t("saveChanges")}
                   </button>
                   <button type="button" className="btn" onClick={() => deletePlano(p.id)}>
-                    Descartar
+                    {t("discard")}
                   </button>
                 </div>
               </div>
@@ -383,7 +385,7 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
         <div className="gt-desglose">
           {confirmados.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--muted)", padding: "20px 30px" }}>
-              Todavía no hay planos confirmados. Subí un PDF o añadí planos manualmente y confirmalos desde la pestaña Revisión.
+              {t("noConfirmedShots")}
             </p>
           )}
           {confirmados.length > 0 && (
@@ -391,16 +393,16 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
               <table className="t gt-tabla">
                 <thead>
                   <tr>
-                    <th>Esc.</th>
-                    <th>Plano</th>
-                    <th>Tipo</th>
-                    <th>Mov.</th>
-                    <th>Lente</th>
-                    <th>Eje</th>
-                    <th>Descripción</th>
-                    <th>Personajes</th>
-                    <th>Dur.</th>
-                    <th>Notas</th>
+                    <th>{t("colScene")}</th>
+                    <th>{t("colShot")}</th>
+                    <th>{t("colType")}</th>
+                    <th>{t("colMove")}</th>
+                    <th>{t("colLens")}</th>
+                    <th>{t("colAxis")}</th>
+                    <th>{t("colDesc")}</th>
+                    <th>{t("colChars")}</th>
+                    <th>{t("colDur")}</th>
+                    <th>{t("colNotes")}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -438,56 +440,56 @@ export default function GuionTecnicoPanel({ fullName, canEdit = true }: { fullNa
       {tab === "manual" && (
         <div className="gcards">
           <p style={{ fontSize: 12, color: "var(--muted)" }}>
-            Añadí planos manualmente uno por uno. Se confirman directamente sin pasar por revisión.
+            {t("addManualHint")}
           </p>
           <button className="btn acc" style={{ alignSelf: "flex-start" }} onClick={() => setShowForm((v) => !v)}>
-            {showForm ? "Cancelar" : "+ Añadir plano"}
+            {showForm ? t("cancel") : t("addShot")}
           </button>
           {showForm && (
             <form onSubmit={handleManual} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 600 }}>
               <div className="gfields">
-                <label className="afield"><span>Escena *</span>
+                <label className="afield"><span>{t("sceneReq")}</span>
                   <input required value={mEscena} onChange={(e) => setMEscena(e.target.value)} placeholder="1" />
                 </label>
-                <label className="afield"><span>Plano *</span>
+                <label className="afield"><span>{t("shotReq")}</span>
                   <input required value={mPlano} onChange={(e) => setMPlano(e.target.value)} placeholder="1A" />
                 </label>
-                <label className="afield"><span>Tipo</span>
+                <label className="afield"><span>{t("type")}</span>
                   <select value={mTipo} onChange={(e) => setMTipo(e.target.value)}>
                     <option value="">—</option>
-                    {TIPO_OPCIONES.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {TIPO_OPCIONES.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
                   </select>
                 </label>
-                <label className="afield"><span>Mov. cámara</span>
+                <label className="afield"><span>{t("camMove")}</span>
                   <select value={mMov} onChange={(e) => setMMov(e.target.value)}>
                     <option value="">—</option>
                     {MOV_OPCIONES.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </label>
-                <label className="afield"><span>Lente</span>
+                <label className="afield"><span>{t("lens")}</span>
                   <input value={mLente} onChange={(e) => setMLente(e.target.value)} placeholder="35mm" />
                 </label>
-                <label className="afield"><span>Eje / Ángulo</span>
+                <label className="afield"><span>{t("axis")}</span>
                   <input value={mEje} onChange={(e) => setMEje(e.target.value)} placeholder="frontal, picado…" />
                 </label>
               </div>
-              <label className="afield"><span>Descripción del encuadre *</span>
+              <label className="afield"><span>{t("frameDescReq")}</span>
                 <textarea required rows={2} value={mDesc} onChange={(e) => setMDesc(e.target.value)} />
               </label>
               <div className="gfields">
-                <label className="afield"><span>Personajes</span>
+                <label className="afield"><span>{t("characters")}</span>
                   <input value={mPersonajes} onChange={(e) => setMPersonajes(e.target.value)} placeholder="ELENA, MARCOS" />
                 </label>
-                <label className="afield"><span>Duración (seg)</span>
+                <label className="afield"><span>{t("duration")}</span>
                   <input type="number" value={mDuracion} onChange={(e) => setMDuracion(e.target.value)} placeholder="8" />
                 </label>
               </div>
-              <label className="afield"><span>Notas técnicas</span>
+              <label className="afield"><span>{t("techNotes")}</span>
                 <input value={mNotas} onChange={(e) => setMNotas(e.target.value)} placeholder="VFX, audio especial…" />
               </label>
               {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
               <button type="submit" className="abtn" disabled={sending} style={{ alignSelf: "flex-start" }}>
-                {sending ? "Guardando…" : "Añadir plano confirmado"}
+                {sending ? t("saving") : t("addConfirmedShot")}
               </button>
             </form>
           )}

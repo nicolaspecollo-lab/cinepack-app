@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
 type GuionEstado = "procesando" | "listo" | "error";
@@ -41,6 +42,7 @@ type Escena = {
 type ViewTab = "revision" | "guion";
 
 export default function GuionPanel({ fullName, canEdit = true }: { fullName: string; canEdit?: boolean }) {
+  const t = useTranslations("guion");
   const [guiones, setGuiones] = useState<Guion[]>([]);
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [edits, setEdits] = useState<Record<string, Escena>>({});
@@ -99,7 +101,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
     if (!file) return;
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("noProject") });
       return;
     }
 
@@ -137,7 +139,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
 
     if (insertError || !guion) {
       setUploading(false);
-      setMsg({ type: "err", text: insertError?.message ?? "No se pudo registrar el guion." });
+      setMsg({ type: "err", text: insertError?.message ?? t("couldNotRegister") });
       return;
     }
 
@@ -153,9 +155,9 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
     setUploading(false);
 
     if (!res.ok) {
-      setMsg({ type: "err", text: result.error ?? "Error al procesar el guion con IA." });
+      setMsg({ type: "err", text: result.error ?? t("aiError") });
     } else {
-      setMsg({ type: "ok", text: `La IA detectó ${result.count} escenas. Revisalas abajo y confirmalas.` });
+      setMsg({ type: "ok", text: t("aiDetected", { count: result.count }) });
       setFile(null);
       setTab("revision");
     }
@@ -236,7 +238,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
 
   async function generarPlan() {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) { setMsgPlan({ type: "err", text: "No se encontró el proyecto activo." }); return; }
+    if (!projectId) { setMsgPlan({ type: "err", text: t("noProject") }); return; }
     setGenerandoPlan(true);
     setMsgPlan(null);
     try {
@@ -246,10 +248,10 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
         body: JSON.stringify({ projectId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error al generar el plan");
-      setMsgPlan({ type: "ok", text: `✓ Plan generado con ${data.jornadas} jornadas. Abrí "Plan de rodaje" en la pestaña Generales para revisarlo.` });
+      if (!res.ok) throw new Error(data.error ?? t("planGenError"));
+      setMsgPlan({ type: "ok", text: t("planGenerated", { n: data.jornadas }) });
     } catch (err) {
-      setMsgPlan({ type: "err", text: err instanceof Error ? err.message : "Error desconocido" });
+      setMsgPlan({ type: "err", text: err instanceof Error ? err.message : t("unknownError") });
     } finally {
       setGenerandoPlan(false);
     }
@@ -264,13 +266,13 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
       {!canEdit && (
         <div className="gen-readonly-banner">
           <span className="hex"></span>
-          Solo visionado — solo el departamento de <strong>Guion</strong> puede subir o editar el guion. Solicitá cambios a través de Producción Ejecutiva.
+          {t("readonlyBanner", { dept: "Guion" })}
         </div>
       )}
       <form onSubmit={handleUpload} className="gup" style={!canEdit ? { pointerEvents: "none", opacity: 0.45 } : undefined}>
         <div className="gup-row">
           <label className="gfile">
-            {file ? file.name : "Elegir guion en PDF…"}
+            {file ? file.name : t("choosePdf")}
             <input
               type="file"
               accept="application/pdf"
@@ -279,7 +281,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
             />
           </label>
           <button type="submit" className="abtn" disabled={!file || uploading} style={{ width: "auto" }}>
-            {uploading ? "Procesando con IA…" : "Subir y procesar"}
+            {uploading ? t("processing") : t("upload")}
           </button>
         </div>
         {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
@@ -290,9 +292,9 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
           {guiones.map((g) => (
             <div className="gitem" key={g.id}>
               <span className="name">{g.nombre}</span>
-              {g.estado === "procesando" && <span className="pill p-warn">Procesando…</span>}
-              {g.estado === "listo" && <span className="pill p-ok">Listo</span>}
-              {g.estado === "error" && <span className="pill p-bad" title={g.error_msg ?? ""}>Error</span>}
+              {g.estado === "procesando" && <span className="pill p-warn">{t("statusProcessing")}</span>}
+              {g.estado === "listo" && <span className="pill p-ok">{t("statusReady")}</span>}
+              {g.estado === "error" && <span className="pill p-bad" title={g.error_msg ?? ""}>{t("statusError")}</span>}
               <span className="meta">{new Date(g.created_at).toLocaleString("es-AR")}</span>
             </div>
           ))}
@@ -302,25 +304,25 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
       <div className="gtabs">
         {canEdit && (
           <button className={`gtab ${tab === "revision" ? "active" : ""}`} onClick={() => setTab("revision")}>
-            Revisión {borradores.length > 0 ? `(${borradores.length})` : ""}
+            {t("tabRevision")} {borradores.length > 0 ? `(${borradores.length})` : ""}
           </button>
         )}
         <button className={`gtab ${tab === "guion" ? "active" : ""}`} onClick={() => setTab("guion")}>
-          Guion {confirmadas.length > 0 ? `(${confirmadas.length})` : ""}
+          {t("tabScript")} {confirmadas.length > 0 ? `(${confirmadas.length})` : ""}
         </button>
       </div>
 
       {tab === "revision" && (
         <div className="gcards">
-          {loading && <p style={{ padding: "0 0 0 0", fontSize: 12, color: "var(--muted)" }}>Cargando…</p>}
+          {loading && <p style={{ padding: "0 0 0 0", fontSize: 12, color: "var(--muted)" }}>{t("loading")}</p>}
           {!loading && procesando && (
             <p style={{ fontSize: 12, color: "var(--muted)" }}>
-              La IA está leyendo el guion y separando las escenas. Esto puede tardar un par de minutos…
+              {t("aiReading")}
             </p>
           )}
           {!loading && !procesando && borradores.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--muted)" }}>
-              No hay escenas pendientes de revisión. Subí un PDF para que la IA lo desglose escena por escena.
+              {t("noPendingScenes")}
             </p>
           )}
           {borradores.map((e) => {
@@ -328,13 +330,13 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
             return (
               <div className="gcard" key={e.id}>
                 <div className="gcard-top">
-                  <span className="num">Escena {edit.numero}</span>
-                  {edit.pagina_pdf && <span className="pag">Pág. {edit.pagina_pdf} del PDF</span>}
+                  <span className="num">{t("scene", { n: edit.numero })}</span>
+                  {edit.pagina_pdf && <span className="pag">{t("pdfPage", { n: edit.pagina_pdf })}</span>}
                 </div>
 
                 <div className="gfields">
                   <label className="afield">
-                    <span>Nº escena</span>
+                    <span>{t("sceneNum")}</span>
                     <input
                       type="number"
                       value={edit.numero}
@@ -342,7 +344,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                     />
                   </label>
                   <label className="afield">
-                    <span>Int./Ext.</span>
+                    <span>{t("intExt")}</span>
                     <select value={edit.int_ext ?? ""} onChange={(ev) => updateField(e.id, "int_ext", ev.target.value || null)}>
                       <option value="">—</option>
                       <option value="INT">INT</option>
@@ -351,7 +353,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                     </select>
                   </label>
                   <label className="afield">
-                    <span>Lugar</span>
+                    <span>{t("place")}</span>
                     <input
                       type="text"
                       value={edit.lugar ?? ""}
@@ -359,7 +361,7 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                     />
                   </label>
                   <label className="afield">
-                    <span>Día / Noche</span>
+                    <span>{t("dayNight")}</span>
                     <input
                       type="text"
                       value={edit.dia_noche ?? ""}
@@ -369,12 +371,12 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                 </div>
 
                 <label className="afield">
-                  <span>Encabezado</span>
+                  <span>{t("heading")}</span>
                   <input type="text" value={edit.encabezado} onChange={(ev) => updateField(e.id, "encabezado", ev.target.value)} />
                 </label>
 
                 <label className="afield">
-                  <span>Descripción / acción</span>
+                  <span>{t("description")}</span>
                   <textarea
                     rows={3}
                     value={edit.descripcion ?? ""}
@@ -383,53 +385,53 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                 </label>
 
                 <label className="afield">
-                  <span>Personajes (separados por coma)</span>
+                  <span>{t("characters")}</span>
                   <input type="text" value={edit.personajes.join(", ")} onChange={(ev) => updatePersonajes(e.id, ev.target.value)} />
                 </label>
 
                 <div className="gdialog">
-                  <h5>Diálogo</h5>
+                  <h5>{t("dialogue")}</h5>
                   {edit.dialogo.map((d, idx) => (
                     <div className="gdrow" key={idx}>
                       <input
                         type="text"
-                        placeholder="Personaje"
+                        placeholder={t("character")}
                         value={d.personaje}
                         onChange={(ev) => updateDialogo(e.id, idx, "personaje", ev.target.value)}
                       />
                       <input
                         type="text"
-                        placeholder="(parentético)"
+                        placeholder={t("parenthetical")}
                         value={d.parentetico ?? ""}
                         onChange={(ev) => updateDialogo(e.id, idx, "parentetico", ev.target.value)}
                       />
                       <textarea
                         rows={1}
-                        placeholder="Texto del diálogo"
+                        placeholder={t("dialogueText")}
                         value={d.texto}
                         onChange={(ev) => updateDialogo(e.id, idx, "texto", ev.target.value)}
                       />
                       <button type="button" className="rm" onClick={() => removeDialogoRow(e.id, idx)}>
-                        Quitar
+                        {t("remove")}
                       </button>
                     </div>
                   ))}
                   <div>
                     <button type="button" className="btn" onClick={() => addDialogoRow(e.id)}>
-                      + Línea de diálogo
+                      {t("addDialogueLine")}
                     </button>
                   </div>
                 </div>
 
                 <div className="gcard-actions">
                   <button type="button" className="btn acc" onClick={() => persistEscena(e.id, "confirmada")}>
-                    Confirmar escena
+                    {t("confirmScene")}
                   </button>
                   <button type="button" className="btn" onClick={() => persistEscena(e.id, "borrador")}>
-                    Guardar cambios
+                    {t("saveChanges")}
                   </button>
                   <button type="button" className="btn" onClick={() => deleteEscena(e.id)}>
-                    Descartar
+                    {t("discard")}
                   </button>
                 </div>
               </div>
@@ -451,10 +453,10 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                   disabled={generandoPlan}
                 >
                   <span className="hex"></span>
-                  {generandoPlan ? "Generando plan con IA…" : "Generar Plan de Rodaje con IA"}
+                  {generandoPlan ? t("generatingPlan") : t("generatePlan")}
                 </button>
                 <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                  {confirmadas.length} escenas confirmadas · la IA agrupará por locación y optimizará el orden
+                  {t("confirmedCount", { n: confirmadas.length })}
                 </span>
               </div>
               {msgPlan && (
@@ -465,13 +467,12 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
         <div className="script">
           {confirmadas.length === 0 && (
             <p style={{ fontSize: 12, color: "var(--muted)" }}>
-              Todavía no hay escenas confirmadas. Confirmalas desde la pestaña Revisión para que aparezcan acá en
-              formato de guion.
+              {t("noConfirmedScenes")}
             </p>
           )}
           {confirmadas.map((e, i) => (
             <div className="script-page" key={e.id}>
-              <span className="pgnum">Pág. {i + 1}</span>
+              <span className="pgnum">{t("pdfPageShort", { n: i + 1 })}</span>
               <div className="script-scene">
                 <div className="script-slug">
                   <span className="script-num">{e.numero}</span>
