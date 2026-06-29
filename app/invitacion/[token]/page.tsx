@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../../useTheme";
@@ -22,6 +23,7 @@ export default function InvitacionPage() {
   const params = useParams<{ token: string }>();
   const router = useRouter();
   const token = params?.token ?? "";
+  const t = useTranslations("invitacion");
   const { theme, toggleTheme } = useTheme();
 
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,7 @@ export default function InvitacionPage() {
     if (!invitacion) return;
 
     if (password !== confirmPassword) {
-      setMsg({ type: "err", text: "Las contraseñas no coinciden." });
+      setMsg({ type: "err", text: t("errPasswordsMismatch") });
       return;
     }
 
@@ -106,7 +108,7 @@ export default function InvitacionPage() {
           </div>
           <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
             <span className="hex"></span>
-            <h4>Cargando invitación…</h4>
+            <h4>{t("loadingInvite")}</h4>
           </div>
         </div>
       </div>
@@ -123,8 +125,8 @@ export default function InvitacionPage() {
           </div>
           <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
             <span className="hex"></span>
-            <h4>Invitación no encontrada</h4>
-            <p>Este link de invitación no es válido. Pedile a quien te invitó que te envíe uno nuevo.</p>
+            <h4>{t("notFoundTitle")}</h4>
+            <p>{t("notFoundDesc")}</p>
           </div>
         </div>
       </div>
@@ -141,9 +143,9 @@ export default function InvitacionPage() {
           </div>
           <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
             <span className="hex"></span>
-            <h4>Invitación ya utilizada</h4>
-            <p>Esta invitación ya fue usada para crear una cuenta. Si es la tuya, podés iniciar sesión.</p>
-            <Link href="/login" className="abtn" style={{ textDecoration: "none" }}>Ir a iniciar sesión</Link>
+            <h4>{t("usedTitle")}</h4>
+            <p>{t("usedDesc")}</p>
+            <Link href="/login" className="abtn" style={{ textDecoration: "none" }}>{t("goToLogin")}</Link>
           </div>
         </div>
       </div>
@@ -160,8 +162,8 @@ export default function InvitacionPage() {
           </div>
           <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
             <span className="hex"></span>
-            <h4>Cuenta creada</h4>
-            <p>Ya formás parte de “{invitacion.proyecto_nombre}”. Vamos a tu proyecto.</p>
+            <h4>{t("accountCreatedTitle")}</h4>
+            <p>{t("accountCreatedDesc", { proyecto: invitacion.proyecto_nombre })}</p>
             <button
               type="button"
               className="abtn"
@@ -170,7 +172,7 @@ export default function InvitacionPage() {
                 router.refresh();
               }}
             >
-              Continuar
+              {t("continueBtn")}
             </button>
           </div>
         </div>
@@ -188,12 +190,9 @@ export default function InvitacionPage() {
           </div>
           <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
             <span className="hex"></span>
-            <h4>Confirmá tu email</h4>
-            <p>
-              Te enviamos un email para confirmar tu cuenta. Después de confirmarla, iniciá sesión
-              y vas a quedar asignado/a a “{invitacion.proyecto_nombre}” automáticamente.
-            </p>
-            <Link href="/login" className="abtn" style={{ textDecoration: "none" }}>Ir a iniciar sesión</Link>
+            <h4>{t("confirmEmailTitle")}</h4>
+            <p>{t("confirmEmailDesc", { proyecto: invitacion.proyecto_nombre })}</p>
+            <Link href="/login" className="abtn" style={{ textDecoration: "none" }}>{t("goToLogin")}</Link>
           </div>
         </div>
       </div>
@@ -211,22 +210,22 @@ export default function InvitacionPage() {
 
           <div className="authcard">
             <div className="atabs">
-              <span className="atab register active">Invitación</span>
+              <span className="atab register active">{t("tab")}</span>
             </div>
 
             <form onSubmit={handleSubmit} className="apanel register">
-              <h3>Te invitaron a “{invitacion.proyecto_nombre}”</h3>
+              <h3>{t("invitedTo", { proyecto: invitacion.proyecto_nombre })}</h3>
               <p className="asub">
                 {invitacion.departamento}{invitacion.cargo ? ` · ${invitacion.cargo}` : ""}
               </p>
 
               <label className="afield">
-                <span>Email</span>
+                <span>{t("email")}</span>
                 <input type="email" value={invitacion.email} readOnly disabled />
               </label>
 
               <label className="afield">
-                <span>Nombre completo</span>
+                <span>{t("fullName")}</span>
                 <input
                   type="text"
                   required
@@ -236,7 +235,7 @@ export default function InvitacionPage() {
               </label>
 
               <PasswordField
-                label="Contraseña"
+                label={t("password")}
                 value={password}
                 onChange={setPassword}
                 required
@@ -244,7 +243,7 @@ export default function InvitacionPage() {
               />
 
               <PasswordField
-                label="Repetir contraseña"
+                label={t("confirmPassword")}
                 value={confirmPassword}
                 onChange={setConfirmPassword}
                 required
@@ -256,7 +255,7 @@ export default function InvitacionPage() {
               )}
 
               <button type="submit" disabled={submitting} className="abtn">
-                {submitting ? "Creando cuenta..." : "Crear cuenta y entrar"}
+                {submitting ? t("creatingAccount") : t("createAndEnter")}
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
               </button>
             </form>

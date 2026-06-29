@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
@@ -21,6 +22,7 @@ import "../cp-theme.css";
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("register");
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function RegisterPage() {
         </div>
         <div className="soon-box" style={{ position: "relative", zIndex: 1 }}>
           <span className="hex"></span>
-          <h4>Verificando invitación…</h4>
+          <h4>{t("checkingInvite")}</h4>
         </div>
       </div>
     </div>

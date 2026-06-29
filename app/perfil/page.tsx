@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
@@ -27,6 +28,7 @@ type Profile = {
 
 export default function PerfilPage() {
   const router = useRouter();
+  const t = useTranslations("perfil");
   const { theme, toggleTheme } = useTheme();
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -122,7 +124,7 @@ export default function PerfilPage() {
     e.preventDefault();
     if (!userId || !original) return;
     if (!paisResidencia || !provinciaResidencia || !paisProduccion || !provinciaProduccion) {
-      setMsg({ type: "err", text: "Completá país y provincia de residencia y de producción." });
+      setMsg({ type: "err", text: t("errFillCountryProvince") });
       return;
     }
 
@@ -193,18 +195,18 @@ export default function PerfilPage() {
     });
 
     setSaving(false);
-    setMsg({ type: "ok", text: "Perfil actualizado. El Productor Ejecutivo fue notificado de los cambios." });
+    setMsg({ type: "ok", text: t("successProfileUpdated") });
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
     if (!userId) return;
     if (newPassword.length < 6) {
-      setPwdMsg({ type: "err", text: "La contraseña debe tener al menos 6 caracteres." });
+      setPwdMsg({ type: "err", text: t("errPasswordMinLength") });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPwdMsg({ type: "err", text: "Las contraseñas no coinciden." });
+      setPwdMsg({ type: "err", text: t("errPasswordsMismatch") });
       return;
     }
 
@@ -231,7 +233,7 @@ export default function PerfilPage() {
     setNewPassword("");
     setConfirmPassword("");
     setSavingPwd(false);
-    setPwdMsg({ type: "ok", text: "Contraseña actualizada. El Productor Ejecutivo fue notificado del cambio." });
+    setPwdMsg({ type: "ok", text: t("successPasswordUpdated") });
   }
 
   if (loading) {
@@ -239,7 +241,7 @@ export default function PerfilPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Cargando perfil…</h4>
+          <h4>{t("loading")}</h4>
         </div>
       </div>
     );
@@ -249,21 +251,18 @@ export default function PerfilPage() {
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar">
         <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
-        <span className="cp-proj">Mi perfil</span>
+        <span className="cp-proj">{t("title")}</span>
         <div className="cp-spacer"></div>
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-          <span className="hex"></span> Volver a proyectos
+          <span className="hex"></span> {t("backToProjects")}
         </Link>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
       <div style={{ padding: "30px 30px 60px", width: "100%" }}>
         <form onSubmit={handleSave} className="apanel">
-          <h3>Datos de perfil</h3>
-          <p className="asub">
-            Esta información es compartida con tu equipo. Cualquier cambio se registra y es visible para el
-            Productor Ejecutivo.
-          </p>
+          <h3>{t("dataTitle")}</h3>
+          <p className="asub">{t("dataDesc")}</p>
 
           <div className="afields-grid">
             <div className="afield-span2" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -282,49 +281,49 @@ export default function PerfilPage() {
                 }}
               >
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Foto de perfil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={avatarUrl} alt={t("photoAlt")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <span className="hex" style={{ width: "24px", height: "20px", background: "var(--lime)" }}></span>
                 )}
               </div>
               <label className="afield" style={{ flex: 1 }}>
-                <span>{uploadingAvatar ? "Subiendo…" : "Cambiar foto de perfil"}</span>
+                <span>{uploadingAvatar ? t("uploading") : t("changePhoto")}</span>
                 <input type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
               </label>
             </div>
 
             <label className="afield">
-              <span>Email</span>
+              <span>{t("email")}</span>
               <input type="email" value={email} disabled />
             </label>
 
             <label className="afield">
-              <span>Departamento</span>
+              <span>{t("department")}</span>
               <input type="text" value={departamento} disabled />
             </label>
 
             <label className="afield">
-              <span>Nombre completo</span>
+              <span>{t("fullName")}</span>
               <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </label>
 
             <label className="afield">
-              <span>Nombre artístico (opcional)</span>
+              <span>{t("artisticNameOpt")}</span>
               <input
                 type="text"
-                placeholder="Como querés que te vean en créditos"
+                placeholder={t("artisticNamePh")}
                 value={nombreArtistico}
                 onChange={(e) => setNombreArtistico(e.target.value)}
               />
             </label>
 
             <label className="afield">
-              <span>Teléfono (opcional)</span>
+              <span>{t("phoneOpt")}</span>
               <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
             </label>
 
             <PaisProvinciaField
-              label="Lugar de residencia"
+              label={t("placeOfResidence")}
               pais={paisResidencia}
               provincia={provinciaResidencia}
               onChangePais={setPaisResidencia}
@@ -333,7 +332,7 @@ export default function PerfilPage() {
             />
 
             <PaisProvinciaField
-              label="Lugar de producción"
+              label={t("placeOfProduction")}
               pais={paisProduccion}
               provincia={provinciaProduccion}
               onChangePais={setPaisProduccion}
@@ -342,10 +341,10 @@ export default function PerfilPage() {
             />
 
             <div className="afield afield-span2">
-              <span>Cargos</span>
+              <span>{t("roles")}</span>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
                 {cargos.length === 0 ? (
-                  <span style={{ fontSize: "13px", color: "var(--muted)" }}>Sin cargos asignados</span>
+                  <span style={{ fontSize: "13px", color: "var(--muted)" }}>{t("noRolesAssigned")}</span>
                 ) : (
                   cargos.map((c) => (
                     <div key={c} style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--hl3)", padding: "6px 10px", borderRadius: "4px", border: "1px solid var(--line)" }}>
@@ -368,9 +367,9 @@ export default function PerfilPage() {
               </div>
               <div style={{ display: "flex", gap: "6px", alignItems: "flex-end" }}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "600", letterSpacing: "0.06em", textTransform: "uppercase" }}>Agregar cargo</span>
+                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "600", letterSpacing: "0.06em", textTransform: "uppercase" }}>{t("addRole")}</span>
                   <select value={cargoNuevo} onChange={(e) => setCargoNuevo(e.target.value)} style={{ padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}>
-                    <option value="">Selecciona un cargo…</option>
+                    <option value="">{t("selectRole")}</option>
                     {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? [])
                       .filter((c) => !cargos.includes(c))
                       .map((c) => (
@@ -396,7 +395,7 @@ export default function PerfilPage() {
             </div>
 
             <label className="afield afield-span2">
-              <span>Bio (opcional)</span>
+              <span>{t("bioOpt")}</span>
               <textarea rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
             </label>
           </div>
@@ -404,23 +403,23 @@ export default function PerfilPage() {
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" disabled={saving} className="abtn">
-            {saving ? "Guardando…" : "Guardar cambios"}
+            {saving ? t("saving") : t("saveChanges")}
           </button>
         </form>
 
         <div className="cp-menu-div" style={{ margin: "28px 0" }}></div>
 
         <form onSubmit={handlePasswordChange} className="apanel">
-          <h3>Cambiar contraseña</h3>
+          <h3>{t("changePasswordTitle")}</h3>
           <div className="afields-grid">
-            <PasswordField label="Nueva contraseña" value={newPassword} onChange={setNewPassword} minLength={6} />
-            <PasswordField label="Confirmar contraseña" value={confirmPassword} onChange={setConfirmPassword} minLength={6} />
+            <PasswordField label={t("newPassword")} value={newPassword} onChange={setNewPassword} minLength={6} />
+            <PasswordField label={t("confirmPassword")} value={confirmPassword} onChange={setConfirmPassword} minLength={6} />
           </div>
 
           {pwdMsg && <p className={`amsg ${pwdMsg.type === "err" ? "err" : "ok"}`}>{pwdMsg.text}</p>}
 
           <button type="submit" disabled={savingPwd} className="abtn">
-            {savingPwd ? "Guardando…" : "Actualizar contraseña"}
+            {savingPwd ? t("saving") : t("updatePassword")}
           </button>
         </form>
       </div>

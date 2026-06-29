@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { useTheme } from "../useTheme";
@@ -13,6 +14,7 @@ import "../cp-theme.css";
 // datos que se usan luego en las estadísticas del panel admin.
 export default function CrearPerfilPage() {
   const router = useRouter();
+  const t = useTranslations("crearPerfil");
   const { theme, toggleTheme } = useTheme();
 
   const [loading, setLoading] = useState(true);
@@ -73,7 +75,7 @@ export default function CrearPerfilPage() {
     if (!userId) return;
 
     if (!fullName.trim() || !cargo || !paisResidencia || !provinciaResidencia || !paisProduccion || !provinciaProduccion) {
-      setMsg({ type: "err", text: "Completá todos los campos para continuar." });
+      setMsg({ type: "err", text: t("errFillAll") });
       return;
     }
 
@@ -113,7 +115,7 @@ export default function CrearPerfilPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Cargando…</h4>
+          <h4>{t("loading")}</h4>
         </div>
       </div>
     );
@@ -123,39 +125,36 @@ export default function CrearPerfilPage() {
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar">
         <span className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></span>
-        <span className="cp-proj">Crear perfil</span>
+        <span className="cp-proj">{t("title")}</span>
         <div className="cp-spacer"></div>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
       <div style={{ padding: "30px 30px 60px", width: "100%", maxWidth: "760px", margin: "0 auto" }}>
         <form onSubmit={handleSubmit} className="apanel">
-          <h3>Completá tu perfil para empezar</h3>
-          <p className="asub">
-            Estos datos son obligatorios para usar CINE PACK: los usamos para identificarte ante tu equipo y
-            para las estadísticas de uso del panel de administración. No podés continuar sin completarlos.
-          </p>
+          <h3>{t("formTitle")}</h3>
+          <p className="asub">{t("formDesc")}</p>
 
           <div className="afields-grid">
             <label className="afield">
-              <span>Email</span>
+              <span>{t("email")}</span>
               <input type="email" value={email} disabled />
             </label>
 
             <label className="afield">
-              <span>Nombre completo</span>
+              <span>{t("fullName")}</span>
               <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </label>
 
             <label className="afield afield-span2">
-              <span>Cargo</span>
+              <span>{t("role")}</span>
               <select
                 required
                 value={cargo}
                 onChange={(e) => setCargo(e.target.value)}
                 style={{ padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}
               >
-                <option value="">Seleccioná tu cargo…</option>
+                <option value="">{t("selectRole")}</option>
                 {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -163,7 +162,7 @@ export default function CrearPerfilPage() {
             </label>
 
             <PaisProvinciaField
-              label="Lugar de residencia"
+              label={t("placeOfResidence")}
               pais={paisResidencia}
               provincia={provinciaResidencia}
               onChangePais={setPaisResidencia}
@@ -172,7 +171,7 @@ export default function CrearPerfilPage() {
             />
 
             <PaisProvinciaField
-              label="Lugar de producción"
+              label={t("placeOfProduction")}
               pais={paisProduccion}
               provincia={provinciaProduccion}
               onChangePais={setPaisProduccion}
@@ -184,7 +183,7 @@ export default function CrearPerfilPage() {
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" disabled={saving} className="abtn">
-            {saving ? "Guardando…" : "Continuar a CINE PACK"}
+            {saving ? t("saving") : t("continueToApp")}
           </button>
         </form>
       </div>
