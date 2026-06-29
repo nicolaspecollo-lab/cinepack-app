@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS, ACCENTS, JERARQUIA_POR_DEPARTAMENTO, TIPOS_PROYECTO } from "../../constants";
@@ -18,6 +19,7 @@ type Plantilla = { id: string; nombre: string; tipo: string | null; departamento
 
 export default function NuevoProyectoPage() {
   const router = useRouter();
+  const t = useTranslations("proyectoNuevo");
   const { theme, toggleTheme } = useTheme();
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -152,19 +154,19 @@ export default function NuevoProyectoPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (requierePago && !gateResuelto) {
-      setMsg({ type: "err", text: "Elegí un pack o solicitá un presupuesto personalizado antes de continuar." });
+      setMsg({ type: "err", text: t("errChoosePackOrQuote") });
       return;
     }
     if (!nombre.trim()) {
-      setMsg({ type: "err", text: "Ponle un nombre al proyecto." });
+      setMsg({ type: "err", text: t("errProjectName") });
       return;
     }
     if (!tipo) {
-      setMsg({ type: "err", text: "Elegí el tipo de proyecto." });
+      setMsg({ type: "err", text: t("errProjectType") });
       return;
     }
     if (deptos.length === 0) {
-      setMsg({ type: "err", text: "Seleccioná al menos un departamento." });
+      setMsg({ type: "err", text: t("errSelectDept") });
       return;
     }
 
@@ -173,11 +175,11 @@ export default function NuevoProyectoPage() {
     );
     for (const p of todasLasPersonas) {
       if (!p.full_name.trim() || !p.email.trim()) {
-        setMsg({ type: "err", text: "Completá nombre y email de cada integrante, o quitá la fila." });
+        setMsg({ type: "err", text: t("errCompleteFields") });
         return;
       }
       if (p.cargo === CARGO_CUSTOM && !p.cargoCustom.trim()) {
-        setMsg({ type: "err", text: `Escribí el cargo de ${p.full_name || "la persona"} en "Redactar cargo".` });
+        setMsg({ type: "err", text: t("errWriteRole", { name: p.full_name || t("personFallback") }) });
         return;
       }
     }
@@ -218,7 +220,7 @@ export default function NuevoProyectoPage() {
 
     if (errProyecto || !proyecto) {
       setSaving(false);
-      setMsg({ type: "err", text: errProyecto?.message ?? "No se pudo crear el proyecto." });
+      setMsg({ type: "err", text: errProyecto?.message ?? t("errCreateProjectFailed") });
       return;
     }
 
@@ -269,7 +271,7 @@ export default function NuevoProyectoPage() {
 
       if (errInv) {
         setSaving(false);
-        setMsg({ type: "err", text: `Proyecto creado, pero falló la generación de invitaciones: ${errInv.message}` });
+        setMsg({ type: "err", text: t("errInviteFailed", { msg: errInv.message }) });
         return;
       }
 
@@ -279,7 +281,7 @@ export default function NuevoProyectoPage() {
     }
 
     setSaving(false);
-    setMsg({ type: "ok", text: "Proyecto creado correctamente." });
+    setMsg({ type: "ok", text: t("successCreated") });
   }
 
   function inviteUrl(token: string) {
@@ -302,7 +304,7 @@ export default function NuevoProyectoPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Verificando acceso…</h4>
+          <h4>{t("checkingAccess")}</h4>
         </div>
       </div>
     );
@@ -313,7 +315,7 @@ export default function NuevoProyectoPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
         <header className="cp-topbar">
           <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
-          <span className="cp-proj">Proyecto creado</span>
+          <span className="cp-proj">{t("projectCreated")}</span>
           <div className="cp-spacer"></div>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </header>
@@ -321,18 +323,18 @@ export default function NuevoProyectoPage() {
         <div className="cp-hero">
           <div className="hexbg"></div>
           <div className="cp-hero-content">
-            <span className="eyebrow"><span className="hex"></span> Listo para arrancar</span>
-            <h2>”{nombre}” está creado</h2>
-            <p>{tipo} · Departamentos involucrados: {deptos.join(" · ")}</p>
+            <span className="eyebrow"><span className="hex"></span> {t("readyToStart")}</span>
+            <h2>{t("createdTitle", { nombre })}</h2>
+            <p>{t("createdSub", { tipo, deptos: deptos.join(" · ") })}</p>
           </div>
         </div>
 
         <div className="cp-np-section">
           {invites.length === 0 ? (
-            <p className="asub">No agregaste integrantes todavía. Podés invitarlos más adelante desde el proyecto.</p>
+            <p className="asub">{t("noInvitesYet")}</p>
           ) : (
             <div className="cp-np-block">
-              <span className="label">Links de invitación</span>
+              <span className="label">{t("inviteLinksLabel")}</span>
               <div className="cp-team-list" style={{ margin: 0 }}>
                 {invites.map((inv) => (
                   <div
@@ -351,7 +353,7 @@ export default function NuevoProyectoPage() {
                       style={{ "--acc": accent(inv.departamento) } as React.CSSProperties}
                       onClick={() => copy(inv.token)}
                     >
-                      {copiedToken === inv.token ? "Copiado ✓" : "Copiar link de invitación"}
+                      {copiedToken === inv.token ? t("copied") : t("copyInviteLink")}
                     </button>
                   </div>
                 ))}
@@ -359,47 +361,44 @@ export default function NuevoProyectoPage() {
             </div>
           )}
 
-          <p className="asub">
-            Enviá a cada persona su link de invitación. Al abrirlo van a poder crear su cuenta y
-            quedarán asignadas al proyecto, departamento y cargo correspondientes.
-          </p>
+          <p className="asub">{t("shareInvitesDesc")}</p>
 
           <div className="cp-np-block">
-            <span className="label">Próximos pasos</span>
+            <span className="label">{t("nextStepsLabel")}</span>
             <div className="cp-onboarding-list">
               <div className="cp-onboarding-item">
                 <span className="hex"></span>
                 <div>
-                  <b>Enviá las invitaciones</b>
-                  <p>Compartí el link de invitación con cada persona del equipo para que pueda crear su cuenta.</p>
+                  <b>{t("step1Title")}</b>
+                  <p>{t("step1Desc")}</p>
                 </div>
               </div>
               <div className="cp-onboarding-item">
                 <span className="hex"></span>
                 <div>
-                  <b>Completá la Jornada de hoy</b>
-                  <p>Entrá al proyecto y definí en &quot;Hoy&quot; las tareas y alertas del primer día de trabajo.</p>
+                  <b>{t("step2Title")}</b>
+                  <p>{t("step2Desc")}</p>
                 </div>
               </div>
               <div className="cp-onboarding-item">
                 <span className="hex"></span>
                 <div>
-                  <b>Revisá los accesos por cargo</b>
-                  <p>En &quot;Gestión de accesos&quot; asigná quién edita y quién visiona cada herramienta clave.</p>
+                  <b>{t("step3Title")}</b>
+                  <p>{t("step3Desc")}</p>
                 </div>
               </div>
               <div className="cp-onboarding-item">
                 <span className="hex"></span>
                 <div>
-                  <b>Cargá las herramientas iniciales</b>
-                  <p>Sumá la primera info en Documentos y Herramientas de cada departamento: guion, presupuesto, casting, etc.</p>
+                  <b>{t("step4Title")}</b>
+                  <p>{t("step4Desc")}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <Link href="/proyectos" className="abtn" style={{ textDecoration: "none", alignSelf: "flex-start" }}>
-            Ir a mis proyectos
+            {t("goToProjects")}
           </Link>
         </div>
       </div>
@@ -412,30 +411,33 @@ export default function NuevoProyectoPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
         <header className="cp-topbar">
           <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
-          <span className="cp-proj">Nuevo proyecto</span>
+          <span className="cp-proj">{t("newProject")}</span>
           <div className="cp-spacer"></div>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
           <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-            <span className="hex"></span> Cancelar
+            <span className="hex"></span> {t("cancel")}
           </Link>
         </header>
 
         <div className="cp-hero">
           <div className="hexbg"></div>
           <div className="cp-hero-content">
-            <span className="eyebrow"><span className="hex"></span> Proyecto adicional</span>
-            <h2>Elegí un pack para este nuevo proyecto</h2>
+            <span className="eyebrow"><span className="hex"></span> {t("additionalProject")}</span>
+            <h2>{t("choosePackTitle")}</h2>
             <p>
-              Ya tenés {proyectosPrevios} proyecto{proyectosPrevios === 1 ? "" : "s"} activo{proyectosPrevios === 1 ? "" : "s"}.
-              Los proyectos adicionales requieren elegir un pack — los precios completos están en{" "}
-              <a href="https://cinepack.es/packs.html" target="_blank" rel="noreferrer">cinepack.es/packs.html</a>.
+              {t.rich("choosePackDesc", {
+                n: proyectosPrevios ?? 0,
+                link: (chunks) => (
+                  <a href="https://cinepack.es/packs.html" target="_blank" rel="noreferrer">{chunks}</a>
+                ),
+              })}
             </p>
           </div>
         </div>
 
         <div className="cp-np-section">
           <div className="cp-np-block">
-            <span className="label">Tipo de proyecto / pack</span>
+            <span className="label">{t("projectTypePackLabel")}</span>
             <div className="chip-group">
               {packs.map((p) => (
                 <button
@@ -455,22 +457,19 @@ export default function NuevoProyectoPage() {
             <div className="cp-np-block">
               <div className="soon-box">
                 <span className="hex"></span>
-                <h4>Pago pendiente de conectar</h4>
-                <p>
-                  El cobro con tarjeta todavía no está conectado (falta configurar Stripe). Por ahora el proyecto se
-                  crea con estado &quot;pendiente de pago&quot; — el equipo de CINE PACK te va a contactar para coordinarlo.
-                </p>
+                <h4>{t("paymentPendingTitle")}</h4>
+                <p>{t("paymentPendingDesc")}</p>
               </div>
             </div>
           )}
 
           <div className="cp-np-block">
-            <span className="label">¿Ninguno de estos packs encaja? (ej. podcast, evento, otro formato)</span>
+            <span className="label">{t("noneOfThesePacks")}</span>
             <textarea
               value={personalizadoMsg}
               onChange={(e) => setPersonalizadoMsg(e.target.value)}
               rows={3}
-              placeholder="Contanos brevemente qué necesitás y te armamos un presupuesto a medida."
+              placeholder={t("customMsgPh")}
             />
             <button
               type="button"
@@ -479,7 +478,7 @@ export default function NuevoProyectoPage() {
               onClick={() => setPersonalizadoEnviado(true)}
               style={{ alignSelf: "flex-start", marginTop: "8px" }}
             >
-              Solicitar presupuesto personalizado
+              {t("requestCustomQuote")}
             </button>
           </div>
         </div>
@@ -491,33 +490,28 @@ export default function NuevoProyectoPage() {
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar">
         <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
-        <span className="cp-proj">Nuevo proyecto</span>
+        <span className="cp-proj">{t("newProject")}</span>
         <div className="cp-spacer"></div>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-          <span className="hex"></span> Cancelar
+          <span className="hex"></span> {t("cancel")}
         </Link>
       </header>
 
       <div className="cp-hero">
         <div className="hexbg"></div>
         <div className="cp-hero-content">
-          <span className="eyebrow"><span className="hex"></span> Producción nueva</span>
-          <h2>Armemos el equipo del proyecto</h2>
-          <p>
-            Elegí los departamentos que van a participar y, opcionalmente, sumá ya a las personas de
-            cada equipo. Al crear el proyecto se genera un link de invitación para cada una.
-          </p>
+          <span className="eyebrow"><span className="hex"></span> {t("newProduction")}</span>
+          <h2>{t("buildTeamTitle")}</h2>
+          <p>{t("buildTeamDesc")}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="cp-np-section">
         {plantillas.length > 0 && (
           <div className="cp-np-block">
-            <span className="label">Usar como plantilla (opcional)</span>
-            <p className="asub" style={{ margin: 0 }}>
-              Copia el tipo, los departamentos y las columnas/campos personalizados de las herramientas de un proyecto existente.
-            </p>
+            <span className="label">{t("useTemplateLabel")}</span>
+            <p className="asub" style={{ margin: 0 }}>{t("useTemplateDesc")}</p>
             <div className="cp-deptgrid">
               {plantillas.map((p) => (
                 <button
@@ -528,7 +522,7 @@ export default function NuevoProyectoPage() {
                 >
                   <span className="hex"></span>
                   <span className="name">{p.nombre}</span>
-                  <span className="check">{plantillaId === p.id ? "✓ Usando como plantilla" : "Usar"}</span>
+                  <span className="check">{plantillaId === p.id ? t("usingTemplate") : t("useTemplate")}</span>
                 </button>
               ))}
             </div>
@@ -536,32 +530,32 @@ export default function NuevoProyectoPage() {
         )}
 
         <div className="cp-np-block">
-          <span className="label">Nombre del proyecto</span>
+          <span className="label">{t("projectNameLabel")}</span>
           <label className="afield" style={{ maxWidth: "420px" }}>
-            <input type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej. Marea Alta" />
+            <input type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t("projectNamePh")} />
           </label>
         </div>
 
         <div className="cp-np-block">
-          <span className="label">Tipo de proyecto</span>
-          <p className="asub" style={{ margin: 0 }}>Debe coincidir con el servicio contratado.</p>
+          <span className="label">{t("projectTypeLabel")}</span>
+          <p className="asub" style={{ margin: 0 }}>{t("projectTypeDesc")}</p>
           <div className="cp-select" style={{ maxWidth: "420px" }}>
             <select required value={tipo} onChange={(e) => setTipo(e.target.value)}>
-              <option value="" disabled>Selecciona un tipo de proyecto</option>
-              {TIPOS_PROYECTO.map((t) => (
-                <option key={t} value={t}>{t}</option>
+              <option value="" disabled>{t("selectProjectType")}</option>
+              {TIPOS_PROYECTO.map((tp) => (
+                <option key={tp} value={tp}>{tp}</option>
               ))}
             </select>
             <span className="cp-select-arrow"></span>
           </div>
         </div>
 
-        <CreditosChips label="Escrito por (opcional)" placeholder="Nombre del guionista" valores={escritoPor} onChange={setEscritoPor} />
-        <CreditosChips label="Dirigido por (opcional)" placeholder="Nombre del director/a" valores={dirigidoPor} onChange={setDirigidoPor} />
-        <CreditosChips label="Producido por (opcional)" placeholder="Nombre de la productora" valores={producidoPor} onChange={setProducidoPor} />
+        <CreditosChips label={t("writtenByOpt")} placeholder={t("writerNamePh")} valores={escritoPor} onChange={setEscritoPor} addLabel={t("add")} />
+        <CreditosChips label={t("directedByOpt")} placeholder={t("directorNamePh")} valores={dirigidoPor} onChange={setDirigidoPor} addLabel={t("add")} />
+        <CreditosChips label={t("producedByOpt")} placeholder={t("producerNamePh")} valores={producidoPor} onChange={setProducidoPor} addLabel={t("add")} />
 
         <div className="cp-np-block">
-          <span className="label">Departamentos involucrados</span>
+          <span className="label">{t("deptsInvolvedLabel")}</span>
           <div className="cp-deptgrid">
             {DEPARTAMENTOS.map((d) => {
               const active = deptos.includes(d);
@@ -575,7 +569,7 @@ export default function NuevoProyectoPage() {
                 >
                   <span className="hex"></span>
                   <span className="name">{d}</span>
-                  <span className="check">{active ? "✓ Seleccionado" : "Agregar"}</span>
+                  <span className="check">{active ? t("selected") : t("add")}</span>
                 </button>
               );
             })}
@@ -586,37 +580,37 @@ export default function NuevoProyectoPage() {
                 className="cp-deptcard active"
                 style={{ "--acc": accent(d) } as React.CSSProperties}
                 onClick={() => toggleDepto(d)}
-                title="Quitar departamento"
+                title={t("removeDeptTitle")}
               >
                 <span className="hex"></span>
                 <span className="name">{d}</span>
-                <span className="check">✓ Personalizado · Quitar</span>
+                <span className="check">{t("customRemove")}</span>
               </button>
             ))}
           </div>
           <div className="cp-deptcustom">
             <input
               type="text"
-              placeholder="¿Falta un departamento? Escribilo aquí (ej. Producción de podcast)"
+              placeholder={t("missingDeptPh")}
               value={deptoCustomInput}
               onChange={(e) => setDeptoCustomInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomDepto(); } }}
             />
             <button type="button" className="abtn" onClick={addCustomDepto}>
-              + Agregar departamento nuevo
+              {t("addNewDept")}
             </button>
           </div>
         </div>
 
         {deptos.map((d) => (
           <div key={d} className="cp-deptteam" style={{ "--acc": accent(d) } as React.CSSProperties}>
-            <h4><span className="hex"></span> Equipo de {d}</h4>
+            <h4><span className="hex"></span> {t("teamOf", { dept: d })}</h4>
 
             {(personas[d] ?? []).map((p, idx) => (
               <div key={idx} className="cp-personarow">
                 <input
                   type="text"
-                  placeholder="Nombre completo"
+                  placeholder={t("fullNamePh")}
                   value={p.full_name}
                   onChange={(e) => updatePersona(d, idx, "full_name", e.target.value)}
                 />
@@ -629,30 +623,30 @@ export default function NuevoProyectoPage() {
                     value={p.cargo}
                     onChange={(e) => updatePersona(d, idx, "cargo", e.target.value)}
                   >
-                    <option value="">Sin cargo</option>
+                    <option value="">{t("noRole")}</option>
                     {(JERARQUIA_POR_DEPARTAMENTO[d] ?? []).map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
-                    <option value={CARGO_CUSTOM}>Redactar cargo…</option>
+                    <option value={CARGO_CUSTOM}>{t("writeRole")}</option>
                   </select>
                   <span className="cp-select-arrow"></span>
                 </div>
                 {p.cargo === CARGO_CUSTOM && (
                   <input
                     type="text"
-                    placeholder="Ej. 3ª Asistencia de dirección"
+                    placeholder={t("customRolePh")}
                     value={p.cargoCustom}
                     onChange={(e) => updatePersona(d, idx, "cargoCustom", e.target.value)}
                   />
                 )}
                 <button type="button" className="cp-removebtn" onClick={() => removePersona(d, idx)}>
-                  Quitar
+                  {t("remove")}
                 </button>
               </div>
             ))}
 
             <button type="button" className="cp-addbtn" style={{ "--acc": accent(d) } as React.CSSProperties} onClick={() => addPersona(d)}>
-              + Agregar persona a {d}
+              {t("addPersonTo", { dept: d })}
             </button>
           </div>
         ))}
@@ -660,7 +654,7 @@ export default function NuevoProyectoPage() {
         {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
         <button type="submit" disabled={saving} className="abtn" style={{ alignSelf: "flex-start" }}>
-          {saving ? "Creando…" : "Crear proyecto y generar invitaciones"}
+          {saving ? t("creating") : t("createAndInvite")}
         </button>
       </form>
     </div>
@@ -670,6 +664,7 @@ export default function NuevoProyectoPage() {
 type EmailStatus = { status: "idle" | "checking" | "registered" | "invited" | "not_found" | "invalid"; full_name?: string; departamento?: string; cargo?: string };
 
 function EmailInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useTranslations("proyectoNuevo");
   const [emailStatus, setEmailStatus] = useState<EmailStatus>({ status: "idle" });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -688,21 +683,21 @@ function EmailInput({ value, onChange }: { value: string; onChange: (v: string) 
 
   return (
     <div className="cp-email-wrap">
-      <input type="email" placeholder="Email" value={value} onChange={handleChange} />
+      <input type="email" placeholder={t("emailPh")} value={value} onChange={handleChange} />
       {emailStatus.status === "checking" && (
-        <span className="cp-email-hint checking">Verificando…</span>
+        <span className="cp-email-hint checking">{t("checkingEmail")}</span>
       )}
       {emailStatus.status === "registered" && (
-        <span className="cp-email-hint ok">✓ {emailStatus.full_name} · {emailStatus.departamento} · ya registrado</span>
+        <span className="cp-email-hint ok">{t("alreadyRegistered", { name: emailStatus.full_name ?? "", dept: emailStatus.departamento ?? "" })}</span>
       )}
       {emailStatus.status === "invited" && (
-        <span className="cp-email-hint warn">⏳ Invitación pendiente para {emailStatus.full_name}</span>
+        <span className="cp-email-hint warn">{t("pendingInviteFor", { name: emailStatus.full_name ?? "" })}</span>
       )}
       {emailStatus.status === "not_found" && (
-        <span className="cp-email-hint info">Correo válido · aún no tiene cuenta en CINE PACK</span>
+        <span className="cp-email-hint info">{t("validNoAccount")}</span>
       )}
       {emailStatus.status === "invalid" && (
-        <span className="cp-email-hint err">Formato de email inválido</span>
+        <span className="cp-email-hint err">{t("invalidEmail")}</span>
       )}
     </div>
   );
