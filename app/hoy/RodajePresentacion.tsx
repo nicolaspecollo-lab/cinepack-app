@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 type Jornada = {
   dia_numero: number;
@@ -19,6 +20,7 @@ const fmtFecha = (iso: string) => {
 };
 
 export default function RodajePresentacion({ jornada, onClose }: { jornada: Jornada; onClose: () => void }) {
+  const t = useTranslations("modoRodaje");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,26 +43,26 @@ export default function RodajePresentacion({ jornada, onClose }: { jornada: Jorn
 
   return (
     <div ref={ref} className="cp-rodaje-presentacion">
-      <button className="cp-rp-close" onClick={onClose} title="Salir (Esc)">✕</button>
+      <button className="cp-rp-close" onClick={onClose} title={t("exitEsc")}>✕</button>
       <div className="cp-rp-head">
-        <span className="rodaje-live"><span className="hex"></span>Día de rodaje</span>
+        <span className="rodaje-live"><span className="hex"></span>{t("shootDay")}</span>
         <div className="cp-rp-day">
-          Día {jornada.dia_numero} <small>de {jornada.dia_total}</small>
+          {t("dayOf", { n: jornada.dia_numero })} <small>{t("ofTotal", { n: jornada.dia_total })}</small>
         </div>
         {jornada.fecha && <div className="cp-rp-fecha">{fmtFecha(jornada.fecha)}</div>}
       </div>
       <div className="cp-rp-grid">
         {jornada.citacion && (
-          <div className="cp-rp-item"><span>Citación</span><b>{jornada.citacion}</b></div>
+          <div className="cp-rp-item"><span>{t("callTime")}</span><b>{jornada.citacion}</b></div>
         )}
         {jornada.ubicacion && (
-          <div className="cp-rp-item"><span>Ubicación</span><b>{jornada.ubicacion}</b></div>
+          <div className="cp-rp-item"><span>{t("location")}</span><b>{jornada.ubicacion}</b></div>
         )}
         {jornada.escenas_dia && (
-          <div className="cp-rp-item cp-rp-wide"><span>Escenas del día</span><b>{jornada.escenas_dia}</b></div>
+          <div className="cp-rp-item cp-rp-wide"><span>{t("dayScenes")}</span><b>{jornada.escenas_dia}</b></div>
         )}
         {jornada.visionado && (
-          <div className="cp-rp-item"><span>Visionado dailies</span><b>{jornada.visionado}</b></div>
+          <div className="cp-rp-item"><span>{t("dailiesScreening")}</span><b>{jornada.visionado}</b></div>
         )}
       </div>
     </div>

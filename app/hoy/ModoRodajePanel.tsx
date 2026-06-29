@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import RodajePresentacion from "./RodajePresentacion";
 import { diaDeRodaje, diasFaltanRodaje } from "./cicloVida";
@@ -29,6 +30,7 @@ const fmtFecha = (iso: string) => {
 };
 
 export default function ModoRodajePanel({ onVerOrden }: { onVerOrden: () => void }) {
+  const t = useTranslations("modoRodaje");
   const [jornada, setJornada] = useState<Jornada | null>(null);
   const [fechaInicioRodaje, setFechaInicioRodaje] = useState<string | null>(null);
   const [nombreProyecto, setNombreProyecto] = useState<string | null>(null);
@@ -77,26 +79,26 @@ export default function ModoRodajePanel({ onVerOrden }: { onVerOrden: () => void
     return (
       <div className="rodaje-banner">
         <div className="rodaje-banner-head">
-          <span className="rodaje-live"><span className="hex"></span>Cuenta atrás</span>
+          <span className="rodaje-live"><span className="hex"></span>{t("countdown")}</span>
           <div className="rodaje-day">
-            Faltan {faltan} día{faltan === 1 ? "" : "s"}{" "}
-            <small>para el largometraje de ficción{nombreProyecto ? `: ${nombreProyecto}` : ""}</small>
+            {t("daysLeft", { n: faltan })}{" "}
+            <small>{t("forFeature", { name: nombreProyecto ? `: ${nombreProyecto}` : "" })}</small>
           </div>
         </div>
         <div className="rodaje-grid">
           {previa.diaTotal != null && (
-            <div className="rodaje-item"><span>Días de rodaje confirmados</span><b>{previa.diaTotal}</b></div>
+            <div className="rodaje-item"><span>{t("confirmedDays")}</span><b>{previa.diaTotal}</b></div>
           )}
           {previa.locaciones.length > 0 && (
-            <div className="rodaje-item"><span>Locaciones</span><b>{previa.locaciones.join(", ")}</b></div>
+            <div className="rodaje-item"><span>{t("locations")}</span><b>{previa.locaciones.join(", ")}</b></div>
           )}
           {previa.departamentos > 0 && (
-            <div className="rodaje-item"><span>Departamentos involucrados</span><b>{previa.departamentos}</b></div>
+            <div className="rodaje-item"><span>{t("deptsInvolved")}</span><b>{previa.departamentos}</b></div>
           )}
-          <div className="rodaje-item"><span>Escenas a rodar</span><b>{previa.escenas}</b></div>
+          <div className="rodaje-item"><span>{t("scenesToShoot")}</span><b>{previa.escenas}</b></div>
         </div>
         <div className="rodaje-ctas">
-          <button className="btn acc rodaje-cta" onClick={onVerOrden}>Ver orden de rodaje completo →</button>
+          <button className="btn acc rodaje-cta" onClick={onVerOrden}>{t("seeFullOrder")}</button>
         </div>
       </div>
     );
@@ -109,29 +111,29 @@ export default function ModoRodajePanel({ onVerOrden }: { onVerOrden: () => void
   return (
     <div className="rodaje-banner">
       <div className="rodaje-banner-head">
-        <span className="rodaje-live"><span className="hex"></span>Modo día de rodaje</span>
+        <span className="rodaje-live"><span className="hex"></span>{t("shootDayMode")}</span>
         <div className="rodaje-day">
-          Día {diaMostrado} <small>de {jornada.dia_total}</small>
+          {t("dayOf", { n: diaMostrado })} <small>{t("ofTotal", { n: jornada.dia_total })}</small>
         </div>
         {jornada.fecha && <span className="rodaje-fecha">{fmtFecha(jornada.fecha)}</span>}
       </div>
       <div className="rodaje-grid">
         {jornada.ubicacion && (
-          <div className="rodaje-item"><span>Ubicación</span><b>{jornada.ubicacion}</b></div>
+          <div className="rodaje-item"><span>{t("location")}</span><b>{jornada.ubicacion}</b></div>
         )}
         {jornada.citacion && (
-          <div className="rodaje-item"><span>Citación</span><b>{jornada.citacion}</b></div>
+          <div className="rodaje-item"><span>{t("callTime")}</span><b>{jornada.citacion}</b></div>
         )}
         {jornada.escenas_dia && (
-          <div className="rodaje-item"><span>Escenas del día</span><b>{jornada.escenas_dia}</b></div>
+          <div className="rodaje-item"><span>{t("dayScenes")}</span><b>{jornada.escenas_dia}</b></div>
         )}
         {jornada.visionado && (
-          <div className="rodaje-item"><span>Visionado dailies</span><b>{jornada.visionado}</b></div>
+          <div className="rodaje-item"><span>{t("dailiesScreening")}</span><b>{jornada.visionado}</b></div>
         )}
       </div>
       <div className="rodaje-ctas">
-        <button className="btn acc rodaje-cta" onClick={onVerOrden}>Ver orden de rodaje completo →</button>
-        <button className="btn rodaje-cta" onClick={() => setPresentacion(true)}>Modo presentación ⛶</button>
+        <button className="btn acc rodaje-cta" onClick={onVerOrden}>{t("seeFullOrder")}</button>
+        <button className="btn rodaje-cta" onClick={() => setPresentacion(true)}>{t("presentationMode")}</button>
       </div>
       {presentacion && <RodajePresentacion jornada={jornada} onClose={() => setPresentacion(false)} />}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { GENERAL_ORDEN_RODAJE } from "../herramientas";
 import { PrintHeader } from "./HerramientaPanel";
@@ -19,17 +20,18 @@ function parseJSON<T>(s: string | undefined, fallback: T): T {
   try { return JSON.parse(s) as T; } catch { return fallback; }
 }
 
-const CAMPOS_TEXTO: { key: string; label: string; placeholder?: string }[] = [
-  { key: "dia", label: "Día", placeholder: "1/18" },
-  { key: "set_principal", label: "Localización principal" },
-  { key: "set_secundario", label: "Localización secundaria" },
-  { key: "productora", label: "Productora" },
-  { key: "unidad", label: "Unidad" },
-  { key: "clima", label: "Clima / Amanecer / Anochecer", placeholder: "☀️ Soleado · 🌡 18°/27° · 🌅 06:48 · 🌇 21:42 · 💨 12 km/h" },
-  { key: "escenas_resumen", label: "Resumen de escenas", placeholder: "6 escenas · 9 1/8 págs" },
+const CAMPOS_TEXTO: { key: string; labelKey: string; placeholder?: string }[] = [
+  { key: "dia", labelKey: "fieldDay", placeholder: "1/18" },
+  { key: "set_principal", labelKey: "fieldMainSet" },
+  { key: "set_secundario", labelKey: "fieldSecondarySet" },
+  { key: "productora", labelKey: "fieldProductionCo" },
+  { key: "unidad", labelKey: "fieldUnit" },
+  { key: "clima", labelKey: "fieldWeather", placeholder: "☀️ 18°/27° · 🌅 06:48 · 🌇 21:42 · 💨 12 km/h" },
+  { key: "escenas_resumen", labelKey: "fieldSceneSummary", placeholder: "6 · 9 1/8" },
 ];
 
 export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullName: string; canEdit?: boolean }) {
+  const t = useTranslations("orden");
   const [filas, setFilas] = useState<Fila[]>([]);
   const [loading, setLoading] = useState(true);
   const [activa, setActiva] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullNam
   }
 
   async function borrarJornada(id: string) {
-    if (!window.confirm("¿Eliminar esta jornada de la orden de rodaje?")) return;
+    if (!window.confirm(t("confirmDeleteDay"))) return;
     setFilas((prev) => prev.filter((f) => f.id !== id));
     if (activa === id) setActiva(null);
     const supabase = createClient();
@@ -103,7 +105,7 @@ export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullNam
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Cargando orden de rodaje…</h4>
+        <h4>{t("loading")}</h4>
       </div>
     );
   }
@@ -115,10 +117,10 @@ export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullNam
       {!canEdit && (
         <div className="gen-readonly-banner">
           <span className="hex"></span>
-          Solo visionado — solo <strong>Dirección</strong> y <strong>Producción</strong> pueden editar la orden de rodaje. Solicitá cambios a través de Producción Ejecutiva.
+          {t("readonlyBanner", { d1: "Dirección", d2: "Producción" })}
         </div>
       )}
-      <div className="hp-open-head"><h3><span className="hex"></span> Orden de rodaje (callsheet)</h3></div>
+      <div className="hp-open-head"><h3><span className="hex"></span> {t("title")}</h3></div>
       <p className="hp-hint">{GENERAL_ORDEN_RODAJE.hint}</p>
 
       <div className="dsubtabs" style={{ padding: "0 30px" }}>
@@ -128,17 +130,17 @@ export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullNam
             className={`dsubtab ${activa === row.id && modo === "editar" ? "active" : ""}`}
             onClick={() => { setActiva(row.id); setModo("editar"); }}
           >
-            Día {row.datos.dia || "—"}
+            {t("dayTab", { n: row.datos.dia || "—" })}
           </button>
         ))}
-        {canEdit && <button className="dsubtab" onClick={nuevaJornada}>+ Nueva jornada</button>}
+        {canEdit && <button className="dsubtab" onClick={nuevaJornada}>{t("newDay")}</button>}
       </div>
 
       {!f && (
         <div className="soon-box" style={{ marginTop: 0 }}>
           <span className="hex"></span>
-          <h4>Sin jornadas todavía</h4>
-          <p>Creá la primera jornada para empezar a armar la callsheet.</p>
+          <h4>{t("noDaysYet")}</h4>
+          <p>{t("noDaysDesc")}</p>
         </div>
       )}
 
@@ -167,6 +169,7 @@ function CallsheetEditor({
   onBorrar: () => void;
   onImprimir: () => void;
 }) {
+  const t = useTranslations("orden");
   const citaciones = parseJSON<Par[]>(fila.datos.citaciones, []);
   const localizaciones = parseJSON<Par[]>(fila.datos.localizaciones, []);
   const llamadas = parseJSON<Par[]>(fila.datos.llamadas, []);
@@ -177,14 +180,14 @@ function CallsheetEditor({
   return (
     <>
       <div className="hp-actions" style={{ paddingBottom: 0 }}>
-        <button className="btn acc" onClick={onImprimir}>🖨 Vista de impresión</button>
-        <button className="hp-del" onClick={onBorrar}>✕ Eliminar jornada</button>
+        <button className="btn acc" onClick={onImprimir}>{t("printView")}</button>
+        <button className="hp-del" onClick={onBorrar}>{t("deleteDay")}</button>
       </div>
 
       <div className="hp-ficha" style={{ padding: "16px 30px" }}>
         {CAMPOS_TEXTO.map((c) => (
           <label className="hp-ficha-field" key={c.key}>
-            <span>{c.label}</span>
+            <span>{t(c.labelKey)}</span>
             <input
               type={c.key === "fecha" ? "date" : "text"}
               defaultValue={fila.datos[c.key] ?? ""}
@@ -194,28 +197,28 @@ function CallsheetEditor({
           </label>
         ))}
         <label className="hp-ficha-field" key="fecha">
-          <span>Fecha</span>
+          <span>{t("fieldDate")}</span>
           <input type="date" defaultValue={fila.datos.fecha ?? ""} onBlur={(e) => onGuardar({ fecha: e.target.value })} />
         </label>
       </div>
 
       <div className="grid2" style={{ padding: "0 30px 22px" }}>
-        <ParListEditor titulo="Citaciones generales" items={citaciones} onChange={(v) => onGuardar({ citaciones: JSON.stringify(v) })} placeholders={["Equipo técnico", "06:00"]} />
-        <ParListEditor titulo="Localizaciones" items={localizaciones} onChange={(v) => onGuardar({ localizaciones: JSON.stringify(v) })} placeholders={["Nombre de la localización", "Acceso / nota"]} />
-        <ParListEditor titulo="Llamadas por departamento" items={llamadas} onChange={(v) => onGuardar({ llamadas: JSON.stringify(v) })} placeholders={["Departamento", "Hora"]} />
-        <ParListEditor titulo="Reparto — citación individual" items={reparto} onChange={(v) => onGuardar({ reparto_individual: JSON.stringify(v) })} placeholders={["Personaje / actor", "Hora → maquillaje"]} />
-        <ParListEditor titulo="Contactos clave" items={contactos} onChange={(v) => onGuardar({ contactos: JSON.stringify(v) })} placeholders={["Rol", "Nombre / teléfono"]} />
+        <ParListEditor titulo={t("generalCalls")} items={citaciones} onChange={(v) => onGuardar({ citaciones: JSON.stringify(v) })} placeholders={[t("phCrew"), t("phTime")]} />
+        <ParListEditor titulo={t("locations")} items={localizaciones} onChange={(v) => onGuardar({ localizaciones: JSON.stringify(v) })} placeholders={[t("phLocName"), t("phLocNote")]} />
+        <ParListEditor titulo={t("deptCalls")} items={llamadas} onChange={(v) => onGuardar({ llamadas: JSON.stringify(v) })} placeholders={[t("phDept"), t("phHour")]} />
+        <ParListEditor titulo={t("individualCast")} items={reparto} onChange={(v) => onGuardar({ reparto_individual: JSON.stringify(v) })} placeholders={[t("phCharActor"), t("phHourMakeup")]} />
+        <ParListEditor titulo={t("keyContacts")} items={contactos} onChange={(v) => onGuardar({ contactos: JSON.stringify(v) })} placeholders={[t("phRole"), t("phNamePhone")]} />
       </div>
 
       <div className="tool" style={{ margin: "0 30px 22px" }}>
-        <div className="tool-head"><span className="hex"></span><h3>Escenas del día</h3></div>
+        <div className="tool-head"><span className="hex"></span><h3>{t("dayScenes")}</h3></div>
         <div style={{ padding: "14px 18px" }}>
           <EscenasEditor items={escenas} onChange={(v) => onGuardar({ escenas: JSON.stringify(v) })} />
         </div>
       </div>
 
       <label className="hp-ficha-field" style={{ padding: "0 30px 30px", display: "block" }}>
-        <span>Notas de producción</span>
+        <span>{t("productionNotes")}</span>
         <textarea
           rows={3}
           defaultValue={fila.datos.notas ?? ""}
@@ -241,6 +244,7 @@ function ParListEditor({
   function set(i: number, key: keyof Par, v: string) {
     onChange(items.map((it, idx) => (idx === i ? { ...it, [key]: v } : it)));
   }
+  const t = useTranslations("orden");
   return (
     <div className="mini">
       <h4><span className="hex"></span>{titulo}</h4>
@@ -253,23 +257,24 @@ function ParListEditor({
           </li>
         ))}
       </ul>
-      <button className="btn" onClick={() => onChange([...items, { label: "", valor: "" }])}>+ Agregar</button>
+      <button className="btn" onClick={() => onChange([...items, { label: "", valor: "" }])}>{t("add")}</button>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-const ESC_COLS: { key: keyof Escena; label: string; w?: number }[] = [
-  { key: "hora", label: "Hora", w: 70 },
-  { key: "esc", label: "Esc.", w: 50 },
-  { key: "intext", label: "Int/Ext", w: 70 },
-  { key: "dianoche", label: "Día/Noche", w: 90 },
-  { key: "set", label: "Set / Descripción" },
-  { key: "personajes", label: "Personajes" },
-  { key: "paginas", label: "Págs.", w: 60 },
+const ESC_COLS: { key: keyof Escena; labelKey: string; w?: number }[] = [
+  { key: "hora", labelKey: "colTime", w: 70 },
+  { key: "esc", labelKey: "colScene", w: 50 },
+  { key: "intext", labelKey: "colIntExt", w: 70 },
+  { key: "dianoche", labelKey: "colDayNight", w: 90 },
+  { key: "set", labelKey: "colSetDesc" },
+  { key: "personajes", labelKey: "colChars" },
+  { key: "paginas", labelKey: "colPages", w: 60 },
 ];
 
 function EscenasEditor({ items, onChange }: { items: Escena[]; onChange: (v: Escena[]) => void }) {
+  const t = useTranslations("orden");
   function set(i: number, key: keyof Escena, v: string) {
     onChange(items.map((it, idx) => (idx === i ? { ...it, [key]: v } : it)));
   }
@@ -279,7 +284,7 @@ function EscenasEditor({ items, onChange }: { items: Escena[]; onChange: (v: Esc
       <table className="hp-table">
         <thead>
           <tr>
-            {ESC_COLS.map((c) => <th key={c.key} style={{ width: c.w }}>{c.label}</th>)}
+            {ESC_COLS.map((c) => <th key={c.key} style={{ width: c.w }}>{t(c.labelKey)}</th>)}
             <th></th>
           </tr>
         </thead>
@@ -297,7 +302,7 @@ function EscenasEditor({ items, onChange }: { items: Escena[]; onChange: (v: Esc
         </tbody>
       </table>
       <div className="hp-actions">
-        <button className="btn acc" onClick={() => onChange([...items, vacia])}>+ Agregar escena</button>
+        <button className="btn acc" onClick={() => onChange([...items, vacia])}>{t("addScene")}</button>
       </div>
     </div>
   );
@@ -305,6 +310,7 @@ function EscenasEditor({ items, onChange }: { items: Escena[]; onChange: (v: Esc
 
 // ---------------------------------------------------------------------------
 function CallsheetPrint({ fila, onVolver }: { fila: Fila; onVolver: () => void }) {
+  const t = useTranslations("orden");
   const d = fila.datos;
   const citaciones = parseJSON<Par[]>(d.citaciones, []);
   const localizaciones = parseJSON<Par[]>(d.localizaciones, []);
@@ -317,24 +323,24 @@ function CallsheetPrint({ fila, onVolver }: { fila: Fila; onVolver: () => void }
   return (
     <div className="cs-print">
       <div className="printbar">
-        <button className="btn" onClick={onVolver}>← Volver a edición</button>
-        <button className="print-btn" onClick={() => window.print()}>📄 Exportar PDF / Imprimir</button>
+        <button className="btn" onClick={onVolver}>{t("backToEdit")}</button>
+        <button className="print-btn" onClick={() => window.print()}>{t("exportPrint")}</button>
       </div>
 
-      <PrintHeader herramientaNombre="Orden de rodaje — Callsheet" departamento="Producción" />
+      <PrintHeader herramientaNombre={t("printDocTitle")} departamento="Producción" />
 
       <div className="tool">
         <div className="tool-head">
           <span className="hex"></span>
-          <h3>Orden de Rodaje — Callsheet</h3>
-          <span className="tag">Día {d.dia || "—"}</span>
+          <h3>{t("callsheetTitle")}</h3>
+          <span className="tag">{t("dayTab", { n: d.dia || "—" })}</span>
           <div className="right">{fecha}</div>
         </div>
         <p className="tool-sub">
-          Localización principal: <b style={{ color: "var(--text)" }}>{d.set_principal || "—"}</b>
-          {d.set_secundario && <> · secundaria: <b style={{ color: "var(--text)" }}>{d.set_secundario}</b></>}
-          {d.productora && <> · Productora: {d.productora}</>}
-          {d.unidad && <> · Unidad: {d.unidad}</>}
+          {t("mainLocLabel")} <b style={{ color: "var(--text)" }}>{d.set_principal || "—"}</b>
+          {d.set_secundario && <>{t("secondaryLabel")}<b style={{ color: "var(--text)" }}>{d.set_secundario}</b></>}
+          {d.productora && <>{t("prodCoLabel")}{d.productora}</>}
+          {d.unidad && <>{t("unitLabel")}{d.unidad}</>}
         </p>
         {d.clima && (
           <div className="chips" style={{ padding: "0 18px 14px" }}>
@@ -344,16 +350,16 @@ function CallsheetPrint({ fila, onVolver }: { fila: Fila; onVolver: () => void }
       </div>
 
       <div className="grid2">
-        <ParListPrint titulo="Citaciones generales" items={citaciones} />
-        <ParListPrint titulo="Localizaciones" items={localizaciones} />
-        <ParListPrint titulo="Llamadas por departamento" items={llamadas} />
+        <ParListPrint titulo={t("generalCalls")} items={citaciones} />
+        <ParListPrint titulo={t("locations")} items={localizaciones} />
+        <ParListPrint titulo={t("deptCalls")} items={llamadas} />
       </div>
 
       <div className="tool">
-        <div className="tool-head"><span className="hex"></span><h3>Escenas del día</h3><div className="right">{d.escenas_resumen || `${escenas.length} escenas`}</div></div>
+        <div className="tool-head"><span className="hex"></span><h3>{t("dayScenes")}</h3><div className="right">{d.escenas_resumen || t("scenesFallback", { n: escenas.length })}</div></div>
         <div className="twrap">
           <table className="t">
-            <tr><th>Hora</th><th>Esc.</th><th>Int/Ext</th><th>Día/Noche</th><th>Set / Descripción</th><th>Personajes</th><th>Págs.</th></tr>
+            <tr><th>{t("colTime")}</th><th>{t("colScene")}</th><th>{t("colIntExt")}</th><th>{t("colDayNight")}</th><th>{t("colSetDesc")}</th><th>{t("colChars")}</th><th>{t("colPages")}</th></tr>
             {escenas.map((e, i) => (
               <tr key={i}>
                 <td className="mono">{e.hora}</td>
@@ -370,12 +376,12 @@ function CallsheetPrint({ fila, onVolver }: { fila: Fila; onVolver: () => void }
       </div>
 
       <div className="grid2">
-        <ParListPrint titulo="Reparto — citación individual" items={reparto} />
-        <ParListPrint titulo="Contactos clave" items={contactos} />
+        <ParListPrint titulo={t("individualCast")} items={reparto} />
+        <ParListPrint titulo={t("keyContacts")} items={contactos} />
       </div>
 
       {d.notas && (
-        <div className="note"><b>Notas de producción:</b> {d.notas}</div>
+        <div className="note"><b>{t("prodNotesLabel")}</b> {d.notas}</div>
       )}
     </div>
   );

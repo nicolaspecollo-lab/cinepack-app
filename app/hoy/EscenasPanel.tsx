@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { HERRAMIENTA_POR_ID } from "../herramientas";
+import { useNombreHerramienta } from "./HerramientasPanel";
 
 type DialogoLinea = { personaje: string; parentetico?: string; texto: string };
 
@@ -58,6 +60,8 @@ type Plano = {
 };
 
 export default function EscenasPanel({ departamento }: { departamento: string }) {
+  const t = useTranslations("escenas");
+  const nombreDe = useNombreHerramienta();
   const [escenas, setEscenas] = useState<Escena[]>([]);
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [propuestas, setPropuestas] = useState<Propuesta[]>([]);
@@ -91,17 +95,15 @@ export default function EscenasPanel({ departamento }: { departamento: string })
     load();
   }, [load]);
 
-  if (loading) return <p className="cons-text">Cargando escenas…</p>;
+  if (loading) return <p className="cons-text">{t("loading")}</p>;
 
   if (escenas.length === 0) {
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <h4>Sin escenas todavía</h4>
+        <h4>{t("noScenesTitle")}</h4>
         <p>
-          <b>Escena 3D</b> es la vista donde, sobre cada escena, se reúnen las propuestas de todos los
-          departamentos. En cuanto se suba y confirme un guion en <b>Guion</b>, las escenas aparecerán aquí y
-          {" "}{departamento} verá cómo conecta su trabajo con el resto, escena por escena.
+          {t("noScenesDesc", { name: "Escena 3D", script: "Guion", dept: departamento })}
         </p>
       </div>
     );
@@ -124,18 +126,18 @@ export default function EscenasPanel({ departamento }: { departamento: string })
       <div className="tool">
         <div className="tool-head">
           <span className="hex"></span>
-          <h3>Índice de escenas</h3>
-          <div className="right">{escenas.length} escenas</div>
+          <h3>{t("sceneIndex")}</h3>
+          <div className="right">{t("scenesCount", { n: escenas.length })}</div>
         </div>
         <div className="twrap">
           <table className="t">
             <tbody>
               <tr>
-                <th>Esc.</th>
-                <th>Encabezado</th>
-                <th>Lugar</th>
-                <th>Personajes</th>
-                <th>Estado</th>
+                <th>{t("colScene")}</th>
+                <th>{t("colHeading")}</th>
+                <th>{t("colPlace")}</th>
+                <th>{t("colChars")}</th>
+                <th>{t("colStatus")}</th>
                 <th></th>
               </tr>
               {escenas.map((e) => (
@@ -148,7 +150,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
                   <td>{e.personajes?.length ? e.personajes.join(", ") : "—"}</td>
                   <td>
                     <span className={`pill ${e.estado === "confirmada" ? "p-ok" : "p-warn"}`}>
-                      {e.estado === "confirmada" ? "Confirmada" : "Borrador"}
+                      {e.estado === "confirmada" ? t("confirmed") : t("draft")}
                     </span>
                   </td>
                   <td>
@@ -157,7 +159,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
                       style={{ cursor: "pointer", borderColor: "var(--acc)", color: "var(--acc)" }}
                       onClick={() => setAbierta(abierta === e.numero ? null : e.numero)}
                     >
-                      {abierta === e.numero ? "Cerrar ↑" : "Ficha completa ↓"}
+                      {abierta === e.numero ? t("close") : t("fullSheet")}
                     </span>
                   </td>
                 </tr>
@@ -172,7 +174,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
           <div className="tool-head">
             <span className="hex"></span>
             <h3>
-              Ficha de Escena — Esc. {escenaAbierta.numero} · {escenaAbierta.encabezado}
+              {t("sceneSheet", { n: escenaAbierta.numero, heading: escenaAbierta.encabezado })}
             </h3>
             <span className="tag">
               {[escenaAbierta.int_ext, escenaAbierta.dia_noche].filter(Boolean).join(" · ") || "—"}
@@ -182,7 +184,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
           <div className="grid2">
             <div className="mini">
               <h4>
-                <span className="hex"></span>Personajes
+                <span className="hex"></span>{t("characters")}
               </h4>
               <ul>
                 {escenaAbierta.personajes?.length ? (
@@ -193,14 +195,14 @@ export default function EscenasPanel({ departamento }: { departamento: string })
                   ))
                 ) : (
                   <li>
-                    <span>Sin personajes asignados</span>
+                    <span>{t("noCharsAssigned")}</span>
                   </li>
                 )}
               </ul>
             </div>
             <div className="mini">
               <h4>
-                <span className="hex"></span>Planos técnicos ({planosAbierta.length})
+                <span className="hex"></span>{t("techShots", { n: planosAbierta.length })}
               </h4>
               <ul>
                 {planosAbierta.length ? (
@@ -214,7 +216,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
                   ))
                 ) : (
                   <li>
-                    <span>Sin desglose técnico todavía — pendiente de Guion Técnico</span>
+                    <span>{t("noTechBreakdown")}</span>
                   </li>
                 )}
               </ul>
@@ -222,13 +224,11 @@ export default function EscenasPanel({ departamento }: { departamento: string })
           </div>
           <div className="mini" style={{ marginTop: "12px" }}>
             <h4>
-              <span className="hex"></span>Propuestas de los departamentos para esta escena ({propuestasAbierta.length})
+              <span className="hex"></span>{t("deptProposals", { n: propuestasAbierta.length })}
             </h4>
             {propuestasAbierta.length === 0 ? (
               <p style={{ fontSize: "12px", color: "var(--muted)", lineHeight: 1.6 }}>
-                Todavía ningún departamento cargó propuestas para la Esc. {escenaAbierta.numero}. Cuando
-                Fotografía, Arte, Sonido u otros agreguen filas con esta escena en sus herramientas, aparecerán
-                acá reunidas — esta es la vista 3D de la escena.
+                {t("noProposalsYet", { n: escenaAbierta.numero })}
               </p>
             ) : (
               <ul>
@@ -241,7 +241,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
                         const resumen = resumenPropuesta(p);
                         return (
                           <li key={i} style={{ display: "block", fontSize: "12px", color: "var(--muted)", padding: "2px 0" }}>
-                            <b style={{ color: "var(--text)" }}>{h?.nombre ?? p.herramienta_id}</b>
+                            <b style={{ color: "var(--text)" }}>{h ? nombreDe(h) : p.herramienta_id}</b>
                             {resumen ? ` — ${resumen}` : ""}
                           </li>
                         );
@@ -256,7 +256,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
           {escenaAbierta.dialogo?.length > 0 && (
             <div className="mini" style={{ marginTop: "12px" }}>
               <h4>
-                <span className="hex"></span>Diálogo
+                <span className="hex"></span>{t("dialogue")}
               </h4>
               <ul>
                 {escenaAbierta.dialogo.map((d, i) => (
@@ -274,9 +274,7 @@ export default function EscenasPanel({ departamento }: { departamento: string })
       )}
 
       <div className="note">
-        <b>Esta vista es compartida</b> por los 13 departamentos: las escenas vienen del desglose de{" "}
-        <b>Guion</b> y los planos técnicos de <b>Guion Técnico</b>. Cada escena confirmada queda disponible aquí
-        para {departamento}.
+        <b>{t("sharedView")}</b>{t("sharedDesc", { script: "Guion", techScript: "Guion Técnico", dept: departamento })}
       </div>
     </div>
   );
