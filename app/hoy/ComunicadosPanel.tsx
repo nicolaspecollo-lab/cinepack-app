@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { ACCENTS } from "../constants";
 
@@ -26,10 +27,10 @@ type Acuse = {
 
 type MiembroDept = { user_id: string; departamento: string; full_name: string };
 
-const TIPO_LABEL: Record<Tipo, string> = {
-  info: "Información",
-  sugerencia: "Sugerencia",
-  consulta: "Consulta",
+const TIPO_LABEL_KEY: Record<Tipo, string> = {
+  info: "tipoInfo",
+  sugerencia: "tipoSugerencia",
+  consulta: "tipoConsulta",
 };
 
 const TIPO_CLASS: Record<Tipo, string> = {
@@ -38,16 +39,16 @@ const TIPO_CLASS: Record<Tipo, string> = {
   consulta: "tag-con",
 };
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return t("timeHoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
+  if (days === 1) return t("timeYesterday");
+  return t("timeDaysAgo", { n: days });
 }
 
 export default function ComunicadosPanel({
@@ -57,6 +58,8 @@ export default function ComunicadosPanel({
   deDepartamento: string;
   fullName: string;
 }) {
+  const t = useTranslations("comunicados");
+  const tHp = useTranslations("hp");
   const [comunicados, setComunicados] = useState<Comunicado[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -197,7 +200,7 @@ export default function ComunicadosPanel({
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("noProject") });
       return;
     }
 
@@ -238,12 +241,12 @@ export default function ComunicadosPanel({
   return (
     <>
       <div className="com-list">
-        {loading && <p className="com-text">Cargando comunicados…</p>}
+        {loading && <p className="com-text">{t("loading")}</p>}
         {!loading && comunicados.length === 0 && (
           <div className="soon-box">
             <span className="hex"></span>
-            <h4>Sin comunicados</h4>
-            <p>El tablón de comunicados del equipo aparecerá aquí.</p>
+            <h4>{t("emptyTitle")}</h4>
+            <p>{t("emptyDesc")}</p>
           </div>
         )}
         {comunicados.map((c) => {
@@ -261,10 +264,10 @@ export default function ComunicadosPanel({
                 <div>
                   <div className="com-title">{c.titulo}</div>
                   <span className="com-meta">
-                    {c.de_departamento} · {c.autor_nombre} · {timeAgo(c.created_at)}
+                    {c.de_departamento} · {c.autor_nombre} · {timeAgo(c.created_at, tHp)}
                   </span>
                 </div>
-                <span className={`pill ${TIPO_CLASS[c.tipo]}`}>{TIPO_LABEL[c.tipo]}</span>
+                <span className={`pill ${TIPO_CLASS[c.tipo]}`}>{t(TIPO_LABEL_KEY[c.tipo])}</span>
               </div>
               <div
                 className="com-text"
@@ -282,15 +285,15 @@ export default function ComunicadosPanel({
                 {c.texto}
               </div>
               {!expanded && c.texto.length > 180 && (
-                <span style={{ fontSize: "11px", color: "var(--cyan)" }}>Ver más…</span>
+                <span style={{ fontSize: "11px", color: "var(--cyan)" }}>{t("seeMore")}</span>
               )}
 
               {expanded && (
                 <div onClick={(e) => e.stopPropagation()} style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div>
-                    <span className="afield" style={{ display: "block", marginBottom: "4px" }}>Visualizado por:</span>
+                    <span className="afield" style={{ display: "block", marginBottom: "4px" }}>{t("viewedBy")}</span>
                     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {visualizado.length === 0 && <span className="com-text">— ningún departamento completó el acuse aún</span>}
+                      {visualizado.length === 0 && <span className="com-text">{t("noneViewedYet")}</span>}
                       {visualizado.map((d) => (
                         <span
                           key={d}
@@ -302,9 +305,9 @@ export default function ComunicadosPanel({
                     </div>
                   </div>
                   <div>
-                    <span className="afield" style={{ display: "block", marginBottom: "4px" }}>Pendiente de visualización:</span>
+                    <span className="afield" style={{ display: "block", marginBottom: "4px" }}>{t("pendingView")}</span>
                     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {pendiente.length === 0 && <span className="com-text">— todos los departamentos acusaron</span>}
+                      {pendiente.length === 0 && <span className="com-text">{t("allAcked")}</span>}
                       {pendiente.map((d) => (
                         <span key={d} className="hex" title={d} style={{ background: `var(--${ACCENTS[d] ?? "lime"})`, opacity: 0.3, width: "18px", height: "15px" }}></span>
                       ))}
@@ -316,7 +319,7 @@ export default function ComunicadosPanel({
                     disabled={yaAcuso}
                     onClick={() => handleAcuse(c)}
                   >
-                    {yaAcuso ? "Ya hiciste acuse de recibo" : "Acuse de recibo"}
+                    {yaAcuso ? t("alreadyAcked") : t("ackButton")}
                   </button>
                 </div>
               )}
@@ -327,45 +330,45 @@ export default function ComunicadosPanel({
 
       <div className="cons-new" style={{ paddingTop: 0 }}>
         <button className="btn acc" style={{ "--acc": "var(--cyan)" } as React.CSSProperties} onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Nuevo comunicado"}
+          {showForm ? t("cancel") : t("newComunicado")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleCreate} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
           <label className="afield">
-            <span>Tipo</span>
+            <span>{t("typeLabel")}</span>
             <select value={tipo} onChange={(e) => setTipo(e.target.value as Tipo)}>
-              <option value="info">Información</option>
-              <option value="sugerencia">Sugerencia</option>
-              <option value="consulta">Consulta</option>
+              <option value="info">{t("tipoInfo")}</option>
+              <option value="sugerencia">{t("tipoSugerencia")}</option>
+              <option value="consulta">{t("tipoConsulta")}</option>
             </select>
           </label>
           <label className="afield">
-            <span>Título</span>
+            <span>{t("titleLabel")}</span>
             <input
               type="text"
               required
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Resumen breve del comunicado"
+              placeholder={t("titlePlaceholder")}
             />
           </label>
           <label className="afield">
-            <span>Mensaje</span>
+            <span>{t("messageLabel")}</span>
             <textarea
               required
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               rows={3}
-              placeholder="Detalle del comunicado"
+              placeholder={t("messagePlaceholder")}
             />
           </label>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Publicando…" : "Publicar comunicado"}
+            {sending ? t("publishing") : t("publish")}
           </button>
         </form>
       )}

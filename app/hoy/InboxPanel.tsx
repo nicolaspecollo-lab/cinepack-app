@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 export type InboxItem = {
   id: string;
@@ -30,6 +31,7 @@ export default function InboxPanel({
   onDescartar: (id: string) => void;
   onIrAPulso: () => void;
 }) {
+  const t = useTranslations("inbox");
   const [open, setOpen] = useState(false);
   const [snoozed, setSnoozed] = useState<Record<string, number>>({});
   const ref = useRef<HTMLDivElement>(null);
@@ -74,23 +76,23 @@ export default function InboxPanel({
     <div className="cp-inbox" ref={ref}>
       <div className="cp-inbox-panel">
           <div className="cp-inbox-head">
-            <span>Notificaciones</span>
+            <span>{t("title")}</span>
             {visibles.length > 0 && (
               <button className="cp-inbox-go" onClick={() => { onIrAPulso(); setOpen(false); }}>
-                Ver en Pulso →
+                {t("seeInPulse")}
               </button>
             )}
           </div>
-          {visibles.length === 0 && <div className="cp-inbox-empty">Todo al día. Sin pendientes.</div>}
+          {visibles.length === 0 && <div className="cp-inbox-empty">{t("allCaughtUp")}</div>}
           {visibles.length > 0 && (
             <ul className="cp-inbox-list">
               {visibles.map((i) => (
                 <li key={i.id}>
-                  <span className={`cp-inbox-pill cp-inbox-${i.tipo}`}>{i.tipo === "tarea" ? "Tarea" : "Alerta"}</span>
+                  <span className={`cp-inbox-pill cp-inbox-${i.tipo}`}>{i.tipo === "tarea" ? t("task") : t("alert")}</span>
                   <span className="cp-inbox-texto">{i.texto}</span>
                   <span className="cp-inbox-actions">
-                    <button title="Posponer 1h" onClick={() => snooze(i.id)}>💤</button>
-                    <button title="Resolver" onClick={() => (i.tipo === "tarea" ? onCompletar(i.id) : onDescartar(i.id))}>✓</button>
+                    <button title={t("snooze")} onClick={() => snooze(i.id)}>💤</button>
+                    <button title={t("resolve")} onClick={() => (i.tipo === "tarea" ? onCompletar(i.id) : onDescartar(i.id))}>✓</button>
                   </span>
                 </li>
               ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { ACCENTS, DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 
@@ -38,16 +39,16 @@ type MiembroProyecto = {
   departamento: string;
 };
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins} min`;
+  if (mins < 1) return t("timeNow");
+  if (mins < 60) return t("timeMinsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `hace ${hours} h`;
+  if (hours < 24) return t("timeHoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  if (days === 1) return "ayer";
-  return `hace ${days} días`;
+  if (days === 1) return t("timeYesterday");
+  return t("timeDaysAgo", { n: days });
 }
 
 export default function ConsultasPanel({
@@ -57,6 +58,8 @@ export default function ConsultasPanel({
   deDepartamento: string;
   fullName: string;
 }) {
+  const t = useTranslations("consultas");
+  const tHp = useTranslations("hp");
   const [consFilter, setConsFilter] = useState<ConsFilter>("todas");
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,15 +138,15 @@ export default function ConsultasPanel({
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
-      setMsg({ type: "err", text: "No se encontró el proyecto activo." });
+      setMsg({ type: "err", text: t("noProject") });
       return;
     }
     if (paraDepartamentos.length === 0) {
-      setMsg({ type: "err", text: "Selecciona al menos un departamento." });
+      setMsg({ type: "err", text: t("selectDept") });
       return;
     }
     if (isPrivate && !privateRecipientId) {
-      setMsg({ type: "err", text: "Selecciona el destinatario de la consulta privada." });
+      setMsg({ type: "err", text: t("selectRecipientErr") });
       return;
     }
 
@@ -244,24 +247,24 @@ export default function ConsultasPanel({
     <>
       <div className="cons-filters">
         <button className={`cfilter ${consFilter === "todas" ? "active" : ""}`} onClick={() => setConsFilter("todas")}>
-          Todas
+          {t("all")}
         </button>
         <button className={`cfilter ${consFilter === "pend" ? "active" : ""}`} onClick={() => setConsFilter("pend")}>
-          Pendientes
+          {t("pending")}
         </button>
         <button className={`cfilter ${consFilter === "res" ? "active" : ""}`} onClick={() => setConsFilter("res")}>
-          Resueltas
+          {t("resolved")}
         </button>
         <div style={{ flex: 1 }} />
         <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? "Cancelar" : "+ Nueva consulta"}
+          {showForm ? t("cancel") : t("newConsulta")}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleCreate} className="cons-new cons-form">
           <label className="afield">
-            <span>Para (uno o más departamentos)</span>
+            <span>{t("toLabel")}</span>
             <div className="chip-group">
               {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
                 <button
@@ -278,7 +281,7 @@ export default function ConsultasPanel({
           </label>
           {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
             <label className="afield">
-              <span>Cargo al que se dirige (opcional)</span>
+              <span>{t("roleLabel")}</span>
               <div className="chip-group">
                 {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
                   <button
@@ -296,14 +299,14 @@ export default function ConsultasPanel({
           )}
           <label className="afield" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
             <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} style={{ width: "auto" }} />
-            <span style={{ textTransform: "none", fontSize: "13px" }}>🔒 Consulta privada (solo la ve el destinatario)</span>
+            <span style={{ textTransform: "none", fontSize: "13px" }}>{t("privateCheck")}</span>
           </label>
 
           {isPrivate && (
             <label className="afield">
-              <span>Destinatario (@usuario)</span>
+              <span>{t("recipientLabel")}</span>
               <select value={privateRecipientId} onChange={(e) => setPrivateRecipientId(e.target.value)}>
-                <option value="">Selecciona un destinatario…</option>
+                <option value="">{t("selectRecipient")}</option>
                 {miembrosProyecto
                   .filter((m) => paraDepartamentos.length === 0 || paraDepartamentos.includes(m.departamento))
                   .map((m) => (
@@ -316,41 +319,41 @@ export default function ConsultasPanel({
           )}
 
           <label className="afield">
-            <span>Título</span>
+            <span>{t("titleLabel")}</span>
             <input
               type="text"
               required
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Resumen breve de la consulta"
+              placeholder={t("titlePlaceholder")}
             />
           </label>
           <label className="afield">
-            <span>Mensaje</span>
+            <span>{t("messageLabel")}</span>
             <textarea
               required
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               rows={3}
-              placeholder="Detalle de la consulta"
+              placeholder={t("messagePlaceholder")}
             />
           </label>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" className="abtn" disabled={sending}>
-            {sending ? "Enviando…" : "Enviar consulta"}
+            {sending ? t("sending") : t("send")}
           </button>
         </form>
       )}
 
       <div className="cons-list">
-        {loading && <p className="cons-text">Cargando consultas…</p>}
+        {loading && <p className="cons-text">{t("loading")}</p>}
         {!loading && filtered.length === 0 && (
           <div className="soon-box">
             <span className="hex"></span>
-            <h4>Sin consultas</h4>
-            <p>Las consultas entre departamentos aparecerán aquí, con su estado y respuestas.</p>
+            <h4>{t("emptyTitle")}</h4>
+            <p>{t("emptyDesc")}</p>
           </div>
         )}
         {filtered.map((c) => {
@@ -368,19 +371,19 @@ export default function ConsultasPanel({
                     {c.is_private
                       ? `${c.autor_nombre} → @${c.private_recipient_nombre}`
                       : `${c.de_departamento} → ${c.para_departamentos.join(", ")}${c.para_cargo ? ` (${c.para_cargo})` : ""}`}
-                    {" "}· {c.autor_nombre} · {timeAgo(c.created_at)}
+                    {" "}· {c.autor_nombre} · {timeAgo(c.created_at, tHp)}
                   </span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                  {c.is_private && <span className="pill" title="Solo visible para el emisor, el destinatario y el Ejecutivo">🔒 Privada</span>}
+                  {c.is_private && <span className="pill" title={t("privateTitle")}>{t("privatePill")}</span>}
                   {c.estado === "resuelta" ? (
-                    <span className="pill p-ok">Resuelta</span>
+                    <span className="pill p-ok">{t("resolvedPill")}</span>
                   ) : (
                     <span className="pill p-warn">
-                      <span className="pulse"></span>Pendiente
+                      <span className="pulse"></span>{t("pendingPill")}
                     </span>
                   )}
-                  {c.respuestas.length > 0 && <span className="pill cons-chat-badge">💬 Conversación</span>}
+                  {c.respuestas.length > 0 && <span className="pill cons-chat-badge">{t("chatPill")}</span>}
                 </div>
               </div>
               <div className="cons-text">{c.texto}</div>
@@ -393,7 +396,7 @@ export default function ConsultasPanel({
 
               {c.estado === "resuelta" && c.respuesta && (
                 <div className="cons-text">
-                  <b>Resuelta por {c.respuesta_autor}:</b> {c.respuesta}
+                  <b>{t("resolvedBy", { name: c.respuesta_autor ?? "" })}</b> {c.respuesta}
                 </div>
               )}
 
@@ -404,7 +407,7 @@ export default function ConsultasPanel({
                     className={`btn ${chatOpen[c.id] ? "acc" : ""}`}
                     onClick={() => setChatOpen((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
                   >
-                    💬 Chat
+                    {t("chatBtn")}
                   </button>
                   {esAutor && (
                     <button
@@ -412,7 +415,7 @@ export default function ConsultasPanel({
                       className="btn acc"
                       onClick={() => setResolveOpen((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
                     >
-                      Resolver
+                      {t("resolveBtn")}
                     </button>
                   )}
                 </div>
@@ -422,13 +425,13 @@ export default function ConsultasPanel({
                 <div className="cons-actions">
                   <input
                     type="text"
-                    placeholder="Escribe un mensaje…"
+                    placeholder={t("msgPlaceholder")}
                     value={respuestaDrafts[c.id] ?? ""}
                     onChange={(e) => setRespuestaDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
                     className="cons-chat-input"
                   />
                   <button className="btn" onClick={() => handleResponder(c)}>
-                    Enviar
+                    {t("sendBtn")}
                   </button>
                 </div>
               )}
@@ -437,13 +440,13 @@ export default function ConsultasPanel({
                 <div className="cons-actions">
                   <input
                     type="text"
-                    placeholder="Nota de cierre (opcional)…"
+                    placeholder={t("closeNotePlaceholder")}
                     value={resolverDrafts[c.id] ?? ""}
                     onChange={(e) => setResolverDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
                     className="cons-chat-input"
                   />
                   <button className="btn acc" onClick={() => handleResolve(c.id)}>
-                    Confirmar resolución
+                    {t("confirmResolve")}
                   </button>
                 </div>
               )}
