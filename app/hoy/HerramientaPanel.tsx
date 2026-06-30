@@ -1798,6 +1798,7 @@ const FICHA_EQUIPO_IDS = new Set([
   "arte-localizaciones-arte",
   "foto-electrico",
   "foto-dit-color",
+  "foto-dit-log-backup",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -1832,7 +1833,7 @@ function FichaEquipo({
   const colFoto = columnas.find((c) => c.tipo === "archivo");
   const tituloKey = FICHA_EQUIPO_TITULO[herramientaId];
   const colTitulo = tituloKey ? columnas.find((c) => c.key === tituloKey) : columnas[0];
-  const colEstado = columnas.find((c) => c.tipo === "estado" && c.key === "estado");
+  const colEstado = columnas.find((c) => c.tipo === "estado" && (c.key === "estado" || c.key === "checksum"));
   const colSubtitulo = columnas.find(
     (c) => c.key !== colTitulo?.key && c.key !== colFoto?.key && c.key !== colEstado?.key && (!c.tipo || c.tipo === "texto")
   );
@@ -1865,6 +1866,7 @@ function FichaEquipo({
           <div className="hp-fe-head">
             <input
               className="hp-fe-titulo"
+              type={colTitulo?.tipo === "fecha" ? "date" : "text"}
               defaultValue={colTitulo ? f.datos?.[colTitulo.key] ?? "" : ""}
               placeholder={colTitulo?.label ?? ""}
               readOnly={!editable}
