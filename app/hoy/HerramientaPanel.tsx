@@ -430,6 +430,19 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) && (
+        <ContinuidadPersonaje
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && AGENDA_DIA_IDS.has(herramienta.id) && (
         <AgendaDia
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -487,7 +500,8 @@ function HerramientaData({
         !PLANO_BOARD_IDS.has(herramienta.id) &&
         !PENDIENTES_BOARD_IDS.has(herramienta.id) &&
         !FICHA_EQUIPO_IDS.has(herramienta.id) &&
-        !AGENDA_DIA_IDS.has(herramienta.id) && (
+        !AGENDA_DIA_IDS.has(herramienta.id) &&
+        !CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -2143,6 +2157,192 @@ function AgendaDia({
         ))
       ) : (
         <div className="hp-agenda-list">{ordenarPorHora(filas).map(Cita)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Continuidad por personaje (desglose de vestuario/maquillaje) ----
+// Desglose de vestuario y de maquillaje por escena son, en el fondo, la
+// misma herramienta de continuidad que ya existe como galería (que se
+// agrupa sola por personaje) — solo que estas dos son tipo "tabla" con
+// foto, así que no recibían ese agrupado. Mismo criterio, misma vista.
+const CONTINUIDAD_PERSONAJE_IDS = new Set(["vest-desglose-escenas", "maq-desglose-escenas"]);
+
+function ContinuidadPersonaje({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colPersonaje = columnas.find((c) => c.key === "personaje");
+  const colEscena = columnas.find((c) => c.key === "escena");
+  const colFoto = columnas.find((c) => c.tipo === "archivo");
+  const colEstado = columnas.find((c) => c.tipo === "estado" && c.key === "estado");
+  const colDesc = columnas.find((c) => c.tipo === "largo" && /desc/.test(c.key));
+  const usados = new Set(
+    [colPersonaje?.key, colEscena?.key, colFoto?.key, colEstado?.key, colDesc?.key].filter(Boolean) as string[]
+  );
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
+
+  function Tarjeta(f: Fila) {
+    const estadoVal = colEstado ? f.datos?.[colEstado.key] ?? "" : "";
+    return (
+      <div className="hp-fe-card" key={f.id}>
+        <div className="hp-fe-photo">
+          {colFoto ? (
+            <ArchivoCell
+              path={f.datos?.[colFoto.key] ?? ""}
+              editable={editable}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              filaId={f.id}
+              colKey={colFoto.key}
+              onSave={(v) => set(f, colFoto.key, v)}
+            />
+          ) : (
+            <span className="hp-fe-photo-placeholder hex" />
+          )}
+        </div>
+        <div className="hp-fe-body">
+          <div className="hp-fe-head">
+            {colEscena && (
+              <input
+                className="hp-fe-titulo"
+                defaultValue={f.datos?.[colEscena.key] ?? ""}
+                placeholder={colEscena.label}
+                readOnly={!editable}
+                onBlur={(e) => set(f, colEscena.key, e.target.value)}
+              />
+            )}
+            {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+          </div>
+          {colEstado && (
+            <select
+              className={`hp-fe-estado tono-${estadoTono(estadoVal)}`}
+              defaultValue={estadoVal}
+              disabled={!editable}
+              onChange={(e) => set(f, colEstado.key, e.target.value)}
+            >
+              <option value="">{t("noStatus")}</option>
+              {(colEstado.opciones ?? []).map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+          )}
+          {colDesc && (
+            <textarea
+              className="hp-agenda-que"
+              defaultValue={f.datos?.[colDesc.key] ?? ""}
+              placeholder={colDesc.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, colDesc.key, e.target.value)}
+              rows={2}
+            />
+          )}
+          {colsChip.length > 0 && (
+            <div className="hp-fe-specs">
+              {colsChip.map((c) => (
+                <label className="hp-fe-chip" key={c.key}>
+                  <span className="hp-fe-chip-label">{c.label}</span>
+                  {c.tipo === "estado" ? (
+                    <select
+                      className="hp-fe-chip-select"
+                      defaultValue={f.datos?.[c.key] ?? ""}
+                      disabled={!editable}
+                      onChange={(e) => set(f, c.key, e.target.value)}
+                    >
+                      <option value="">—</option>
+                      {(c.opciones ?? []).map((op) => (
+                        <option key={op} value={op}>{op}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="hp-fe-chip-input"
+                      type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
+                      defaultValue={f.datos?.[c.key] ?? ""}
+                      readOnly={!editable}
+                      placeholder="—"
+                      onBlur={(e) => set(f, c.key, e.target.value)}
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
+          {colsNotas.map((c) => (
+            <textarea
+              key={c.key}
+              className="hp-fe-nota"
+              defaultValue={c.key in (f.datos ?? {}) ? f.datos[c.key] : ""}
+              placeholder={c.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, c.key, e.target.value)}
+              rows={2}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const grupos = colPersonaje
+    ? Object.entries(
+        filas.reduce<Record<string, Fila[]>>((acc, f) => {
+          const nombre = (f.datos?.[colPersonaje.key] ?? "").trim() || t("noCharacter");
+          (acc[nombre] ??= []).push(f);
+          return acc;
+        }, {})
+      ).sort(([a], [b]) => a.localeCompare(b, "es"))
+    : null;
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : grupos ? (
+        grupos.map(([nombre, fs]) => (
+          <div className="hp-gal-group" key={nombre}>
+            <div className="hp-gal-group-head">
+              <span className="hex"></span>
+              <span>{nombre}</span>
+              <span className="hp-gal-group-count">{fs.length}</span>
+            </div>
+            <div className="hp-fe-grid">{fs.map(Tarjeta)}</div>
+          </div>
+        ))
+      ) : (
+        <div className="hp-fe-grid">{filas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
