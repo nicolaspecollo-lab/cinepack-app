@@ -430,6 +430,19 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && AGENDA_DIA_IDS.has(herramienta.id) && (
+        <AgendaDia
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && FICHA_EQUIPO_IDS.has(herramienta.id) && (
         <FichaEquipo
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -473,7 +486,8 @@ function HerramientaData({
         herramienta.id !== "maq-efectos-especiales-maq" &&
         !PLANO_BOARD_IDS.has(herramienta.id) &&
         !PENDIENTES_BOARD_IDS.has(herramienta.id) &&
-        !FICHA_EQUIPO_IDS.has(herramienta.id) && (
+        !FICHA_EQUIPO_IDS.has(herramienta.id) &&
+        !AGENDA_DIA_IDS.has(herramienta.id) && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -1906,6 +1920,229 @@ function FichaEquipo({
         </div>
       ) : (
         <div className="hp-fe-grid">{filas.map(Tarjeta)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Agenda del día (citaciones / pruebas) ----
+// Calendario de preparación de maquillaje y calendario de pruebas de
+// vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
+// Se lee como una agenda por día, no como filas sueltas — quién es la
+// próxima cita importa más que cualquier otro dato.
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas"]);
+
+function AgendaDia({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (key: string) => columnas.find((c) => c.key === key)?.label ?? key;
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colFecha = columnas.find((c) => c.tipo === "fecha");
+  const colHora = columnas.find((c) => /^hora/.test(c.key));
+  const colActor = columnas.find((c) => c.key === "actor");
+  const colPersonaje = columnas.find((c) => c.key === "personaje");
+  const colQue = columnas.find((c) => /look/.test(c.key));
+  const colResultado = columnas.find((c) => c.tipo === "estado" && c.key === "resultado");
+  const colFoto = columnas.find((c) => c.tipo === "archivo");
+  const colNotas = columnas.find((c) => c.key === "notas");
+  const colTPrevisto = columnas.find((c) => c.key === "tiempo_previsto");
+  const colTReal = columnas.find((c) => c.key === "tiempo_real");
+  const usados = new Set(
+    [
+      colFecha?.key, colHora?.key, colActor?.key, colPersonaje?.key, colQue?.key,
+      colResultado?.key, colFoto?.key, colNotas?.key, colTPrevisto?.key, colTReal?.key,
+    ].filter(Boolean) as string[]
+  );
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && c.tipo !== "largo");
+
+  function ordenarPorHora(fs: Fila[]) {
+    if (!colHora) return fs;
+    return [...fs].sort((a, b) => (a.datos?.[colHora.key] ?? "").localeCompare(b.datos?.[colHora.key] ?? ""));
+  }
+
+  function Cita(f: Fila) {
+    const resultadoVal = colResultado ? f.datos?.[colResultado.key] ?? "" : "";
+    return (
+      <div className="hp-agenda-card" key={f.id}>
+        {colFoto && (
+          <ArchivoCell
+            path={f.datos?.[colFoto.key] ?? ""}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey={colFoto.key}
+            onSave={(v) => set(f, colFoto.key, v)}
+          />
+        )}
+        <div className="hp-agenda-body">
+          <div className="hp-agenda-head">
+            {colHora && (
+              <input
+                className="hp-agenda-hora"
+                defaultValue={f.datos?.[colHora.key] ?? ""}
+                placeholder={label(colHora.key)}
+                readOnly={!editable}
+                onBlur={(e) => set(f, colHora.key, e.target.value)}
+              />
+            )}
+            {colActor && (
+              <input
+                className="hp-agenda-actor"
+                defaultValue={f.datos?.[colActor.key] ?? ""}
+                placeholder={label(colActor.key)}
+                readOnly={!editable}
+                onBlur={(e) => set(f, colActor.key, e.target.value)}
+              />
+            )}
+            {colPersonaje && (
+              <input
+                className="hp-agenda-personaje"
+                defaultValue={f.datos?.[colPersonaje.key] ?? ""}
+                placeholder={label(colPersonaje.key)}
+                readOnly={!editable}
+                onBlur={(e) => set(f, colPersonaje.key, e.target.value)}
+              />
+            )}
+            <span className="hp-agenda-spacer" />
+            {colResultado && (
+              <select
+                className={`hp-agenda-resultado tono-${estadoTono(resultadoVal)}`}
+                defaultValue={resultadoVal}
+                disabled={!editable}
+                onChange={(e) => set(f, colResultado.key, e.target.value)}
+              >
+                <option value="">{t("noStatus")}</option>
+                {(colResultado.opciones ?? []).map((op) => (
+                  <option key={op} value={op}>{op}</option>
+                ))}
+              </select>
+            )}
+            {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+          </div>
+          {colQue && (
+            <textarea
+              className="hp-agenda-que"
+              defaultValue={f.datos?.[colQue.key] ?? ""}
+              placeholder={colQue.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, colQue.key, e.target.value)}
+              rows={2}
+            />
+          )}
+          {(colTPrevisto || colTReal) && (
+            <div className="hp-agenda-tiempos">
+              {colTPrevisto && (
+                <label className="hp-agenda-chip">
+                  <span>{label("tiempo_previsto")}</span>
+                  <input
+                    type="number"
+                    defaultValue={f.datos?.tiempo_previsto ?? ""}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, "tiempo_previsto", e.target.value)}
+                  />
+                </label>
+              )}
+              {colTPrevisto && colTReal && <span className="hp-agenda-arrow">→</span>}
+              {colTReal && (
+                <label className="hp-agenda-chip">
+                  <span>{label("tiempo_real")}</span>
+                  <input
+                    type="number"
+                    defaultValue={f.datos?.tiempo_real ?? ""}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, "tiempo_real", e.target.value)}
+                  />
+                </label>
+              )}
+            </div>
+          )}
+          {colsChip.length > 0 && (
+            <div className="hp-agenda-specs">
+              {colsChip.map((c) => (
+                <label className="hp-agenda-chip" key={c.key}>
+                  <span>{c.label}</span>
+                  <input
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, c.key, e.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          )}
+          {colNotas && (
+            <textarea
+              className="hp-agenda-notas"
+              defaultValue={f.datos?.notas ?? ""}
+              placeholder={colNotas.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, "notas", e.target.value)}
+              rows={2}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const grupos = colFecha
+    ? Object.entries(
+        filas.reduce<Record<string, Fila[]>>((acc, f) => {
+          const fecha = (f.datos?.[colFecha.key] ?? "").trim() || t("noScene");
+          (acc[fecha] ??= []).push(f);
+          return acc;
+        }, {})
+      ).sort(([a], [b]) => a.localeCompare(b))
+    : null;
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : grupos ? (
+        grupos.map(([fecha, fs]) => (
+          <div className="hp-gal-group" key={fecha}>
+            <div className="hp-gal-group-head">
+              <span className="hex"></span>
+              <span>{fecha}</span>
+              <span className="hp-gal-group-count">{fs.length}</span>
+            </div>
+            <div className="hp-agenda-list">{ordenarPorHora(fs).map(Cita)}</div>
+          </div>
+        ))
+      ) : (
+        <div className="hp-agenda-list">{ordenarPorHora(filas).map(Cita)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
