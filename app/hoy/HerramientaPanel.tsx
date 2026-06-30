@@ -1434,6 +1434,7 @@ const PENDIENTES_BOARD_IDS = new Set([
   "luz-peticion-equipo",
   "arte-build-sheet",
   "arte-desglose-atrezzo",
+  "prod-proveedores",
 ]);
 // arte-desglose-atrezzo empieza por "escena", pero lo que identifica la
 // tarjeta es el objeto a conseguir, no la escena.
@@ -1918,6 +1919,8 @@ const FICHA_EQUIPO_IDS = new Set([
   "foto-dit-color",
   "foto-dit-log-backup",
   "arte-ficha-maquillaje",
+  "prod-localizaciones-scouting",
+  "prod-material-prestado",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -2087,7 +2090,7 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo", "prod-agenda-coord"]);
 
 function AgendaDia({
   columnas,
@@ -2117,8 +2120,12 @@ function AgendaDia({
 
   const colFecha = columnas.find((c) => c.tipo === "fecha");
   const colHora = columnas.find((c) => /^hora/.test(c.key));
-  const colActor = columnas.find((c) => c.key === "actor" || c.key === "con_quien");
-  const colPersonaje = columnas.find((c) => c.key === "personaje");
+  // El titular: actor/con quién si existe; si no, la primera columna de texto
+  // (ej. "tema" en una agenda de coordinación) — nunca lo dejamos sin nombre.
+  const colActor =
+    columnas.find((c) => c.key === "actor" || c.key === "con_quien") ??
+    columnas.find((c) => (!c.tipo || c.tipo === "texto") && c.key !== (columnas.find((x) => x.tipo === "fecha")?.key) && !/^hora/.test(c.key));
+  const colPersonaje = columnas.find((c) => c.key === "personaje" && c.key !== colActor?.key);
   const colResultado = columnas.find((c) => c.tipo === "estado");
   const colFoto = columnas.find((c) => c.tipo === "archivo");
   const colTPrevisto = columnas.find((c) => c.key === "tiempo_previsto");
@@ -2611,6 +2618,7 @@ const PRESUPUESTO_BOARD_IDS = new Set([
   "ej-presupuesto-general",
   "ej-presupuesto-depto",
   "ej-control-costos",
+  "prod-presup-operativo",
 ]);
 
 function PresupuestoBoard({
@@ -3145,6 +3153,8 @@ const DOC_STATUS_IDS = new Set([
   "ej-deliverables",
   "ej-pagos-nominas",
   "ej-cronograma-produccion",
+  "prod-permisos",
+  "prod-equipo-tecnico",
 ]);
 
 function DocStatusBoard({
