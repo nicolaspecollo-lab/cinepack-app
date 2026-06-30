@@ -381,7 +381,10 @@
     "noExclusiveToolsDesc": "Aquest departament encara no té eines exclusives de càrrec al mapa.",
     "yourRole": "el teu càrrec",
     "uploadError": "No s'ha pogut pujar l'arxiu: {msg}",
-    "loadError": "No s'ha pogut carregar l'arxiu."
+    "loadError": "No s'ha pogut carregar l'arxiu.",
+    "visMini": "Visiona",
+    "visMiniDone": "Visionat ✓",
+    "noCharacter": "Sense personatge"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

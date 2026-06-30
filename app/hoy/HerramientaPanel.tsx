@@ -1871,62 +1871,90 @@ function GaleriaTool({
     const label = window.prompt(t("newFieldPrompt"));
     if (label && label.trim()) onAgregarColumna(label.trim());
   }
+
+  function tarjeta(f: Fila) {
+    const yoVi = (f.visionado_por ?? []).some((v) => v.usuario === fullName);
+    const path = f.datos?.img ?? "";
+    return (
+      <div className="hp-gcard" key={f.id}>
+        <GaleriaImg
+          path={path}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramientaId}
+          filaId={f.id}
+          onSave={(v) => set(f, "img", v)}
+        />
+        {columnas.map((c) => (
+          <label className="hp-gfield" key={c.key}>
+            <span>{c.label}</span>
+            {c.tipo === "archivo" ? (
+              <ArchivoCell
+                path={f.datos?.[c.key] ?? ""}
+                editable={editable}
+                departamento={departamento}
+                herramientaId={herramientaId}
+                filaId={f.id}
+                colKey={c.key}
+                onSave={(v) => set(f, c.key, v)}
+              />
+            ) : c.tipo === "link" ? (
+              <LinkCell valor={f.datos?.[c.key] ?? ""} editable={editable} onSave={(v) => set(f, c.key, v)} />
+            ) : !c.tipo || c.tipo === "largo" || c.tipo === "texto" ? (
+              <RichCell
+                valor={f.datos?.[c.key] ?? ""}
+                editable={editable}
+                onCommit={(html) => set(f, c.key, html)}
+                className="hp-gfield-rich hp-cell-rich"
+              />
+            ) : (
+              <input defaultValue={f.datos?.[c.key] ?? ""} readOnly={!editable} onBlur={(e) => set(f, c.key, e.target.value)} />
+            )}
+          </label>
+        ))}
+        <div className="hp-gfoot">
+          <button className={`hp-vis-mini ${yoVi ? "visto" : ""}`} onClick={() => onVisionar(f.id)}>
+            {yoVi ? t("visMiniDone") : t("visMini")}
+          </button>
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button>}
+        </div>
+      </div>
+    );
+  }
+
+  // Galerías de continuidad (vestuario/maquillaje/peinado) comparten una columna
+  // "personaje" — agruparlas por personaje es cómo el equipo realmente las usa
+  // (revisar la continuidad DE alguien, no mirar fotos sueltas sin orden).
+  const colPersonaje = columnas.find((c) => c.key === "personaje");
+  const grupos = colPersonaje
+    ? Object.entries(
+        filas.reduce<Record<string, Fila[]>>((acc, f) => {
+          const nombre = (f.datos?.personaje ?? "").trim() || t("noCharacter");
+          (acc[nombre] ??= []).push(f);
+          return acc;
+        }, {})
+      ).sort(([a], [b]) => a.localeCompare(b, "es"))
+    : null;
+
   return (
     <>
       {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
         <RichToolbar className="hp-tabla-richbar" />
       )}
-      <div className="hp-galeria">
-        {filas.map((f) => {
-          const yoVi = (f.visionado_por ?? []).some((v) => v.usuario === fullName);
-          const path = f.datos?.img ?? "";
-          return (
-            <div className="hp-gcard" key={f.id}>
-              <GaleriaImg
-                path={path}
-                editable={editable}
-                departamento={departamento}
-                herramientaId={herramientaId}
-                filaId={f.id}
-                onSave={(v) => set(f, "img", v)}
-              />
-              {columnas.map((c) => (
-                <label className="hp-gfield" key={c.key}>
-                  <span>{c.label}</span>
-                  {c.tipo === "archivo" ? (
-                    <ArchivoCell
-                      path={f.datos?.[c.key] ?? ""}
-                      editable={editable}
-                      departamento={departamento}
-                      herramientaId={herramientaId}
-                      filaId={f.id}
-                      colKey={c.key}
-                      onSave={(v) => set(f, c.key, v)}
-                    />
-                  ) : c.tipo === "link" ? (
-                    <LinkCell valor={f.datos?.[c.key] ?? ""} editable={editable} onSave={(v) => set(f, c.key, v)} />
-                  ) : !c.tipo || c.tipo === "largo" || c.tipo === "texto" ? (
-                    <RichCell
-                      valor={f.datos?.[c.key] ?? ""}
-                      editable={editable}
-                      onCommit={(html) => set(f, c.key, html)}
-                      className="hp-gfield-rich hp-cell-rich"
-                    />
-                  ) : (
-                    <input defaultValue={f.datos?.[c.key] ?? ""} readOnly={!editable} onBlur={(e) => set(f, c.key, e.target.value)} />
-                  )}
-                </label>
-              ))}
-              <div className="hp-gfoot">
-                <button className={`hp-vis-mini ${yoVi ? "visto" : ""}`} onClick={() => onVisionar(f.id)}>
-                  {yoVi ? "Visionado ✓" : "Visionar"}
-                </button>
-                {editable && <button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button>}
-              </div>
+      {grupos ? (
+        grupos.map(([nombre, fs]) => (
+          <div className="hp-gal-group" key={nombre}>
+            <div className="hp-gal-group-head">
+              <span className="hex"></span>
+              <span>{nombre}</span>
+              <span className="hp-gal-group-count">{fs.length}</span>
             </div>
-          );
-        })}
-      </div>
+            <div className="hp-galeria">{fs.map(tarjeta)}</div>
+          </div>
+        ))
+      ) : (
+        <div className="hp-galeria">{filas.map(tarjeta)}</div>
+      )}
       {editable && (
         <div className="hp-actions">
           <button className="btn acc" onClick={onCrear}>{t("addCard")}</button>

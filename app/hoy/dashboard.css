@@ -1174,6 +1174,16 @@
 
 /* Galería */
 .cp-dash .hp-galeria{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; padding:16px 30px 0; }
+.cp-dash .hp-gal-group{ margin-bottom:8px; }
+.cp-dash .hp-gal-group-head{
+  display:flex; align-items:center; gap:8px; padding:14px 30px 6px; font-family:'Poppins',sans-serif;
+  font-size:13px; font-weight:600; color:var(--text);
+}
+.cp-dash .hp-gal-group-head .hex{ width:9px; height:8px; background:var(--acc); flex-shrink:0; }
+.cp-dash .hp-gal-group-count{
+  font-size:10px; color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:1px 7px; margin-left:2px;
+}
+.cp-dash .hp-gal-group + .hp-gal-group{ border-top:1px solid var(--line); }
 .cp-dash .hp-gcard{
   border:1px solid var(--line); background:var(--panel); display:flex; flex-direction:column; gap:8px; padding:10px;
   transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;

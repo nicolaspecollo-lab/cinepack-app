@@ -381,7 +381,10 @@
     "noExclusiveToolsDesc": "Este departamento todavía no tiene herramientas exclusivas de cargo en el mapa.",
     "yourRole": "tu cargo",
     "uploadError": "No se pudo subir el archivo: {msg}",
-    "loadError": "No se pudo cargar el archivo."
+    "loadError": "No se pudo cargar el archivo.",
+    "visMini": "Visionar",
+    "visMiniDone": "Visionado ✓",
+    "noCharacter": "Sin personaje"
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",

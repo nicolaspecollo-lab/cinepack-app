@@ -381,7 +381,10 @@
     "noExclusiveToolsDesc": "This department doesn't have role-exclusive tools in the map yet.",
     "yourRole": "your role",
     "uploadError": "Couldn't upload the file: {msg}",
-    "loadError": "Couldn't load the file."
+    "loadError": "Couldn't load the file.",
+    "visMini": "View",
+    "visMiniDone": "Viewed ✓",
+    "noCharacter": "No character"
   },
   "herr": {
     "accesos-equipo": "Team access",
