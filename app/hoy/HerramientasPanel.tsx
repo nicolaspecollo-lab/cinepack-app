@@ -163,8 +163,10 @@ export default function HerramientasPanel({
     if (!id) return;
     const candidatos =
       seccion === "departamento"
-        ? deptTools(departamento)
-        : cargoGroups(departamento).flatMap((g) => g.tools);
+        ? [...deptTools(departamento), ...cargoGroups(departamento).flatMap((g) => g.tools)]
+        : cargo
+          ? cargoGroups(departamento).find((g) => g.cargo === cargo)?.tools ?? []
+          : [];
     const h = candidatos.find((t) => t.id === id);
     if (h) setAbierta(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,43 +262,70 @@ export default function HerramientasPanel({
   }
 
   if (seccion === "departamento") {
-    // Panorama completo del departamento (visionado): TODAS las herramientas
-    // del depto — las compartidas y las de todos los cargos — para que cualquier
-    // integrante VEA todo. La edición/creación vive en Exclusivas (tu cargo).
-    const seen = new Set<string>();
-    const tools = [...deptTools(departamento), ...cargoGroups(departamento).flatMap((g) => g.tools)]
-      .filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos")
-      .filter((h) => (seen.has(h.id) ? false : (seen.add(h.id), true)));
-    return (
-      <div className="hp-index">
-        <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
-        {tools.length === 0 ? (
+    // Panorama completo del departamento (visionado): las herramientas
+    // compartidas + las de CADA cargo, subdivididas por cargo, para que
+    // cualquier integrante VEA todo. Solo lectura — la edición vive en
+    // Exclusivas (tu cargo).
+    const shared = deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos");
+    const groups = cargoGroups(departamento)
+      .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos") }))
+      .filter((g) => g.tools.length > 0);
+    if (shared.length === 0 && groups.length === 0) {
+      return (
+        <div className="hp-index">
+          <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
           <div className="soon-box">
             <span className="hex"></span>
             <h4>{t("noDeptTools")}</h4>
             <p>{t("noDeptToolsDesc")}</p>
           </div>
-        ) : (
+        </div>
+      );
+    }
+    return (
+      <div className="hp-index hp-index-cols">
+        <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
+        {shared.length > 0 && (
           <section className="hp-group">
-            <span className="hp-group-label">{t("toolsOf", { dept: departamento })}</span>
+            <span className="hp-group-label">
+              <span className="hex" style={{ width: "8px", height: "7px" }} />
+              {t("sharedGroup")}
+            </span>
             <div className="hp-cards">
-              {tools.map((h) => (
-                <ToolCard key={h.id} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+              {shared.map((h) => (
+                <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
               ))}
             </div>
           </section>
         )}
+        {groups.map((g) => {
+          const esMio = !!cargo && g.cargo === cargo;
+          return (
+            <section className="hp-group" key={g.cargo}>
+              <span className="hp-group-label">
+                <span className="hex" style={{ width: "8px", height: "7px" }} />
+                {g.cargo}
+                {esMio && <span className="hp-mine">{t("yourRole")}</span>}
+              </span>
+              <div className="hp-cards">
+                {g.tools.map((h) => (
+                  <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     );
   }
 
-  // seccion === "cargo" (Exclusivas): el espacio EDITABLE — herramientas
-  // compartidas del depto + las de cada cargo + tus herramientas personales.
-  const sharedTools = deptTools(departamento).filter((h) => !ocultas.has(h.id));
-  const groups = cargoGroups(departamento)
-    .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id)) }))
-    .filter((g) => g.tools.length > 0);
-  if (groups.length === 0 && sharedTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
+  // seccion === "cargo" (Exclusivas): SOLO el espacio editable del usuario —
+  // las herramientas de SU cargo + sus herramientas personales (Espacio de
+  // trabajo). Las compartidas del depto y las de otros cargos se ven (en
+  // visionado) en la pestaña Departamento.
+  const miGrupo = cargo ? cargoGroups(departamento).find((g) => g.cargo === cargo) : undefined;
+  const misCargoTools = (miGrupo?.tools ?? []).filter((h) => !ocultas.has(h.id));
+  if (misCargoTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
         <button className="btn acc" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
@@ -343,36 +372,20 @@ export default function HerramientasPanel({
           </div>
         </section>
       )}
-      {sharedTools.length > 0 && (
+      {misCargoTools.length > 0 && (
         <section className="hp-group">
           <span className="hp-group-label">
             <span className="hex" style={{ width: "8px", height: "7px" }} />
-            {t("sharedGroup")}
+            {cargo}
+            <span className="hp-mine">{t("yourRole")}</span>
           </span>
           <div className="hp-cards">
-            {sharedTools.map((h) => (
-              <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} cargo conteo={conteos[h.id]} />
+            {misCargoTools.map((h) => (
+              <ToolCard key={`mine-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
             ))}
           </div>
         </section>
       )}
-      {groups.map((g) => {
-        const esMio = !!cargo && g.cargo === cargo;
-        return (
-          <section className="hp-group" key={g.cargo}>
-            <span className="hp-group-label">
-              <span className="hex" style={{ width: "8px", height: "7px" }} />
-              {g.cargo}
-              {esMio && <span className="hp-mine">{t("yourRole")}</span>}
-            </span>
-            <div className="hp-cards">
-              {g.tools.map((h) => (
-                <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} cargo conteo={conteos[h.id]} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
     </div>
   );
 }
