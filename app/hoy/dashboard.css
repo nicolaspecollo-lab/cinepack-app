@@ -2641,8 +2641,12 @@
 .cp-dash .sb-strip:hover .sb-grip{ color:var(--muted); }
 .cp-dash .sb-escena{ font-family:'Poppins',sans-serif; font-weight:700; font-size:18px; color:var(--text); background:none; border:none; width:44px; text-align:center; padding:0; flex-shrink:0; }
 .cp-dash .sb-escena:focus{ outline:none; }
-.cp-dash .sb-chip{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.03em; text-transform:uppercase; color:var(--muted); background:none; border:1px solid var(--line); padding:4px 8px; cursor:pointer; border-radius:0; flex-shrink:0; }
-.cp-dash .sb-chip:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+.cp-dash .sb-seg{ display:inline-flex; border:1px solid var(--line); flex-shrink:0; }
+.cp-dash .sb-seg-cell{ font-family:'Poppins',sans-serif; font-weight:600; font-size:10px; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); background:none; border:none; border-right:1px solid var(--line); padding:5px 9px; cursor:pointer; border-radius:0; transition:background var(--dur-fast), color var(--dur-fast); }
+.cp-dash .sb-seg-cell:last-child{ border-right:none; }
+.cp-dash .sb-seg-cell:hover:not(:disabled){ color:var(--text); background:var(--hl2); }
+.cp-dash .sb-seg-on, .cp-dash .sb-seg-on:hover{ background:var(--acc); color:#0D0D12; }
+.cp-dash .sb-seg-cell:disabled{ cursor:default; }
 .cp-dash .sb-loc{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-weight:600; font-size:13px; color:var(--text); background:none; border:none; padding:0; }
 .cp-dash .sb-loc:focus{ outline:none; }
 .cp-dash .sb-pag{ display:flex; align-items:center; gap:3px; border:1px solid var(--line); padding:3px 7px; flex-shrink:0; }

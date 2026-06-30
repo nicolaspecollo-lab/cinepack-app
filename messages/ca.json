@@ -413,7 +413,9 @@
     "sbAddStrip": "Afegir tira",
     "sbDay": "Dia {n}",
     "sbNoDay": "Sense dia assignat",
-    "sbDayTotals": "{escenas} escenes · {pag} pàg"
+    "sbDayTotals": "{escenas} escenes · {pag} pàg",
+    "sbIntExt": "Interior o exterior",
+    "sbDayNight": "Moment del dia"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

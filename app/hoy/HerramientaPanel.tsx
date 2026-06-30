@@ -3809,6 +3809,27 @@ function StripboardTool({
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
   }
+
+  // Control segmentado propio de CINEPACK — reemplaza el <select> nativo
+  // (que arrastra el desplegable del SO y rompe la estética). Celdas que se
+  // seleccionan, esquinas rectas, mismo lenguaje que las pestañas de la app.
+  function Seg({ valor, opciones, onPick, ariaLabel }: { valor: string; opciones: string[]; onPick: (v: string) => void; ariaLabel: string }) {
+    return (
+      <div className="sb-seg" role="group" aria-label={ariaLabel}>
+        {opciones.map((op) => (
+          <button
+            key={op}
+            type="button"
+            className={`sb-seg-cell ${valor === op ? "sb-seg-on" : ""}`}
+            disabled={!editable}
+            onClick={() => onPick(valor === op ? "" : op)}
+          >
+            {op}
+          </button>
+        ))}
+      </div>
+    );
+  }
   const ord = (f: Fila) => {
     const o = parseFloat(f.datos?._orden ?? "");
     return isNaN(o) ? (f.orden ?? 0) : o;
@@ -3851,14 +3872,8 @@ function StripboardTool({
         <div className="sb-row1">
           {editable && <span className="sb-grip"><Icon name="grip-vertical" size={16} /></span>}
           <input className="sb-escena" defaultValue={f.datos?.escena ?? ""} placeholder="—" readOnly={!editable} onBlur={(e) => set(f, "escena", e.target.value)} />
-          <select className="sb-chip" value={f.datos?.intext ?? ""} disabled={!editable} onChange={(e) => set(f, "intext", e.target.value)}>
-            <option value="">INT/EXT</option>
-            {(colIntext?.opciones ?? ["INT", "EXT", "INT/EXT"]).map((o) => <option key={o} value={o}>{o}</option>)}
-          </select>
-          <select className="sb-chip" value={f.datos?.dianoche ?? ""} disabled={!editable} onChange={(e) => set(f, "dianoche", e.target.value)}>
-            <option value="">D/N</option>
-            {(colDN?.opciones ?? ["Día", "Noche", "Amanecer", "Atardecer"]).map((o) => <option key={o} value={o}>{o}</option>)}
-          </select>
+          <Seg valor={f.datos?.intext ?? ""} opciones={colIntext?.opciones ?? ["INT", "EXT", "INT/EXT"]} onPick={(v) => set(f, "intext", v)} ariaLabel={t("sbIntExt")} />
+          <Seg valor={f.datos?.dianoche ?? ""} opciones={colDN?.opciones ?? ["Día", "Noche", "Amanecer", "Atardecer"]} onPick={(v) => set(f, "dianoche", v)} ariaLabel={t("sbDayNight")} />
           <input className="sb-loc" defaultValue={f.datos?.locacion ?? ""} placeholder={t("sbLocation")} readOnly={!editable} onBlur={(e) => set(f, "locacion", e.target.value)} />
           <div className="sb-pag" title={t("sbPages")}>
             <input className="sb-pag-input" defaultValue={f.datos?.paginas ?? ""} placeholder="0/8" readOnly={!editable} onBlur={(e) => set(f, "paginas", e.target.value)} />

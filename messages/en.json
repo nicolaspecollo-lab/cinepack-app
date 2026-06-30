@@ -413,7 +413,9 @@
     "sbAddStrip": "Add strip",
     "sbDay": "Day {n}",
     "sbNoDay": "No day assigned",
-    "sbDayTotals": "{escenas} scenes · {pag} pg"
+    "sbDayTotals": "{escenas} scenes · {pag} pg",
+    "sbIntExt": "Interior or exterior",
+    "sbDayNight": "Time of day"
   },
   "herr": {
     "accesos-equipo": "Team access",
