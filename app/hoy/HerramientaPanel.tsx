@@ -430,8 +430,20 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "arte-timeline-decorados" && (
+        <TimelineDecorados
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" &&
         herramienta.id !== "foto-marcas-foco" &&
+        herramienta.id !== "arte-timeline-decorados" &&
         !PLANO_BOARD_IDS.has(herramienta.id) &&
         !PENDIENTES_BOARD_IDS.has(herramienta.id) && (
         <TablaTool
@@ -1205,7 +1217,7 @@ function PlanoBoard({
 // trabajo real acá es "¿qué nos falta todavía y qué tan urgente es?", no
 // una fila de tabla. Columnas Kanban por estado (en el orden que ya definía
 // la herramienta), tarjeta con prioridad/urgencia destacada.
-const PENDIENTES_BOARD_IDS = new Set(["arte-props-pendientes", "luz-peticion-equipo"]);
+const PENDIENTES_BOARD_IDS = new Set(["arte-props-pendientes", "luz-peticion-equipo", "arte-build-sheet"]);
 
 function PendientesBoard({
   columnas,
@@ -1366,6 +1378,192 @@ function PendientesBoard({
               <div className="hp-pend-col-body">{col.filas.map(Tarjeta)}</div>
             </div>
           ))}
+        </div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Línea de tiempo de decorados (Gantt simplificado) ----
+// Construcción de decorados se planifica en paralelo: mientras un set se
+// construye, otro ya se está montando y un tercero se desmonta. Eso es
+// invisible en una tabla y obvio en una línea de tiempo. Una franja de
+// construcción por decorado, con marcas de montaje y desmontaje.
+const DECORADO_ESTADO_TONO: Record<string, "ok" | "warn" | "bad" | "info" | "neutral"> = {
+  "Planificado": "neutral",
+  "En construcción": "warn",
+  "Montado": "ok",
+  "Rodando": "info",
+  "Desmontado": "neutral",
+};
+function decoradoTono(v: string) {
+  return DECORADO_ESTADO_TONO[v] ?? "neutral";
+}
+const DIA_MS = 86400000;
+
+function TimelineDecorados({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (key: string) => columnas.find((c) => c.key === key)?.label ?? key;
+  const colEstado = columnas.find((c) => c.key === "estado");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  function aFecha(v?: string): number | null {
+    if (!v) return null;
+    const ms = new Date(v).getTime();
+    return isNaN(ms) ? null : ms;
+  }
+
+  const todasFechas = filas
+    .flatMap((f) => [f.datos?.inicio_construccion, f.datos?.fin_construccion, f.datos?.montaje, f.datos?.desmontaje])
+    .map(aFecha)
+    .filter((n): n is number => n !== null);
+
+  const hoy = Date.now();
+  const minRaw = todasFechas.length ? Math.min(...todasFechas) : hoy;
+  const maxRaw = todasFechas.length ? Math.max(...todasFechas) : hoy + 30 * DIA_MS;
+  const padding = Math.max(3 * DIA_MS, (maxRaw - minRaw) * 0.06);
+  const min = minRaw - padding;
+  const max = Math.max(maxRaw + padding, min + 7 * DIA_MS);
+  const span = max - min;
+  const pct = (ms: number) => ((ms - min) / span) * 100;
+
+  const meses: { label: string; left: number }[] = [];
+  {
+    const d = new Date(min);
+    d.setDate(1);
+    d.setHours(0, 0, 0, 0);
+    while (d.getTime() <= max) {
+      meses.push({ label: d.toLocaleDateString("es", { month: "short", year: "2-digit" }), left: pct(d.getTime()) });
+      d.setMonth(d.getMonth() + 1);
+    }
+  }
+
+  function Renglon({ f }: { f: Fila }) {
+    const ic = aFecha(f.datos?.inicio_construccion);
+    const fc = aFecha(f.datos?.fin_construccion);
+    const mo = aFecha(f.datos?.montaje);
+    const de = aFecha(f.datos?.desmontaje);
+    const estado = f.datos?.estado ?? "";
+    const tono = decoradoTono(estado);
+    return (
+      <div className="hp-gantt-row">
+        <div className="hp-gantt-side">
+          <input
+            className="hp-gantt-nombre"
+            defaultValue={f.datos?.decorado ?? ""}
+            placeholder={label("decorado")}
+            readOnly={!editable}
+            onBlur={(e) => set(f, "decorado", e.target.value)}
+          />
+          {colEstado && (
+            <select
+              className={`hp-gantt-estado tono-${tono}`}
+              defaultValue={estado}
+              disabled={!editable}
+              onChange={(e) => set(f, "estado", e.target.value)}
+            >
+              <option value="">{t("noStatus")}</option>
+              {(colEstado.opciones ?? []).map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+          )}
+          <input
+            className="hp-gantt-responsable"
+            defaultValue={f.datos?.responsable ?? ""}
+            placeholder={label("responsable")}
+            readOnly={!editable}
+            onBlur={(e) => set(f, "responsable", e.target.value)}
+          />
+          {editable && (
+            <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>
+          )}
+        </div>
+        <div className="hp-gantt-track">
+          {meses.map((m) => (
+            <div className="hp-gantt-gridline" style={{ left: `${m.left}%` }} key={m.label} />
+          ))}
+          {ic !== null && fc !== null && (
+            <div
+              className={`hp-gantt-bar tono-${tono}`}
+              style={{ left: `${pct(ic)}%`, width: `${Math.max(pct(fc) - pct(ic), 1.2)}%` }}
+              title={`${label("inicio_construccion")}: ${f.datos?.inicio_construccion} → ${label("fin_construccion")}: ${f.datos?.fin_construccion}`}
+            />
+          )}
+          {mo !== null && (
+            <div className="hp-gantt-marker hp-gantt-marker-montaje" style={{ left: `${pct(mo)}%` }} title={`${label("montaje")}: ${f.datos?.montaje}`} />
+          )}
+          {de !== null && (
+            <div className="hp-gantt-marker hp-gantt-marker-desmontaje" style={{ left: `${pct(de)}%` }} title={`${label("desmontaje")}: ${f.datos?.desmontaje}`} />
+          )}
+        </div>
+        <div className="hp-gantt-fields">
+          {(["inicio_construccion", "fin_construccion", "montaje", "desmontaje"] as const).map((k) => (
+            <label className="hp-gantt-field" key={k}>
+              <span>{label(k)}</span>
+              <input
+                type="date"
+                defaultValue={f.datos?.[k] ?? ""}
+                readOnly={!editable}
+                onBlur={(e) => set(f, k, e.target.value)}
+              />
+            </label>
+          ))}
+          <label className="hp-gantt-field">
+            <span>{label("rodaje")}</span>
+            <input
+              type="text"
+              defaultValue={f.datos?.rodaje ?? ""}
+              readOnly={!editable}
+              onBlur={(e) => set(f, "rodaje", e.target.value)}
+            />
+          </label>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-gantt">
+          <div className="hp-gantt-months">
+            <div className="hp-gantt-side" />
+            <div className="hp-gantt-track">
+              {meses.map((m) => (
+                <span className="hp-gantt-month-label" style={{ left: `${m.left}%` }} key={m.label}>{m.label}</span>
+              ))}
+            </div>
+          </div>
+          {filas.map((f) => <Renglon f={f} key={f.id} />)}
         </div>
       )}
       {editable && filas.length > 0 && (
