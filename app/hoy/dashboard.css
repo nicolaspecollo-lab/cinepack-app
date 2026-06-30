@@ -2187,3 +2187,52 @@
   .cp-dash .hp-gantt-fields{ padding-left:0; }
   .cp-dash .hp-gantt-side{ flex:0 0 140px; }
 }
+
+/* Efectos especiales de maquillaje: comparación antes/después, dos fotos
+   lado a lado — eso es lo que un supervisor de FX necesita ver primero. */
+.cp-dash .hp-fx-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));
+  gap:var(--sp-3); padding:var(--sp-3) var(--gutter) var(--sp-4);
+}
+.cp-dash .hp-fx-card{
+  background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3);
+  display:flex; flex-direction:column; gap:var(--sp-2);
+}
+.cp-dash .hp-fx-head{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-fx-escena{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text);
+  background:none; border:none; padding:0; width:84px; flex-shrink:0;
+}
+.cp-dash .hp-fx-tipo{
+  font-size:var(--fs-sm); color:var(--muted); background:none; border:none; padding:0; flex:1; min-width:0;
+}
+.cp-dash .hp-fx-escena:focus, .cp-dash .hp-fx-tipo:focus{ outline:none; }
+.cp-dash .hp-fx-photos{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-fx-photo{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; background:var(--hl1); border:1px solid var(--line); padding:var(--sp-2); }
+.cp-dash .hp-fx-photo-label{ font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); }
+.cp-dash .hp-fx-arrow{ color:var(--muted); font-size:var(--fs-md); flex-shrink:0; }
+.cp-dash .hp-fx-desc{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-sm); color:var(--text); background:var(--hl1); border:1px solid var(--line);
+  padding:var(--sp-2); resize:vertical;
+}
+.cp-dash .hp-fx-desc:focus, .cp-dash .hp-fx-materiales:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-fx-specs{ display:flex; flex-wrap:wrap; gap:6px; }
+.cp-dash .hp-fx-chip{ display:flex; flex-direction:column; gap:1px; background:var(--hl1); border:1px solid var(--line); padding:3px 7px; }
+.cp-dash .hp-fx-chip-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-fx-chip-input{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-xs); color:var(--text); background:none; border:none; padding:0; min-width:50px;
+}
+.cp-dash .hp-fx-chip-input:focus{ outline:none; }
+.cp-dash .hp-fx-materiales{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line);
+  padding:var(--sp-2); resize:vertical;
+}
+
+@media (max-width:640px){
+  .cp-dash .hp-fx-grid{ grid-template-columns:1fr; }
+  .cp-dash .hp-fx-photos{ flex-direction:column; }
+  .cp-dash .hp-fx-arrow{ transform:rotate(90deg); }
+}

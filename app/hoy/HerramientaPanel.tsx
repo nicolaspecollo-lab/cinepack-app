@@ -430,6 +430,19 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "maq-efectos-especiales-maq" && (
+        <FxAntesDespues
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "arte-timeline-decorados" && (
         <TimelineDecorados
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -444,6 +457,7 @@ function HerramientaData({
       {herramienta.tipo === "tabla" &&
         herramienta.id !== "foto-marcas-foco" &&
         herramienta.id !== "arte-timeline-decorados" &&
+        herramienta.id !== "maq-efectos-especiales-maq" &&
         !PLANO_BOARD_IDS.has(herramienta.id) &&
         !PENDIENTES_BOARD_IDS.has(herramienta.id) && (
         <TablaTool
@@ -1565,6 +1579,144 @@ function TimelineDecorados({
           </div>
           {filas.map((f) => <Renglon f={f} key={f.id} />)}
         </div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Efectos especiales de maquillaje: antes / después ----
+// Lo que un supervisor de FX necesita ver de un vistazo es la comparación
+// visual proceso → resultado, no una fila de tabla con dos columnas de
+// archivo perdidas entre texto. Dos fotos lado a lado, grandes.
+function FxAntesDespues({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (key: string) => columnas.find((c) => c.key === key)?.label ?? key;
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colsChip = columnas.filter((c) =>
+    !["escena", "tipo_efecto", "descripcion_tecnica", "materiales", "foto_proceso", "foto_resultado"].includes(c.key)
+  );
+
+  function Tarjeta(f: Fila) {
+    return (
+      <div className="hp-fx-card" key={f.id}>
+        <div className="hp-fx-head">
+          <input
+            className="hp-fx-escena"
+            defaultValue={f.datos?.escena ?? ""}
+            placeholder={label("escena")}
+            readOnly={!editable}
+            onBlur={(e) => set(f, "escena", e.target.value)}
+          />
+          <input
+            className="hp-fx-tipo"
+            defaultValue={f.datos?.tipo_efecto ?? ""}
+            placeholder={label("tipo_efecto")}
+            readOnly={!editable}
+            onBlur={(e) => set(f, "tipo_efecto", e.target.value)}
+          />
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        <div className="hp-fx-photos">
+          <div className="hp-fx-photo">
+            <span className="hp-fx-photo-label">{label("foto_proceso")}</span>
+            <ArchivoCell
+              path={f.datos?.foto_proceso ?? ""}
+              editable={editable}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              filaId={f.id}
+              colKey="foto_proceso"
+              onSave={(v) => set(f, "foto_proceso", v)}
+            />
+          </div>
+          <span className="hp-fx-arrow">→</span>
+          <div className="hp-fx-photo">
+            <span className="hp-fx-photo-label">{label("foto_resultado")}</span>
+            <ArchivoCell
+              path={f.datos?.foto_resultado ?? ""}
+              editable={editable}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              filaId={f.id}
+              colKey="foto_resultado"
+              onSave={(v) => set(f, "foto_resultado", v)}
+            />
+          </div>
+        </div>
+        <textarea
+          className="hp-fx-desc"
+          defaultValue={f.datos?.descripcion_tecnica ?? ""}
+          placeholder={label("descripcion_tecnica")}
+          readOnly={!editable}
+          onBlur={(e) => set(f, "descripcion_tecnica", e.target.value)}
+          rows={2}
+        />
+        {colsChip.length > 0 && (
+          <div className="hp-fx-specs">
+            {colsChip.map((c) => (
+              <label className="hp-fx-chip" key={c.key}>
+                <span className="hp-fx-chip-label">{c.label}</span>
+                <input
+                  className="hp-fx-chip-input"
+                  type={c.tipo === "num" || c.tipo === "money" ? "number" : "text"}
+                  defaultValue={f.datos?.[c.key] ?? ""}
+                  readOnly={!editable}
+                  placeholder="—"
+                  onBlur={(e) => set(f, c.key, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        )}
+        <textarea
+          className="hp-fx-materiales"
+          defaultValue={f.datos?.materiales ?? ""}
+          placeholder={label("materiales")}
+          readOnly={!editable}
+          onBlur={(e) => set(f, "materiales", e.target.value)}
+          rows={2}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-fx-grid">{filas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
