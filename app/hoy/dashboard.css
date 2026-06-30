@@ -2569,3 +2569,102 @@
 .cp-dash .hp-kpi-tile-pct{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-md); color:var(--muted); }
 .cp-dash .hp-kpi-tile-label{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
 .cp-dash .hp-kpi-hint{ color:var(--muted); font-size:var(--fs-sm); margin:0; }
+
+/* ===========================================================================
+   VOCABULARIO DE CONTROLES CINEPACK — botones propios, sin pinta genérica
+   =========================================================================== */
+.cp-dash .cp-btn{
+  display:inline-flex; align-items:center; gap:6px; font-family:'Poppins',sans-serif; font-weight:600;
+  font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted);
+  background:none; border:1px solid var(--line); padding:7px 13px; cursor:pointer; border-radius:0;
+  transition:color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+}
+.cp-dash .cp-btn:hover{ color:var(--text); border-color:var(--acc); }
+.cp-dash .cp-btn-acc{ color:var(--acc); border-color:var(--acc); }
+.cp-dash .cp-btn-acc:hover{ background:var(--acc); color:#0D0D12; }
+
+/* Toggle de vista Tablero/Tabla/Archivos (reusa dsubtabs nativo) */
+.cp-dash .hp-view-tabs{ padding-top:14px; }
+.cp-dash .hp-view-tabs .dsubtab{ display:inline-flex; align-items:center; gap:6px; }
+
+/* Carpeta de archivos por herramienta */
+.cp-dash .hp-carpeta{ padding:16px var(--gutter) 22px; }
+.cp-dash .hp-carpeta-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.cp-dash .hp-carpeta-title{ display:flex; align-items:center; gap:7px; font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-md); color:var(--text); }
+.cp-dash .hp-carpeta-count{ font-size:var(--fs-xs); color:var(--muted); background:var(--hl3); padding:1px 9px; border-radius:10px; }
+.cp-dash .hp-carpeta-up{ margin-left:auto; }
+.cp-dash .hp-carpeta-vacia{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:38px 0; text-align:center; }
+.cp-dash .hp-carpeta-vacia .hex{ width:22px; height:19px; background:var(--acc); }
+.cp-dash .hp-carpeta-vacia p{ color:var(--text); font-size:var(--fs-base); margin:0; }
+.cp-dash .hp-carpeta-hint{ color:var(--muted); font-size:var(--fs-sm); max-width:380px; line-height:1.6; }
+.cp-dash .hp-carpeta-empty{ color:var(--muted); font-size:var(--fs-sm); }
+.cp-dash .hp-carpeta-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+.cp-dash .hp-file{ position:relative; background:var(--bg-2); border:1px solid var(--line); }
+.cp-dash .hp-file:hover{ border-color:var(--acc); }
+.cp-dash .hp-file-open{ display:flex; flex-direction:column; align-items:flex-start; gap:7px; width:100%; padding:14px 12px; background:none; border:none; cursor:pointer; text-align:left; color:var(--muted); }
+.cp-dash .hp-file-open:hover{ color:var(--text); }
+.cp-dash .hp-file-name{ font-size:var(--fs-sm); color:var(--text); word-break:break-word; line-height:1.35; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; }
+.cp-dash .hp-file-meta{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .hp-file-del{ position:absolute; top:5px; right:5px; background:none; border:none; color:var(--muted); cursor:pointer; padding:3px; opacity:0; transition:opacity var(--dur-fast); }
+.cp-dash .hp-file:hover .hp-file-del{ opacity:1; }
+.cp-dash .hp-file-del:hover{ color:var(--rose); }
+
+/* ===========================================================================
+   STRIPBOARD — tiras de colores por jornada
+   =========================================================================== */
+.cp-dash .sb-board{ padding:6px var(--gutter) 22px; }
+.cp-dash .sb-legend{ display:flex; align-items:center; flex-wrap:wrap; gap:16px; padding:12px 0 14px; font-size:11px; color:var(--muted); }
+.cp-dash .sb-leg{ display:flex; align-items:center; gap:7px; }
+.cp-dash .sb-sw{ width:14px; height:14px; display:inline-block; border:1px solid var(--line); }
+.cp-dash .sb-sw-intdia{ background:#F4F4F6; }
+.cp-dash .sb-sw-intnoche{ background:var(--blue); }
+.cp-dash .sb-sw-extdia{ background:var(--yellow); }
+.cp-dash .sb-sw-extnoche{ background:var(--green); }
+.cp-dash .sb-add{ margin-left:auto; }
+
+.cp-dash .sb-day{ margin-bottom:14px; }
+.cp-dash .sb-day-banner{ display:flex; align-items:center; gap:12px; background:#000; border:1px solid var(--line); padding:9px 14px; margin-bottom:6px; }
+.cp-dash .sb-day-n{ font-family:'Poppins',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.05em; color:#F4F4F6; text-transform:uppercase; }
+.cp-dash .sb-day-totals{ margin-left:auto; font-size:11px; color:var(--muted); font-family:'Poppins',sans-serif; font-weight:500; }
+
+.cp-dash .sb-strip{ border:1px solid var(--line); border-left-width:6px; background:var(--bg-2); margin-bottom:5px; transition:transform var(--dur-fast), background var(--dur-fast); }
+.cp-dash .sb-strip:hover{ background:#1c1c25; }
+.cp-dash .sb-strip.sb-dragging{ opacity:0.4; }
+.cp-dash .sb-intdia{ border-left-color:#F4F4F6; }
+.cp-dash .sb-intnoche{ border-left-color:var(--blue); background:rgba(31,125,226,0.08); }
+.cp-dash .sb-extdia{ border-left-color:var(--yellow); background:rgba(245,226,106,0.06); }
+.cp-dash .sb-extnoche{ border-left-color:var(--green); background:rgba(82,236,100,0.06); }
+
+.cp-dash .sb-row1{ display:flex; align-items:center; gap:9px; padding:8px 11px; }
+.cp-dash .sb-row2{ display:flex; align-items:center; gap:10px; padding:0 11px 9px 11px; }
+.cp-dash .sb-grip{ color:#55555f; cursor:grab; display:flex; align-items:center; }
+.cp-dash .sb-strip:hover .sb-grip{ color:var(--muted); }
+.cp-dash .sb-escena{ font-family:'Poppins',sans-serif; font-weight:700; font-size:18px; color:var(--text); background:none; border:none; width:44px; text-align:center; padding:0; flex-shrink:0; }
+.cp-dash .sb-escena:focus{ outline:none; }
+.cp-dash .sb-chip{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.03em; text-transform:uppercase; color:var(--muted); background:none; border:1px solid var(--line); padding:4px 8px; cursor:pointer; border-radius:0; flex-shrink:0; }
+.cp-dash .sb-chip:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+.cp-dash .sb-loc{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-weight:600; font-size:13px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .sb-loc:focus{ outline:none; }
+.cp-dash .sb-pag{ display:flex; align-items:center; gap:3px; border:1px solid var(--line); padding:3px 7px; flex-shrink:0; }
+.cp-dash .sb-pag-input{ width:42px; text-align:center; font-family:'Courier New',monospace; font-weight:700; font-size:13px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .sb-pag-input:focus{ outline:none; }
+.cp-dash .sb-pag-unit{ font-size:10px; color:var(--muted); text-transform:uppercase; }
+.cp-dash .sb-elenco{ display:flex; gap:3px; flex-wrap:wrap; max-width:120px; flex-shrink:0; }
+.cp-dash .sb-cast{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; color:#0D0D12; background:var(--muted); padding:1px 6px; min-width:18px; text-align:center; }
+.cp-dash .sb-cast-empty{ color:#55555f; }
+.cp-dash .sb-del{ background:none; border:none; color:#55555f; cursor:pointer; padding:4px; flex-shrink:0; }
+.cp-dash .sb-del:hover{ color:var(--rose); }
+.cp-dash .sb-sinopsis{ flex:1; min-width:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:12px; color:var(--muted); background:none; border:none; border-top:1px dashed var(--line); padding:6px 0 0; }
+.cp-dash .sb-sinopsis:focus{ outline:none; color:var(--text); }
+.cp-dash .sb-elenco-edit{ width:150px; font-size:11px; color:var(--muted); background:none; border:none; border-top:1px dashed var(--line); padding:6px 0 0; }
+.cp-dash .sb-elenco-edit:focus{ outline:none; color:var(--text); }
+.cp-dash .sb-ref{ flex-shrink:0; max-width:170px; }
+.cp-dash .sb-ref .hp-archivo{ gap:4px; }
+
+@media (max-width:640px){
+  .cp-dash .sb-row1{ flex-wrap:wrap; }
+  .cp-dash .sb-loc{ flex-basis:100%; order:5; }
+  .cp-dash .sb-row2{ flex-direction:column; align-items:stretch; }
+  .cp-dash .sb-elenco-edit{ width:100%; }
+  .cp-dash .hp-carpeta-grid{ grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); }
+}

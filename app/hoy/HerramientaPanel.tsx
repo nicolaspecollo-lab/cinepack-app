@@ -132,7 +132,8 @@ function tablaTieneVistaBespoke(id: string): boolean {
     CASHFLOW_IDS.has(id) ||
     FINANCIACION_PIPELINE_IDS.has(id) ||
     DOC_STATUS_IDS.has(id) ||
-    id === "ej-modelo-financiero"
+    id === "ej-modelo-financiero" ||
+    id === "prod-stripboard"
   );
 }
 
@@ -159,6 +160,15 @@ function HerramientaData({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [historial, setHistorial] = useState<HistEntry[]>([]);
+  // Vista activa de una herramienta tipo tabla: el tablero a medida, la tabla
+  // con todo el poder (buscar/filtrar/exportar) o la carpeta de archivos.
+  // Nunca le sacamos poder al usuario: las tres conviven en un toggle.
+  const [vista, setVista] = useState<"tablero" | "tabla" | "archivos">(
+    herramienta.tipo === "tabla" && tablaTieneVistaBespoke(herramienta.id) ? "tablero" : "tabla"
+  );
+  useEffect(() => {
+    setVista(herramienta.tipo === "tabla" && tablaTieneVistaBespoke(herramienta.id) ? "tablero" : "tabla");
+  }, [herramienta.id, herramienta.tipo]);
 
   function pushHistorial(entry: HistEntry) {
     setHistorial((prev) => [entry, ...prev].slice(0, 8));
@@ -401,6 +411,8 @@ function HerramientaData({
 
   const extraCols: Columna[] = meta?.datos?._extra ? JSON.parse(meta.datos._extra) : [];
   const extraCampos: Columna[] = filas[0]?.datos?._extra ? JSON.parse(filas[0].datos._extra) : [];
+  const esTabla = herramienta.tipo === "tabla";
+  const tieneTablero = esTabla && tablaTieneVistaBespoke(herramienta.id);
 
   return (
     <div className="hp">
@@ -417,6 +429,24 @@ function HerramientaData({
       )}
       {herramienta.hint && <p className="hp-hint">{herramienta.hint}</p>}
 
+      {esTabla && (
+        <div className="dsubtabs hp-view-tabs">
+          {tieneTablero && (
+            <button className={`dsubtab ${vista === "tablero" ? "active" : ""}`} onClick={() => setVista("tablero")}>
+              <Icon name="film" size={12} /> {t("viewBoard")}
+            </button>
+          )}
+          <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
+            <Icon name="table" size={12} /> {t("viewTable")}
+          </button>
+          <button className={`dsubtab ${vista === "archivos" ? "active" : ""}`} onClick={() => setVista("archivos")}>
+            <Icon name="folder" size={12} /> {t("viewFiles")}
+          </button>
+        </div>
+      )}
+
+      {esTabla && vista === "tablero" && (
+        <>
       {herramienta.tipo === "tabla" && herramienta.id === "foto-marcas-foco" && (
         <FocoCueSheet
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -589,7 +619,22 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "tabla" && !tablaTieneVistaBespoke(herramienta.id) && (
+      {herramienta.id === "prod-stripboard" && (
+        <StripboardTool
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+        </>
+      )}
+
+      {esTabla && vista === "tabla" && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -608,6 +653,10 @@ function HerramientaData({
             for (const datos of rows) await crearFila(datos);
           }}
         />
+      )}
+
+      {esTabla && vista === "archivos" && (
+        <CarpetaArchivos departamento={departamento} herramientaId={herramienta.id} editable={editable} />
       )}
 
       {herramienta.tipo === "galeria" && (
@@ -673,14 +722,6 @@ function HerramientaData({
           onGuardar={guardarFila}
           onVisionar={visionar}
         />
-      )}
-
-      {herramienta.tipo === "galeria" && filas.length === 0 && (
-        <div className="soon-box" style={{ marginTop: 0 }}>
-          <span className="hex"></span>
-          <h4>{t("noRecordsYet")}</h4>
-          <p>{editable ? t("startAddingRow") : t("waitForData")}</p>
-        </div>
       )}
 
       {esSingle && filas[0] && (
@@ -3595,6 +3636,293 @@ function KpiDashboard({
   );
 }
 
+// ===========================================================================
+// Carpeta de archivos por herramienta
+// Cada herramienta tiene su propia carpeta en Storage: planos, permisos,
+// referencias, PDFs. Viven con la herramienta, no sueltos en Documentos.
+// ===========================================================================
+function bytesLegibles(n: number): string {
+  if (!n) return "";
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function CarpetaArchivos({
+  departamento,
+  herramientaId,
+  editable,
+}: {
+  departamento: string;
+  herramientaId: string;
+  editable: boolean;
+}) {
+  const t = useTranslations("hp");
+  const [archivos, setArchivos] = useState<{ name: string; size: number; created: string }[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [subiendo, setSubiendo] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const prefix = useMemo(() => {
+    const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+    return projectId ? `${projectId}/${safeKey(departamento)}/herramientas/${safeKey(herramientaId)}/_carpeta` : null;
+  }, [departamento, herramientaId]);
+
+  const cargar = useCallback(async () => {
+    if (!prefix) { setCargando(false); return; }
+    setCargando(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.storage.from("documentos").list(prefix, {
+      limit: 200,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+    if (error) { setErr(error.message); setCargando(false); return; }
+    setArchivos(
+      (data ?? [])
+        .filter((o) => o.name !== ".emptyFolderPlaceholder")
+        .map((o) => ({ name: o.name, size: (o.metadata?.size as number) ?? 0, created: o.created_at ?? "" }))
+    );
+    setCargando(false);
+  }, [prefix]);
+
+  useEffect(() => { cargar(); }, [cargar]);
+
+  async function subir(file: File) {
+    if (!prefix) return;
+    setSubiendo(true); setErr(null);
+    const supabase = createClient();
+    const path = `${prefix}/${Date.now()}-${safeKey(file.name)}`;
+    const { error } = await supabase.storage.from("documentos").upload(path, file);
+    setSubiendo(false);
+    if (error) { setErr(t("uploadError", { msg: error.message })); return; }
+    cargar();
+  }
+  async function abrir(name: string) {
+    if (!prefix) return;
+    const supabase = createClient();
+    const { data } = await supabase.storage.from("documentos").createSignedUrl(`${prefix}/${name}`, 60);
+    if (data) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
+  async function quitar(name: string) {
+    if (!prefix || !window.confirm(t("fileConfirmDelete"))) return;
+    const supabase = createClient();
+    await supabase.storage.from("documentos").remove([`${prefix}/${name}`]);
+    cargar();
+  }
+
+  const nombreLimpio = (n: string) => n.replace(/^\d+-/, "");
+
+  return (
+    <div className="hp-carpeta">
+      <div className="hp-carpeta-head">
+        <span className="hp-carpeta-title"><Icon name="folder" size={15} /> {t("filesTitle")}</span>
+        <span className="hp-carpeta-count">{archivos.length}</span>
+        {editable && (
+          <label className="cp-btn cp-btn-acc hp-carpeta-up">
+            {subiendo ? t("importing") : <><Icon name="upload" size={13} /> {t("upload")}</>}
+            <input type="file" style={{ display: "none" }} disabled={subiendo} onChange={(e) => { const f = e.target.files?.[0]; if (f) subir(f); e.target.value = ""; }} />
+          </label>
+        )}
+      </div>
+      {err && <div className="hp-error"><span>⚠ {err}</span><button onClick={() => setErr(null)}><Icon name="x" size={12} /></button></div>}
+      {cargando ? (
+        <p className="hp-carpeta-empty">{t("saving")}</p>
+      ) : archivos.length === 0 ? (
+        <div className="hp-carpeta-vacia">
+          <span className="hex"></span>
+          <p>{t("filesEmpty")}</p>
+          {editable && <span className="hp-carpeta-hint">{t("filesHint")}</span>}
+        </div>
+      ) : (
+        <div className="hp-carpeta-grid">
+          {archivos.map((a) => (
+            <div className="hp-file" key={a.name}>
+              <button className="hp-file-open" onClick={() => abrir(a.name)} title={nombreLimpio(a.name)}>
+                <Icon name="file-text" size={26} />
+                <span className="hp-file-name">{nombreLimpio(a.name)}</span>
+                <span className="hp-file-meta">{bytesLegibles(a.size)}</span>
+              </button>
+              {editable && <button className="hp-file-del" onClick={() => quitar(a.name)} title={t("delete")}><Icon name="x" size={12} /></button>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===========================================================================
+// STRIPBOARD — el corazón de la planificación de rodaje
+// No es una tabla: es el orden del día en tiras de colores (convención
+// universal: blanco INT-día, azul INT-noche, amarillo EXT-día, verde
+// EXT-noche), agrupadas por jornada, con páginas en octavos sumadas por día.
+// ===========================================================================
+function stripTono(intext: string, dn: string): "intdia" | "intnoche" | "extdia" | "extnoche" {
+  const ext = /ext/i.test(intext);
+  const noche = /noche|atardecer/i.test(dn);
+  if (ext) return noche ? "extnoche" : "extdia";
+  return noche ? "intnoche" : "intdia";
+}
+function octavosDe(paginas: string): number {
+  if (!paginas) return 0;
+  const m = paginas.trim().match(/^(?:(\d+)\s+)?(?:(\d+)\/8)?$/);
+  if (m) return (parseInt(m[1] || "0") * 8) + parseInt(m[2] || "0");
+  const soloEnt = paginas.trim().match(/^(\d+)$/);
+  if (soloEnt) return parseInt(soloEnt[1]) * 8;
+  const soloFrac = paginas.trim().match(/^(\d+)\/8$/);
+  if (soloFrac) return parseInt(soloFrac[1]);
+  return 0;
+}
+function octavosAPag(oct: number): string {
+  const ent = Math.floor(oct / 8);
+  const frac = oct % 8;
+  if (ent && frac) return `${ent} ${frac}/8`;
+  if (ent) return `${ent}`;
+  if (frac) return `${frac}/8`;
+  return "0";
+}
+
+function StripboardTool({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [arrastrando, setArrastrando] = useState<string | null>(null);
+  const colIntext = columnas.find((c) => c.key === "intext");
+  const colDN = columnas.find((c) => c.key === "dianoche");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+  const ord = (f: Fila) => {
+    const o = parseFloat(f.datos?._orden ?? "");
+    return isNaN(o) ? (f.orden ?? 0) : o;
+  };
+
+  const ordenadas = [...filas].sort((a, b) => ord(a) - ord(b));
+  const dias = Array.from(new Set(ordenadas.map((f) => (f.datos?.dia ?? "").trim()))).sort((a, b) =>
+    a.localeCompare(b, "es", { numeric: true })
+  );
+
+  function moverStrip(f: Fila, dia: string, beforeId: string | null) {
+    const enDia = ordenadas.filter((x) => (x.datos?.dia ?? "").trim() === dia && x.id !== f.id);
+    const idx = beforeId ? enDia.findIndex((x) => x.id === beforeId) : enDia.length;
+    let prev: number, next: number;
+    if (enDia.length === 0) { prev = 0; next = 2; }
+    else if (idx <= 0) { next = ord(enDia[0]); prev = next - 2; }
+    else if (idx >= enDia.length) { prev = ord(enDia[enDia.length - 1]); next = prev + 2; }
+    else { prev = ord(enDia[idx - 1]); next = ord(enDia[idx]); }
+    onGuardar(f.id, { ...f.datos, dia, _orden: String((prev + next) / 2) }, f);
+  }
+
+  function Tira({ f }: { f: Fila }) {
+    const tono = stripTono(f.datos?.intext ?? "", f.datos?.dianoche ?? "");
+    const elenco = (f.datos?.elenco ?? "").split(/[,\s]+/).filter(Boolean);
+    return (
+      <div
+        className={`sb-strip sb-${tono} ${arrastrando === f.id ? "sb-dragging" : ""}`}
+        draggable={editable}
+        onDragStart={() => setArrastrando(f.id)}
+        onDragEnd={() => setArrastrando(null)}
+        onDragOver={(e) => { if (arrastrando && arrastrando !== f.id) e.preventDefault(); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (!arrastrando || arrastrando === f.id) return;
+          const dragged = filas.find((x) => x.id === arrastrando);
+          if (dragged) moverStrip(dragged, (f.datos?.dia ?? "").trim(), f.id);
+          setArrastrando(null);
+        }}
+      >
+        <div className="sb-row1">
+          {editable && <span className="sb-grip"><Icon name="grip-vertical" size={16} /></span>}
+          <input className="sb-escena" defaultValue={f.datos?.escena ?? ""} placeholder="—" readOnly={!editable} onBlur={(e) => set(f, "escena", e.target.value)} />
+          <select className="sb-chip" value={f.datos?.intext ?? ""} disabled={!editable} onChange={(e) => set(f, "intext", e.target.value)}>
+            <option value="">INT/EXT</option>
+            {(colIntext?.opciones ?? ["INT", "EXT", "INT/EXT"]).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <select className="sb-chip" value={f.datos?.dianoche ?? ""} disabled={!editable} onChange={(e) => set(f, "dianoche", e.target.value)}>
+            <option value="">D/N</option>
+            {(colDN?.opciones ?? ["Día", "Noche", "Amanecer", "Atardecer"]).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <input className="sb-loc" defaultValue={f.datos?.locacion ?? ""} placeholder={t("sbLocation")} readOnly={!editable} onBlur={(e) => set(f, "locacion", e.target.value)} />
+          <div className="sb-pag" title={t("sbPages")}>
+            <input className="sb-pag-input" defaultValue={f.datos?.paginas ?? ""} placeholder="0/8" readOnly={!editable} onBlur={(e) => set(f, "paginas", e.target.value)} />
+            <span className="sb-pag-unit">pág</span>
+          </div>
+          <div className="sb-elenco" title={t("sbCast")}>
+            {elenco.length > 0 ? elenco.map((c, i) => <span className="sb-cast" key={i}>{c}</span>) : <span className="sb-cast-empty">—</span>}
+          </div>
+          {editable && <button className="sb-del" onClick={() => onBorrar(f.id)} title={t("delete")}><Icon name="x" size={13} /></button>}
+        </div>
+        <div className="sb-row2">
+          <input className="sb-sinopsis" defaultValue={f.datos?.sinopsis ?? ""} placeholder={t("sbSynopsis")} readOnly={!editable} onBlur={(e) => set(f, "sinopsis", e.target.value)} />
+          <input className="sb-elenco-edit" defaultValue={f.datos?.elenco ?? ""} placeholder={t("sbCastEdit")} readOnly={!editable} onBlur={(e) => set(f, "elenco", e.target.value)} />
+          <div className="sb-ref">
+            <ArchivoCell path={f.datos?.ref ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="ref" onSave={(v) => set(f, "ref", v)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="sb-board">
+      <div className="sb-legend">
+        <span className="sb-leg"><span className="sb-sw sb-sw-intdia"></span>{t("sbIntDay")}</span>
+        <span className="sb-leg"><span className="sb-sw sb-sw-intnoche"></span>{t("sbIntNight")}</span>
+        <span className="sb-leg"><span className="sb-sw sb-sw-extdia"></span>{t("sbExtDay")}</span>
+        <span className="sb-leg"><span className="sb-sw sb-sw-extnoche"></span>{t("sbExtNight")}</span>
+        {editable && (
+          <button className="cp-btn cp-btn-acc sb-add" onClick={() => onCrear({ dia: dias[dias.length - 1] || "1" })}>
+            <Icon name="plus" size={13} /> {t("sbAddStrip")}
+          </button>
+        )}
+      </div>
+
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear({ dia: "1" })}>{t("sbAddStrip")}</button>}
+        </div>
+      ) : (
+        dias.map((dia) => {
+          const fs = ordenadas.filter((f) => (f.datos?.dia ?? "").trim() === dia);
+          const oct = fs.reduce((s, f) => s + octavosDe(f.datos?.paginas ?? ""), 0);
+          return (
+            <div className="sb-day" key={dia || "_sin"}>
+              <div
+                className="sb-day-banner"
+                onDragOver={(e) => { if (arrastrando) e.preventDefault(); }}
+                onDrop={(e) => { e.preventDefault(); if (!arrastrando) return; const d = filas.find((x) => x.id === arrastrando); if (d) moverStrip(d, dia, null); setArrastrando(null); }}
+              >
+                <span className="sb-day-n">{dia ? t("sbDay", { n: dia }) : t("sbNoDay")}</span>
+                <span className="sb-day-totals">{t("sbDayTotals", { escenas: fs.length, pag: octavosAPag(oct) })}</span>
+              </div>
+              {fs.map((f) => <Tira f={f} key={f.id} />)}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 // ---- Tabla con registro de intervenciones ----
 const ITEMS_POR_PAG = 50;
 
@@ -4707,7 +5035,13 @@ function GaleriaTool({
       {editable && columnas.some((c) => !c.tipo || c.tipo === "largo" || c.tipo === "texto") && (
         <RichToolbar className="hp-tabla-richbar" />
       )}
-      {grupos ? (
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("noRecordsYet")}</p>
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addCard")}</button>}
+        </div>
+      ) : grupos ? (
         grupos.map(([nombre, fs]) => (
           <div className="hp-gal-group" key={nombre}>
             <div className="hp-gal-group-head">
@@ -4721,7 +5055,7 @@ function GaleriaTool({
       ) : (
         <div className="hp-galeria">{filas.map(tarjeta)}</div>
       )}
-      {editable && (
+      {editable && filas.length > 0 && (
         <div className="hp-actions">
           <button className="btn acc" onClick={onCrear}>{t("addCard")}</button>
           <button className="btn" onClick={pedirColumna}>{t("addField")}</button>

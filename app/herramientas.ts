@@ -325,6 +325,8 @@ const stripboard: Herramienta = {
     { key: "locacion", label: "Locación" },
     { key: "paginas", label: "Páginas (1/8)" },
     { key: "elenco", label: "Elenco" },
+    { key: "sinopsis", label: "Síntesis de la escena", tipo: "largo" },
+    { key: "ref", label: "Referencia / plano", tipo: "archivo" as const },
   ],
 };
 const cateringDietas: Herramienta = {
