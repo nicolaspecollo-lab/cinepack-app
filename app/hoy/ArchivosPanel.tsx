@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { safeKey } from "../lib/storageKey";
 import * as pdfjsLib from "pdfjs-dist";
 
 type Archivo = {
@@ -40,16 +41,6 @@ function fileIcon(nombre: string) {
 }
 
 const BUCKET = "documentos";
-
-// Supabase Storage no admite tildes ni espacios en las keys.
-// Sanitiza cada segmento de la ruta sin tocar el nombre que se muestra en la UI.
-function safeKey(s: string) {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "") // quita tildes/diacríticos
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9._-]/g, "");
-}
 
 export default function ArchivosPanel({ departamento }: { departamento: string }) {
   const t = useTranslations("archivos");

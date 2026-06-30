@@ -379,7 +379,9 @@
     "toolsOf": "Herramientas de {dept}",
     "noExclusiveTools": "Sin herramientas exclusivas",
     "noExclusiveToolsDesc": "Este departamento todavía no tiene herramientas exclusivas de cargo en el mapa.",
-    "yourRole": "tu cargo"
+    "yourRole": "tu cargo",
+    "uploadError": "No se pudo subir el archivo: {msg}",
+    "loadError": "No se pudo cargar el archivo."
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",

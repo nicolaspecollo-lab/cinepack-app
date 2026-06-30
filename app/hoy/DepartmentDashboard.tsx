@@ -14,6 +14,7 @@ import CommandPalette, { type PaletteItem } from "./CommandPalette";
 import InboxPanel, { type InboxItem } from "./InboxPanel";
 import { deptTools, cargoGroups } from "../herramientas";
 import { createClient } from "@/lib/supabase/client";
+import { safeKey } from "../lib/storageKey";
 import { CLIENTE_DEPT } from "../constants";
 import "./dashboard.css";
 
@@ -79,7 +80,7 @@ export default function DepartmentDashboard({
       const projectId = localStorage.getItem("cinepack-proyecto-id");
       if (!projectId) return;
       const supabase = createClient();
-      const base = `${projectId}/${nombre}/archivos`;
+      const base = `${projectId}/${safeKey(nombre)}/archivos`;
       const { data } = await supabase.storage.from("documentos").list(base, { limit: 200 });
       if (data) {
         const found: { nombre: string; path: string }[] = [];

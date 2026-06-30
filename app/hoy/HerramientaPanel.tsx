@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
@@ -504,8 +505,10 @@ function ImgPreview({ path }: { path: string }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let activo = true;
-    createClient().storage.from("documentos").createSignedUrl(path, 3600).then(({ data }) => {
-      if (activo) setUrl(data?.signedUrl ?? null);
+    createClient().storage.from("documentos").createSignedUrl(path, 3600).then(({ data, error }) => {
+      if (!activo) return;
+      if (error) console.error("createSignedUrl falló:", path, error);
+      setUrl(data?.signedUrl ?? null);
     });
     return () => { activo = false; };
   }, [path]);
@@ -532,17 +535,23 @@ function ArchivoCell({
 }) {
   const t = useTranslations("hp");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   const fileName = path ? path.split("/").pop()?.replace(/^\d+-/, "") ?? path : "";
 
   async function subir(file: File) {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) return;
     setBusy(true);
+    setErr(null);
     const supabase = createClient();
-    const p = `${projectId}/${departamento}/herramientas/${herramientaId}/${filaId}/${colKey}/${Date.now()}-${file.name}`;
+    const p = `${projectId}/${safeKey(departamento)}/herramientas/${safeKey(herramientaId)}/${filaId}/${safeKey(colKey)}/${Date.now()}-${safeKey(file.name)}`;
     const { error } = await supabase.storage.from("documentos").upload(p, file);
     setBusy(false);
-    if (!error) onSave(p);
+    if (error) {
+      setErr(t("uploadError", { msg: error.message }));
+      return;
+    }
+    onSave(p);
   }
 
   async function ver() {
@@ -578,6 +587,7 @@ function ArchivoCell({
           />
         </label>
       )}
+      {err && <span className="hp-archivo-err">{err}</span>}
     </div>
   );
 }
@@ -1773,15 +1783,19 @@ function GaleriaImg({
   filaId: string;
   onSave: (v: string) => void;
 }) {
+  const t = useTranslations("hp");
   const [url, setUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
     let activo = true;
     if (!path) { setUrl(null); return; }
     const supabase = createClient();
-    supabase.storage.from("documentos").createSignedUrl(path, 3600).then(({ data }) => {
-      if (activo) setUrl(data?.signedUrl ?? null);
+    supabase.storage.from("documentos").createSignedUrl(path, 3600).then(({ data, error }) => {
+      if (!activo) return;
+      if (error) console.error("createSignedUrl falló:", path, error);
+      setUrl(data?.signedUrl ?? null);
     });
     return () => { activo = false; };
   }, [path]);
@@ -1790,11 +1804,16 @@ function GaleriaImg({
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) return;
     setBusy(true);
+    setErr(null);
     const supabase = createClient();
-    const p = `${projectId}/${departamento}/herramientas/${herramientaId}/${filaId}/img/${Date.now()}-${file.name}`;
+    const p = `${projectId}/${safeKey(departamento)}/herramientas/${safeKey(herramientaId)}/${filaId}/img/${Date.now()}-${safeKey(file.name)}`;
     const { error } = await supabase.storage.from("documentos").upload(p, file);
     setBusy(false);
-    if (!error) onSave(p);
+    if (error) {
+      setErr(t("uploadError", { msg: error.message }));
+      return;
+    }
+    onSave(p);
   }
 
   return (
@@ -1809,7 +1828,7 @@ function GaleriaImg({
       </div>
       {editable && (
         <label className="hp-archivo-up hp-gimg-up">
-          {busy ? "Subiendo…" : path ? "Cambiar imagen" : "Subir imagen"}
+          {busy ? t("uploading") : path ? t("change") : t("upload")}
           <input
             type="file"
             accept="image/*"
@@ -1823,6 +1842,7 @@ function GaleriaImg({
           />
         </label>
       )}
+      {err && <span className="hp-archivo-err">{err}</span>}
     </>
   );
 }

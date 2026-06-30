@@ -379,7 +379,9 @@
     "toolsOf": "{dept} tools",
     "noExclusiveTools": "No exclusive tools",
     "noExclusiveToolsDesc": "This department doesn't have role-exclusive tools in the map yet.",
-    "yourRole": "your role"
+    "yourRole": "your role",
+    "uploadError": "Couldn't upload the file: {msg}",
+    "loadError": "Couldn't load the file."
   },
   "herr": {
     "accesos-equipo": "Team access",

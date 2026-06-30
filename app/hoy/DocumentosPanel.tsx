@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { safeKey } from "../lib/storageKey";
 import { DOCUMENTOS_POR_DEPARTAMENTO } from "../constants";
 
 type DocRow = {
@@ -82,7 +83,7 @@ export default function DocumentosPanel({
       return;
     }
 
-    const path = `${projectId}/${departamento}/${categoria}/${Date.now()}-${file.name}`;
+    const path = `${projectId}/${safeKey(departamento)}/${categoria}/${Date.now()}-${safeKey(file.name)}`;
     const { error: upErr } = await supabase.storage.from("documentos").upload(path, file);
     if (upErr) {
       setSubiendo(null);
