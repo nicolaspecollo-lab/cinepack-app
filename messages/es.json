@@ -384,7 +384,8 @@
     "loadError": "No se pudo cargar el archivo.",
     "visMini": "Visionar",
     "visMiniDone": "Visionado ✓",
-    "noCharacter": "Sin personaje"
+    "noCharacter": "Sin personaje",
+    "noScene": "Sin escena"
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",

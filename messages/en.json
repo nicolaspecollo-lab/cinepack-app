@@ -384,7 +384,8 @@
     "loadError": "Couldn't load the file.",
     "visMini": "View",
     "visMiniDone": "Viewed ✓",
-    "noCharacter": "No character"
+    "noCharacter": "No character",
+    "noScene": "No scene"
   },
   "herr": {
     "accesos-equipo": "Team access",

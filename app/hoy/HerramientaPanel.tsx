@@ -404,7 +404,19 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "tabla" && herramienta.id !== "foto-marcas-foco" && (
+      {herramienta.tipo === "tabla" && PLANO_BOARD_IDS.has(herramienta.id) && (
+        <PlanoBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id !== "foto-marcas-foco" && !PLANO_BOARD_IDS.has(herramienta.id) && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -940,6 +952,211 @@ function FocoCueSheet({
             </div>
           ))}
         </div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Tablero de planos (shot board) ----
+// Plan técnico de cámara, plan de cámara por escena, guión técnico y orden
+// del día comparten una misma realidad: un equipo de cámara no consulta esto
+// como una tabla de datos sueltos, lo recorre como un plan de rodaje —
+// plano por plano, agrupado por escena (o en orden de ejecución para la
+// orden del día). Tarjetas grandes con el número de plano destacado.
+const PLANO_BOARD_IDS = new Set([
+  "foto-shotlist",
+  "foto-plan-camara",
+  "foto-guion-tecnico",
+  "foto-orden-dia-camara",
+]);
+// La orden del día es una secuencia de ejecución del día, no un agrupado
+// por escena (un mismo set puede mezclar varias escenas en el orden real).
+const PLANO_BOARD_NO_GROUP = new Set(["foto-orden-dia-camara"]);
+
+function PlanoBoard({
+  columnas,
+  filas,
+  editable,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colGrupo = PLANO_BOARD_NO_GROUP.has(herramientaId)
+    ? undefined
+    : columnas.find((c) => c.key === "escena");
+  const colNum = columnas.find((c) => ["plano", "num_plano", "orden"].includes(c.key));
+  const colEstado = columnas.find((c) => c.tipo === "estado" && (c.key === "estado" || c.key === "ok"));
+  const colDesc = columnas.find((c) => c.key !== colGrupo?.key && /desc/.test(c.key));
+  const colLink = columnas.find((c) => c.tipo === "link");
+  const colArchivo = columnas.find((c) => c.tipo === "archivo");
+  const usados = new Set(
+    [colGrupo?.key, colNum?.key, colEstado?.key, colDesc?.key, colLink?.key, colArchivo?.key].filter(Boolean) as string[]
+  );
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter(
+    (c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo"
+  );
+
+  function ordenar(fs: Fila[]) {
+    if (!colNum) return fs;
+    return [...fs].sort((a, b) => {
+      const va = a.datos?.[colNum.key] ?? "";
+      const vb = b.datos?.[colNum.key] ?? "";
+      const na = parseFloat(va);
+      const nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+      return va.localeCompare(vb, "es", { numeric: true });
+    });
+  }
+
+  function ChipInput({ f, c }: { f: Fila; c: Columna }) {
+    const v = f.datos?.[c.key] ?? "";
+    if (c.tipo === "estado") {
+      return (
+        <select
+          className={`hp-plano-chip-select tono-${estadoTono(v)}`}
+          defaultValue={v}
+          disabled={!editable}
+          onChange={(e) => set(f, c.key, e.target.value)}
+        >
+          <option value="">—</option>
+          {(c.opciones ?? []).map((op) => (
+            <option key={op} value={op}>{op}</option>
+          ))}
+        </select>
+      );
+    }
+    return (
+      <input
+        className="hp-plano-chip-input"
+        type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
+        defaultValue={v}
+        readOnly={!editable}
+        placeholder="—"
+        onBlur={(e) => set(f, c.key, e.target.value)}
+      />
+    );
+  }
+
+  function Tarjeta(f: Fila) {
+    const estadoVal = colEstado ? f.datos?.[colEstado.key] ?? "" : "";
+    return (
+      <div className="hp-plano-card" key={f.id}>
+        <div className="hp-plano-head">
+          {colNum && (
+            <input
+              className="hp-plano-num"
+              defaultValue={f.datos?.[colNum.key] ?? ""}
+              placeholder="—"
+              readOnly={!editable}
+              onBlur={(e) => set(f, colNum.key, e.target.value)}
+            />
+          )}
+          {colEstado && (
+            <select
+              className={`hp-plano-estado tono-${estadoTono(estadoVal)}`}
+              defaultValue={estadoVal}
+              disabled={!editable}
+              onChange={(e) => set(f, colEstado.key, e.target.value)}
+            >
+              <option value="">{t("noStatus")}</option>
+              {(colEstado.opciones ?? []).map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+          )}
+          <span className="hp-plano-head-spacer" />
+          {editable && (
+            <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>
+          )}
+        </div>
+        {colDesc && (
+          <textarea
+            className="hp-plano-desc"
+            defaultValue={stripHtml(f.datos?.[colDesc.key] ?? "")}
+            placeholder={colDesc.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, colDesc.key, e.target.value)}
+            rows={2}
+          />
+        )}
+        {colsChip.length > 0 && (
+          <div className="hp-plano-specs">
+            {colsChip.map((c) => (
+              <label className="hp-plano-chip" key={c.key}>
+                <span className="hp-plano-chip-label">{c.label}</span>
+                <ChipInput f={f} c={c} />
+              </label>
+            ))}
+          </div>
+        )}
+        {colLink && <LinkCell valor={f.datos?.[colLink.key] ?? ""} editable={editable} onSave={(v) => set(f, colLink.key, v)} />}
+        {colsNotas.map((c) => (
+          <label className="hp-plano-note" key={c.key}>
+            <span>{c.label}</span>
+            <textarea
+              defaultValue={f.datos?.[c.key] ?? ""}
+              readOnly={!editable}
+              onBlur={(e) => set(f, c.key, e.target.value)}
+              rows={2}
+            />
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  const grupos = colGrupo
+    ? Object.entries(
+        filas.reduce<Record<string, Fila[]>>((acc, f) => {
+          const nombre = (f.datos?.[colGrupo.key] ?? "").trim() || t("noScene");
+          (acc[nombre] ??= []).push(f);
+          return acc;
+        }, {})
+      ).sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }))
+    : null;
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : grupos ? (
+        grupos.map(([nombre, fs]) => (
+          <div className="hp-gal-group" key={nombre}>
+            <div className="hp-gal-group-head">
+              <span className="hex"></span>
+              <span>{nombre}</span>
+              <span className="hp-gal-group-count">{fs.length}</span>
+            </div>
+            <div className="hp-plano-grid">{ordenar(fs).map(Tarjeta)}</div>
+          </div>
+        ))
+      ) : (
+        <div className="hp-plano-grid">{ordenar(filas).map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">

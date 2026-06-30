@@ -1991,3 +1991,72 @@
   .cp-dash .hp-foco-grid{ grid-template-columns:1fr; padding:var(--sp-3) var(--gutter); gap:var(--sp-3); }
   .cp-dash .hp-foco-mark-val{ font-size:var(--fs-lg); }
 }
+
+/* Tablero de planos (shot list / plan de cámara / guión técnico / orden del
+   día): tarjetas de plano agrupadas por escena, leídas en orden de rodaje. */
+.cp-dash .hp-plano-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:var(--sp-3); padding:var(--sp-3) var(--gutter) var(--sp-4);
+}
+.cp-dash .hp-plano-card{
+  background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3);
+  display:flex; flex-direction:column; gap:var(--sp-2);
+}
+.cp-dash .hp-plano-head{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-plano-num{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-md);
+  color:var(--text); background:var(--hl2); border:1px solid var(--line);
+  width:40px; text-align:center; padding:3px 2px; flex-shrink:0;
+}
+.cp-dash .hp-plano-num:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-plano-head-spacer{ flex:1; }
+.cp-dash .hp-plano-estado{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-xs);
+  border:1px solid var(--line); background:var(--hl2); color:var(--muted);
+  padding:4px 8px; cursor:pointer;
+}
+.cp-dash .hp-plano-estado.tono-ok{ background:rgba(159,232,112,0.14); color:var(--lime); border-color:transparent; }
+.cp-dash .hp-plano-estado.tono-warn{ background:rgba(245,166,35,0.14); color:var(--amber); border-color:transparent; }
+.cp-dash .hp-plano-estado.tono-bad{ background:rgba(255,107,107,0.14); color:var(--rose); border-color:transparent; }
+.cp-dash .hp-plano-estado.tono-info{ background:rgba(17,194,220,0.12); color:var(--cyan); border-color:transparent; }
+.cp-dash .hp-plano-desc{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-base); color:var(--text); background:none; border:none;
+  padding:0; resize:vertical; min-height:38px; line-height:1.4;
+}
+.cp-dash .hp-plano-desc:focus{ outline:none; }
+.cp-dash .hp-plano-desc::placeholder{ color:var(--muted); }
+.cp-dash .hp-plano-specs{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.cp-dash .hp-plano-chip{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+  background:var(--hl1); border:1px solid var(--line); padding:4px 8px;
+}
+.cp-dash .hp-plano-chip-label{
+  font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.03em;
+}
+.cp-dash .hp-plano-chip-input, .cp-dash .hp-plano-chip-select{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-sm); color:var(--text); background:none; border:none; padding:0;
+  min-width:40px;
+}
+.cp-dash .hp-plano-chip-input:focus, .cp-dash .hp-plano-chip-select:focus{ outline:none; }
+.cp-dash .hp-plano-chip-select{ cursor:pointer; }
+.cp-dash .hp-plano-chip-select.tono-ok{ color:var(--lime); }
+.cp-dash .hp-plano-chip-select.tono-warn{ color:var(--amber); }
+.cp-dash .hp-plano-chip-select.tono-bad{ color:var(--rose); }
+.cp-dash .hp-plano-chip-select.tono-info{ color:var(--cyan); }
+.cp-dash .hp-plano-note{
+  display:flex; flex-direction:column; gap:2px;
+  font-size:var(--fs-sm); color:var(--muted); border-top:1px solid var(--line); padding-top:var(--sp-2);
+}
+.cp-dash .hp-plano-note > span:first-child{ font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-plano-note textarea{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-sm); color:var(--text); background:var(--hl1); border:1px solid var(--line);
+  padding:var(--sp-2); resize:vertical;
+}
+.cp-dash .hp-plano-note textarea:focus{ outline:none; border-color:var(--acc); }
+
+@media (max-width:640px){
+  .cp-dash .hp-plano-grid{ grid-template-columns:1fr; padding:var(--sp-3) var(--gutter); gap:var(--sp-3); }
+}

@@ -384,7 +384,8 @@
     "loadError": "No s'ha pogut carregar l'arxiu.",
     "visMini": "Visiona",
     "visMiniDone": "Visionat ✓",
-    "noCharacter": "Sense personatge"
+    "noCharacter": "Sense personatge",
+    "noScene": "Sense escena"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",
