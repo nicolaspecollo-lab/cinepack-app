@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -35,6 +36,8 @@ const ESTADO_BADGE: Record<Transaccion["estado"], string> = {
 };
 
 export default function AdminGestion() {
+  const t = useTranslations("adminGestion");
+  const locale = useLocale();
   const { checking, isAdmin } = useAdminGuard();
   const [planes, setPlanes] = useState<Plan[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -109,8 +112,8 @@ export default function AdminGestion() {
 
   function exportarCSV() {
     const filas = [
-      ["Usuario", "Plan", "Importe", "Estado", "Fecha"],
-      ...transacciones.map((t) => [t.usuario, t.plan, t.importe.toFixed(2), t.estado, t.fecha]),
+      [t("csvUser"), t("csvPlan"), t("csvAmount"), t("csvStatus"), t("csvDate")],
+      ...transacciones.map((tr) => [tr.usuario, tr.plan, tr.importe.toFixed(2), tr.estado, tr.fecha]),
     ];
     const csv = filas.map((f) => f.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -130,63 +133,59 @@ export default function AdminGestion() {
 
       <div className="cp-admin-kpis">
         <div className="cp-admin-kpi">
-          <span className="num">{RESUMEN_MOCK.ingresosMesActual.toLocaleString("es-ES")} €</span>
-          <span className="label">Ingresos del mes actual</span>
+          <span className="num">{RESUMEN_MOCK.ingresosMesActual.toLocaleString(locale)} €</span>
+          <span className="label">{t("kpiRevenueThisMonth")}</span>
         </div>
         <div className="cp-admin-kpi">
-          <span className="num">{RESUMEN_MOCK.ingresosMesAnterior.toLocaleString("es-ES")} €</span>
-          <span className="label">Ingresos del mes anterior</span>
+          <span className="num">{RESUMEN_MOCK.ingresosMesAnterior.toLocaleString(locale)} €</span>
+          <span className="label">{t("kpiRevenueLastMonth")}</span>
         </div>
         <div className="cp-admin-kpi">
           <span className="num">{RESUMEN_MOCK.suscripcionesActivas}</span>
-          <span className="label">Suscripciones activas</span>
+          <span className="label">{t("kpiActiveSubs")}</span>
         </div>
         <div className="cp-admin-kpi">
           <span className="num">{RESUMEN_MOCK.suscripcionesCanceladasEsteMes}</span>
-          <span className="label">Canceladas este mes</span>
+          <span className="label">{t("kpiCanceledThisMonth")}</span>
         </div>
       </div>
-      <p style={{ color: "var(--muted)", fontSize: "12px", margin: "-6px 0 16px" }}>
-        Datos de ejemplo — se conectan a la pasarela de pago cuando esté decidida.
-      </p>
+      <p style={{ color: "var(--muted)", fontSize: "12px", margin: "-6px 0 16px" }}>{t("mockDataNote")}</p>
 
       <div className="cp-admin-section">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", marginBottom: "14px", flexWrap: "wrap" }}>
-          <h3 style={{ margin: 0 }}>Transacciones ({transacciones.length})</h3>
+          <h3 style={{ margin: 0 }}>{t("transactionsTitle", { n: transacciones.length })}</h3>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <select
               value={filtroEstado}
               onChange={(e) => setFiltroEstado(e.target.value as typeof filtroEstado)}
               style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }}
             >
-              <option value="todos">Todos los estados</option>
-              <option value="pagado">Pagado</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="fallido">Fallido</option>
+              <option value="todos">{t("allStatuses")}</option>
+              <option value="pagado">{t("statusPaid")}</option>
+              <option value="pendiente">{t("statusPending")}</option>
+              <option value="fallido">{t("statusFailed")}</option>
             </select>
             <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }} />
             <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }} />
-            <button className="btn" onClick={exportarCSV} disabled={transacciones.length === 0}>Exportar CSV</button>
+            <button className="btn" onClick={exportarCSV} disabled={transacciones.length === 0}>{t("exportCsv")}</button>
           </div>
         </div>
 
         {transacciones.length === 0 ? (
-          <div className="cp-admin-empty">
-            Sin transacciones todavía — esta sección se llena automáticamente cuando se conecte la pasarela de pago.
-          </div>
+          <div className="cp-admin-empty">{t("noTransactionsYet")}</div>
         ) : (
           <table className="cp-admin-table">
             <thead>
-              <tr><th>Usuario</th><th>Plan</th><th>Importe</th><th>Estado</th><th>Fecha</th></tr>
+              <tr><th>{t("colUser")}</th><th>{t("colPlan")}</th><th>{t("colAmount")}</th><th>{t("colStatus")}</th><th>{t("colDate")}</th></tr>
             </thead>
             <tbody>
-              {transacciones.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.usuario}</td>
-                  <td>{t.plan}</td>
-                  <td>{t.importe.toFixed(2)} €</td>
-                  <td><span className={`cp-admin-badge ${ESTADO_BADGE[t.estado]}`}>{t.estado}</span></td>
-                  <td>{new Date(t.fecha).toLocaleDateString("es-ES")}</td>
+              {transacciones.map((tr) => (
+                <tr key={tr.id}>
+                  <td>{tr.usuario}</td>
+                  <td>{tr.plan}</td>
+                  <td>{tr.importe.toFixed(2)} €</td>
+                  <td><span className={`cp-admin-badge ${ESTADO_BADGE[tr.estado]}`}>{tr.estado}</span></td>
+                  <td>{new Date(tr.fecha).toLocaleDateString(locale)}</td>
                 </tr>
               ))}
             </tbody>
@@ -195,19 +194,16 @@ export default function AdminGestion() {
       </div>
 
       <div className="cp-admin-section">
-        <h3>Planes</h3>
-        <p style={{ color: "var(--muted)", fontSize: "12.5px", marginBottom: "16px" }}>
-          Habilitar/deshabilitar es solo un flag en la base — todavía no hay pasarela de pago conectada,
-          así que no cobra nada automáticamente.
-        </p>
+        <h3>{t("plansTitle")}</h3>
+        <p style={{ color: "var(--muted)", fontSize: "12.5px", marginBottom: "16px" }}>{t("plansDesc")}</p>
 
-        {planes === null && !err && <div className="cp-admin-empty">Cargando…</div>}
-        {planes?.length === 0 && <div className="cp-admin-empty">Sin planes configurados todavía.</div>}
+        {planes === null && !err && <div className="cp-admin-empty">{t("loading")}</div>}
+        {planes?.length === 0 && <div className="cp-admin-empty">{t("noPlansYet")}</div>}
 
         {planes && planes.length > 0 && (
           <table className="cp-admin-table" style={{ marginBottom: "16px" }}>
             <thead>
-              <tr><th>Nombre</th><th>Precio</th><th>Features</th><th>Estado</th><th>Acciones</th></tr>
+              <tr><th>{t("colName")}</th><th>{t("colPrice")}</th><th>{t("colFeatures")}</th><th>{t("colStatus")}</th><th>{t("colActions")}</th></tr>
             </thead>
             <tbody>
               {planes.map((p) => (
@@ -215,10 +211,10 @@ export default function AdminGestion() {
                   <td>{p.name}</td>
                   <td>{p.price.toFixed(2)} €</td>
                   <td>{p.features.join(", ") || "—"}</td>
-                  <td><span className={`cp-admin-badge ${p.active ? "ok" : "pend"}`}>{p.active ? "habilitado" : "deshabilitado"}</span></td>
+                  <td><span className={`cp-admin-badge ${p.active ? "ok" : "pend"}`}>{p.active ? t("enabled") : t("disabled")}</span></td>
                   <td>
                     <button className="btn" disabled={busy === p.id} onClick={() => togglePlan(p)}>
-                      {p.active ? "Deshabilitar" : "Habilitar"}
+                      {p.active ? t("disable") : t("enable")}
                     </button>
                   </td>
                 </tr>
@@ -230,7 +226,7 @@ export default function AdminGestion() {
         <form onSubmit={agregarPlan} style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
           <input
             type="text"
-            placeholder="Nombre del plan"
+            placeholder={t("planNamePh")}
             value={nuevoNombre}
             onChange={(e) => setNuevoNombre(e.target.value)}
             style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }}
@@ -238,19 +234,19 @@ export default function AdminGestion() {
           <input
             type="number"
             step="0.01"
-            placeholder="Precio"
+            placeholder={t("pricePh")}
             value={nuevoPrecio}
             onChange={(e) => setNuevoPrecio(e.target.value)}
             style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px", width: "100px" }}
           />
           <input
             type="text"
-            placeholder="Features separadas por coma"
+            placeholder={t("featuresPh")}
             value={nuevoFeatures}
             onChange={(e) => setNuevoFeatures(e.target.value)}
             style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px", minWidth: "220px" }}
           />
-          <button type="submit" className="btn" disabled={busy === "nuevo"}>+ Agregar plan</button>
+          <button type="submit" className="btn" disabled={busy === "nuevo"}>{t("addPlan")}</button>
         </form>
       </div>
     </AdminShell>

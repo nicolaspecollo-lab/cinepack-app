@@ -2,27 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
 import "../cp-theme.css";
 import "./admin.css";
 
-const TABS = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/proyectos", label: "Proyectos" },
-  { href: "/admin/usuarios", label: "Usuarios" },
-  { href: "/admin/actividad", label: "Actividad" },
-  { href: "/admin/feedback", label: "Feedback" },
-  { href: "/admin/flags", label: "Feature flags" },
-  { href: "/admin/soporte", label: "Soporte" },
-  { href: "/admin/gestion", label: "Gestión" },
-];
-
 const BIBLIA_URL = "https://cinepack.es/biblia/";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("adminShell");
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
+
+  const TABS = [
+    { href: "/admin", label: t("dashboard") },
+    { href: "/admin/proyectos", label: t("projects") },
+    { href: "/admin/usuarios", label: t("users") },
+    { href: "/admin/actividad", label: t("activity") },
+    { href: "/admin/feedback", label: t("feedback") },
+    { href: "/admin/flags", label: t("featureFlags") },
+    { href: "/admin/soporte", label: t("support") },
+    { href: "/admin/gestion", label: t("management") },
+  ];
 
   return (
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
@@ -30,26 +32,26 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <Link href="/proyectos" className="cp-logo">
           <img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" />
         </Link>
-        <span className="cp-proj">Panel de administrador</span>
+        <span className="cp-proj">{t("adminPanel")}</span>
         <div className="cp-spacer"></div>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-          <span className="hex"></span> Salir del admin
+          <span className="hex"></span> {t("exitAdmin")}
         </Link>
       </header>
 
       <nav className="cp-admin-nav">
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <Link
-            key={t.href}
-            href={t.href}
-            className={`cp-admin-tab ${pathname === t.href ? "active" : ""}`}
+            key={tab.href}
+            href={tab.href}
+            className={`cp-admin-tab ${pathname === tab.href ? "active" : ""}`}
           >
-            {t.label}
+            {tab.label}
           </Link>
         ))}
         <a href={BIBLIA_URL} target="_blank" rel="noreferrer" className="cp-admin-tab cp-admin-tab-biblia">
-          <span className="hex"></span> Biblia de Producto ↗
+          <span className="hex"></span> {t("productBible")} ↗
         </a>
       </nav>
 

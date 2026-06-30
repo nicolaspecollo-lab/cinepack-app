@@ -1,11 +1,14 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 type Slice = { label: string; value: number; color: string };
 
 const R = 60;
 const CIRC = 2 * Math.PI * R;
 
 export default function DonutChart({ data }: { data: Slice[] }) {
+  const t = useTranslations("charts");
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1;
   let acc = 0;
   const arcs = data.map((d) => {
@@ -18,7 +21,7 @@ export default function DonutChart({ data }: { data: Slice[] }) {
 
   return (
     <div className="cp-chart-donut-wrap">
-      <svg viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="Gráfico circular">
+      <svg viewBox="0 0 160 160" width="160" height="160" role="img" aria-label={t("pieChartAria")}>
         <circle cx="80" cy="80" r={R} fill="none" stroke="var(--line)" strokeWidth="20" />
         {arcs.map((a) => (
           <circle

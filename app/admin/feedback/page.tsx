@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -15,6 +16,8 @@ type Fila = {
 };
 
 export default function AdminFeedback() {
+  const t = useTranslations("adminFeedback");
+  const locale = useLocale();
   const { checking, isAdmin } = useAdminGuard();
   const [filas, setFilas] = useState<Fila[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -50,26 +53,26 @@ export default function AdminFeedback() {
       {err && <div className="cp-admin-err">{err}</div>}
       <div className="cp-admin-section">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-          <h3 style={{ margin: 0 }}>Sugerencias / feedback de usuarios</h3>
+          <h3 style={{ margin: 0 }}>{t("title")}</h3>
           <div className="cons-filters" style={{ padding: 0 }}>
-            <button className={`cfilter ${filtro === "abierto" ? "active" : ""}`} onClick={() => setFiltro("abierto")}>Pendientes</button>
-            <button className={`cfilter ${filtro === "todos" ? "active" : ""}`} onClick={() => setFiltro("todos")}>Todos</button>
+            <button className={`cfilter ${filtro === "abierto" ? "active" : ""}`} onClick={() => setFiltro("abierto")}>{t("pending")}</button>
+            <button className={`cfilter ${filtro === "todos" ? "active" : ""}`} onClick={() => setFiltro("todos")}>{t("all")}</button>
           </div>
         </div>
-        {filas === null && !err && <div className="cp-admin-empty">Cargando…</div>}
-        {filas?.length === 0 && <div className="cp-admin-empty">Sin feedback {filtro === "abierto" ? "pendiente" : "todavía"}.</div>}
+        {filas === null && !err && <div className="cp-admin-empty">{t("loading")}</div>}
+        {filas?.length === 0 && <div className="cp-admin-empty">{filtro === "abierto" ? t("noFeedbackPending") : t("noFeedbackYet")}</div>}
         {filas?.map((f) => (
           <div key={f.id} className="cons" style={{ marginBottom: "10px" }}>
             <div className="cons-top">
               <div>
-                <span className="cons-meta">{f.profiles?.full_name ?? "Usuario"} · {new Date(f.created_at).toLocaleString("es-ES")}</span>
+                <span className="cons-meta">{f.profiles?.full_name ?? t("anonymousUser")} · {new Date(f.created_at).toLocaleString(locale)}</span>
               </div>
-              <span className={`cp-admin-badge ${!f.resuelto ? "warn" : "ok"}`}>{f.resuelto ? "resuelto" : "pendiente"}</span>
+              <span className={`cp-admin-badge ${!f.resuelto ? "warn" : "ok"}`}>{f.resuelto ? t("resolved") : t("pendingStatus")}</span>
             </div>
             <div className="cons-text">{f.content}</div>
             {!f.resuelto && (
               <div className="cons-actions">
-                <button className="btn acc" onClick={() => resolver(f.id)}>Marcar como resuelto</button>
+                <button className="btn acc" onClick={() => resolver(f.id)}>{t("markResolved")}</button>
               </div>
             )}
           </div>

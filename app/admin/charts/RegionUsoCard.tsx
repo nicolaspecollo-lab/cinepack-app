@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import BarChart from "./BarChart";
 
@@ -9,6 +10,7 @@ import BarChart from "./BarChart";
 // persona completa en su perfil — más confiable y más relevante para el
 // negocio que la ubicación de conexión.
 export default function RegionUsoCard() {
+  const t = useTranslations("charts");
   const [datos, setDatos] = useState<{ label: string; value: number }[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -33,13 +35,11 @@ export default function RegionUsoCard() {
 
   return (
     <div className="cp-chart-card">
-      <h4><span className="hex"></span>Región de uso (lugar de producción)</h4>
+      <h4><span className="hex"></span>{t("regionTitle")}</h4>
       {err && <div className="cp-admin-err">{err}</div>}
-      {!err && datos === null && <div className="cp-admin-empty">Cargando…</div>}
+      {!err && datos === null && <div className="cp-admin-empty">{t("loading")}</div>}
       {!err && datos?.length === 0 && (
-        <div className="cp-admin-empty">
-          Sin datos suficientes aún — se completan desde el perfil de cada usuario.
-        </div>
+        <div className="cp-admin-empty">{t("notEnoughDataRegion")}</div>
       )}
       {!err && datos && datos.length > 0 && <BarChart data={datos} color="var(--amber)" />}
     </div>

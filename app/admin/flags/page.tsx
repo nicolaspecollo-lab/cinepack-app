@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -8,6 +9,7 @@ import AdminShell from "../AdminShell";
 type Flag = { key: string; enabled: boolean; descripcion: string | null };
 
 export default function AdminFlags() {
+  const t = useTranslations("adminFlags");
   const { checking, isAdmin } = useAdminGuard();
   const [flags, setFlags] = useState<Flag[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -43,12 +45,11 @@ export default function AdminFlags() {
     <AdminShell>
       {err && <div className="cp-admin-err">{err}</div>}
       <div className="cp-admin-section">
-        <h3>Feature flags</h3>
+        <h3>{t("title")}</h3>
         <p style={{ color: "var(--muted)", fontSize: "12.5px", marginBottom: "16px" }}>
-          Activar/desactivar funciones sin tocar código ni redesplegar. <code>beta_mode</code> controla si crear un
-          proyecto nuevo pide pago o no.
+          {t.rich("desc", { code: (chunks) => <code>{chunks}</code> })}
         </p>
-        {flags === null && !err && <div className="cp-admin-empty">Cargando…</div>}
+        {flags === null && !err && <div className="cp-admin-empty">{t("loading")}</div>}
         {flags?.map((f) => (
           <div key={f.key} className="cp-admin-flagrow">
             <div>
@@ -59,7 +60,7 @@ export default function AdminFlags() {
               type="button"
               className={`cp-admin-toggle ${f.enabled ? "on" : ""}`}
               onClick={() => toggle(f.key, f.enabled)}
-              aria-label={`${f.enabled ? "Desactivar" : "Activar"} ${f.key}`}
+              aria-label={`${f.enabled ? t("disable") : t("enable")} ${f.key}`}
             >
               <span className="knob"></span>
             </button>

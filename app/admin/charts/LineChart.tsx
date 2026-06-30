@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 type Point = { label: string; value: number; usuarios?: number };
 
@@ -9,6 +10,7 @@ const H = 200;
 const PAD = 28;
 
 export default function LineChart({ data, color = "var(--lime)" }: { data: Point[]; color?: string }) {
+  const t = useTranslations("charts");
   const [activo, setActivo] = useState<number | null>(null);
   const max = Math.max(1, ...data.map((d) => d.value));
   const stepX = data.length > 1 ? (W - PAD * 2) / (data.length - 1) : 0;
@@ -30,7 +32,7 @@ export default function LineChart({ data, color = "var(--lime)" }: { data: Point
         width="100%"
         height={H}
         role="img"
-        aria-label="Gráfico de línea"
+        aria-label={t("lineChartAria")}
         preserveAspectRatio="none"
         onMouseLeave={() => setActivo(null)}
       >
@@ -92,8 +94,8 @@ export default function LineChart({ data, color = "var(--lime)" }: { data: Point
           }}
         >
           <div style={{ fontWeight: 700 }}>{punto.label}</div>
-          <div>{punto.value} acciones</div>
-          {punto.usuarios !== undefined && <div>{punto.usuarios} usuario{punto.usuarios === 1 ? "" : "s"} activo{punto.usuarios === 1 ? "" : "s"}</div>}
+          <div>{punto.value} {t("actions")}</div>
+          {punto.usuarios !== undefined && <div>{t("activeUsers", { n: punto.usuarios })}</div>}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -17,6 +18,8 @@ type Acceso = {
 };
 
 export default function AdminSoporte() {
+  const t = useTranslations("adminSoporte");
+  const locale = useLocale();
   const { checking, isAdmin } = useAdminGuard();
   const [soportes, setSoportes] = useState<Perfil[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
@@ -96,16 +99,10 @@ export default function AdminSoporte() {
       {err && <div className="cp-admin-err">{err}</div>}
 
       <div className="cp-admin-section">
-        <h3>Otorgar acceso de soporte</h3>
-        <p style={{ color: "var(--muted)", fontSize: "12.5px", marginBottom: "16px" }}>
-          El usuario de soporte va a poder ver el proyecto en modo lectura. No puede modificar ningún dato
-          (las políticas de escritura siguen exigiendo ser miembro del proyecto).
-        </p>
+        <h3>{t("grantTitle")}</h3>
+        <p style={{ color: "var(--muted)", fontSize: "12.5px", marginBottom: "16px" }}>{t("grantDesc")}</p>
         {soportes.length === 0 ? (
-          <div className="cp-admin-empty">
-            Todavía no hay ningún usuario con rol &quot;support&quot;. Asignalo primero desde la sección de Usuarios
-            cambiando su app_role.
-          </div>
+          <div className="cp-admin-empty">{t("noSupportUsers")}</div>
         ) : (
           <form onSubmit={otorgar} style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
             <select
@@ -114,7 +111,7 @@ export default function AdminSoporte() {
               onChange={(e) => setUserId(e.target.value)}
               style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }}
             >
-              <option value="" disabled>Usuario de soporte…</option>
+              <option value="" disabled>{t("supportUserPh")}</option>
               {soportes.map((s) => (
                 <option key={s.id} value={s.id}>{s.full_name ?? s.id}</option>
               ))}
@@ -125,28 +122,28 @@ export default function AdminSoporte() {
               onChange={(e) => setProjectId(e.target.value)}
               style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }}
             >
-              <option value="" disabled>Proyecto…</option>
+              <option value="" disabled>{t("projectPh")}</option>
               {proyectos.map((p) => (
                 <option key={p.id} value={p.id}>{p.nombre}</option>
               ))}
             </select>
-            <button type="submit" className="btn" disabled={busy}>Otorgar acceso</button>
+            <button type="submit" className="btn" disabled={busy}>{t("grantAccess")}</button>
           </form>
         )}
       </div>
 
       <div className="cp-admin-section">
-        <h3>Accesos de soporte activos ({accesos?.length ?? 0})</h3>
-        {accesos === null && !err && <div className="cp-admin-empty">Cargando…</div>}
-        {accesos?.length === 0 && <div className="cp-admin-empty">Sin accesos de soporte activos.</div>}
+        <h3>{t("activeAccessTitle", { n: accesos?.length ?? 0 })}</h3>
+        {accesos === null && !err && <div className="cp-admin-empty">{t("loading")}</div>}
+        {accesos?.length === 0 && <div className="cp-admin-empty">{t("noActiveAccess")}</div>}
         {accesos && accesos.length > 0 && (
           <table className="cp-admin-table">
             <thead>
               <tr>
-                <th>Usuario de soporte</th>
-                <th>Proyecto</th>
-                <th>Otorgado</th>
-                <th>Acciones</th>
+                <th>{t("colSupportUser")}</th>
+                <th>{t("colProject")}</th>
+                <th>{t("colGranted")}</th>
+                <th>{t("colActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -154,9 +151,9 @@ export default function AdminSoporte() {
                 <tr key={`${a.user_id}-${a.project_id}`}>
                   <td>{a.profiles?.full_name ?? a.user_id}</td>
                   <td>{a.proyectos?.nombre ?? a.project_id}</td>
-                  <td>{new Date(a.granted_at).toLocaleDateString("es-ES")}</td>
+                  <td>{new Date(a.granted_at).toLocaleDateString(locale)}</td>
                   <td>
-                    <button className="btn" disabled={busy} onClick={() => revocar(a)}>Revocar</button>
+                    <button className="btn" disabled={busy} onClick={() => revocar(a)}>{t("revoke")}</button>
                   </td>
                 </tr>
               ))}

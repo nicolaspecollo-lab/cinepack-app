@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "./useAdminGuard";
 import AdminShell from "./AdminShell";
@@ -24,13 +25,6 @@ const PAGO_COLOR: Record<string, string> = {
   pendiente_personalizado: "var(--amber)",
 };
 
-const PAGO_LABEL: Record<string, string> = {
-  beta_gratis: "Beta gratis",
-  pagado: "Pagado",
-  pendiente_pago: "Pendiente de pago",
-  pendiente_personalizado: "Personalizado pendiente",
-};
-
 function ultimosNDias(n: number) {
   const dias: string[] = [];
   for (let i = n - 1; i >= 0; i--) {
@@ -42,6 +36,7 @@ function ultimosNDias(n: number) {
 }
 
 export default function AdminDashboard() {
+  const t = useTranslations("adminDashboard");
   const { checking, isAdmin } = useAdminGuard();
   const [stats, setStats] = useState<Stats | null>(null);
   const [porTipo, setPorTipo] = useState<{ label: string; value: number }[] | null>(null);
@@ -72,7 +67,7 @@ export default function AdminDashboard() {
       const conteoTipo: Record<string, number> = {};
       const conteoPago: Record<string, number> = {};
       (todosProyectos ?? []).forEach((p) => {
-        const tipo = p.tipo ?? "Sin tipo";
+        const tipo = p.tipo ?? t("noType");
         conteoTipo[tipo] = (conteoTipo[tipo] ?? 0) + 1;
         conteoPago[p.pago_estado] = (conteoPago[p.pago_estado] ?? 0) + 1;
       });
@@ -82,6 +77,12 @@ export default function AdminDashboard() {
           .sort((a, b) => b.value - a.value)
           .slice(0, 8)
       );
+      const PAGO_LABEL: Record<string, string> = {
+        beta_gratis: t("payBetaFree"),
+        pagado: t("payPaid"),
+        pendiente_pago: t("payPendingPayment"),
+        pendiente_personalizado: t("payPendingCustom"),
+      };
       setPorPago(
         Object.entries(conteoPago).map(([key, value]) => ({
           label: PAGO_LABEL[key] ?? key,
@@ -139,12 +140,12 @@ export default function AdminDashboard() {
             label: `${h}h`,
             value: v,
             color: top5.includes(h) && v > 0 ? "var(--rose)" : undefined,
-            hint: `${v} evento${v === 1 ? "" : "s"} entre las ${h}h y las ${h + 1}h`,
+            hint: t("hintEvents", { v, h, h2: h + 1 }),
           }))
         );
       }
     })().catch((e) => setErr(e.message));
-  }, [isAdmin]);
+  }, [isAdmin, t]);
 
   if (checking) return null;
 
@@ -154,53 +155,53 @@ export default function AdminDashboard() {
       <div className="cp-admin-kpis">
         <div className="cp-admin-kpi">
           <span className="num">{stats?.proyectos ?? "—"}</span>
-          <span className="label">Proyectos totales</span>
+          <span className="label">{t("kpiProjects")}</span>
         </div>
         <div className="cp-admin-kpi">
           <span className="num">{stats?.miembros ?? "—"}</span>
-          <span className="label">Membresías (usuarios × proyecto)</span>
+          <span className="label">{t("kpiMemberships")}</span>
         </div>
         <div className="cp-admin-kpi">
           <span className="num">{stats?.feedbackAbierto ?? "—"}</span>
-          <span className="label">Feedback sin resolver</span>
+          <span className="label">{t("kpiOpenFeedback")}</span>
         </div>
         <div className="cp-admin-kpi">
           <span className="num">{stats?.betaMode == null ? "—" : stats.betaMode ? "ON" : "OFF"}</span>
-          <span className="label">Modo beta (proyectos gratis)</span>
+          <span className="label">{t("kpiBetaMode")}</span>
         </div>
       </div>
 
       <div className="cp-admin-charts">
         <div className="cp-chart-card wide">
-          <h4><span className="hex"></span>Actividad últimos 14 días (filas de herramientas + consultas)</h4>
-          {actividadDiaria ? <LineChart data={actividadDiaria} color="var(--lime)" /> : <div className="cp-admin-empty">Cargando…</div>}
+          <h4><span className="hex"></span>{t("chartActivity")}</h4>
+          {actividadDiaria ? <LineChart data={actividadDiaria} color="var(--lime)" /> : <div className="cp-admin-empty">{t("loading")}</div>}
         </div>
         <HorasUsoCard />
         <div className="cp-chart-card">
-          <h4><span className="hex"></span>Proyectos por tipo</h4>
-          {porTipo ? <BarChart data={porTipo} color="var(--cyan)" /> : <div className="cp-admin-empty">Cargando…</div>}
+          <h4><span className="hex"></span>{t("chartByType")}</h4>
+          {porTipo ? <BarChart data={porTipo} color="var(--cyan)" /> : <div className="cp-admin-empty">{t("loading")}</div>}
         </div>
         <div className="cp-chart-card">
-          <h4><span className="hex"></span>Proyectos por estado de pago</h4>
-          {porPago ? <DonutChart data={porPago} /> : <div className="cp-admin-empty">Cargando…</div>}
+          <h4><span className="hex"></span>{t("chartByPayStatus")}</h4>
+          {porPago ? <DonutChart data={porPago} /> : <div className="cp-admin-empty">{t("loading")}</div>}
         </div>
         <div className="cp-chart-card wide">
-          <h4><span className="hex"></span>Horas del día con más uso (top 5 destacadas)</h4>
-          {horasPico === null && <div className="cp-admin-empty">Cargando…</div>}
-          {horasPico?.length === 0 && <div className="cp-admin-empty">Sin datos suficientes aún.</div>}
+          <h4><span className="hex"></span>{t("chartPeakHours")}</h4>
+          {horasPico === null && <div className="cp-admin-empty">{t("loading")}</div>}
+          {horasPico?.length === 0 && <div className="cp-admin-empty">{t("notEnoughData")}</div>}
           {horasPico && horasPico.length > 0 && <BarChart data={horasPico} color="var(--cyan)" />}
         </div>
         <RegionUsoCard />
       </div>
 
       <div className="cp-admin-section">
-        <h3>Atajos</h3>
+        <h3>{t("shortcutsTitle")}</h3>
         <div className="chip-group">
-          <a className="dept-chip" href="/admin/usuarios" style={{ "--chip-acc": "var(--lime)" } as React.CSSProperties}>Ver usuarios</a>
-          <a className="dept-chip" href="/admin/proyectos" style={{ "--chip-acc": "var(--cyan)" } as React.CSSProperties}>Ver proyectos</a>
-          <a className="dept-chip" href="/admin/feedback" style={{ "--chip-acc": "var(--rose)" } as React.CSSProperties}>Revisar feedback</a>
-          <a className="dept-chip" href="/admin/flags" style={{ "--chip-acc": "var(--violet)" } as React.CSSProperties}>Configurar flags</a>
-          <a className="dept-chip" href="https://cinepack.es/biblia/" target="_blank" rel="noreferrer" style={{ "--chip-acc": "var(--blue)" } as React.CSSProperties}>Biblia de Producto ↗</a>
+          <a className="dept-chip" href="/admin/usuarios" style={{ "--chip-acc": "var(--lime)" } as React.CSSProperties}>{t("viewUsers")}</a>
+          <a className="dept-chip" href="/admin/proyectos" style={{ "--chip-acc": "var(--cyan)" } as React.CSSProperties}>{t("viewProjects")}</a>
+          <a className="dept-chip" href="/admin/feedback" style={{ "--chip-acc": "var(--rose)" } as React.CSSProperties}>{t("reviewFeedback")}</a>
+          <a className="dept-chip" href="/admin/flags" style={{ "--chip-acc": "var(--violet)" } as React.CSSProperties}>{t("configureFlags")}</a>
+          <a className="dept-chip" href="https://cinepack.es/biblia/" target="_blank" rel="noreferrer" style={{ "--chip-acc": "var(--blue)" } as React.CSSProperties}>{t("productBible")} ↗</a>
         </div>
       </div>
     </AdminShell>

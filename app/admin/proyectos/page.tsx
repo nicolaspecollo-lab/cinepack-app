@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -26,6 +27,8 @@ function badgeClass(estado: string) {
 }
 
 export default function AdminProyectos() {
+  const t = useTranslations("adminProyectos");
+  const locale = useLocale();
   const { checking, isAdmin } = useAdminGuard();
   const router = useRouter();
   const [filas, setFilas] = useState<Fila[] | null>(null);
@@ -83,21 +86,21 @@ export default function AdminProyectos() {
     <AdminShell>
       {err && <div className="cp-admin-err">{err}</div>}
       <div className="cp-admin-section">
-        <h3>Todos los proyectos ({filas?.length ?? 0})</h3>
-        {filas === null && !err && <div className="cp-admin-empty">Cargando…</div>}
-        {filas?.length === 0 && <div className="cp-admin-empty">Todavía no hay proyectos.</div>}
+        <h3>{t("title", { n: filas?.length ?? 0 })}</h3>
+        {filas === null && !err && <div className="cp-admin-empty">{t("loading")}</div>}
+        {filas?.length === 0 && <div className="cp-admin-empty">{t("noProjectsYet")}</div>}
         {filas && filas.length > 0 && (
           <table className="cp-admin-table">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Departamentos</th>
-                <th>Miembros</th>
-                <th>Estado de pago</th>
-                <th>Pack / Nota</th>
-                <th>Creado</th>
-                <th>Acciones</th>
+                <th>{t("colName")}</th>
+                <th>{t("colType")}</th>
+                <th>{t("colDepartments")}</th>
+                <th>{t("colMembers")}</th>
+                <th>{t("colPayStatus")}</th>
+                <th>{t("colPackNote")}</th>
+                <th>{t("colCreated")}</th>
+                <th>{t("colActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -109,14 +112,14 @@ export default function AdminProyectos() {
                   <td>{p.miembros}</td>
                   <td><span className={`cp-admin-badge ${badgeClass(p.pago_estado)}`}>{p.pago_estado.replace("_", " ")}</span></td>
                   <td>{p.pack_config?.mensaje ? p.pack_config.mensaje : (p.pack_tipo ?? "—")}</td>
-                  <td>{new Date(p.created_at).toLocaleDateString("es-ES")}</td>
+                  <td>{new Date(p.created_at).toLocaleDateString(locale)}</td>
                   <td>
                     <div className="cons-actions" style={{ marginTop: 0 }}>
                       <button className="btn" disabled={busy === p.id} onClick={() => toggleBeta(p)}>
-                        {p.pago_estado === "beta_gratis" ? "Desactivar beta" : "Activar beta"}
+                        {p.pago_estado === "beta_gratis" ? t("deactivateBeta") : t("activateBeta")}
                       </button>
                       <button className="btn" disabled={busy === p.id} onClick={() => verComoSoporte(p)}>
-                        Ver como soporte
+                        {t("viewAsSupport")}
                       </button>
                     </div>
                   </td>

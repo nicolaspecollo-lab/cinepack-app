@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import BarChart from "./BarChart";
 
@@ -14,13 +15,6 @@ const DIAS_POR_PERIODO: Record<Periodo, number> = {
   anual: 365,
 };
 
-const PERIODO_LABEL: Record<Periodo, string> = {
-  mensual: "Mensual",
-  trimestral: "Trimestral",
-  semestral: "Semestral",
-  anual: "Anual",
-};
-
 type Evento = { dia: string; userId: string | null; projectId: string | null; ts: number };
 
 // No hay tracking de sesión real (sin heartbeat, nada visible para el usuario).
@@ -31,6 +25,13 @@ type Evento = { dia: string; userId: string | null; projectId: string | null; ts
 // acción cuentan como 0 horas (pero sí cuentan como "sesión" para el cálculo
 // de promedio, con un mínimo de 1 minuto para no dividir por cero).
 export default function HorasUsoCard() {
+  const t = useTranslations("charts");
+  const PERIODO_LABEL: Record<Periodo, string> = {
+    mensual: t("periodMonthly"),
+    trimestral: t("periodQuarterly"),
+    semestral: t("periodSemiannual"),
+    anual: t("periodAnnual"),
+  };
   const [periodo, setPeriodo] = useState<Periodo>("mensual");
   const [metrica, setMetrica] = useState<Metrica>("horas_usuario");
   const [eventos, setEventos] = useState<Evento[] | null>(null);
@@ -52,7 +53,7 @@ export default function HorasUsoCard() {
         supabase.from("proyectos").select("id, nombre"),
       ]);
       if (e1 || e2) {
-        setErr((e1 ?? e2)?.message ?? "Error cargando datos de uso.");
+        setErr((e1 ?? e2)?.message ?? t("errLoadingUsage"));
         return;
       }
 
@@ -80,7 +81,7 @@ export default function HorasUsoCard() {
       (proyectos ?? []).forEach((p) => (mapaProyectos[p.id] = p.nombre));
       setNombrePorProyecto(mapaProyectos);
     })().catch((e) => setErr(e.message));
-  }, []);
+  }, [t]);
 
   const datos = useMemo(() => {
     if (!eventos) return null;
@@ -139,7 +140,7 @@ export default function HorasUsoCard() {
   return (
     <div className="cp-chart-card wide">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}>
-        <h4 style={{ margin: 0 }}><span className="hex"></span>Horas de uso (estimadas)</h4>
+        <h4 style={{ margin: 0 }}><span className="hex"></span>{t("usageHoursTitle")}</h4>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <div className="chip-group" style={{ margin: 0 }}>
             {(Object.keys(DIAS_POR_PERIODO) as Periodo[]).map((p) => (
@@ -159,24 +160,20 @@ export default function HorasUsoCard() {
             onChange={(e) => setMetrica(e.target.value as Metrica)}
             style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 12px", fontSize: "12.5px" }}
           >
-            <option value="horas_usuario">Horas totales por usuario</option>
-            <option value="horas_proyecto">Horas totales por proyecto</option>
-            <option value="promedio_sesion">Promedio de sesión (minutos)</option>
+            <option value="horas_usuario">{t("metricHoursByUser")}</option>
+            <option value="horas_proyecto">{t("metricHoursByProject")}</option>
+            <option value="promedio_sesion">{t("metricAvgSession")}</option>
           </select>
         </div>
       </div>
 
       {err && <div className="cp-admin-err">{err}</div>}
-      {!err && datos === null && <div className="cp-admin-empty">Cargando…</div>}
+      {!err && datos === null && <div className="cp-admin-empty">{t("loading")}</div>}
       {!err && datos?.length === 0 && (
-        <div className="cp-admin-empty">
-          Sin datos de sesión aún. Los datos se acumularán a medida que los usuarios utilicen la plataforma.
-        </div>
+        <div className="cp-admin-empty">{t("noSessionDataYet")}</div>
       )}
       {!err && datos && datos.length > 0 && <BarChart data={datos} color="var(--violet)" />}
-      <p style={{ color: "var(--muted)", fontSize: "11px", marginTop: "10px" }}>
-        Estimado a partir del rango entre la primera y la última acción de cada persona por día — no hay tracking de sesión en tiempo real.
-      </p>
+      <p style={{ color: "var(--muted)", fontSize: "11px", marginTop: "10px" }}>{t("usageHoursFootnote")}</p>
     </div>
   );
 }

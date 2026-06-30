@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAdminGuard } from "../useAdminGuard";
 import AdminShell from "../AdminShell";
@@ -14,6 +15,8 @@ type Evento = {
 };
 
 export default function AdminActividad() {
+  const t = useTranslations("adminActividad");
+  const locale = useLocale();
   const { checking, isAdmin } = useAdminGuard();
   const [eventos, setEventos] = useState<Evento[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -42,7 +45,10 @@ export default function AdminActividad() {
         id: `fila-${f.id}`,
         cuando: f.updated_at,
         quien: f.editor_nombre || f.autor_nombre || "—",
-        que: `${f.editor_nombre && f.editor_nombre !== f.autor_nombre ? "editó" : "creó/editó"} una fila en ${f.departamento} · ${f.herramienta_id}`,
+        que:
+          f.editor_nombre && f.editor_nombre !== f.autor_nombre
+            ? t("editedRow", { dept: f.departamento, tool: f.herramienta_id })
+            : t("createdEditedRow", { dept: f.departamento, tool: f.herramienta_id }),
         proyecto: nombreProyecto[f.project_id] ?? "—",
       }));
 
@@ -50,7 +56,7 @@ export default function AdminActividad() {
         id: `consulta-${c.id}`,
         cuando: c.created_at,
         quien: c.autor_nombre,
-        que: `creó la consulta "${c.titulo}" (${c.estado})`,
+        que: t("createdQuery", { title: c.titulo, status: c.estado }),
         proyecto: nombreProyecto[c.project_id] ?? "—",
       }));
 
@@ -60,7 +66,7 @@ export default function AdminActividad() {
         )
       );
     })().catch((e) => setErr(e.message));
-  }, [isAdmin]);
+  }, [isAdmin, t]);
 
   if (checking) return null;
 
@@ -68,18 +74,18 @@ export default function AdminActividad() {
     <AdminShell>
       {err && <div className="cp-admin-err">{err}</div>}
       <div className="cp-admin-section">
-        <h3>Actividad reciente (todos los proyectos)</h3>
-        {eventos === null && !err && <div className="cp-admin-empty">Cargando…</div>}
-        {eventos?.length === 0 && <div className="cp-admin-empty">Sin actividad todavía.</div>}
+        <h3>{t("title")}</h3>
+        {eventos === null && !err && <div className="cp-admin-empty">{t("loading")}</div>}
+        {eventos?.length === 0 && <div className="cp-admin-empty">{t("noActivityYet")}</div>}
         {eventos && eventos.length > 0 && (
           <table className="cp-admin-table">
             <thead>
-              <tr><th>Cuándo</th><th>Quién</th><th>Qué</th><th>Proyecto</th></tr>
+              <tr><th>{t("colWhen")}</th><th>{t("colWho")}</th><th>{t("colWhat")}</th><th>{t("colProject")}</th></tr>
             </thead>
             <tbody>
               {eventos.map((e) => (
                 <tr key={e.id}>
-                  <td>{new Date(e.cuando).toLocaleString("es-ES")}</td>
+                  <td>{new Date(e.cuando).toLocaleString(locale)}</td>
                   <td>{e.quien}</td>
                   <td>{e.que}</td>
                   <td>{e.proyecto}</td>
