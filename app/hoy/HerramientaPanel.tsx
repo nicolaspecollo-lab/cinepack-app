@@ -626,7 +626,17 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "ficha" && (
+      {herramienta.tipo === "ficha" && herramienta.id === "ej-kpis" && (
+        <KpiDashboard
+          campos={[...(herramienta.campos ?? []), ...extraCampos]}
+          fila={filas[0]}
+          editable={editable}
+          asegurar={asegurarSingle}
+          onGuardar={guardarFila}
+        />
+      )}
+
+      {herramienta.tipo === "ficha" && herramienta.id !== "ej-kpis" && (
         <FichaTool
           campos={[...(herramienta.campos ?? []), ...extraCampos]}
           fila={filas[0]}
@@ -3476,6 +3486,100 @@ function ModeloFinanciero({
         </div>
       )}
     </>
+  );
+}
+
+// ---- Panel de KPIs del proyecto ----
+// Reemplaza la ficha genérica de campos por un panel: progreso de rodaje,
+// presupuesto y páginas como barras, y el resto como tiles de número
+// grande. Lo que un ejecutivo proyecta en una reunión.
+function KpiDashboard({
+  campos,
+  fila,
+  editable,
+  asegurar,
+  onGuardar,
+}: {
+  campos: Columna[];
+  fila: Fila | undefined;
+  editable: boolean;
+  asegurar: () => Promise<Fila>;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+}) {
+  const t = useTranslations("hp");
+  async function set(key: string, v: string) {
+    const f = fila ?? (await asegurar());
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+  const val = (key: string) => fila?.datos?.[key] ?? "";
+
+  const pares: { num: string; den: string; money?: boolean }[] = [
+    { num: "dias_rodados", den: "dias_rodaje_total" },
+    { num: "presupuesto_ejecutado", den: "presupuesto_total", money: true },
+    { num: "paginas_rodadas", den: "paginas_guion" },
+  ];
+  const campoDe = (key: string) => campos.find((c) => c.key === key);
+  const usados = new Set<string>();
+  const paresValidos = pares.filter((p) => campoDe(p.num) && campoDe(p.den));
+  paresValidos.forEach((p) => { usados.add(p.num); usados.add(p.den); });
+  const tiles = campos.filter((c) => !usados.has(c.key));
+
+  function NumInput({ k, cls }: { k: string; cls: string }) {
+    return (
+      <input
+        className={cls}
+        type="number"
+        defaultValue={val(k)}
+        readOnly={!editable}
+        placeholder="0"
+        onBlur={(e) => set(k, e.target.value)}
+      />
+    );
+  }
+
+  return (
+    <div className="hp-kpi">
+      {paresValidos.length > 0 && (
+        <div className="hp-kpi-progress">
+          {paresValidos.map((p) => {
+            const n = ejNum(val(p.num));
+            const d = ejNum(val(p.den));
+            const pct = d > 0 ? Math.min(100, (n / d) * 100) : 0;
+            const tono = pct >= 100 ? "ok" : pct >= 60 ? "info" : "warn";
+            return (
+              <div className="hp-kpi-prog-card" key={p.num}>
+                <span className="hp-kpi-prog-label">{campoDe(p.num)?.label}</span>
+                <div className="hp-kpi-prog-nums">
+                  <NumInput k={p.num} cls="hp-kpi-prog-num" />
+                  <span className="hp-kpi-prog-sep">/</span>
+                  <NumInput k={p.den} cls="hp-kpi-prog-den" />
+                  {p.money && <span className="hp-pre-money-eur">€</span>}
+                  <span className={`hp-kpi-prog-pct tono-${tono}`}>{Math.round(pct)}%</span>
+                </div>
+                <div className="hp-kpi-prog-bar">
+                  <div className={`hp-pre-bar-fill tono-${tono}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {tiles.length > 0 && (
+        <div className="hp-kpi-tiles">
+          {tiles.map((c) => (
+            <div className="hp-kpi-tile" key={c.key}>
+              <span className="hp-kpi-tile-val-wrap">
+                <NumInput k={c.key} cls="hp-kpi-tile-val" />
+                {c.tipo === "money" && <span className="hp-pre-money-eur">€</span>}
+                {c.key.includes("pct") && <span className="hp-kpi-tile-pct">%</span>}
+              </span>
+              <span className="hp-kpi-tile-label">{c.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {!fila && <p className="hp-kpi-hint">{editable ? t("startAddingRow") : t("waitForData")}</p>}
+    </div>
   );
 }
 
