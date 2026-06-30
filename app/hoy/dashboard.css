@@ -1204,6 +1204,12 @@
 .cp-dash .hp-tabla-empty p{ color:var(--text); font-size:13px; margin:0; }
 .cp-dash .hp-tabla-empty-hint{ color:var(--muted) !important; font-size:12px !important; max-width:440px; line-height:1.6; }
 .cp-dash .hp-tabla-empty .hp-actions{ margin-top:4px; }
+.cp-dash .hp-tabla-empty-row td{
+  text-align:center; padding:32px 20px; color:var(--muted); font-size:13px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.cp-dash .hp-tabla-empty-row .hex{ width:20px; height:17px; background:var(--acc); }
+.cp-dash .hp-tabla-empty-row .btn{ margin-top:2px; }
 .cp-dash .hp-stats-bar{ display:flex; align-items:center; gap:8px; padding:10px 30px; flex-wrap:wrap; border-bottom:1px solid var(--line); background:var(--hl3); }
 .cp-dash .hp-stats-total{ font-size:11px; font-family:'Poppins',sans-serif; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-right:4px; }
 .cp-dash .hp-stats-pill{ font-size:11px; font-family:'Poppins',sans-serif; padding:3px 10px; border-radius:0; background:var(--hl1); border:1px solid var(--line); color:var(--text); }

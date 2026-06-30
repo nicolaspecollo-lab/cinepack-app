@@ -469,7 +469,7 @@ function HerramientaData({
         />
       )}
 
-      {esMulti && filas.length === 0 && (
+      {herramienta.tipo === "galeria" && filas.length === 0 && (
         <div className="soon-box" style={{ marginTop: 0 }}>
           <span className="hex"></span>
           <h4>{t("noRecordsYet")}</h4>
@@ -1236,29 +1236,8 @@ export function TablaTool({
     );
   })();
 
-  if (filas.length === 0) {
-    return (
-      <div className="hp-tabla-empty">
-        <span className="hex"></span>
-        <p>{t("emptyTitle")}</p>
-        {herramientaNombre && <p className="hp-tabla-empty-hint">{t("emptyHint", { name: herramientaNombre })}</p>}
-        {editable && (
-          <div className="hp-actions">
-            <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
-            <button className="btn" onClick={pedirColumna}>{t("addColumn")}</button>
-            {onImportarCSV && (
-              <>
-                <button className="btn" onClick={() => importInputRef.current?.click()} disabled={importando}>
-                  {importando ? t("importing") : t("importCsv")}
-                </button>
-                <input ref={importInputRef} type="file" accept=".csv" style={{display:"none"}} onChange={handleImportCSV} />
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
+  const colSpanVacio =
+    (editable ? 1 : 0) + visibleCols.length + 1 + (editable ? 2 : 0) + (showLastEdit ? 1 : 0);
 
   const contenido = (
     <>
@@ -1517,6 +1496,17 @@ export function TablaTool({
               </tr>
             </thead>
             <tbody>
+              {filasPagina.length === 0 && (
+                <tr className="hp-tabla-empty-row">
+                  <td colSpan={colSpanVacio}>
+                    <span className="hex"></span>
+                    {t("emptyTitle")}
+                    {editable && (
+                      <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
+                    )}
+                  </td>
+                </tr>
+              )}
               {filasPagina.map((f, rowIdx) => {
                 const rowColor = f.datos?._rowColor || "";
                 const isSelected = seleccionadas.has(f.id);
