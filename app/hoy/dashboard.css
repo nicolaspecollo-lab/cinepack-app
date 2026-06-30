@@ -1933,3 +1933,61 @@
 /* Contenido de tabla en sans (legible, moderno) en vez de monoespaciada */
 .cp-dash table.hp-table td, .cp-dash .hp-cell-input, .cp-dash .hp-cell-area,
 .cp-dash .hp-cell-select{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; }
+
+/* Cue sheet de foco (Foquista): tarjetas grandes A→B→C en vez de tabla genérica.
+   Marcas legibles en rodaje, no celdas chicas. */
+.cp-dash .hp-foco-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  gap:var(--sp-4); padding:var(--sp-4) var(--gutter);
+}
+.cp-dash .hp-foco-card{
+  background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-4);
+  display:flex; flex-direction:column; gap:var(--sp-3);
+}
+.cp-dash .hp-foco-head{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-foco-escena{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-lg);
+  color:var(--text); background:none; border:none; border-bottom:1px solid transparent;
+  padding:2px 0; width:64px; flex-shrink:0;
+}
+.cp-dash .hp-foco-escena:focus{ outline:none; border-bottom-color:var(--acc); }
+.cp-dash .hp-foco-optica{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-base); color:var(--muted); background:none; border:none;
+  border-bottom:1px solid transparent; padding:2px 0; flex:1; min-width:0;
+}
+.cp-dash .hp-foco-optica:focus{ outline:none; border-bottom-color:var(--acc); color:var(--text); }
+.cp-dash .hp-foco-marks{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-foco-arrow{ color:var(--muted); font-size:var(--fs-md); flex-shrink:0; }
+.cp-dash .hp-foco-mark{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:var(--hl2); border:1px solid var(--line); padding:var(--sp-2) var(--sp-1);
+  min-width:0;
+}
+.cp-dash .hp-foco-mark-a{ border-color:color-mix(in srgb, var(--cyan) 45%, var(--line)); }
+.cp-dash .hp-foco-mark-b{ border-color:color-mix(in srgb, var(--amber) 45%, var(--line)); }
+.cp-dash .hp-foco-mark-c{ border-color:color-mix(in srgb, var(--rose) 45%, var(--line)); }
+.cp-dash .hp-foco-mark-label{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-xs);
+  color:var(--muted); letter-spacing:0.04em;
+}
+.cp-dash .hp-foco-mark-val{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-xl);
+  color:var(--text); background:none; border:none; text-align:center; width:100%;
+  padding:0; line-height:1.1;
+}
+.cp-dash .hp-foco-mark-val:focus{ outline:none; }
+.cp-dash .hp-foco-mark-val::-webkit-outer-spin-button,
+.cp-dash .hp-foco-mark-val::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+.cp-dash .hp-foco-mark-unit{ font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .hp-foco-notas{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line);
+  padding:var(--sp-2); resize:vertical; min-height:36px;
+}
+.cp-dash .hp-foco-notas:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+
+@media (max-width:640px){
+  .cp-dash .hp-foco-grid{ grid-template-columns:1fr; padding:var(--sp-3) var(--gutter); gap:var(--sp-3); }
+  .cp-dash .hp-foco-mark-val{ font-size:var(--fs-lg); }
+}

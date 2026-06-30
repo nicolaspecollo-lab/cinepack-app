@@ -393,7 +393,18 @@ function HerramientaData({
       )}
       {herramienta.hint && <p className="hp-hint">{herramienta.hint}</p>}
 
-      {herramienta.tipo === "tabla" && (
+      {herramienta.tipo === "tabla" && herramienta.id === "foto-marcas-foco" && (
+        <FocoCueSheet
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id !== "foto-marcas-foco" && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -826,6 +837,116 @@ function CeldaConAutocomp({
     <Celda col={col} valor={valor} editable={editable} onChange={onChange}
       onCommit={onCommit} onSave={onSave} departamento={departamento}
       herramientaId={herramientaId} filaId={filaId} />
+  );
+}
+
+// ---- Cue sheet de foco (Foquista) ----
+// Puesto de trabajo a medida para "foto-marcas-foco": un foquista no lee una
+// grilla de datos en pleno rodaje, lee marcas grandes y legibles por toma.
+// Reemplaza la tabla genérica solo para esta herramienta puntual.
+function FocoCueSheet({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (key: string) => columnas.find((c) => c.key === key)?.label ?? key;
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const ordenadas = [...filas].sort((a, b) =>
+    (a.datos?.escena ?? "").localeCompare(b.datos?.escena ?? "", "es", { numeric: true })
+  );
+
+  function Marca({ f, k, tono }: { f: Fila; k: "distA" | "distB" | "distC"; tono: "a" | "b" | "c" }) {
+    return (
+      <div className={`hp-foco-mark hp-foco-mark-${tono}`}>
+        <span className="hp-foco-mark-label">{k === "distA" ? "A" : k === "distB" ? "B" : "C"}</span>
+        <input
+          className="hp-foco-mark-val"
+          type="number"
+          step="0.1"
+          inputMode="decimal"
+          defaultValue={f.datos?.[k] ?? ""}
+          readOnly={!editable}
+          onBlur={(e) => set(f, k, e.target.value)}
+          placeholder="—"
+        />
+        <span className="hp-foco-mark-unit">m</span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && (
+            <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
+          )}
+        </div>
+      ) : (
+        <div className="hp-foco-grid">
+          {ordenadas.map((f) => (
+            <div className="hp-foco-card" key={f.id}>
+              <div className="hp-foco-head">
+                <input
+                  className="hp-foco-escena"
+                  defaultValue={f.datos?.escena ?? ""}
+                  placeholder={label("escena")}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, "escena", e.target.value)}
+                />
+                <input
+                  className="hp-foco-optica"
+                  defaultValue={f.datos?.optica ?? ""}
+                  placeholder={label("optica")}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, "optica", e.target.value)}
+                />
+                {editable && (
+                  <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>
+                )}
+              </div>
+              <div className="hp-foco-marks">
+                <Marca f={f} k="distA" tono="a" />
+                <span className="hp-foco-arrow">→</span>
+                <Marca f={f} k="distB" tono="b" />
+                <span className="hp-foco-arrow">→</span>
+                <Marca f={f} k="distC" tono="c" />
+              </div>
+              <textarea
+                className="hp-foco-notas"
+                defaultValue={f.datos?.notas ?? ""}
+                placeholder={label("notas")}
+                readOnly={!editable}
+                onBlur={(e) => set(f, "notas", e.target.value)}
+                rows={2}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
   );
 }
 
