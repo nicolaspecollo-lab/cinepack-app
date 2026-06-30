@@ -2160,5 +2160,46 @@
     "errPasswordMinLength": "Password must be at least 6 characters.",
     "errPasswordsMismatch": "Passwords don't match.",
     "successPasswordUpdated": "Password updated. The Executive Producer was notified of the change."
+  },
+  "proyectos": {
+    "selectProject": "Select a project",
+    "createProject": "Create project",
+    "myProfile": "My profile",
+    "loading": "Loading projects…",
+    "noProjectsTitle": "No projects assigned",
+    "noProjectsDesc": "You're not part of any project yet. Contact support to get one assigned.",
+    "tag": "Project",
+    "enterWorkspace": "Enter your workspace in {nombre}."
+  },
+  "sugerencias": {
+    "title": "Suggest something",
+    "backToProjects": "Back to projects",
+    "formTitle": "Suggest something",
+    "formDesc": "What would you change about CINE PACK? Tell us about your experience with the software: what works, what doesn't, and what you'd like to see. Your feedback goes straight to the team.",
+    "fieldLabel": "Your suggestion or experience",
+    "placeholder": "Write here…",
+    "sending": "Sending…",
+    "send": "Send suggestion",
+    "success": "Thanks! Your suggestion was sent to the CINE PACK team."
+  },
+  "controlDepto": {
+    "loading": "Loading…",
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedDesc": "Only Department Heads can access this page.",
+    "backToProjects": "Back to projects",
+    "controlOf": "{dept} control",
+    "manageDesc": "Manage your department's members and tools.",
+    "membersTitle": "Department members ({n})",
+    "noMembers": "No members in your department",
+    "noRole": "No role",
+    "sharedRoles": "Shared roles",
+    "none": "None",
+    "addSharedRolePh": "Add shared role…",
+    "add": "+ Add",
+    "toolsTitle": "Department tools",
+    "toolsDesc": "Tool management by role is done from the tools map in \"General\".",
+    "errChangeRole": "Couldn't change the role: {msg}",
+    "errAddSharedRole": "Couldn't add the shared role: {msg}",
+    "errRemoveSharedRole": "Couldn't remove the shared role: {msg}"
   }
 }

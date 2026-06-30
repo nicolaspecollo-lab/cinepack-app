@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../useTheme";
@@ -10,6 +11,7 @@ import "../cp-theme.css";
 
 export default function SugerenciasPage() {
   const router = useRouter();
+  const t = useTranslations("sugerencias");
   const { theme, toggleTheme } = useTheme();
   const [userId, setUserId] = useState<string | null>(null);
   const [content, setContent] = useState("");
@@ -49,44 +51,41 @@ export default function SugerenciasPage() {
     }
 
     setContent("");
-    setMsg({ type: "ok", text: "¡Gracias! Tu sugerencia fue enviada al equipo de CINE PACK." });
+    setMsg({ type: "ok", text: t("success") });
   }
 
   return (
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar">
         <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
-        <span className="cp-proj">Sugiérenos</span>
+        <span className="cp-proj">{t("title")}</span>
         <div className="cp-spacer"></div>
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-          <span className="hex"></span> Volver a proyectos
+          <span className="hex"></span> {t("backToProjects")}
         </Link>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
       <div style={{ padding: "30px 30px 60px", width: "100%" }}>
         <form onSubmit={handleSubmit} className="apanel" style={{ maxWidth: "640px" }}>
-          <h3>Sugiérenos</h3>
-          <p className="asub">
-            ¿Qué cambiarías de CINE PACK? Contanos tu experiencia con el software: lo que funciona, lo que no, y
-            qué te gustaría ver. Tu feedback llega directo al equipo.
-          </p>
+          <h3>{t("formTitle")}</h3>
+          <p className="asub">{t("formDesc")}</p>
 
           <label className="afield">
-            <span>Tu sugerencia o experiencia</span>
+            <span>{t("fieldLabel")}</span>
             <textarea
               required
               rows={6}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Escribe aquí…"
+              placeholder={t("placeholder")}
             />
           </label>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
           <button type="submit" disabled={sending || !content.trim()} className="abtn">
-            {sending ? "Enviando…" : "Enviar sugerencia"}
+            {sending ? t("sending") : t("send")}
           </button>
         </form>
       </div>

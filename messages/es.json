@@ -2160,5 +2160,46 @@
     "errPasswordMinLength": "La contraseña debe tener al menos 6 caracteres.",
     "errPasswordsMismatch": "Las contraseñas no coinciden.",
     "successPasswordUpdated": "Contraseña actualizada. El Productor Ejecutivo fue notificado del cambio."
+  },
+  "proyectos": {
+    "selectProject": "Selecciona un proyecto",
+    "createProject": "Crear proyecto",
+    "myProfile": "Mi perfil",
+    "loading": "Cargando proyectos…",
+    "noProjectsTitle": "Sin proyectos asignados",
+    "noProjectsDesc": "Todavía no formas parte de ningún proyecto. Contacta con soporte para que te asignen uno.",
+    "tag": "Proyecto",
+    "enterWorkspace": "Entrar a tu espacio de trabajo en {nombre}."
+  },
+  "sugerencias": {
+    "title": "Sugiérenos",
+    "backToProjects": "Volver a proyectos",
+    "formTitle": "Sugiérenos",
+    "formDesc": "¿Qué cambiarías de CINE PACK? Contanos tu experiencia con el software: lo que funciona, lo que no, y qué te gustaría ver. Tu feedback llega directo al equipo.",
+    "fieldLabel": "Tu sugerencia o experiencia",
+    "placeholder": "Escribe aquí…",
+    "sending": "Enviando…",
+    "send": "Enviar sugerencia",
+    "success": "¡Gracias! Tu sugerencia fue enviada al equipo de CINE PACK."
+  },
+  "controlDepto": {
+    "loading": "Cargando…",
+    "accessDeniedTitle": "Acceso denegado",
+    "accessDeniedDesc": "Solo los Jefes de Departamento pueden acceder aquí.",
+    "backToProjects": "Volver a proyectos",
+    "controlOf": "Control de {dept}",
+    "manageDesc": "Gestiona los miembros y herramientas de tu departamento.",
+    "membersTitle": "Miembros del departamento ({n})",
+    "noMembers": "Sin miembros en tu departamento",
+    "noRole": "Sin cargo",
+    "sharedRoles": "Cargos compartidos",
+    "none": "Ninguno",
+    "addSharedRolePh": "Agregar cargo compartido…",
+    "add": "+ Agregar",
+    "toolsTitle": "Herramientas del departamento",
+    "toolsDesc": "La gestión de herramientas por cargo se realiza desde el mapa de herramientas en \"Generales\".",
+    "errChangeRole": "No se pudo cambiar el cargo: {msg}",
+    "errAddSharedRole": "No se pudo agregar el cargo compartido: {msg}",
+    "errRemoveSharedRole": "No se pudo quitar el cargo compartido: {msg}"
   }
 }

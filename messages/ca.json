@@ -2160,5 +2160,46 @@
     "errPasswordMinLength": "La contrasenya ha de tenir almenys 6 caràcters.",
     "errPasswordsMismatch": "Les contrasenyes no coincideixen.",
     "successPasswordUpdated": "Contrasenya actualitzada. El Productor Executiu ha estat notificat del canvi."
+  },
+  "proyectos": {
+    "selectProject": "Selecciona un projecte",
+    "createProject": "Crea un projecte",
+    "myProfile": "El meu perfil",
+    "loading": "Carregant projectes…",
+    "noProjectsTitle": "Sense projectes assignats",
+    "noProjectsDesc": "Encara no formes part de cap projecte. Contacta amb suport perquè te'n assignin un.",
+    "tag": "Projecte",
+    "enterWorkspace": "Entra al teu espai de treball a {nombre}."
+  },
+  "sugerencias": {
+    "title": "Suggereix-nos",
+    "backToProjects": "Torna als projectes",
+    "formTitle": "Suggereix-nos",
+    "formDesc": "Què canviaries de CINE PACK? Explica'ns la teva experiència amb el programa: què funciona, què no, i què t'agradaria veure. El teu feedback arriba directament a l'equip.",
+    "fieldLabel": "El teu suggeriment o experiència",
+    "placeholder": "Escriu aquí…",
+    "sending": "Enviant…",
+    "send": "Envia el suggeriment",
+    "success": "Gràcies! El teu suggeriment s'ha enviat a l'equip de CINE PACK."
+  },
+  "controlDepto": {
+    "loading": "Carregant…",
+    "accessDeniedTitle": "Accés denegat",
+    "accessDeniedDesc": "Només els Caps de Departament poden accedir aquí.",
+    "backToProjects": "Torna als projectes",
+    "controlOf": "Control de {dept}",
+    "manageDesc": "Gestiona els membres i les eines del teu departament.",
+    "membersTitle": "Membres del departament ({n})",
+    "noMembers": "Sense membres al teu departament",
+    "noRole": "Sense càrrec",
+    "sharedRoles": "Càrrecs compartits",
+    "none": "Cap",
+    "addSharedRolePh": "Afegeix càrrec compartit…",
+    "add": "+ Afegeix",
+    "toolsTitle": "Eines del departament",
+    "toolsDesc": "La gestió d'eines per càrrec es fa des del mapa d'eines a \"General\".",
+    "errChangeRole": "No s'ha pogut canviar el càrrec: {msg}",
+    "errAddSharedRole": "No s'ha pogut afegir el càrrec compartit: {msg}",
+    "errRemoveSharedRole": "No s'ha pogut treure el càrrec compartit: {msg}"
   }
 }

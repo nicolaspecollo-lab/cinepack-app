@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
@@ -19,6 +20,7 @@ type Miembro = {
 
 export default function ControlDeptPage() {
   const router = useRouter();
+  const t = useTranslations("controlDepto");
   const { theme, toggleTheme } = useTheme();
   const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function ControlDeptPage() {
     const supabase = createClient();
     const { error } = await supabase.from("profiles").update({ cargo: nuevoCargo }).eq("id", userId);
     if (error) {
-      alert(`No se pudo cambiar el cargo: ${error.message}`);
+      alert(t("errChangeRole", { msg: error.message }));
       return;
     }
     setMiembros((prev) => prev.map((m) => (m.user_id === userId ? { ...m, cargo: nuevoCargo } : m)));
@@ -107,7 +109,7 @@ export default function ControlDeptPage() {
     const supabase = createClient();
     const { error } = await supabase.from("user_roles").insert({ user_id: userId, cargo });
     if (error) {
-      alert(`No se pudo agregar el cargo compartido: ${error.message}`);
+      alert(t("errAddSharedRole", { msg: error.message }));
       return;
     }
     setMiembros((prev) =>
@@ -120,7 +122,7 @@ export default function ControlDeptPage() {
     const supabase = createClient();
     const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("cargo", cargo);
     if (error) {
-      alert(`No se pudo quitar el cargo compartido: ${error.message}`);
+      alert(t("errRemoveSharedRole", { msg: error.message }));
       return;
     }
     setMiembros((prev) =>
@@ -133,7 +135,7 @@ export default function ControlDeptPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Cargando…</h4>
+          <h4>{t("loading")}</h4>
         </div>
       </div>
     );
@@ -144,8 +146,8 @@ export default function ControlDeptPage() {
       <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Acceso denegado</h4>
-          <p>Solo los Jefes de Departamento pueden acceder aquí.</p>
+          <h4>{t("accessDeniedTitle")}</h4>
+          <p>{t("accessDeniedDesc")}</p>
         </div>
       </div>
     );
@@ -155,25 +157,23 @@ export default function ControlDeptPage() {
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar">
         <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
-        <span className="cp-proj">Control de {departamento}</span>
+        <span className="cp-proj">{t("controlOf", { dept: departamento })}</span>
         <div className="cp-spacer"></div>
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-          <span className="hex"></span> Volver a proyectos
+          <span className="hex"></span> {t("backToProjects")}
         </Link>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
       <div style={{ padding: "30px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h2 style={{ marginBottom: "6px" }}>Control de {departamento}</h2>
-        <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "20px" }}>
-          Gestiona los miembros y herramientas de tu departamento.
-        </p>
+        <h2 style={{ marginBottom: "6px" }}>{t("controlOf", { dept: departamento })}</h2>
+        <p style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "20px" }}>{t("manageDesc")}</p>
 
         <div style={{ background: "var(--hl1)", padding: "16px", borderRadius: "6px", border: "1px solid var(--line)" }}>
-          <h3 style={{ marginBottom: "12px" }}>👥 Miembros del departamento ({miembros.length})</h3>
+          <h3 style={{ marginBottom: "12px" }}>👥 {t("membersTitle", { n: miembros.length })}</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {miembros.length === 0 ? (
-              <span style={{ fontSize: "13px", color: "var(--muted)" }}>Sin miembros en tu departamento</span>
+              <span style={{ fontSize: "13px", color: "var(--muted)" }}>{t("noMembers")}</span>
             ) : (
               miembros.map((m) => (
                 <div key={m.user_id} style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "12px", background: "var(--bg)", borderRadius: "4px", border: "1px solid var(--line)" }}>
@@ -206,7 +206,7 @@ export default function ControlDeptPage() {
                       onChange={(e) => cambiarCargo(m.user_id, e.target.value)}
                       style={{ padding: "8px 10px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "12px" }}
                     >
-                      <option value="">Sin cargo</option>
+                      <option value="">{t("noRole")}</option>
                       {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
@@ -215,11 +215,11 @@ export default function ControlDeptPage() {
 
                   <div style={{ paddingLeft: "52px" }}>
                     <div style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "6px" }}>
-                      Cargos compartidos
+                      {t("sharedRoles")}
                     </div>
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
                       {m.cargosCompartidos.length === 0 ? (
-                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>Ninguno</span>
+                        <span style={{ fontSize: "12px", color: "var(--muted)" }}>{t("none")}</span>
                       ) : (
                         m.cargosCompartidos.map((c) => (
                           <div key={c} style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--hl3)", padding: "5px 9px", borderRadius: "4px", border: "1px solid var(--line)", fontSize: "12px" }}>
@@ -235,7 +235,7 @@ export default function ControlDeptPage() {
                         onChange={(e) => setCargoCompartidoNuevo((prev) => ({ ...prev, [m.user_id]: e.target.value }))}
                         style={{ padding: "8px 10px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "12px" }}
                       >
-                        <option value="">Agregar cargo compartido…</option>
+                        <option value="">{t("addSharedRolePh")}</option>
                         {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? [])
                           .filter((c) => c !== m.cargo && !m.cargosCompartidos.includes(c))
                           .map((c) => (
@@ -249,7 +249,7 @@ export default function ControlDeptPage() {
                         disabled={!cargoCompartidoNuevo[m.user_id]}
                         onClick={() => agregarCargoCompartido(m.user_id)}
                       >
-                        + Agregar
+                        {t("add")}
                       </button>
                     </div>
                   </div>
@@ -260,10 +260,8 @@ export default function ControlDeptPage() {
         </div>
 
         <div style={{ marginTop: "20px", padding: "16px", background: "var(--hl1)", borderRadius: "6px", border: "1px solid var(--line)" }}>
-          <h3 style={{ marginBottom: "12px" }}>🛠 Herramientas del departamento</h3>
-          <p style={{ fontSize: "13px", color: "var(--muted)" }}>
-            La gestión de herramientas por cargo se realiza desde el mapa de herramientas en "Generales".
-          </p>
+          <h3 style={{ marginBottom: "12px" }}>🛠 {t("toolsTitle")}</h3>
+          <p style={{ fontSize: "13px", color: "var(--muted)" }}>{t("toolsDesc")}</p>
         </div>
       </div>
     </div>

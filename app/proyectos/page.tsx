@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useTheme } from "../useTheme";
@@ -13,6 +14,7 @@ type Proyecto = { id: string; nombre: string };
 
 export default function ProyectosPage() {
   const router = useRouter();
+  const t = useTranslations("proyectos");
   const { theme, setTheme, toggleTheme } = useTheme();
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,15 +63,15 @@ export default function ProyectosPage() {
       <ThemeChooser onChoose={setTheme} />
       <header className="cp-topbar">
         <div className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></div>
-        <span className="cp-proj">Selecciona un proyecto</span>
+        <span className="cp-proj">{t("selectProject")}</span>
         <div className="cp-spacer"></div>
         {isAdmin && (
           <Link href="/proyectos/nuevo" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-            <span className="hex"></span> Crear proyecto
+            <span className="hex"></span> {t("createProject")}
           </Link>
         )}
         <Link href="/perfil" className="cp-menu-btn" style={{ textDecoration: "none" }}>
-          <span className="hex"></span> Mi perfil
+          <span className="hex"></span> {t("myProfile")}
         </Link>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
@@ -77,21 +79,21 @@ export default function ProyectosPage() {
       {loading ? (
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Cargando proyectos…</h4>
+          <h4>{t("loading")}</h4>
         </div>
       ) : proyectos.length === 0 ? (
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
-          <h4>Sin proyectos asignados</h4>
-          <p>Todavía no formas parte de ningún proyecto. Contacta con soporte para que te asignen uno.</p>
+          <h4>{t("noProjectsTitle")}</h4>
+          <p>{t("noProjectsDesc")}</p>
         </div>
       ) : (
         <div className="cp-projects">
           {proyectos.map((p) => (
             <button key={p.id} className="cp-project-card" onClick={() => elegir(p)}>
-              <span className="tag">Proyecto</span>
+              <span className="tag">{t("tag")}</span>
               <h3>{p.nombre}</h3>
-              <p>Entrar a tu espacio de trabajo en {p.nombre}.</p>
+              <p>{t("enterWorkspace", { nombre: p.nombre })}</p>
             </button>
           ))}
         </div>
