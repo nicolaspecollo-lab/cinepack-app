@@ -1284,7 +1284,15 @@ function PlanoBoard({
 // trabajo real acá es "¿qué nos falta todavía y qué tan urgente es?", no
 // una fila de tabla. Columnas Kanban por estado (en el orden que ya definía
 // la herramienta), tarjeta con prioridad/urgencia destacada.
-const PENDIENTES_BOARD_IDS = new Set(["arte-props-pendientes", "luz-peticion-equipo", "arte-build-sheet"]);
+const PENDIENTES_BOARD_IDS = new Set([
+  "arte-props-pendientes",
+  "luz-peticion-equipo",
+  "arte-build-sheet",
+  "arte-desglose-atrezzo",
+]);
+// arte-desglose-atrezzo empieza por "escena", pero lo que identifica la
+// tarjeta es el objeto a conseguir, no la escena.
+const PENDIENTES_BOARD_TITULO: Record<string, string> = { "arte-desglose-atrezzo": "objeto" };
 
 function PendientesBoard({
   columnas,
@@ -1312,7 +1320,8 @@ function PendientesBoard({
   }
 
   const colEstado = columnas.find((c) => c.tipo === "estado" && c.key === "estado");
-  const colTitulo = columnas[0];
+  const tituloKey = PENDIENTES_BOARD_TITULO[herramientaId];
+  const colTitulo = tituloKey ? columnas.find((c) => c.key === tituloKey) : columnas[0];
   const colPrioridad = columnas.find((c) => c.tipo === "estado" && (c.key === "prioridad" || c.key === "urgencia"));
   const colArchivo = columnas.find((c) => c.tipo === "archivo");
   const colLink = columnas.find((c) => c.tipo === "link");
@@ -1799,6 +1808,7 @@ const FICHA_EQUIPO_IDS = new Set([
   "foto-electrico",
   "foto-dit-color",
   "foto-dit-log-backup",
+  "arte-ficha-maquillaje",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -2211,7 +2221,7 @@ function AgendaDia({
 // misma herramienta de continuidad que ya existe como galería (que se
 // agrupa sola por personaje) — solo que estas dos son tipo "tabla" con
 // foto, así que no recibían ese agrupado. Mismo criterio, misma vista.
-const CONTINUIDAD_PERSONAJE_IDS = new Set(["vest-desglose-escenas", "maq-desglose-escenas"]);
+const CONTINUIDAD_PERSONAJE_IDS = new Set(["vest-desglose-escenas", "maq-desglose-escenas", "arte-desglose-vestuario"]);
 
 function ContinuidadPersonaje({
   columnas,
