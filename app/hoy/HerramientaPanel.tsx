@@ -3098,13 +3098,25 @@ function FinanciacionPipeline({
             {colsChip.map((c) => (
               <label className="hp-fin-chip" key={c.key}>
                 <span>{c.label}</span>
-                <input
-                  type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
-                  defaultValue={f.datos?.[c.key] ?? ""}
-                  readOnly={!editable}
-                  placeholder="—"
-                  onBlur={(e) => set(f, c.key, e.target.value)}
-                />
+                {c.tipo === "estado" ? (
+                  <select
+                    className={`tono-${estadoTono(f.datos?.[c.key] ?? "")}`}
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    disabled={!editable}
+                    onChange={(e) => set(f, c.key, e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {(c.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    readOnly={!editable}
+                    placeholder="—"
+                    onBlur={(e) => set(f, c.key, e.target.value)}
+                  />
+                )}
               </label>
             ))}
           </div>
