@@ -430,6 +430,16 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "luz-generador" && (
+        <ControlGenerador
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) && (
         <ContinuidadPersonaje
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -501,7 +511,8 @@ function HerramientaData({
         !PENDIENTES_BOARD_IDS.has(herramienta.id) &&
         !FICHA_EQUIPO_IDS.has(herramienta.id) &&
         !AGENDA_DIA_IDS.has(herramienta.id) &&
-        !CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) && (
+        !CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) &&
+        herramienta.id !== "luz-generador" && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -1785,6 +1796,8 @@ const FICHA_EQUIPO_IDS = new Set([
   "vest-mantenimiento",
   "arte-ambientacion-ext",
   "arte-localizaciones-arte",
+  "foto-electrico",
+  "foto-dit-color",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -2367,6 +2380,128 @@ function ContinuidadPersonaje({
         ))
       ) : (
         <div className="hp-fe-grid">{filas.map(Tarjeta)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Control de generador por jornada ----
+// Lo que un gaffer necesita ver de un vistazo no son cuatro números de
+// kW sueltos en una fila — es "¿cuánto margen me queda hoy?". Una barra
+// de capacidad (consumido vs. disponible) y otra de combustible
+// (inicio → fin) dicen eso en un segundo; una tabla no.
+function ControlGenerador({
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  function num(f: Fila, key: string): number | null {
+    const v = parseFloat(f.datos?.[key] ?? "");
+    return isNaN(v) ? null : v;
+  }
+
+  const ordenadas = [...filas].sort((a, b) => (b.datos?.jornada ?? "").localeCompare(a.datos?.jornada ?? ""));
+
+  function Tarjeta(f: Fila) {
+    const disp = num(f, "kw_disponibles");
+    const cons = num(f, "kw_consumidos");
+    const pctKw = disp && disp > 0 ? Math.min(100, ((cons ?? 0) / disp) * 100) : null;
+    const tonoKw = pctKw === null ? "neutral" : pctKw >= 90 ? "bad" : pctKw >= 70 ? "warn" : "ok";
+
+    const ini = num(f, "combustible_inicio");
+    const fin = num(f, "combustible_fin");
+    const pctComb = ini && ini > 0 && fin !== null ? Math.min(100, (fin / ini) * 100) : null;
+    const tonoComb = pctComb === null ? "neutral" : pctComb <= 15 ? "bad" : pctComb <= 35 ? "warn" : "ok";
+
+    return (
+      <div className="hp-gen-card" key={f.id}>
+        <div className="hp-gen-head">
+          <input
+            type="date"
+            className="hp-gen-fecha"
+            defaultValue={f.datos?.jornada ?? ""}
+            readOnly={!editable}
+            onBlur={(e) => set(f, "jornada", e.target.value)}
+          />
+          <input
+            className="hp-gen-loc"
+            defaultValue={f.datos?.localizacion ?? ""}
+            placeholder={t("noScene")}
+            readOnly={!editable}
+            onBlur={(e) => set(f, "localizacion", e.target.value)}
+          />
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+
+        <div className="hp-gen-gauge">
+          <div className="hp-gen-gauge-label">
+            <span>kW</span>
+            <span className="hp-gen-gauge-nums">
+              <input type="number" defaultValue={f.datos?.kw_consumidos ?? ""} readOnly={!editable} onBlur={(e) => set(f, "kw_consumidos", e.target.value)} />
+              {" / "}
+              <input type="number" defaultValue={f.datos?.kw_disponibles ?? ""} readOnly={!editable} onBlur={(e) => set(f, "kw_disponibles", e.target.value)} />
+            </span>
+          </div>
+          <div className="hp-gen-bar">
+            <div className={`hp-gen-bar-fill tono-${tonoKw}`} style={{ width: `${pctKw ?? 0}%` }} />
+          </div>
+        </div>
+
+        <div className="hp-gen-gauge">
+          <div className="hp-gen-gauge-label">
+            <span>{t("genFuel")}</span>
+            <span className="hp-gen-gauge-nums">
+              <input type="number" defaultValue={f.datos?.combustible_inicio ?? ""} readOnly={!editable} onBlur={(e) => set(f, "combustible_inicio", e.target.value)} />
+              {" → "}
+              <input type="number" defaultValue={f.datos?.combustible_fin ?? ""} readOnly={!editable} onBlur={(e) => set(f, "combustible_fin", e.target.value)} />
+            </span>
+          </div>
+          <div className="hp-gen-bar">
+            <div className={`hp-gen-bar-fill tono-${tonoComb}`} style={{ width: `${pctComb ?? 100}%` }} />
+          </div>
+        </div>
+
+        <textarea
+          className="hp-gen-incidencias"
+          defaultValue={f.datos?.incidencias ?? ""}
+          placeholder={t("genIncidencias")}
+          readOnly={!editable}
+          onBlur={(e) => set(f, "incidencias", e.target.value)}
+          rows={2}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-gen-grid">{ordenadas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">

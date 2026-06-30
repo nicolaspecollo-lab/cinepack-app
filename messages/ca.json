@@ -386,7 +386,9 @@
     "visMiniDone": "Visionat ✓",
     "noCharacter": "Sense personatge",
     "noScene": "Sense escena",
-    "pendMoveTo": "Mou a…"
+    "pendMoveTo": "Mou a…",
+    "genFuel": "Combustible (L)",
+    "genIncidencias": "Incidències"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

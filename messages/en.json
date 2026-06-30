@@ -386,7 +386,9 @@
     "visMiniDone": "Viewed ✓",
     "noCharacter": "No character",
     "noScene": "No scene",
-    "pendMoveTo": "Move to…"
+    "pendMoveTo": "Move to…",
+    "genFuel": "Fuel (L)",
+    "genIncidencias": "Incidents"
   },
   "herr": {
     "accesos-equipo": "Team access",

@@ -386,7 +386,9 @@
     "visMiniDone": "Visionado ✓",
     "noCharacter": "Sin personaje",
     "noScene": "Sin escena",
-    "pendMoveTo": "Mover a…"
+    "pendMoveTo": "Mover a…",
+    "genFuel": "Combustible (L)",
+    "genIncidencias": "Incidencias"
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",
