@@ -135,6 +135,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
     id === "prod-transporte" ||
+    id === "prod-plan-semana" ||
     CATERING_IDS.has(id)
   );
 }
@@ -686,6 +687,17 @@ function HerramientaData({
 
       {CATERING_IDS.has(herramienta.id) && (
         <CateringBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.id === "prod-plan-semana" && (
+        <PlanSemanaBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
           editable={editable}
@@ -4115,6 +4127,70 @@ function CateringBoard({
       ) : (
         <>
           <div className="ct-grid">{filas.map(Tarjeta)}</div>
+          {editable && <button className="cp-btn cp-btn-acc tr-add" onClick={onCrear}><Icon name="plus" size={13} /> {t("addRow")}</button>}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---- Plan semanal — jornadas de la semana como tarjetas ----
+function PlanSemanaBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  const colEstado = columnas.find((c) => c.tipo === "estado");
+  const colNotas = columnas.find((c) => c.tipo === "largo");
+  function set(f: Fila, k: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  }
+  const ordenadas = [...filas].sort((a, b) => (a.datos?.dia ?? "").localeCompare(b.datos?.dia ?? "", "es", { numeric: true }));
+
+  function Tarjeta(f: Fila) {
+    const estadoVal = colEstado ? f.datos?.[colEstado.key] ?? "" : "";
+    return (
+      <div className={`ps-card tono-${estadoTono(estadoVal)}`} key={f.id}>
+        <div className="ps-head">
+          <input className="ps-dia" defaultValue={f.datos?.dia ?? ""} placeholder={label("dia")} readOnly={!editable} onBlur={(e) => set(f, "dia", e.target.value)} />
+          {colEstado && <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />}
+          {editable && <button className="od-x" onClick={() => onBorrar(f.id)} title={t("delete")}><Icon name="x" size={13} /></button>}
+        </div>
+        <input className="ps-loc" defaultValue={f.datos?.localizacion ?? ""} placeholder={label("localizacion")} readOnly={!editable} onBlur={(e) => set(f, "localizacion", e.target.value)} />
+        <input className="ps-esc" defaultValue={f.datos?.escenas ?? ""} placeholder={label("escenas")} readOnly={!editable} onBlur={(e) => set(f, "escenas", e.target.value)} />
+        <div className="ps-counts">
+          <span className="ps-count"><Icon name="users" size={13} /><input type="number" defaultValue={f.datos?.crew_necesario ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, "crew_necesario", e.target.value)} /><span>{label("crew_necesario")}</span></span>
+          <span className="ps-count"><input type="number" defaultValue={f.datos?.extras_necesarios ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, "extras_necesarios", e.target.value)} /><span>{label("extras_necesarios")}</span></span>
+        </div>
+        <div className="ps-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.hora_inicio ?? ""} readOnly={!editable} placeholder={label("hora_inicio")} onBlur={(e) => set(f, "hora_inicio", e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.hora_fin_estimada ?? ""} readOnly={!editable} placeholder={label("hora_fin_estimada")} onBlur={(e) => set(f, "hora_fin_estimada", e.target.value)} /></div>
+        {colNotas && <textarea className="ps-notas" defaultValue={f.datos?.[colNotas.key] ?? ""} placeholder={colNotas.label} readOnly={!editable} rows={1} onBlur={(e) => set(f, colNotas.key, e.target.value)} />}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ps-board">
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>}
+        </div>
+      ) : (
+        <>
+          <div className="ps-grid">{ordenadas.map(Tarjeta)}</div>
           {editable && <button className="cp-btn cp-btn-acc tr-add" onClick={onCrear}><Icon name="plus" size={13} /> {t("addRow")}</button>}
         </>
       )}

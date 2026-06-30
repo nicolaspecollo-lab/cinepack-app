@@ -2876,3 +2876,31 @@
 .cp-dash .ct-menu textarea:focus, .cp-dash .ct-esp textarea:focus{ outline:none; border-color:var(--cyan); }
 .cp-dash .ct-prov input{ font-size:13px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:3px 0; }
 .cp-dash .ct-prov input:focus{ outline:none; border-bottom-color:var(--cyan); }
+
+/* ===========================================================================
+   PLAN SEMANAL — jornadas como tarjetas (acento por estado)
+   =========================================================================== */
+.cp-dash .ps-board{ padding:14px var(--gutter) 22px; }
+.cp-dash .ps-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+.cp-dash .ps-card{ background:var(--bg-2); border:1px solid var(--line); border-top:3px solid var(--muted); padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+.cp-dash .ps-card.tono-ok{ border-top-color:var(--lime); }
+.cp-dash .ps-card.tono-warn{ border-top-color:var(--amber); }
+.cp-dash .ps-card.tono-bad{ border-top-color:var(--rose); }
+.cp-dash .ps-card.tono-info{ border-top-color:var(--cyan); }
+.cp-dash .ps-head{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.cp-dash .ps-dia{ flex:1; min-width:60px; font-family:'Poppins',sans-serif; font-weight:700; font-size:15px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .ps-dia:focus{ outline:none; }
+.cp-dash .ps-loc{ font-family:'Poppins',sans-serif; font-weight:600; font-size:13px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:4px 0; }
+.cp-dash .ps-loc:focus{ outline:none; border-bottom-color:var(--cyan); }
+.cp-dash .ps-esc{ font-size:12px; color:var(--muted); background:none; border:none; padding:0; }
+.cp-dash .ps-esc:focus{ outline:none; color:var(--text); }
+.cp-dash .ps-counts{ display:flex; gap:14px; }
+.cp-dash .ps-count{ display:flex; align-items:center; gap:5px; color:var(--cyan); }
+.cp-dash .ps-count input{ width:42px; font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .ps-count input:focus{ outline:none; }
+.cp-dash .ps-count span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .ps-time{ display:flex; align-items:center; gap:6px; color:var(--muted); }
+.cp-dash .ps-time input{ width:60px; font-family:'Courier New',monospace; font-weight:700; font-size:13px; color:var(--text); background:none; border:1px solid var(--line); padding:3px 5px; text-align:center; }
+.cp-dash .ps-time input:focus{ outline:none; border-color:var(--cyan); }
+.cp-dash .ps-notas{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:12px; color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .ps-notas:focus{ outline:none; border-color:var(--cyan); color:var(--text); }
