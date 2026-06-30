@@ -328,7 +328,7 @@ const stripboard: Herramienta = {
   ],
 };
 const cateringDietas: Herramienta = {
-  id: "prod-catering",
+  id: "prod-catering-general",
   nombre: "Catering y dietas",
   tipo: "tabla",
   columnas: [
