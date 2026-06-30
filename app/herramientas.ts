@@ -2270,7 +2270,13 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Script": {
       departamento: [partesScript],
       cargo: [
-        { id: "dir-continuidad-foto", nombre: "Continuidad fotográfica", tipo: "galeria", hint: "Galería + notas de raccord." },
+        {
+          id: "dir-continuidad-foto", nombre: "Continuidad fotográfica", tipo: "galeria", hint: "Galería + notas de raccord.",
+          columnas: [
+            { key: "escena", label: "Escena / Toma" },
+            { key: "raccord", label: "Notas de raccord", tipo: "largo" },
+          ],
+        },
         dirScriptLog,
         dirCambiosGuion,
         dirFotosContinuidad,
@@ -2653,6 +2659,16 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
         {
           id: "foto-dit-ficha-jornada", nombre: "Ficha técnica de jornada (DIT)", tipo: "ficha",
           hint: "Resumen del día: total GB, tarjetas, incidencias de cámara.",
+          campos: [
+            { key: "fecha", label: "Fecha", tipo: "fecha" },
+            { key: "total_gb", label: "Total GB copiados", tipo: "num" },
+            { key: "tarjetas", label: "Tarjetas / discos origen" },
+            { key: "copias_destino", label: "Destinos de backup (rutas)", tipo: "largo" },
+            { key: "checksum_estado", label: "Verificación checksum", tipo: "estado", opciones: ["Pendiente", "Verificado", "Error"] },
+            { key: "luts_aplicadas", label: "LUTs aplicadas hoy" },
+            { key: "incidencias", label: "Incidencias de cámara", tipo: "largo" },
+            { key: "notas_post", label: "Notas para postproducción", tipo: "largo" },
+          ],
         },
       ],
     },
