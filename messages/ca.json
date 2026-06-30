@@ -388,7 +388,12 @@
     "noScene": "Sense escena",
     "pendMoveTo": "Mou a…",
     "genFuel": "Combustible (L)",
-    "genIncidencias": "Incidències"
+    "genIncidencias": "Incidències",
+    "preVariance": "Desviació",
+    "cfNet": "Net",
+    "docExpired": "Vençut",
+    "docToday": "Venç avui",
+    "docInDays": "{n} dies"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

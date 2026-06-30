@@ -112,6 +112,30 @@ export default function HerramientaPanel({
   );
 }
 
+// ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
+// TablaTool genérico. Centralizado acá para no arrastrar una cadena de
+// negaciones en el render (cada patrón nuevo se suma a esta lista).
+// Referencia sets/constantes definidos más abajo: es seguro porque solo se
+// invoca en tiempo de render, cuando el módulo ya está inicializado.
+function tablaTieneVistaBespoke(id: string): boolean {
+  return (
+    id === "foto-marcas-foco" ||
+    id === "luz-generador" ||
+    id === "arte-timeline-decorados" ||
+    id === "maq-efectos-especiales-maq" ||
+    PLANO_BOARD_IDS.has(id) ||
+    PENDIENTES_BOARD_IDS.has(id) ||
+    FICHA_EQUIPO_IDS.has(id) ||
+    AGENDA_DIA_IDS.has(id) ||
+    CONTINUIDAD_PERSONAJE_IDS.has(id) ||
+    PRESUPUESTO_BOARD_IDS.has(id) ||
+    CASHFLOW_IDS.has(id) ||
+    FINANCIACION_PIPELINE_IDS.has(id) ||
+    DOC_STATUS_IDS.has(id) ||
+    id === "ej-modelo-financiero"
+  );
+}
+
 function HerramientaData({
   departamento,
   herramienta,
@@ -503,16 +527,69 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "tabla" &&
-        herramienta.id !== "foto-marcas-foco" &&
-        herramienta.id !== "arte-timeline-decorados" &&
-        herramienta.id !== "maq-efectos-especiales-maq" &&
-        !PLANO_BOARD_IDS.has(herramienta.id) &&
-        !PENDIENTES_BOARD_IDS.has(herramienta.id) &&
-        !FICHA_EQUIPO_IDS.has(herramienta.id) &&
-        !AGENDA_DIA_IDS.has(herramienta.id) &&
-        !CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) &&
-        herramienta.id !== "luz-generador" && (
+      {herramienta.tipo === "tabla" && PRESUPUESTO_BOARD_IDS.has(herramienta.id) && (
+        <PresupuestoBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && CASHFLOW_IDS.has(herramienta.id) && (
+        <CashflowChart
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && FINANCIACION_PIPELINE_IDS.has(herramienta.id) && (
+        <FinanciacionPipeline
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && DOC_STATUS_IDS.has(herramienta.id) && (
+        <DocStatusBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "ej-modelo-financiero" && (
+        <ModeloFinanciero
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && !tablaTieneVistaBespoke(herramienta.id) && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -1998,7 +2075,7 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo"]);
 
 function AgendaDia({
   columnas,
@@ -2028,18 +2105,23 @@ function AgendaDia({
 
   const colFecha = columnas.find((c) => c.tipo === "fecha");
   const colHora = columnas.find((c) => /^hora/.test(c.key));
-  const colActor = columnas.find((c) => c.key === "actor");
+  const colActor = columnas.find((c) => c.key === "actor" || c.key === "con_quien");
   const colPersonaje = columnas.find((c) => c.key === "personaje");
-  const colQue = columnas.find((c) => /look/.test(c.key));
-  const colResultado = columnas.find((c) => c.tipo === "estado" && c.key === "resultado");
+  const colResultado = columnas.find((c) => c.tipo === "estado");
   const colFoto = columnas.find((c) => c.tipo === "archivo");
-  const colNotas = columnas.find((c) => c.key === "notas");
   const colTPrevisto = columnas.find((c) => c.key === "tiempo_previsto");
   const colTReal = columnas.find((c) => c.key === "tiempo_real");
+  // Columnas de texto largo: la primera es el "qué" prominente (asunto, looks
+  // a probar…), el resto van como notas. Así sirve igual para una prueba de
+  // vestuario que para un log de reuniones ejecutivas (asunto + resultado).
+  const largoCols = columnas.filter((c) => c.tipo === "largo");
+  const colQue = largoCols[0];
+  const colsNotas = largoCols.slice(1);
   const usados = new Set(
     [
-      colFecha?.key, colHora?.key, colActor?.key, colPersonaje?.key, colQue?.key,
-      colResultado?.key, colFoto?.key, colNotas?.key, colTPrevisto?.key, colTReal?.key,
+      colFecha?.key, colHora?.key, colActor?.key, colPersonaje?.key,
+      colResultado?.key, colFoto?.key, colTPrevisto?.key, colTReal?.key,
+      ...largoCols.map((c) => c.key),
     ].filter(Boolean) as string[]
   );
   const colsChip = columnas.filter((c) => !usados.has(c.key) && c.tipo !== "largo");
@@ -2160,16 +2242,17 @@ function AgendaDia({
               ))}
             </div>
           )}
-          {colNotas && (
+          {colsNotas.map((c) => (
             <textarea
+              key={c.key}
               className="hp-agenda-notas"
-              defaultValue={f.datos?.notas ?? ""}
-              placeholder={colNotas.label}
+              defaultValue={f.datos?.[c.key] ?? ""}
+              placeholder={c.label}
               readOnly={!editable}
-              onBlur={(e) => set(f, "notas", e.target.value)}
+              onBlur={(e) => set(f, c.key, e.target.value)}
               rows={2}
             />
-          )}
+          ))}
         </div>
       </div>
     );
@@ -2514,6 +2597,878 @@ function ControlGenerador({
         </div>
       ) : (
         <div className="hp-gen-grid">{ordenadas.map(Tarjeta)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ===========================================================================
+// DEPARTAMENTO EJECUTIVO — vistas financieras a medida
+// El ejecutivo le muestra números a inversores y superiores: lo que importa
+// no es la celda suelta, es el total, el desvío y la salud de un vistazo.
+// ===========================================================================
+function ejNum(v: string | undefined): number {
+  if (!v) return 0;
+  const n = parseFloat(v.replace(/[^0-9.,-]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
+  return isNaN(n) ? 0 : n;
+}
+function ejMoney(n: number): string {
+  return new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 }).format(Math.round(n)) + " €";
+}
+
+// ---- Tablero de presupuesto (top sheet / por depto / cost report) ----
+// Header con totales y desvío + barra de ejecución por partida. Lo que un
+// ejecutivo necesita ver primero: cuánto del presupuesto está consumido y
+// si hay desvío, no una grilla de cifras sin sumar.
+const PRESUPUESTO_BOARD_IDS = new Set([
+  "ej-presupuesto-general",
+  "ej-presupuesto-depto",
+  "ej-control-costos",
+]);
+
+function PresupuestoBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const moneyCols = columnas.filter((c) => c.tipo === "money");
+  const budgetCol =
+    moneyCols.find((c) => ["presup", "presupuestado", "asignado", "presupuesto"].includes(c.key)) ?? moneyCols[0];
+  const spentCol =
+    moneyCols.find((c) => ["real", "gastado"].includes(c.key)) ??
+    moneyCols.find((c) => c.key !== budgetCol?.key);
+  const otherMoney = moneyCols.filter((c) => c.key !== budgetCol?.key && c.key !== spentCol?.key);
+  const colEstado = columnas.find((c) => c.tipo === "estado");
+  const colArchivo = columnas.find((c) => c.tipo === "archivo");
+  const colTitulo = columnas[0];
+  const colSubtitulo = columnas.find(
+    (c, i) => i > 0 && (!c.tipo || c.tipo === "texto") && c.key !== colTitulo?.key
+  );
+  const usados = new Set(
+    [budgetCol?.key, spentCol?.key, ...otherMoney.map((c) => c.key), colEstado?.key, colArchivo?.key, colTitulo?.key, colSubtitulo?.key].filter(Boolean) as string[]
+  );
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
+
+  const totalBudget = budgetCol ? filas.reduce((s, f) => s + ejNum(f.datos?.[budgetCol.key]), 0) : 0;
+  const totalSpent = spentCol ? filas.reduce((s, f) => s + ejNum(f.datos?.[spentCol.key]), 0) : 0;
+  const pctGlobal = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  const variance = totalBudget - totalSpent;
+  const tonoGlobal = pctGlobal > 100 ? "bad" : pctGlobal >= 90 ? "warn" : "ok";
+
+  function MoneyInput({ f, col }: { f: Fila; col: Columna }) {
+    return (
+      <span className="hp-pre-money-wrap">
+        <input
+          className="hp-pre-money"
+          type="number"
+          defaultValue={f.datos?.[col.key] ?? ""}
+          readOnly={!editable}
+          placeholder="0"
+          onBlur={(e) => set(f, col.key, e.target.value)}
+        />
+        <span className="hp-pre-money-eur">€</span>
+      </span>
+    );
+  }
+
+  function Fila_({ f }: { f: Fila }) {
+    const budget = budgetCol ? ejNum(f.datos?.[budgetCol.key]) : 0;
+    const spent = spentCol ? ejNum(f.datos?.[spentCol.key]) : 0;
+    const pct = budget > 0 ? (spent / budget) * 100 : 0;
+    const tono = pct > 100 ? "bad" : pct >= 90 ? "warn" : "ok";
+    const estadoVal = colEstado ? f.datos?.[colEstado.key] ?? "" : "";
+    return (
+      <div className="hp-pre-row">
+        <div className="hp-pre-row-top">
+          <div className="hp-pre-titulo-wrap">
+            <input
+              className="hp-pre-titulo"
+              defaultValue={f.datos?.[colTitulo.key] ?? ""}
+              placeholder={colTitulo.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, colTitulo.key, e.target.value)}
+            />
+            {colSubtitulo && (
+              <input
+                className="hp-pre-subtitulo"
+                defaultValue={f.datos?.[colSubtitulo.key] ?? ""}
+                placeholder={colSubtitulo.label}
+                readOnly={!editable}
+                onBlur={(e) => set(f, colSubtitulo.key, e.target.value)}
+              />
+            )}
+          </div>
+          {colEstado && (
+            <select
+              className={`hp-pre-estado tono-${estadoTono(estadoVal)}`}
+              defaultValue={estadoVal}
+              disabled={!editable}
+              onChange={(e) => set(f, colEstado.key, e.target.value)}
+            >
+              <option value="">{t("noStatus")}</option>
+              {(colEstado.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
+            </select>
+          )}
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        {budgetCol && spentCol && (
+          <div className="hp-pre-bar-row">
+            <div className="hp-pre-bar">
+              <div className={`hp-pre-bar-fill tono-${tono}`} style={{ width: `${Math.min(100, pct)}%` }} />
+            </div>
+            <span className={`hp-pre-pct tono-${tono}`}>{budget > 0 ? `${Math.round(pct)}%` : "—"}</span>
+          </div>
+        )}
+        <div className="hp-pre-figs">
+          {budgetCol && (
+            <span className="hp-pre-fig">
+              <span className="hp-pre-fig-label">{budgetCol.label}</span>
+              <MoneyInput f={f} col={budgetCol} />
+            </span>
+          )}
+          {spentCol && (
+            <span className="hp-pre-fig">
+              <span className="hp-pre-fig-label">{spentCol.label}</span>
+              <MoneyInput f={f} col={spentCol} />
+            </span>
+          )}
+          {otherMoney.map((col) => (
+            <span className="hp-pre-fig" key={col.key}>
+              <span className="hp-pre-fig-label">{col.label}</span>
+              <MoneyInput f={f} col={col} />
+            </span>
+          ))}
+          {colsChip.map((col) => (
+            <span className="hp-pre-fig" key={col.key}>
+              <span className="hp-pre-fig-label">{col.label}</span>
+              <input
+                className="hp-pre-chip-input"
+                type={col.tipo === "num" ? "number" : col.tipo === "fecha" ? "date" : "text"}
+                defaultValue={f.datos?.[col.key] ?? ""}
+                readOnly={!editable}
+                placeholder="—"
+                onBlur={(e) => set(f, col.key, e.target.value)}
+              />
+            </span>
+          ))}
+        </div>
+        {colsNotas.map((col) => (
+          <textarea
+            key={col.key}
+            className="hp-pre-nota"
+            defaultValue={col.key in (f.datos ?? {}) ? f.datos[col.key] : ""}
+            placeholder={col.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, col.key, e.target.value)}
+            rows={1}
+          />
+        ))}
+        {colArchivo && (
+          <ArchivoCell
+            path={f.datos?.[colArchivo.key] ?? ""}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey={colArchivo.key}
+            onSave={(v) => set(f, colArchivo.key, v)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length > 0 && budgetCol && spentCol && (
+        <div className={`hp-pre-header tono-${tonoGlobal}`}>
+          <div className="hp-pre-h-item">
+            <span className="hp-pre-h-label">{budgetCol.label}</span>
+            <span className="hp-pre-h-val">{ejMoney(totalBudget)}</span>
+          </div>
+          <div className="hp-pre-h-item">
+            <span className="hp-pre-h-label">{spentCol.label}</span>
+            <span className="hp-pre-h-val">{ejMoney(totalSpent)}</span>
+          </div>
+          <div className="hp-pre-h-item">
+            <span className="hp-pre-h-label">{t("preVariance")}</span>
+            <span className={`hp-pre-h-val tono-${variance < 0 ? "bad" : "ok"}`}>{ejMoney(variance)}</span>
+          </div>
+          <div className="hp-pre-h-gauge">
+            <div className="hp-pre-h-bar">
+              <div className={`hp-pre-bar-fill tono-${tonoGlobal}`} style={{ width: `${Math.min(100, pctGlobal)}%` }} />
+            </div>
+            <span className={`hp-pre-pct tono-${tonoGlobal}`}>{Math.round(pctGlobal)}%</span>
+          </div>
+        </div>
+      )}
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-pre-list">{filas.map((f) => <Fila_ f={f} key={f.id} />)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Cashflow (flujo de caja semana a semana) ----
+// "Detecta déficits antes de que ocurran" — eso pide barras de ingreso vs.
+// egreso por período y el saldo coloreado, no una grilla de números.
+const CASHFLOW_IDS = new Set(["ej-flujo-caja", "ej-cashflow"]);
+
+function CashflowChart({
+  columnas,
+  filas,
+  editable,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colPeriodo = columnas.find((c) => ["periodo", "semana"].includes(c.key)) ?? columnas[0];
+  const colIn = columnas.find((c) => ["ingresos", "ingresos_reales"].includes(c.key));
+  const colInPrev = columnas.find((c) => c.key === "ingresos_previstos");
+  const colOut = columnas.find((c) => ["egresos", "gastos_reales"].includes(c.key));
+  const colOutPrev = columnas.find((c) => c.key === "gastos_previstos");
+  const colSaldo = columnas.find((c) => c.key === "saldo");
+  const colEstado = columnas.find((c) => c.tipo === "estado");
+  const colConcepto = columnas.find((c) => (!c.tipo || c.tipo === "texto") && c.key !== colPeriodo?.key);
+  const colNotas = columnas.find((c) => c.tipo === "largo");
+
+  const maxFlujo = Math.max(
+    1,
+    ...filas.map((f) => Math.max(colIn ? ejNum(f.datos?.[colIn.key]) : 0, colOut ? ejNum(f.datos?.[colOut.key]) : 0))
+  );
+  const totalIn = colIn ? filas.reduce((s, f) => s + ejNum(f.datos?.[colIn.key]), 0) : 0;
+  const totalOut = colOut ? filas.reduce((s, f) => s + ejNum(f.datos?.[colOut.key]), 0) : 0;
+  const neto = totalIn - totalOut;
+
+  function MoneyField({ f, col }: { f: Fila; col: Columna }) {
+    return (
+      <label className="hp-cf-fig">
+        <span>{col.label}</span>
+        <span className="hp-pre-money-wrap">
+          <input
+            className="hp-pre-money"
+            type="number"
+            defaultValue={f.datos?.[col.key] ?? ""}
+            readOnly={!editable}
+            placeholder="0"
+            onBlur={(e) => set(f, col.key, e.target.value)}
+          />
+          <span className="hp-pre-money-eur">€</span>
+        </span>
+      </label>
+    );
+  }
+
+  function Periodo({ f }: { f: Fila }) {
+    const inV = colIn ? ejNum(f.datos?.[colIn.key]) : 0;
+    const outV = colOut ? ejNum(f.datos?.[colOut.key]) : 0;
+    const saldoV = colSaldo ? ejNum(f.datos?.[colSaldo.key]) : inV - outV;
+    const estadoVal = colEstado ? f.datos?.[colEstado.key] ?? "" : "";
+    return (
+      <div className="hp-cf-row">
+        <div className="hp-cf-side">
+          <input
+            className="hp-cf-periodo"
+            type={colPeriodo?.tipo === "fecha" ? "date" : "text"}
+            defaultValue={f.datos?.[colPeriodo.key] ?? ""}
+            placeholder={colPeriodo.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, colPeriodo.key, e.target.value)}
+          />
+          {colConcepto && (
+            <input
+              className="hp-cf-concepto"
+              defaultValue={f.datos?.[colConcepto.key] ?? ""}
+              placeholder={colConcepto.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, colConcepto.key, e.target.value)}
+            />
+          )}
+        </div>
+        <div className="hp-cf-bars">
+          <div className="hp-cf-bar-track">
+            <div className="hp-cf-bar-in" style={{ width: `${(inV / maxFlujo) * 100}%` }} title={`${colIn?.label}: ${ejMoney(inV)}`} />
+          </div>
+          <div className="hp-cf-bar-track">
+            <div className="hp-cf-bar-out" style={{ width: `${(outV / maxFlujo) * 100}%` }} title={`${colOut?.label}: ${ejMoney(outV)}`} />
+          </div>
+        </div>
+        <div className="hp-cf-saldo-wrap">
+          <span className="hp-cf-saldo-label">{colSaldo?.label ?? "Saldo"}</span>
+          <span className={`hp-cf-saldo tono-${saldoV < 0 ? "bad" : "ok"}`}>{ejMoney(saldoV)}</span>
+          {colEstado && (
+            <select
+              className={`hp-cf-estado tono-${estadoTono(estadoVal)}`}
+              defaultValue={estadoVal}
+              disabled={!editable}
+              onChange={(e) => set(f, colEstado.key, e.target.value)}
+            >
+              <option value="">{t("noStatus")}</option>
+              {(colEstado.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
+            </select>
+          )}
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        <div className="hp-cf-edit">
+          {colInPrev && <MoneyField f={f} col={colInPrev} />}
+          {colIn && <MoneyField f={f} col={colIn} />}
+          {colOutPrev && <MoneyField f={f} col={colOutPrev} />}
+          {colOut && <MoneyField f={f} col={colOut} />}
+          {colSaldo && <MoneyField f={f} col={colSaldo} />}
+          {colNotas && (
+            <label className="hp-cf-fig hp-cf-fig-nota">
+              <span>{colNotas.label}</span>
+              <input defaultValue={f.datos?.[colNotas.key] ?? ""} readOnly={!editable} onBlur={(e) => set(f, colNotas.key, e.target.value)} />
+            </label>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length > 0 && colIn && colOut && (
+        <div className="hp-cf-header">
+          <div className="hp-pre-h-item"><span className="hp-pre-h-label">{colIn.label}</span><span className="hp-pre-h-val tono-ok">{ejMoney(totalIn)}</span></div>
+          <div className="hp-pre-h-item"><span className="hp-pre-h-label">{colOut.label}</span><span className="hp-pre-h-val tono-bad">{ejMoney(totalOut)}</span></div>
+          <div className="hp-pre-h-item"><span className="hp-pre-h-label">{t("cfNet")}</span><span className={`hp-pre-h-val tono-${neto < 0 ? "bad" : "ok"}`}>{ejMoney(neto)}</span></div>
+        </div>
+      )}
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-cf-list">{filas.map((f) => <Periodo f={f} key={f.id} />)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Pipeline de financiación (fuentes por etapa, con € por columna) ----
+// Plan de financiación, ayudas, coproducciones: la pregunta es "¿cuánto
+// dinero tengo en cada etapa de estar asegurado?". Kanban por estado con
+// el total € de cada columna en la cabecera.
+const FINANCIACION_PIPELINE_IDS = new Set([
+  "ej-plan-financiacion",
+  "ej-ayudas-subvenciones",
+  "ej-coproducciones",
+]);
+
+function FinanciacionPipeline({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colEstado =
+    columnas.find((c) => c.tipo === "estado" && (c.key === "estado" || c.key === "estado_firma")) ??
+    columnas.find((c) => c.tipo === "estado");
+  const colTitulo = columnas[0];
+  const moneyCols = columnas.filter((c) => c.tipo === "money");
+  const colImporte =
+    moneyCols.find((c) => ["importe", "aportacion", "importe_concedido", "importe_solicitado"].includes(c.key)) ?? moneyCols[0];
+  const colArchivo = columnas.find((c) => c.tipo === "archivo");
+  const usados = new Set([colEstado?.key, colTitulo?.key, colImporte?.key, colArchivo?.key].filter(Boolean) as string[]);
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
+
+  if (!colEstado) return null;
+  const etapas = [...(colEstado.opciones ?? []), t("noStatus")];
+  const porEtapa = etapas.map((op) => {
+    const fs = filas.filter((f) => (f.datos?.[colEstado.key] ?? "") === op || (!f.datos?.[colEstado.key] && op === t("noStatus")));
+    const total = colImporte ? fs.reduce((s, f) => s + ejNum(f.datos?.[colImporte.key]), 0) : 0;
+    return { nombre: op, fs, total };
+  });
+
+  function Tarjeta(f: Fila) {
+    return (
+      <div className="hp-fin-card" key={f.id}>
+        <div className="hp-fin-head">
+          <input
+            className="hp-fin-titulo"
+            defaultValue={f.datos?.[colTitulo.key] ?? ""}
+            placeholder={colTitulo.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, colTitulo.key, e.target.value)}
+          />
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        {colImporte && (
+          <span className="hp-pre-money-wrap hp-fin-money">
+            <input
+              className="hp-pre-money"
+              type="number"
+              defaultValue={f.datos?.[colImporte.key] ?? ""}
+              readOnly={!editable}
+              placeholder="0"
+              onBlur={(e) => set(f, colImporte.key, e.target.value)}
+            />
+            <span className="hp-pre-money-eur">€</span>
+          </span>
+        )}
+        {colsChip.length > 0 && (
+          <div className="hp-fin-specs">
+            {colsChip.map((c) => (
+              <label className="hp-fin-chip" key={c.key}>
+                <span>{c.label}</span>
+                <input
+                  type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
+                  defaultValue={f.datos?.[c.key] ?? ""}
+                  readOnly={!editable}
+                  placeholder="—"
+                  onBlur={(e) => set(f, c.key, e.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+        )}
+        {colsNotas.map((c) => (
+          <textarea
+            key={c.key}
+            className="hp-fin-nota"
+            defaultValue={c.key in (f.datos ?? {}) ? f.datos[c.key] : ""}
+            placeholder={c.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, c.key, e.target.value)}
+            rows={2}
+          />
+        ))}
+        {colArchivo && (
+          <ArchivoCell
+            path={f.datos?.[colArchivo.key] ?? ""}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey={colArchivo.key}
+            onSave={(v) => set(f, colArchivo.key, v)}
+          />
+        )}
+        {editable && colEstado && (
+          <select
+            className="hp-pend-mover"
+            value={f.datos?.[colEstado.key] ?? ""}
+            onChange={(e) => set(f, colEstado.key, e.target.value)}
+          >
+            <option value="" disabled>{t("pendMoveTo")}</option>
+            {(colEstado.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
+          </select>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-pend-board">
+          {porEtapa.map((col) => (
+            <div className={`hp-pend-col tono-${estadoTono(col.nombre)}`} key={col.nombre}>
+              <div className="hp-pend-col-head">
+                <span>{col.nombre}</span>
+                <span className="hp-pend-col-count">{col.fs.length}</span>
+              </div>
+              {colImporte && <div className="hp-fin-col-total">{ejMoney(col.total)}</div>}
+              <div className="hp-pend-col-body">{col.fs.map(Tarjeta)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Tablero de estado de documentos (contratos, NDA, pólizas, facturas…) ----
+// Documentos/acuerdos con un estado y, casi siempre, una fecha de
+// vencimiento. Agrupado por estado, con alerta si está vencido o por
+// vencer. Lo que importa: qué falta firmar y qué caduca pronto.
+const DOC_STATUS_IDS = new Set([
+  "ej-contratos",
+  "ej-cesion-nda",
+  "ej-derechos-pi",
+  "ej-polizas-permisos",
+  "ej-facturas",
+  "ej-deliverables",
+  "ej-pagos-nominas",
+  "ej-cronograma-produccion",
+]);
+
+function DocStatusBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colGrupo =
+    columnas.find((c) => c.tipo === "estado" && (c.key === "estado" || c.key === "firma")) ??
+    columnas.find((c) => c.tipo === "estado");
+  const colTitulo = columnas[0];
+  const colMoney = columnas.find((c) => c.tipo === "money");
+  // Fecha a vigilar (vencimiento/caducidad) — para alertar de lo que expira.
+  const colFecha = columnas.find((c) =>
+    ["vence", "hasta", "caducidad", "vigencia", "fecha_entrega", "fecha_real", "fecha_prevista", "fecha"].includes(c.key) && c.tipo === "fecha"
+  );
+  const colsArchivo = columnas.filter((c) => c.tipo === "archivo");
+  const usados = new Set(
+    [colGrupo?.key, colTitulo?.key, colMoney?.key, colFecha?.key, ...colsArchivo.map((c) => c.key)].filter(Boolean) as string[]
+  );
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
+
+  function diasPara(fechaStr?: string): number | null {
+    if (!fechaStr) return null;
+    const ms = new Date(fechaStr).getTime();
+    if (isNaN(ms)) return null;
+    return Math.ceil((ms - Date.now()) / DIA_MS);
+  }
+
+  function Tarjeta(f: Fila) {
+    const dias = colFecha ? diasPara(f.datos?.[colFecha.key]) : null;
+    const fechaTono = dias === null ? "" : dias < 0 ? "bad" : dias <= 14 ? "warn" : "ok";
+    return (
+      <div className="hp-doc-card" key={f.id}>
+        <div className="hp-doc-head">
+          <input
+            className="hp-doc-titulo"
+            defaultValue={f.datos?.[colTitulo.key] ?? ""}
+            placeholder={colTitulo.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, colTitulo.key, e.target.value)}
+          />
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        {colMoney && (
+          <span className="hp-pre-money-wrap hp-doc-money">
+            <input
+              className="hp-pre-money"
+              type="number"
+              defaultValue={f.datos?.[colMoney.key] ?? ""}
+              readOnly={!editable}
+              placeholder="0"
+              onBlur={(e) => set(f, colMoney.key, e.target.value)}
+            />
+            <span className="hp-pre-money-eur">€</span>
+          </span>
+        )}
+        {colFecha && (
+          <label className={`hp-doc-fecha tono-${fechaTono || "neutral"}`}>
+            <span className="hp-doc-fecha-label">{colFecha.label}</span>
+            <input
+              type="date"
+              defaultValue={f.datos?.[colFecha.key] ?? ""}
+              readOnly={!editable}
+              onBlur={(e) => set(f, colFecha.key, e.target.value)}
+            />
+            {dias !== null && (
+              <span className="hp-doc-fecha-badge">
+                {dias < 0 ? t("docExpired") : dias === 0 ? t("docToday") : t("docInDays", { n: dias })}
+              </span>
+            )}
+          </label>
+        )}
+        {colsChip.length > 0 && (
+          <div className="hp-doc-specs">
+            {colsChip.map((c) => (
+              <label className="hp-doc-chip" key={c.key}>
+                <span>{c.label}</span>
+                {c.tipo === "estado" ? (
+                  <select
+                    className={`tono-${estadoTono(f.datos?.[c.key] ?? "")}`}
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    disabled={!editable}
+                    onChange={(e) => set(f, c.key, e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {(c.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    readOnly={!editable}
+                    placeholder="—"
+                    onBlur={(e) => set(f, c.key, e.target.value)}
+                  />
+                )}
+              </label>
+            ))}
+          </div>
+        )}
+        {colsNotas.map((c) => (
+          <textarea
+            key={c.key}
+            className="hp-doc-nota"
+            defaultValue={c.key in (f.datos ?? {}) ? f.datos[c.key] : ""}
+            placeholder={c.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, c.key, e.target.value)}
+            rows={2}
+          />
+        ))}
+        {colsArchivo.map((c) => (
+          <ArchivoCell
+            key={c.key}
+            path={f.datos?.[c.key] ?? ""}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey={c.key}
+            onSave={(v) => set(f, c.key, v)}
+          />
+        ))}
+        {editable && colGrupo && (
+          <select
+            className="hp-pend-mover"
+            value={f.datos?.[colGrupo.key] ?? ""}
+            onChange={(e) => set(f, colGrupo.key, e.target.value)}
+          >
+            <option value="" disabled>{t("pendMoveTo")}</option>
+            {(colGrupo.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
+          </select>
+        )}
+      </div>
+    );
+  }
+
+  if (!colGrupo) return null;
+  const etapas = [...(colGrupo.opciones ?? []), t("noStatus")];
+  const porEtapa = etapas.map((op) => ({
+    nombre: op,
+    fs: filas.filter((f) => (f.datos?.[colGrupo.key] ?? "") === op || (!f.datos?.[colGrupo.key] && op === t("noStatus"))),
+  }));
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-pend-board">
+          {porEtapa.map((col) => (
+            <div className={`hp-pend-col tono-${estadoTono(col.nombre)}`} key={col.nombre}>
+              <div className="hp-pend-col-head">
+                <span>{col.nombre}</span>
+                <span className="hp-pend-col-count">{col.fs.length}</span>
+              </div>
+              <div className="hp-pend-col-body">{col.fs.map(Tarjeta)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Modelo financiero (escenarios optimista / base / conservador) ----
+// Tres escenarios lado a lado con el margen destacado — una comparación,
+// no tres filas de tabla.
+function ModeloFinanciero({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colEscenario = columnas.find((c) => c.key === "escenario") ?? columnas[0];
+  const colHipotesis = columnas.find((c) => c.tipo === "largo");
+  const moneyCols = columnas.filter((c) => c.tipo === "money");
+  const colMargen = moneyCols.find((c) => c.key === "margen");
+  const orden = colEscenario.opciones ?? [];
+  const ordenadas = [...filas].sort(
+    (a, b) => orden.indexOf(a.datos?.[colEscenario.key] ?? "") - orden.indexOf(b.datos?.[colEscenario.key] ?? "")
+  );
+
+  function MoneyField({ f, col, big }: { f: Fila; col: Columna; big?: boolean }) {
+    const v = ejNum(f.datos?.[col.key]);
+    return (
+      <div className={`hp-mf-fig ${big ? "hp-mf-fig-big" : ""}`}>
+        <span className="hp-mf-fig-label">{col.label}</span>
+        <span className={`hp-pre-money-wrap ${big ? `hp-mf-margen tono-${v < 0 ? "bad" : "ok"}` : ""}`}>
+          <input
+            className="hp-pre-money"
+            type="number"
+            defaultValue={f.datos?.[col.key] ?? ""}
+            readOnly={!editable}
+            placeholder="0"
+            onBlur={(e) => set(f, col.key, e.target.value)}
+          />
+          <span className="hp-pre-money-eur">€</span>
+        </span>
+      </div>
+    );
+  }
+
+  function Escenario(f: Fila) {
+    const esc = f.datos?.[colEscenario.key] ?? "";
+    return (
+      <div className={`hp-mf-card tono-${estadoTono(esc)}`} key={f.id}>
+        <div className="hp-mf-head">
+          {colEscenario.opciones ? (
+            <select className="hp-mf-escenario" defaultValue={esc} disabled={!editable} onChange={(e) => set(f, colEscenario.key, e.target.value)}>
+              <option value="">{t("noStatus")}</option>
+              {colEscenario.opciones.map((op) => <option key={op} value={op}>{op}</option>)}
+            </select>
+          ) : (
+            <input className="hp-mf-escenario" defaultValue={esc} readOnly={!editable} onBlur={(e) => set(f, colEscenario.key, e.target.value)} />
+          )}
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        <div className="hp-mf-figs">
+          {moneyCols.filter((c) => c.key !== colMargen?.key).map((c) => <MoneyField key={c.key} f={f} col={c} />)}
+          {colMargen && <MoneyField f={f} col={colMargen} big />}
+        </div>
+        {colHipotesis && (
+          <textarea
+            className="hp-mf-hipotesis"
+            defaultValue={f.datos?.[colHipotesis.key] ?? ""}
+            placeholder={colHipotesis.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, colHipotesis.key, e.target.value)}
+            rows={3}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-mf-grid">{ordenadas.map(Escenario)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">

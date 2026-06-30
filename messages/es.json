@@ -388,7 +388,12 @@
     "noScene": "Sin escena",
     "pendMoveTo": "Mover a…",
     "genFuel": "Combustible (L)",
-    "genIncidencias": "Incidencias"
+    "genIncidencias": "Incidencias",
+    "preVariance": "Desvío",
+    "cfNet": "Neto",
+    "docExpired": "Vencido",
+    "docToday": "Vence hoy",
+    "docInDays": "{n} días"
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",

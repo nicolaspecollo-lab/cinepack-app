@@ -2386,3 +2386,161 @@
   color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical;
 }
 .cp-dash .hp-gen-incidencias:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+
+/* ===========================================================================
+   DEPARTAMENTO EJECUTIVO — vistas financieras
+   =========================================================================== */
+
+/* Inputs de dinero reutilizables en las vistas ejecutivas */
+.cp-dash .hp-pre-money-wrap{ display:inline-flex; align-items:baseline; gap:2px; }
+.cp-dash .hp-pre-money{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-sm); color:var(--text);
+  background:none; border:none; border-bottom:1px solid transparent; padding:0; width:84px; text-align:right;
+}
+.cp-dash .hp-pre-money:focus{ outline:none; border-bottom-color:var(--acc); }
+.cp-dash .hp-pre-money-eur{ font-size:var(--fs-xs); color:var(--muted); }
+
+/* Header de totales (presupuesto y cashflow) */
+.cp-dash .hp-pre-header, .cp-dash .hp-cf-header{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-4);
+  margin:0 var(--gutter) var(--sp-3); padding:var(--sp-3) var(--sp-4);
+  background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--muted);
+}
+.cp-dash .hp-pre-header.tono-ok{ border-left-color:var(--lime); }
+.cp-dash .hp-pre-header.tono-warn{ border-left-color:var(--amber); }
+.cp-dash .hp-pre-header.tono-bad{ border-left-color:var(--rose); }
+.cp-dash .hp-pre-h-item{ display:flex; flex-direction:column; gap:2px; }
+.cp-dash .hp-pre-h-label{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .hp-pre-h-val{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-lg); color:var(--text); }
+.cp-dash .hp-pre-h-val.tono-ok{ color:var(--lime); }
+.cp-dash .hp-pre-h-val.tono-bad{ color:var(--rose); }
+.cp-dash .hp-pre-h-gauge{ flex:1; min-width:140px; display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-pre-h-bar{ flex:1; height:10px; background:var(--hl2); border:1px solid var(--line); overflow:hidden; }
+
+/* Lista de partidas de presupuesto */
+.cp-dash .hp-pre-list{ display:flex; flex-direction:column; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-3); }
+.cp-dash .hp-pre-row{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .hp-pre-row-top{ display:flex; align-items:flex-start; gap:var(--sp-2); }
+.cp-dash .hp-pre-titulo-wrap{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.cp-dash .hp-pre-titulo{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .hp-pre-titulo:focus{ outline:none; }
+.cp-dash .hp-pre-subtitulo{ font-size:var(--fs-sm); color:var(--muted); background:none; border:none; padding:0; }
+.cp-dash .hp-pre-subtitulo:focus{ outline:none; }
+.cp-dash .hp-pre-estado{
+  font-size:10px; font-weight:600; font-family:'Poppins',sans-serif; border:none; padding:2px 8px;
+  background:var(--hl2); color:var(--muted); cursor:pointer;
+}
+.cp-dash .hp-pre-estado.tono-ok{ background:rgba(159,232,112,0.14); color:var(--lime); }
+.cp-dash .hp-pre-estado.tono-warn{ background:rgba(245,166,35,0.14); color:var(--amber); }
+.cp-dash .hp-pre-estado.tono-bad{ background:rgba(255,107,107,0.14); color:var(--rose); }
+.cp-dash .hp-pre-estado.tono-info{ background:rgba(17,194,220,0.12); color:var(--cyan); }
+.cp-dash .hp-pre-bar-row{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-pre-bar{ flex:1; height:8px; background:var(--hl2); border:1px solid var(--line); overflow:hidden; }
+.cp-dash .hp-pre-bar-fill{ height:100%; transition:width var(--dur); }
+.cp-dash .hp-pre-bar-fill.tono-ok{ background:var(--lime); }
+.cp-dash .hp-pre-bar-fill.tono-warn{ background:var(--amber); }
+.cp-dash .hp-pre-bar-fill.tono-bad{ background:var(--rose); }
+.cp-dash .hp-pre-pct{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-sm); min-width:42px; text-align:right; }
+.cp-dash .hp-pre-pct.tono-ok{ color:var(--lime); }
+.cp-dash .hp-pre-pct.tono-warn{ color:var(--amber); }
+.cp-dash .hp-pre-pct.tono-bad{ color:var(--rose); }
+.cp-dash .hp-pre-figs{ display:flex; flex-wrap:wrap; gap:var(--sp-3); }
+.cp-dash .hp-pre-fig{ display:flex; flex-direction:column; gap:1px; }
+.cp-dash .hp-pre-fig-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-pre-chip-input{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--text); background:none; border:none; padding:0; min-width:50px; }
+.cp-dash .hp-pre-chip-input:focus{ outline:none; }
+.cp-dash .hp-pre-nota{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .hp-pre-nota:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+
+/* Cashflow */
+.cp-dash .hp-cf-list{ display:flex; flex-direction:column; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-3); }
+.cp-dash .hp-cf-row{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-2) var(--sp-3); display:grid; grid-template-columns:140px 1fr 130px; gap:var(--sp-3); align-items:center; }
+.cp-dash .hp-cf-side{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.cp-dash .hp-cf-periodo{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .hp-cf-periodo:focus{ outline:none; }
+.cp-dash .hp-cf-concepto{ font-size:var(--fs-xs); color:var(--muted); background:none; border:none; padding:0; }
+.cp-dash .hp-cf-concepto:focus{ outline:none; }
+.cp-dash .hp-cf-bars{ display:flex; flex-direction:column; gap:3px; }
+.cp-dash .hp-cf-bar-track{ height:9px; background:var(--hl1); position:relative; }
+.cp-dash .hp-cf-bar-in{ height:100%; background:var(--lime); opacity:0.7; }
+.cp-dash .hp-cf-bar-out{ height:100%; background:var(--rose); opacity:0.7; }
+.cp-dash .hp-cf-saldo-wrap{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.cp-dash .hp-cf-saldo-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-cf-saldo{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-md); }
+.cp-dash .hp-cf-saldo.tono-ok{ color:var(--lime); }
+.cp-dash .hp-cf-saldo.tono-bad{ color:var(--rose); }
+.cp-dash .hp-cf-estado{ font-size:10px; font-weight:600; font-family:'Poppins',sans-serif; border:none; padding:1px 6px; background:var(--hl2); color:var(--muted); cursor:pointer; }
+.cp-dash .hp-cf-edit{ grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:var(--sp-3); border-top:1px solid var(--line); padding-top:var(--sp-2); }
+.cp-dash .hp-cf-fig{ display:flex; flex-direction:column; gap:1px; }
+.cp-dash .hp-cf-fig > span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-cf-fig-nota input{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:2px 0; min-width:120px; }
+.cp-dash .hp-cf-fig-nota input:focus{ outline:none; border-bottom-color:var(--acc); }
+
+/* Pipeline de financiación — total € por columna (reusa hp-pend-*) */
+.cp-dash .hp-fin-col-total{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--text); padding:4px var(--sp-3); border-bottom:1px solid var(--line); }
+.cp-dash .hp-fin-card{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-2) var(--sp-3); display:flex; flex-direction:column; gap:6px; }
+.cp-dash .hp-fin-head{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-fin-titulo{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text); background:none; border:none; padding:0; flex:1; min-width:0; }
+.cp-dash .hp-fin-titulo:focus{ outline:none; }
+.cp-dash .hp-fin-money{ font-size:var(--fs-md); }
+.cp-dash .hp-fin-money .hp-pre-money{ font-size:var(--fs-md); width:100px; text-align:left; }
+.cp-dash .hp-fin-specs{ display:flex; flex-wrap:wrap; gap:6px; }
+.cp-dash .hp-fin-chip{ display:flex; flex-direction:column; gap:1px; background:var(--hl1); border:1px solid var(--line); padding:3px 7px; }
+.cp-dash .hp-fin-chip > span{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-fin-chip input{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:11px; color:var(--text); background:none; border:none; padding:0; min-width:40px; }
+.cp-dash .hp-fin-chip input:focus{ outline:none; }
+.cp-dash .hp-fin-nota{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .hp-fin-nota:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+
+/* Tablero de estado de documentos (reusa hp-pend-board) */
+.cp-dash .hp-doc-card{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-2) var(--sp-3); display:flex; flex-direction:column; gap:6px; }
+.cp-dash .hp-doc-head{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-doc-titulo{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text); background:none; border:none; padding:0; flex:1; min-width:0; }
+.cp-dash .hp-doc-titulo:focus{ outline:none; }
+.cp-dash .hp-doc-money{ font-size:var(--fs-md); }
+.cp-dash .hp-doc-money .hp-pre-money{ text-align:left; width:100px; }
+.cp-dash .hp-doc-fecha{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:4px 7px; background:var(--hl1); border:1px solid var(--line); border-left:3px solid var(--muted); }
+.cp-dash .hp-doc-fecha.tono-ok{ border-left-color:var(--lime); }
+.cp-dash .hp-doc-fecha.tono-warn{ border-left-color:var(--amber); }
+.cp-dash .hp-doc-fecha.tono-bad{ border-left-color:var(--rose); }
+.cp-dash .hp-doc-fecha-label{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-doc-fecha input{ font-size:11px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .hp-doc-fecha input:focus{ outline:none; }
+.cp-dash .hp-doc-fecha-badge{ font-size:10px; font-weight:600; font-family:'Poppins',sans-serif; color:var(--muted); margin-left:auto; }
+.cp-dash .hp-doc-fecha.tono-bad .hp-doc-fecha-badge{ color:var(--rose); }
+.cp-dash .hp-doc-fecha.tono-warn .hp-doc-fecha-badge{ color:var(--amber); }
+.cp-dash .hp-doc-specs{ display:flex; flex-wrap:wrap; gap:6px; }
+.cp-dash .hp-doc-chip{ display:flex; flex-direction:column; gap:1px; background:var(--hl1); border:1px solid var(--line); padding:3px 7px; }
+.cp-dash .hp-doc-chip > span{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-doc-chip input, .cp-dash .hp-doc-chip select{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:11px; color:var(--text); background:none; border:none; padding:0; min-width:40px; }
+.cp-dash .hp-doc-chip input:focus, .cp-dash .hp-doc-chip select:focus{ outline:none; }
+.cp-dash .hp-doc-chip select.tono-ok{ color:var(--lime); }
+.cp-dash .hp-doc-chip select.tono-warn{ color:var(--amber); }
+.cp-dash .hp-doc-chip select.tono-bad{ color:var(--rose); }
+.cp-dash .hp-doc-nota{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .hp-doc-nota:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+
+/* Modelo financiero — escenarios lado a lado */
+.cp-dash .hp-mf-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:var(--sp-3); padding:var(--sp-3) var(--gutter) var(--sp-4); }
+.cp-dash .hp-mf-card{ background:var(--bg-2); border:1px solid var(--line); border-top:3px solid var(--muted); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-3); }
+.cp-dash .hp-mf-card.tono-ok{ border-top-color:var(--lime); }
+.cp-dash .hp-mf-card.tono-warn{ border-top-color:var(--amber); }
+.cp-dash .hp-mf-card.tono-bad{ border-top-color:var(--rose); }
+.cp-dash .hp-mf-card.tono-info{ border-top-color:var(--cyan); }
+.cp-dash .hp-mf-head{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-mf-escenario{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-md); color:var(--text); background:none; border:none; padding:0; flex:1; min-width:0; cursor:pointer; }
+.cp-dash .hp-mf-escenario:focus{ outline:none; }
+.cp-dash .hp-mf-figs{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .hp-mf-fig{ display:flex; flex-direction:column; gap:1px; }
+.cp-dash .hp-mf-fig-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-mf-fig-big{ border-top:1px solid var(--line); padding-top:var(--sp-2); }
+.cp-dash .hp-mf-margen .hp-pre-money{ font-size:var(--fs-lg); font-weight:700; width:110px; text-align:left; }
+.cp-dash .hp-mf-margen.tono-ok .hp-pre-money{ color:var(--lime); }
+.cp-dash .hp-mf-margen.tono-bad .hp-pre-money{ color:var(--rose); }
+.cp-dash .hp-mf-hipotesis{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .hp-mf-hipotesis:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+
+@media (max-width:640px){
+  .cp-dash .hp-cf-row{ grid-template-columns:1fr; }
+  .cp-dash .hp-cf-saldo-wrap{ align-items:flex-start; }
+}

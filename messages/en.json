@@ -388,7 +388,12 @@
     "noScene": "No scene",
     "pendMoveTo": "Move to…",
     "genFuel": "Fuel (L)",
-    "genIncidencias": "Incidents"
+    "genIncidencias": "Incidents",
+    "preVariance": "Variance",
+    "cfNet": "Net",
+    "docExpired": "Expired",
+    "docToday": "Due today",
+    "docInDays": "{n} days"
   },
   "herr": {
     "accesos-equipo": "Team access",
