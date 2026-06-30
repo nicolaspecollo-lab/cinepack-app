@@ -137,6 +137,45 @@ function tablaTieneVistaBespoke(id: string): boolean {
   );
 }
 
+// Control segmentado CINEPACK — el reemplazo universal del <select> nativo
+// (que arrastra el desplegable del SO y rompe la estética). Celdas que se
+// seleccionan, esquinas rectas; la activa se colorea por su tono semántico
+// (verde/ámbar/rojo/cian) con texto casi-negro, o por el acento del depto.
+function EstadoSeg({
+  valor,
+  opciones,
+  onPick,
+  editable,
+  chip = false,
+  color = false,
+}: {
+  valor: string;
+  opciones: string[];
+  onPick: (v: string) => void;
+  editable: boolean;
+  chip?: boolean;
+  color?: boolean;
+}) {
+  return (
+    <div className={`cp-seg ${chip ? "cp-seg-chip" : ""}`} role="group">
+      {opciones.map((op) => {
+        const on = valor === op;
+        return (
+          <button
+            key={op}
+            type="button"
+            disabled={!editable}
+            className={`cp-seg-cell ${on ? "cp-seg-on" : ""} ${on && color ? `seg-${estadoTono(op)}` : ""}`}
+            onClick={() => onPick(on ? "" : op)}
+          >
+            {op || "—"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function HerramientaData({
   departamento,
   herramienta,
@@ -1132,7 +1171,7 @@ function FocoCueSheet({
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
           {editable && (
-            <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
+            <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>
           )}
         </div>
       ) : (
@@ -1179,7 +1218,7 @@ function FocoCueSheet({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -1261,19 +1300,7 @@ function PlanoBoard({
   function ChipInput({ f, c }: { f: Fila; c: Columna }) {
     const v = f.datos?.[c.key] ?? "";
     if (c.tipo === "estado") {
-      return (
-        <select
-          className={`hp-plano-chip-select tono-${estadoTono(v)}`}
-          defaultValue={v}
-          disabled={!editable}
-          onChange={(e) => set(f, c.key, e.target.value)}
-        >
-          <option value="">—</option>
-          {(c.opciones ?? []).map((op) => (
-            <option key={op} value={op}>{op}</option>
-          ))}
-        </select>
-      );
+      return <EstadoSeg valor={v} opciones={c.opciones ?? []} onPick={(nv) => set(f, c.key, nv)} editable={editable} chip color />;
     }
     return (
       <input
@@ -1302,17 +1329,7 @@ function PlanoBoard({
             />
           )}
           {colEstado && (
-            <select
-              className={`hp-plano-estado tono-${estadoTono(estadoVal)}`}
-              defaultValue={estadoVal}
-              disabled={!editable}
-              onChange={(e) => set(f, colEstado.key, e.target.value)}
-            >
-              <option value="">{t("noStatus")}</option>
-              {(colEstado.opciones ?? []).map((op) => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
+            <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} color />
           )}
           <span className="hp-plano-head-spacer" />
           {editable && (
@@ -1382,7 +1399,7 @@ function PlanoBoard({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : grupos ? (
         grupos.map(([nombre, fs]) => (
@@ -1400,7 +1417,7 @@ function PlanoBoard({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -1474,17 +1491,7 @@ function PendientesBoard({
           {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
         </div>
         {colPrioridad && (
-          <select
-            className={`hp-pend-prio tono-${estadoTono(prioVal)}`}
-            defaultValue={prioVal}
-            disabled={!editable}
-            onChange={(e) => set(f, colPrioridad.key, e.target.value)}
-          >
-            <option value="">{t("noStatus")}</option>
-            {(colPrioridad.opciones ?? []).map((op) => (
-              <option key={op} value={op}>{op}</option>
-            ))}
-          </select>
+          <EstadoSeg valor={prioVal} opciones={colPrioridad.opciones ?? []} onPick={(v) => set(f, colPrioridad.key, v)} editable={editable} color />
         )}
         {colsChip.length > 0 && (
           <div className="hp-pend-specs">
@@ -1492,17 +1499,7 @@ function PendientesBoard({
               <label className="hp-pend-chip" key={c.key}>
                 <span className="hp-pend-chip-label">{c.label}</span>
                 {c.tipo === "estado" ? (
-                  <select
-                    className="hp-pend-chip-select"
-                    defaultValue={f.datos?.[c.key] ?? ""}
-                    disabled={!editable}
-                    onChange={(e) => set(f, c.key, e.target.value)}
-                  >
-                    <option value="">—</option>
-                    {(c.opciones ?? []).map((op) => (
-                      <option key={op} value={op}>{op}</option>
-                    ))}
-                  </select>
+                  <EstadoSeg valor={f.datos?.[c.key] ?? ""} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={editable} chip color />
                 ) : (
                   <input
                     className="hp-pend-chip-input"
@@ -1541,16 +1538,10 @@ function PendientesBoard({
           />
         )}
         {editable && colEstado && (
-          <select
-            className="hp-pend-mover"
-            value={f.datos?.[colEstado.key] ?? ""}
-            onChange={(e) => set(f, colEstado.key, e.target.value)}
-          >
-            <option value="" disabled>{t("pendMoveTo")}</option>
-            {(colEstado.opciones ?? []).map((op) => (
-              <option key={op} value={op}>{op}</option>
-            ))}
-          </select>
+          <label className="hp-pend-mover-wrap">
+            <span className="hp-pend-mover-label">{t("pendMoveTo")}</span>
+            <EstadoSeg valor={f.datos?.[colEstado.key] ?? ""} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />
+          </label>
         )}
       </div>
     );
@@ -1569,7 +1560,7 @@ function PendientesBoard({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-pend-board">
@@ -1586,7 +1577,7 @@ function PendientesBoard({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -1682,17 +1673,7 @@ function TimelineDecorados({
             onBlur={(e) => set(f, "decorado", e.target.value)}
           />
           {colEstado && (
-            <select
-              className={`hp-gantt-estado tono-${tono}`}
-              defaultValue={estado}
-              disabled={!editable}
-              onChange={(e) => set(f, "estado", e.target.value)}
-            >
-              <option value="">{t("noStatus")}</option>
-              {(colEstado.opciones ?? []).map((op) => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
+            <EstadoSeg valor={estado} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={editable} chip color />
           )}
           <input
             className="hp-gantt-responsable"
@@ -1755,7 +1736,7 @@ function TimelineDecorados({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-gantt">
@@ -1772,7 +1753,7 @@ function TimelineDecorados({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -1903,14 +1884,14 @@ function FxAntesDespues({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-fx-grid">{filas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2022,17 +2003,7 @@ function FichaEquipo({
             />
           )}
           {colEstado && (
-            <select
-              className={`hp-fe-estado tono-${estadoTono(estadoVal)}`}
-              defaultValue={estadoVal}
-              disabled={!editable}
-              onChange={(e) => set(f, colEstado.key, e.target.value)}
-            >
-              <option value="">{t("noStatus")}</option>
-              {(colEstado.opciones ?? []).map((op) => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
+            <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} color />
           )}
           {colsChip.length > 0 && (
             <div className="hp-fe-specs">
@@ -2059,17 +2030,7 @@ function FichaEquipo({
                   <label className="hp-fe-chip" key={c.key}>
                     <span className="hp-fe-chip-label">{c.label}</span>
                     {c.tipo === "estado" ? (
-                      <select
-                        className="hp-fe-chip-select"
-                        defaultValue={f.datos?.[c.key] ?? ""}
-                        disabled={!editable}
-                        onChange={(e) => set(f, c.key, e.target.value)}
-                      >
-                        <option value="">—</option>
-                        {(c.opciones ?? []).map((op) => (
-                          <option key={op} value={op}>{op}</option>
-                        ))}
-                      </select>
+                      <EstadoSeg valor={f.datos?.[c.key] ?? ""} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={editable} chip color />
                     ) : (
                       <input
                         className="hp-fe-chip-input"
@@ -2107,14 +2068,14 @@ function FichaEquipo({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-fe-grid">{filas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2228,17 +2189,7 @@ function AgendaDia({
             )}
             <span className="hp-agenda-spacer" />
             {colResultado && (
-              <select
-                className={`hp-agenda-resultado tono-${estadoTono(resultadoVal)}`}
-                defaultValue={resultadoVal}
-                disabled={!editable}
-                onChange={(e) => set(f, colResultado.key, e.target.value)}
-              >
-                <option value="">{t("noStatus")}</option>
-                {(colResultado.opciones ?? []).map((op) => (
-                  <option key={op} value={op}>{op}</option>
-                ))}
-              </select>
+              <EstadoSeg valor={resultadoVal} opciones={colResultado.opciones ?? []} onPick={(v) => set(f, colResultado.key, v)} editable={editable} chip color />
             )}
             {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
           </div>
@@ -2325,7 +2276,7 @@ function AgendaDia({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : grupos ? (
         grupos.map(([fecha, fs]) => (
@@ -2343,7 +2294,7 @@ function AgendaDia({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2426,17 +2377,7 @@ function ContinuidadPersonaje({
             {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
           </div>
           {colEstado && (
-            <select
-              className={`hp-fe-estado tono-${estadoTono(estadoVal)}`}
-              defaultValue={estadoVal}
-              disabled={!editable}
-              onChange={(e) => set(f, colEstado.key, e.target.value)}
-            >
-              <option value="">{t("noStatus")}</option>
-              {(colEstado.opciones ?? []).map((op) => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
+            <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} color />
           )}
           {colDesc && (
             <textarea
@@ -2454,17 +2395,7 @@ function ContinuidadPersonaje({
                 <label className="hp-fe-chip" key={c.key}>
                   <span className="hp-fe-chip-label">{c.label}</span>
                   {c.tipo === "estado" ? (
-                    <select
-                      className="hp-fe-chip-select"
-                      defaultValue={f.datos?.[c.key] ?? ""}
-                      disabled={!editable}
-                      onChange={(e) => set(f, c.key, e.target.value)}
-                    >
-                      <option value="">—</option>
-                      {(c.opciones ?? []).map((op) => (
-                        <option key={op} value={op}>{op}</option>
-                      ))}
-                    </select>
+                    <EstadoSeg valor={f.datos?.[c.key] ?? ""} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={editable} chip color />
                   ) : (
                     <input
                       className="hp-fe-chip-input"
@@ -2511,7 +2442,7 @@ function ContinuidadPersonaje({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : grupos ? (
         grupos.map(([nombre, fs]) => (
@@ -2529,7 +2460,7 @@ function ContinuidadPersonaje({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2644,14 +2575,14 @@ function ControlGenerador({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-gen-grid">{ordenadas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2775,15 +2706,7 @@ function PresupuestoBoard({
             )}
           </div>
           {colEstado && (
-            <select
-              className={`hp-pre-estado tono-${estadoTono(estadoVal)}`}
-              defaultValue={estadoVal}
-              disabled={!editable}
-              onChange={(e) => set(f, colEstado.key, e.target.value)}
-            >
-              <option value="">{t("noStatus")}</option>
-              {(colEstado.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
-            </select>
+            <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} color />
           )}
           {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
         </div>
@@ -2882,14 +2805,14 @@ function PresupuestoBoard({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-pre-list">{filas.map((f) => <Fila_ f={f} key={f.id} />)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2998,15 +2921,7 @@ function CashflowChart({
           <span className="hp-cf-saldo-label">{colSaldo?.label ?? "Saldo"}</span>
           <span className={`hp-cf-saldo tono-${saldoV < 0 ? "bad" : "ok"}`}>{ejMoney(saldoV)}</span>
           {colEstado && (
-            <select
-              className={`hp-cf-estado tono-${estadoTono(estadoVal)}`}
-              defaultValue={estadoVal}
-              disabled={!editable}
-              onChange={(e) => set(f, colEstado.key, e.target.value)}
-            >
-              <option value="">{t("noStatus")}</option>
-              {(colEstado.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
-            </select>
+            <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />
           )}
           {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
         </div>
@@ -3040,14 +2955,14 @@ function CashflowChart({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-cf-list">{filas.map((f) => <Periodo f={f} key={f.id} />)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -3140,15 +3055,7 @@ function FinanciacionPipeline({
               <label className="hp-fin-chip" key={c.key}>
                 <span>{c.label}</span>
                 {c.tipo === "estado" ? (
-                  <select
-                    className={`tono-${estadoTono(f.datos?.[c.key] ?? "")}`}
-                    defaultValue={f.datos?.[c.key] ?? ""}
-                    disabled={!editable}
-                    onChange={(e) => set(f, c.key, e.target.value)}
-                  >
-                    <option value="">—</option>
-                    {(c.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
-                  </select>
+                  <EstadoSeg valor={f.datos?.[c.key] ?? ""} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={editable} chip color />
                 ) : (
                   <input
                     type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
@@ -3185,14 +3092,10 @@ function FinanciacionPipeline({
           />
         )}
         {editable && colEstado && (
-          <select
-            className="hp-pend-mover"
-            value={f.datos?.[colEstado.key] ?? ""}
-            onChange={(e) => set(f, colEstado.key, e.target.value)}
-          >
-            <option value="" disabled>{t("pendMoveTo")}</option>
-            {(colEstado.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
-          </select>
+          <label className="hp-pend-mover-wrap">
+            <span className="hp-pend-mover-label">{t("pendMoveTo")}</span>
+            <EstadoSeg valor={f.datos?.[colEstado.key] ?? ""} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />
+          </label>
         )}
       </div>
     );
@@ -3204,7 +3107,7 @@ function FinanciacionPipeline({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-pend-board">
@@ -3222,7 +3125,7 @@ function FinanciacionPipeline({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -3341,15 +3244,7 @@ function DocStatusBoard({
               <label className="hp-doc-chip" key={c.key}>
                 <span>{c.label}</span>
                 {c.tipo === "estado" ? (
-                  <select
-                    className={`tono-${estadoTono(f.datos?.[c.key] ?? "")}`}
-                    defaultValue={f.datos?.[c.key] ?? ""}
-                    disabled={!editable}
-                    onChange={(e) => set(f, c.key, e.target.value)}
-                  >
-                    <option value="">—</option>
-                    {(c.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
-                  </select>
+                  <EstadoSeg valor={f.datos?.[c.key] ?? ""} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={editable} chip color />
                 ) : (
                   <input
                     type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : "text"}
@@ -3387,14 +3282,10 @@ function DocStatusBoard({
           />
         ))}
         {editable && colGrupo && (
-          <select
-            className="hp-pend-mover"
-            value={f.datos?.[colGrupo.key] ?? ""}
-            onChange={(e) => set(f, colGrupo.key, e.target.value)}
-          >
-            <option value="" disabled>{t("pendMoveTo")}</option>
-            {(colGrupo.opciones ?? []).map((op) => <option key={op} value={op}>{op}</option>)}
-          </select>
+          <label className="hp-pend-mover-wrap">
+            <span className="hp-pend-mover-label">{t("pendMoveTo")}</span>
+            <EstadoSeg valor={f.datos?.[colGrupo.key] ?? ""} opciones={colGrupo.opciones ?? []} onPick={(v) => set(f, colGrupo.key, v)} editable={editable} chip color />
+          </label>
         )}
       </div>
     );
@@ -3413,7 +3304,7 @@ function DocStatusBoard({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-pend-board">
@@ -3430,7 +3321,7 @@ function DocStatusBoard({
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -3495,10 +3386,7 @@ function ModeloFinanciero({
       <div className={`hp-mf-card tono-${estadoTono(esc)}`} key={f.id}>
         <div className="hp-mf-head">
           {colEscenario.opciones ? (
-            <select className="hp-mf-escenario" defaultValue={esc} disabled={!editable} onChange={(e) => set(f, colEscenario.key, e.target.value)}>
-              <option value="">{t("noStatus")}</option>
-              {colEscenario.opciones.map((op) => <option key={op} value={op}>{op}</option>)}
-            </select>
+            <EstadoSeg valor={esc} opciones={colEscenario.opciones} onPick={(v) => set(f, colEscenario.key, v)} editable={editable} color />
           ) : (
             <input className="hp-mf-escenario" defaultValue={esc} readOnly={!editable} onBlur={(e) => set(f, colEscenario.key, e.target.value)} />
           )}
@@ -3528,14 +3416,14 @@ function ModeloFinanciero({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
         </div>
       ) : (
         <div className="hp-mf-grid">{ordenadas.map(Escenario)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">
-          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -5154,15 +5042,7 @@ function FichaTool({
               className="hp-ficha-rich hp-cell-rich"
             />
           ) : c.tipo === "estado" ? (
-            <select
-              className={`tono-${estadoTono(fila?.datos?.[c.key] ?? "")}`}
-              defaultValue={fila?.datos?.[c.key] ?? ""}
-              disabled={!editable}
-              onChange={(e) => set(c.key, e.target.value)}
-            >
-              <option value="">—</option>
-              {(c.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
+            <EstadoSeg valor={fila?.datos?.[c.key] ?? ""} opciones={c.opciones ?? []} onPick={(v) => set(c.key, v)} editable={editable} color />
           ) : c.tipo === "money" ? (
             <div className="hp-money-wrap">
               <input

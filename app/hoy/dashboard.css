@@ -2583,6 +2583,22 @@
 .cp-dash .cp-btn-acc{ color:var(--acc); border-color:var(--acc); }
 .cp-dash .cp-btn-acc:hover{ background:var(--acc); color:#0D0D12; }
 
+/* Control segmentado universal — reemplaza todos los <select> nativos */
+.cp-dash .cp-seg{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--line); max-width:100%; }
+.cp-dash .cp-seg-cell{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.03em; text-transform:uppercase; color:var(--muted); background:none; border:none; border-right:1px solid var(--line); padding:5px 10px; cursor:pointer; border-radius:0; transition:background var(--dur-fast), color var(--dur-fast); }
+.cp-dash .cp-seg-cell:last-child{ border-right:none; }
+.cp-dash .cp-seg-cell:hover:not(:disabled){ color:var(--text); background:var(--hl2); }
+.cp-dash .cp-seg-cell:disabled{ cursor:default; }
+.cp-dash .cp-seg-on{ background:var(--acc); color:#0D0D12; }
+.cp-dash .cp-seg-on.seg-ok{ background:var(--lime); color:#0D0D12; }
+.cp-dash .cp-seg-on.seg-warn{ background:var(--amber); color:#0D0D12; }
+.cp-dash .cp-seg-on.seg-bad{ background:var(--rose); color:#0D0D12; }
+.cp-dash .cp-seg-on.seg-info{ background:var(--cyan); color:#0D0D12; }
+.cp-dash .cp-seg-on.seg-neutral{ background:var(--muted); color:#0D0D12; }
+.cp-dash .cp-seg-chip .cp-seg-cell{ font-size:10px; padding:3px 7px; }
+.cp-dash .hp-pend-mover-wrap{ display:flex; flex-direction:column; gap:3px; margin-top:2px; }
+.cp-dash .hp-pend-mover-label{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+
 /* Toggle de vista Tablero/Tabla/Archivos (reusa dsubtabs nativo) */
 .cp-dash .hp-view-tabs{ padding-top:14px; }
 .cp-dash .hp-view-tabs .dsubtab{ display:inline-flex; align-items:center; gap:6px; }
