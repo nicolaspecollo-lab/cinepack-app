@@ -2818,3 +2818,61 @@
 .cp-dash .pd-firma span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
 .cp-dash .pd-firma-v{ font-family:'Poppins',sans-serif; font-size:15px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:6px 0; }
 .cp-dash .pd-firma-v:focus{ outline:none; border-bottom-color:var(--cyan); }
+
+/* ===========================================================================
+   TRANSPORTE — tablero de despacho (acento cian)
+   =========================================================================== */
+.cp-dash .tr-board{ padding:14px var(--gutter) 22px; }
+.cp-dash .tr-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px; }
+.cp-dash .tr-card{ background:var(--bg-2); border:1px solid var(--line); border-left:4px solid var(--cyan); padding:12px 14px; display:flex; flex-direction:column; gap:9px; }
+.cp-dash .tr-head{ display:flex; align-items:center; gap:8px; }
+.cp-dash .tr-veh-ico{ color:var(--cyan); display:flex; }
+.cp-dash .tr-veh{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-weight:700; font-size:15px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .tr-veh:focus{ outline:none; }
+.cp-dash .tr-route{ display:flex; align-items:center; gap:8px; background:var(--hl1); border:1px solid var(--line); padding:7px 10px; }
+.cp-dash .tr-loc{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-weight:600; font-size:13px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .tr-loc:focus{ outline:none; }
+.cp-dash .tr-arrow{ color:var(--cyan); flex-shrink:0; display:flex; }
+.cp-dash .tr-meta{ display:flex; align-items:center; gap:12px; }
+.cp-dash .tr-time{ display:flex; align-items:center; gap:6px; color:var(--muted); }
+.cp-dash .tr-time input{ width:58px; font-family:'Courier New',monospace; font-weight:700; font-size:13px; color:var(--text); background:none; border:1px solid var(--line); padding:3px 5px; text-align:center; }
+.cp-dash .tr-time input:focus{ outline:none; border-color:var(--cyan); }
+.cp-dash .tr-time-arrow{ color:var(--muted); }
+.cp-dash .tr-people{ display:flex; gap:10px; flex-wrap:wrap; }
+.cp-dash .tr-field{ flex:1; min-width:90px; display:flex; flex-direction:column; gap:2px; }
+.cp-dash .tr-field span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .tr-field input{ font-size:13px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:3px 0; }
+.cp-dash .tr-field input:focus{ outline:none; border-bottom-color:var(--cyan); }
+.cp-dash .tr-notas{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:12px; color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .tr-notas:focus{ outline:none; border-color:var(--cyan); color:var(--text); }
+.cp-dash .tr-add{ margin-top:12px; }
+
+/* ===========================================================================
+   CATERING — servicio de comidas por jornada (acento cian)
+   =========================================================================== */
+.cp-dash .ct-board{ padding:14px var(--gutter) 22px; }
+.cp-dash .ct-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
+.cp-dash .ct-card{ background:var(--bg-2); border:1px solid var(--line); padding:12px 14px; display:flex; flex-direction:column; gap:9px; }
+.cp-dash .ct-head{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.cp-dash .ct-when{ font-family:'Poppins',sans-serif; font-weight:600; font-size:14px; color:var(--text); background:none; border:none; padding:0; flex:1; min-width:90px; }
+.cp-dash .ct-when:focus{ outline:none; }
+.cp-dash .ct-body{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.cp-dash .ct-comensales{ display:flex; align-items:center; gap:7px; color:var(--cyan); }
+.cp-dash .ct-comensales input{ font-family:'Poppins',sans-serif; font-weight:700; font-size:24px; color:var(--text); background:none; border:none; width:60px; padding:0; }
+.cp-dash .ct-comensales input:focus{ outline:none; }
+.cp-dash .ct-comensales span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .ct-meta{ display:flex; align-items:center; gap:12px; }
+.cp-dash .ct-hora{ display:flex; align-items:center; gap:5px; color:var(--muted); }
+.cp-dash .ct-hora input{ width:60px; font-family:'Courier New',monospace; font-weight:700; font-size:13px; color:var(--text); background:none; border:1px solid var(--line); padding:3px 5px; text-align:center; }
+.cp-dash .ct-hora input:focus{ outline:none; border-color:var(--cyan); }
+.cp-dash .ct-coste{ font-family:'Poppins',sans-serif; font-weight:700; font-size:14px; color:var(--text); display:flex; align-items:baseline; gap:2px; }
+.cp-dash .ct-coste input{ width:70px; font-family:'Poppins',sans-serif; font-weight:700; font-size:14px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); text-align:right; padding:0; }
+.cp-dash .ct-coste input:focus{ outline:none; border-bottom-color:var(--cyan); }
+.cp-dash .ct-menu, .cp-dash .ct-esp, .cp-dash .ct-prov{ display:flex; flex-direction:column; gap:3px; }
+.cp-dash .ct-menu span, .cp-dash .ct-prov span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .ct-esp span{ display:flex; align-items:center; gap:4px; font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .ct-menu textarea, .cp-dash .ct-esp textarea{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:12px; color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
+.cp-dash .ct-esp textarea{ border-left:3px solid var(--amber); color:var(--muted); }
+.cp-dash .ct-menu textarea:focus, .cp-dash .ct-esp textarea:focus{ outline:none; border-color:var(--cyan); }
+.cp-dash .ct-prov input{ font-size:13px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:3px 0; }
+.cp-dash .ct-prov input:focus{ outline:none; border-bottom-color:var(--cyan); }

@@ -133,7 +133,9 @@ function tablaTieneVistaBespoke(id: string): boolean {
     FINANCIACION_PIPELINE_IDS.has(id) ||
     DOC_STATUS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
-    id === "prod-stripboard"
+    id === "prod-stripboard" ||
+    id === "prod-transporte" ||
+    CATERING_IDS.has(id)
   );
 }
 
@@ -666,6 +668,28 @@ function HerramientaData({
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.id === "prod-transporte" && (
+        <TransporteBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {CATERING_IDS.has(herramienta.id) && (
+        <CateringBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
@@ -3936,6 +3960,164 @@ function ParteDiario({
       </div>
 
       {!fila && <p className="hp-kpi-hint">{editable ? t("startAddingRow") : t("waitForData")}</p>}
+    </div>
+  );
+}
+
+// ---- Transporte — tablero de despacho de vehículos ----
+// Cada vehículo es un despacho: ruta origen→destino, conductor, pasajeros,
+// salida→llegada y estado. Se lee como una hoja de movimientos, no una tabla.
+function TransporteBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  const colEstado = columnas.find((c) => c.tipo === "estado");
+  const colNotas = columnas.find((c) => c.tipo === "largo");
+  function set(f: Fila, k: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  }
+  const ordenadas = [...filas].sort((a, b) => (a.datos?.hora_salida ?? "").localeCompare(b.datos?.hora_salida ?? ""));
+
+  function Tarjeta(f: Fila) {
+    return (
+      <div className="tr-card" key={f.id}>
+        <div className="tr-head">
+          <span className="tr-veh-ico"><Icon name="map-pin" size={15} /></span>
+          <input className="tr-veh" defaultValue={f.datos?.vehiculo ?? ""} placeholder={label("vehiculo")} readOnly={!editable} onBlur={(e) => set(f, "vehiculo", e.target.value)} />
+          {colEstado && <EstadoSeg valor={f.datos?.[colEstado.key] ?? ""} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />}
+          {editable && <button className="od-x" onClick={() => onBorrar(f.id)} title={t("delete")}><Icon name="x" size={13} /></button>}
+        </div>
+        <div className="tr-route">
+          <input className="tr-loc" defaultValue={f.datos?.origen ?? ""} placeholder={label("origen")} readOnly={!editable} onBlur={(e) => set(f, "origen", e.target.value)} />
+          <span className="tr-arrow"><Icon name="arrow-right" size={15} /></span>
+          <input className="tr-loc" defaultValue={f.datos?.destino ?? ""} placeholder={label("destino")} readOnly={!editable} onBlur={(e) => set(f, "destino", e.target.value)} />
+        </div>
+        <div className="tr-meta">
+          <span className="tr-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.hora_salida ?? ""} placeholder={label("hora_salida")} readOnly={!editable} onBlur={(e) => set(f, "hora_salida", e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.hora_llegada ?? ""} placeholder={label("hora_llegada")} readOnly={!editable} onBlur={(e) => set(f, "hora_llegada", e.target.value)} /></span>
+        </div>
+        <div className="tr-people">
+          <label className="tr-field"><span>{label("conductor")}</span><input defaultValue={f.datos?.conductor ?? ""} readOnly={!editable} onBlur={(e) => set(f, "conductor", e.target.value)} /></label>
+          <label className="tr-field"><span>{label("pasajeros")}</span><input defaultValue={f.datos?.pasajeros ?? ""} readOnly={!editable} onBlur={(e) => set(f, "pasajeros", e.target.value)} /></label>
+        </div>
+        {colNotas && (
+          <textarea className="tr-notas" defaultValue={f.datos?.[colNotas.key] ?? ""} placeholder={colNotas.label} readOnly={!editable} rows={1} onBlur={(e) => set(f, colNotas.key, e.target.value)} />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="tr-board">
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>}
+        </div>
+      ) : (
+        <>
+          <div className="tr-grid">{ordenadas.map(Tarjeta)}</div>
+          {editable && <button className="cp-btn cp-btn-acc tr-add" onClick={onCrear}><Icon name="plus" size={13} /> {t("addRow")}</button>}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---- Catering — servicio de comidas por jornada ----
+const CATERING_IDS = new Set(["prod-catering", "prod-catering-general"]);
+function CateringBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const label = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  function set(f: Fila, k: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  }
+  const colWhen = columnas.find((c) => c.key === "jornada" || c.key === "fecha") ?? columnas[0];
+  const colServicio = columnas.find((c) => c.tipo === "estado" && c.key === "servicio");
+  const colEstado = columnas.find((c) => c.tipo === "estado" && c.key === "estado");
+  const colComensales = columnas.find((c) => c.key === "comensales" || c.key === "personas");
+  const colMenu = columnas.find((c) => c.key === "menu");
+  const colEspeciales = columnas.find((c) => c.key === "especiales");
+  const colHora = columnas.find((c) => /^hora/.test(c.key));
+  const colCoste = columnas.find((c) => c.tipo === "money");
+  const colProveedor = columnas.find((c) => c.key === "proveedor");
+
+  function Tarjeta(f: Fila) {
+    return (
+      <div className="ct-card" key={f.id}>
+        <div className="ct-head">
+          <input className="ct-when" type={colWhen?.tipo === "fecha" ? "date" : "text"} defaultValue={f.datos?.[colWhen.key] ?? ""} placeholder={colWhen?.label} readOnly={!editable} onBlur={(e) => set(f, colWhen.key, e.target.value)} />
+          {colServicio && <EstadoSeg valor={f.datos?.[colServicio.key] ?? ""} opciones={colServicio.opciones ?? []} onPick={(v) => set(f, colServicio.key, v)} editable={editable} chip />}
+          {colEstado && <EstadoSeg valor={f.datos?.[colEstado.key] ?? ""} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />}
+          {editable && <button className="od-x" onClick={() => onBorrar(f.id)} title={t("delete")}><Icon name="x" size={13} /></button>}
+        </div>
+        <div className="ct-body">
+          {colComensales && (
+            <div className="ct-comensales">
+              <Icon name="users" size={16} />
+              <input defaultValue={f.datos?.[colComensales.key] ?? ""} type="number" readOnly={!editable} placeholder="0" onBlur={(e) => set(f, colComensales.key, e.target.value)} />
+              <span>{label(colComensales.key)}</span>
+            </div>
+          )}
+          <div className="ct-meta">
+            {colHora && <span className="ct-hora"><Icon name="clock" size={13} /><input defaultValue={f.datos?.[colHora.key] ?? ""} readOnly={!editable} placeholder={label(colHora.key)} onBlur={(e) => set(f, colHora.key, e.target.value)} /></span>}
+            {colCoste && <span className="ct-coste"><input type="number" defaultValue={f.datos?.[colCoste.key] ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, colCoste.key, e.target.value)} />€</span>}
+          </div>
+        </div>
+        {colMenu && (
+          <label className="ct-menu"><span>{label(colMenu.key)}</span><textarea defaultValue={f.datos?.[colMenu.key] ?? ""} readOnly={!editable} rows={2} placeholder="—" onBlur={(e) => set(f, colMenu.key, e.target.value)} /></label>
+        )}
+        {colEspeciales && (
+          <label className="ct-esp"><span><Icon name="alert-triangle" size={12} /> {label(colEspeciales.key)}</span><textarea defaultValue={f.datos?.[colEspeciales.key] ?? ""} readOnly={!editable} rows={1} placeholder="—" onBlur={(e) => set(f, colEspeciales.key, e.target.value)} /></label>
+        )}
+        {colProveedor && (
+          <label className="ct-prov"><span>{label(colProveedor.key)}</span><input defaultValue={f.datos?.[colProveedor.key] ?? ""} readOnly={!editable} onBlur={(e) => set(f, colProveedor.key, e.target.value)} /></label>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ct-board">
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>}
+        </div>
+      ) : (
+        <>
+          <div className="ct-grid">{filas.map(Tarjeta)}</div>
+          {editable && <button className="cp-btn cp-btn-acc tr-add" onClick={onCrear}><Icon name="plus" size={13} /> {t("addRow")}</button>}
+        </>
+      )}
     </div>
   );
 }
