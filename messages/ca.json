@@ -2202,7 +2202,18 @@
     "toolsDesc": "La gestió d'eines per càrrec es fa des del mapa d'eines a \"General\".",
     "errChangeRole": "No s'ha pogut canviar el càrrec: {msg}",
     "errAddSharedRole": "No s'ha pogut afegir el càrrec compartit: {msg}",
-    "errRemoveSharedRole": "No s'ha pogut treure el càrrec compartit: {msg}"
+    "errRemoveSharedRole": "No s'ha pogut treure el càrrec compartit: {msg}",
+    "errCreateRole": "No s'ha pogut crear el càrrec: {msg}",
+    "errToggleTool": "No s'ha pogut actualitzar l'eina: {msg}",
+    "rolesTitle": "Càrrecs del departament",
+    "rolesDesc": "A més dels càrrecs fixos, pots crear càrrecs nous específics del teu departament.",
+    "newRolePh": "Falta un càrrec? Escriu-lo aquí",
+    "createRole": "+ Crea càrrec",
+    "noTools": "Aquest departament encara no té eines al catàleg.",
+    "restoreTool": "Restaura",
+    "hideTool": "Amaga",
+    "accessTitle": "Accessos per eina",
+    "accessDesc": "Assigna qui edita i qui només visiona cada eina del teu departament."
   },
   "adminShell": {
     "dashboard": "Tauler",

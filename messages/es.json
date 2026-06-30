@@ -2202,7 +2202,18 @@
     "toolsDesc": "La gestión de herramientas por cargo se realiza desde el mapa de herramientas en \"Generales\".",
     "errChangeRole": "No se pudo cambiar el cargo: {msg}",
     "errAddSharedRole": "No se pudo agregar el cargo compartido: {msg}",
-    "errRemoveSharedRole": "No se pudo quitar el cargo compartido: {msg}"
+    "errRemoveSharedRole": "No se pudo quitar el cargo compartido: {msg}",
+    "errCreateRole": "No se pudo crear el cargo: {msg}",
+    "errToggleTool": "No se pudo actualizar la herramienta: {msg}",
+    "rolesTitle": "Cargos del departamento",
+    "rolesDesc": "Además de los cargos fijos, podés crear cargos nuevos específicos de tu departamento.",
+    "newRolePh": "¿Falta un cargo? Escribilo aquí",
+    "createRole": "+ Crear cargo",
+    "noTools": "Este departamento todavía no tiene herramientas en el catálogo.",
+    "restoreTool": "Restaurar",
+    "hideTool": "Ocultar",
+    "accessTitle": "Accesos por herramienta",
+    "accessDesc": "Asigná quién edita y quién solo visiona cada herramienta de tu departamento."
   },
   "adminShell": {
     "dashboard": "Dashboard",

@@ -2202,7 +2202,18 @@
     "toolsDesc": "Tool management by role is done from the tools map in \"General\".",
     "errChangeRole": "Couldn't change the role: {msg}",
     "errAddSharedRole": "Couldn't add the shared role: {msg}",
-    "errRemoveSharedRole": "Couldn't remove the shared role: {msg}"
+    "errRemoveSharedRole": "Couldn't remove the shared role: {msg}",
+    "errCreateRole": "Couldn't create the role: {msg}",
+    "errToggleTool": "Couldn't update the tool: {msg}",
+    "rolesTitle": "Department roles",
+    "rolesDesc": "Besides the fixed roles, you can create new roles specific to your department.",
+    "newRolePh": "Missing a role? Type it here",
+    "createRole": "+ Create role",
+    "noTools": "This department has no tools in the catalog yet.",
+    "restoreTool": "Restore",
+    "hideTool": "Hide",
+    "accessTitle": "Access by tool",
+    "accessDesc": "Assign who edits and who only views each tool in your department."
   },
   "adminShell": {
     "dashboard": "Dashboard",

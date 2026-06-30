@@ -70,6 +70,7 @@ export default function HerramientasPanel({
   const [abierta, setAbierta] = useState<Herramienta | null>(null);
   const [vista, setVista] = useState<"tabla" | "personajes">("tabla");
   const [conteos, setConteos] = useState<Record<string, number>>({});
+  const [ocultas, setOcultas] = useState<Set<string>>(new Set());
   const [personalTools, setPersonalTools] = useState<PersonalTool[]>([]);
   const [abiertaPersonal, setAbiertaPersonal] = useState<PersonalTool | null>(null);
   const [creandoEspacio, setCreandoEspacio] = useState(false);
@@ -110,6 +111,15 @@ export default function HerramientasPanel({
           setConteos(c);
         }
       }
+
+      // Herramientas ocultadas por la cabeza del departamento (ver /control-depto)
+      const { data: ocultasData } = await supabase
+        .from("herramienta_visibilidad")
+        .select("herramienta")
+        .eq("project_id", projectId)
+        .eq("departamento", departamento)
+        .eq("oculta", true);
+      setOcultas(new Set((ocultasData ?? []).map((r) => r.herramienta)));
 
       // Herramientas personales del usuario (visibles en Departamento y Exclusivas)
       await recargarPersonalTools();
@@ -247,7 +257,7 @@ export default function HerramientasPanel({
   }
 
   if (seccion === "departamento") {
-    const tools = deptTools(departamento);
+    const tools = deptTools(departamento).filter((h) => !ocultas.has(h.id));
     return (
       <div className="hp-index">
         <button className={`btn${creandoEspacio ? "" : " acc"}`} style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
@@ -302,7 +312,9 @@ export default function HerramientasPanel({
   }
 
   // seccion === "cargo": agrupadas por cargo, todas las del departamento.
-  const groups = cargoGroups(departamento).filter((g) => g.tools.length > 0);
+  const groups = cargoGroups(departamento)
+    .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id)) }))
+    .filter((g) => g.tools.length > 0);
   if (groups.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
