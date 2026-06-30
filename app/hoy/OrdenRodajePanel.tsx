@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { GENERAL_ORDEN_RODAJE } from "../herramientas";
-import { PrintHeader } from "./HerramientaPanel";
+import { PrintHeader, EstadoSeg, CarpetaArchivos } from "./HerramientaPanel";
+import Icon from "../components/Icon";
 
 type Par = { label: string; valor: string };
 type Escena = { hora: string; esc: string; intext: string; dianoche: string; set: string; personajes: string; paginas: string };
@@ -19,16 +20,6 @@ function parseJSON<T>(s: string | undefined, fallback: T): T {
   if (!s) return fallback;
   try { return JSON.parse(s) as T; } catch { return fallback; }
 }
-
-const CAMPOS_TEXTO: { key: string; labelKey: string; placeholder?: string }[] = [
-  { key: "dia", labelKey: "fieldDay", placeholder: "1/18" },
-  { key: "set_principal", labelKey: "fieldMainSet" },
-  { key: "set_secundario", labelKey: "fieldSecondarySet" },
-  { key: "productora", labelKey: "fieldProductionCo" },
-  { key: "unidad", labelKey: "fieldUnit" },
-  { key: "clima", labelKey: "fieldWeather", placeholder: "☀️ 18°/27° · 🌅 06:48 · 🌇 21:42 · 💨 12 km/h" },
-  { key: "escenas_resumen", labelKey: "fieldSceneSummary", placeholder: "6 · 9 1/8" },
-];
 
 export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullName: string; canEdit?: boolean }) {
   const t = useTranslations("orden");
@@ -158,6 +149,15 @@ export default function OrdenRodajePanel({ fullName, canEdit = true }: { fullNam
 }
 
 // ---------------------------------------------------------------------------
+// Editor en-app: orden del día cinematográfico (CINEPACK). La impresión y la
+// exportación siguen usando CallsheetPrint (formato estándar de la industria).
+function odTono(intext: string, dn: string): "intdia" | "intnoche" | "extdia" | "extnoche" {
+  const ext = /ext/i.test(intext);
+  const noche = /noche|atardecer/i.test(dn);
+  if (ext) return noche ? "extnoche" : "extdia";
+  return noche ? "intnoche" : "intdia";
+}
+
 function CallsheetEditor({
   fila,
   onGuardar,
@@ -170,140 +170,156 @@ function CallsheetEditor({
   onImprimir: () => void;
 }) {
   const t = useTranslations("orden");
-  const citaciones = parseJSON<Par[]>(fila.datos.citaciones, []);
-  const localizaciones = parseJSON<Par[]>(fila.datos.localizaciones, []);
-  const llamadas = parseJSON<Par[]>(fila.datos.llamadas, []);
-  const reparto = parseJSON<Par[]>(fila.datos.reparto_individual, []);
-  const contactos = parseJSON<Par[]>(fila.datos.contactos, []);
-  const escenas = parseJSON<Escena[]>(fila.datos.escenas, []);
+  const d = fila.datos;
+  const citaciones = parseJSON<Par[]>(d.citaciones, []);
+  const localizaciones = parseJSON<Par[]>(d.localizaciones, []);
+  const llamadas = parseJSON<Par[]>(d.llamadas, []);
+  const reparto = parseJSON<Par[]>(d.reparto_individual, []);
+  const contactos = parseJSON<Par[]>(d.contactos, []);
+  const escenas = parseJSON<Escena[]>(d.escenas, []);
+  const climaChips = (d.clima ?? "").split("·").map((s) => s.trim()).filter(Boolean);
+  // Citación general: la primera hora que aparezca en las citaciones de equipo.
+  const horaGeneral = [...citaciones, ...llamadas].map((p) => p.valor).find((v) => /\d{1,2}:\d{2}/.test(v)) ?? "—";
 
   return (
     <>
-      <div className="hp-actions" style={{ paddingBottom: 0 }}>
-        <button className="btn acc" onClick={onImprimir}>{t("printView")}</button>
-        <button className="hp-del" onClick={onBorrar}>{t("deleteDay")}</button>
+      <div className="od-actionbar">
+        <button className="cp-btn cp-btn-acc" onClick={onImprimir}><Icon name="file-text" size={13} /> {t("printView")}</button>
+        <button className="cp-btn" onClick={onBorrar}><Icon name="trash" size={13} /> {t("deleteDay")}</button>
       </div>
 
-      <div className="hp-ficha" style={{ padding: "16px 30px" }}>
-        {CAMPOS_TEXTO.map((c) => (
-          <label className="hp-ficha-field" key={c.key}>
-            <span>{t(c.labelKey)}</span>
-            <input
-              type={c.key === "fecha" ? "date" : "text"}
-              defaultValue={fila.datos[c.key] ?? ""}
-              placeholder={c.placeholder}
-              onBlur={(e) => onGuardar({ [c.key]: e.target.value })}
-            />
-          </label>
-        ))}
-        <label className="hp-ficha-field" key="fecha">
-          <span>{t("fieldDate")}</span>
-          <input type="date" defaultValue={fila.datos.fecha ?? ""} onBlur={(e) => onGuardar({ fecha: e.target.value })} />
-        </label>
-      </div>
-
-      <div className="grid2" style={{ padding: "0 30px 22px" }}>
-        <ParListEditor titulo={t("generalCalls")} items={citaciones} onChange={(v) => onGuardar({ citaciones: JSON.stringify(v) })} placeholders={[t("phCrew"), t("phTime")]} />
-        <ParListEditor titulo={t("locations")} items={localizaciones} onChange={(v) => onGuardar({ localizaciones: JSON.stringify(v) })} placeholders={[t("phLocName"), t("phLocNote")]} />
-        <ParListEditor titulo={t("deptCalls")} items={llamadas} onChange={(v) => onGuardar({ llamadas: JSON.stringify(v) })} placeholders={[t("phDept"), t("phHour")]} />
-        <ParListEditor titulo={t("individualCast")} items={reparto} onChange={(v) => onGuardar({ reparto_individual: JSON.stringify(v) })} placeholders={[t("phCharActor"), t("phHourMakeup")]} />
-        <ParListEditor titulo={t("keyContacts")} items={contactos} onChange={(v) => onGuardar({ contactos: JSON.stringify(v) })} placeholders={[t("phRole"), t("phNamePhone")]} />
-      </div>
-
-      <div className="tool" style={{ margin: "0 30px 22px" }}>
-        <div className="tool-head"><span className="hex"></span><h3>{t("dayScenes")}</h3></div>
-        <div style={{ padding: "14px 18px" }}>
-          <EscenasEditor items={escenas} onChange={(v) => onGuardar({ escenas: JSON.stringify(v) })} />
+      <div className="od-head">
+        <div className="od-head-l">
+          <span className="od-pill">{t("title")}</span>
+          <div className="od-titlewrap">
+            <input className="od-mainset" defaultValue={d.set_principal ?? ""} placeholder={t("fieldMainSet")} onBlur={(e) => onGuardar({ set_principal: e.target.value })} />
+            <input className="od-prodco" defaultValue={d.productora ?? ""} placeholder={t("fieldProductionCo")} onBlur={(e) => onGuardar({ productora: e.target.value })} />
+          </div>
+        </div>
+        <div className="od-head-r">
+          <div className="od-metric"><span className="od-metric-l">{t("fieldDay")}</span><input className="od-metric-v od-day" defaultValue={d.dia ?? ""} onBlur={(e) => onGuardar({ dia: e.target.value })} /></div>
+          <div className="od-metric"><span className="od-metric-l">{t("fieldDate")}</span><input className="od-metric-v od-date" type="date" defaultValue={d.fecha ?? ""} onBlur={(e) => onGuardar({ fecha: e.target.value })} /></div>
+          <div className="od-metric od-metric-acc"><span className="od-metric-l">{t("generalCalls")}</span><span className="od-metric-v od-call">{horaGeneral}</span></div>
         </div>
       </div>
 
-      <label className="hp-ficha-field" style={{ padding: "0 30px 30px", display: "block" }}>
-        <span>{t("productionNotes")}</span>
-        <textarea
-          rows={3}
-          defaultValue={fila.datos.notas ?? ""}
-          onBlur={(e) => onGuardar({ notas: e.target.value })}
-        />
-      </label>
+      <div className="od-cond">
+        {climaChips.length > 0 && (
+          <div className="od-cond-chips">
+            <Icon name="sun" size={16} />
+            {climaChips.map((c, i) => <span className="od-chip" key={i}>{c}</span>)}
+          </div>
+        )}
+        <input className="od-cond-edit" defaultValue={d.clima ?? ""} placeholder={t("fieldWeather")} onBlur={(e) => onGuardar({ clima: e.target.value })} />
+      </div>
+
+      <div className="od-meta">
+        <OdField label={t("fieldSecondarySet")} value={d.set_secundario ?? ""} onSave={(v) => onGuardar({ set_secundario: v })} />
+        <OdField label={t("fieldUnit")} value={d.unidad ?? ""} onSave={(v) => onGuardar({ unidad: v })} />
+        <OdField label={t("fieldSceneSummary")} value={d.escenas_resumen ?? ""} onSave={(v) => onGuardar({ escenas_resumen: v })} placeholder="6 · 9 1/8" />
+      </div>
+
+      <OdSection icon="film" title={t("dayScenes")} extra={d.escenas_resumen}>
+        <EscenasStrips items={escenas} onChange={(v) => onGuardar({ escenas: JSON.stringify(v) })} />
+      </OdSection>
+
+      <OdSection icon="users" title={t("individualCast")}>
+        <OdParList items={reparto} onChange={(v) => onGuardar({ reparto_individual: JSON.stringify(v) })} ph={[t("phCharActor"), t("phHourMakeup")]} />
+      </OdSection>
+
+      <div className="od-2col">
+        <OdSection icon="clock" title={t("generalCalls")}>
+          <OdParList items={citaciones} onChange={(v) => onGuardar({ citaciones: JSON.stringify(v) })} ph={[t("phCrew"), t("phTime")]} />
+        </OdSection>
+        <OdSection icon="clock" title={t("deptCalls")}>
+          <OdParList items={llamadas} onChange={(v) => onGuardar({ llamadas: JSON.stringify(v) })} ph={[t("phDept"), t("phHour")]} />
+        </OdSection>
+      </div>
+
+      <div className="od-2col">
+        <OdSection icon="map-pin" title={t("locations")}>
+          <OdParList items={localizaciones} onChange={(v) => onGuardar({ localizaciones: JSON.stringify(v) })} ph={[t("phLocName"), t("phLocNote")]} />
+        </OdSection>
+        <OdSection icon="phone" title={t("keyContacts")}>
+          <OdParList items={contactos} onChange={(v) => onGuardar({ contactos: JSON.stringify(v) })} ph={[t("phRole"), t("phNamePhone")]} />
+        </OdSection>
+      </div>
+
+      <OdSection icon="alert-triangle" title={t("productionNotes")}>
+        <textarea className="od-notas" rows={3} defaultValue={d.notas ?? ""} placeholder={t("productionNotes")} onBlur={(e) => onGuardar({ notas: e.target.value })} />
+      </OdSection>
+
+      <OdSection icon="folder" title="">
+        <CarpetaArchivos departamento="General" herramientaId={`${GENERAL_ORDEN_RODAJE.id}-${fila.id}`} editable />
+      </OdSection>
     </>
   );
 }
 
-// ---------------------------------------------------------------------------
-function ParListEditor({
-  titulo,
-  items,
-  onChange,
-  placeholders,
-}: {
-  titulo: string;
-  items: Par[];
-  onChange: (v: Par[]) => void;
-  placeholders: [string, string];
-}) {
-  function set(i: number, key: keyof Par, v: string) {
-    onChange(items.map((it, idx) => (idx === i ? { ...it, [key]: v } : it)));
-  }
-  const t = useTranslations("orden");
+function OdSection({ icon, title, extra, children }: { icon: Parameters<typeof Icon>[0]["name"]; title: string; extra?: string; children: React.ReactNode }) {
   return (
-    <div className="mini">
-      <h4><span className="hex"></span>{titulo}</h4>
-      <ul style={{ gap: 6 }}>
-        {items.map((it, i) => (
-          <li key={i} style={{ gap: 6 }}>
-            <input className="hp-cell-input" defaultValue={it.label} placeholder={placeholders[0]} onBlur={(e) => set(i, "label", e.target.value)} />
-            <input className="hp-cell-input" style={{ maxWidth: 130 }} defaultValue={it.valor} placeholder={placeholders[1]} onBlur={(e) => set(i, "valor", e.target.value)} />
-            <button className="hp-del" onClick={() => onChange(items.filter((_, idx) => idx !== i))}>✕</button>
-          </li>
-        ))}
-      </ul>
-      <button className="btn" onClick={() => onChange([...items, { label: "", valor: "" }])}>{t("add")}</button>
+    <div className="od-sec-wrap">
+      {title && (
+        <div className="od-sec"><span className="od-sec-ico"><Icon name={icon} size={14} /></span><span className="od-sec-t">{title}</span>{extra && <span className="od-sec-x">{extra}</span>}</div>
+      )}
+      {children}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-const ESC_COLS: { key: keyof Escena; labelKey: string; w?: number }[] = [
-  { key: "hora", labelKey: "colTime", w: 70 },
-  { key: "esc", labelKey: "colScene", w: 50 },
-  { key: "intext", labelKey: "colIntExt", w: 70 },
-  { key: "dianoche", labelKey: "colDayNight", w: 90 },
-  { key: "set", labelKey: "colSetDesc" },
-  { key: "personajes", labelKey: "colChars" },
-  { key: "paginas", labelKey: "colPages", w: 60 },
-];
+function OdField({ label, value, onSave, placeholder }: { label: string; value: string; onSave: (v: string) => void; placeholder?: string }) {
+  return (
+    <label className="od-field">
+      <span>{label}</span>
+      <input defaultValue={value} placeholder={placeholder} onBlur={(e) => onSave(e.target.value)} />
+    </label>
+  );
+}
 
-function EscenasEditor({ items, onChange }: { items: Escena[]; onChange: (v: Escena[]) => void }) {
+function OdParList({ items, onChange, ph }: { items: Par[]; onChange: (v: Par[]) => void; ph: [string, string] }) {
+  const t = useTranslations("orden");
+  function set(i: number, key: keyof Par, v: string) {
+    onChange(items.map((it, idx) => (idx === i ? { ...it, [key]: v } : it)));
+  }
+  return (
+    <div className="od-list">
+      {items.map((it, i) => (
+        <div className="od-list-row" key={i}>
+          <input className="od-list-label" defaultValue={it.label} placeholder={ph[0]} onBlur={(e) => set(i, "label", e.target.value)} />
+          <input className="od-list-val" defaultValue={it.valor} placeholder={ph[1]} onBlur={(e) => set(i, "valor", e.target.value)} />
+          <button className="od-x" onClick={() => onChange(items.filter((_, idx) => idx !== i))} title={t("deleteDay")}><Icon name="x" size={12} /></button>
+        </div>
+      ))}
+      <button className="cp-btn od-add" onClick={() => onChange([...items, { label: "", valor: "" }])}><Icon name="plus" size={12} /> {t("add")}</button>
+    </div>
+  );
+}
+
+function EscenasStrips({ items, onChange }: { items: Escena[]; onChange: (v: Escena[]) => void }) {
   const t = useTranslations("orden");
   function set(i: number, key: keyof Escena, v: string) {
     onChange(items.map((it, idx) => (idx === i ? { ...it, [key]: v } : it)));
   }
   const vacia: Escena = { hora: "", esc: "", intext: "", dianoche: "", set: "", personajes: "", paginas: "" };
   return (
-    <div className="hp-table-wrap">
-      <table className="hp-table">
-        <thead>
-          <tr>
-            {ESC_COLS.map((c) => <th key={c.key} style={{ width: c.w }}>{t(c.labelKey)}</th>)}
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((it, i) => (
-            <tr key={i}>
-              {ESC_COLS.map((c) => (
-                <td key={c.key}>
-                  <input className="hp-cell-input" defaultValue={it[c.key]} onBlur={(e) => set(i, c.key, e.target.value)} />
-                </td>
-              ))}
-              <td><button className="hp-del" onClick={() => onChange(items.filter((_, idx) => idx !== i))}>✕</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="hp-actions">
-        <button className="btn acc" onClick={() => onChange([...items, vacia])}>{t("addScene")}</button>
-      </div>
+    <div className="od-plan">
+      {items.map((it, i) => (
+        <div className={`od-strip od-${odTono(it.intext, it.dianoche)}`} key={i}>
+          <div className="od-strip-r1">
+            <input className="od-strip-hora" defaultValue={it.hora} placeholder={t("colTime")} onBlur={(e) => set(i, "hora", e.target.value)} />
+            <input className="od-strip-esc" defaultValue={it.esc} placeholder="#" onBlur={(e) => set(i, "esc", e.target.value)} />
+            <EstadoSeg valor={it.intext} opciones={["INT", "EXT", "INT/EXT"]} onPick={(v) => set(i, "intext", v)} editable />
+            <EstadoSeg valor={it.dianoche} opciones={["Día", "Noche", "Amanecer", "Atardecer"]} onPick={(v) => set(i, "dianoche", v)} editable />
+            <input className="od-strip-pag" defaultValue={it.paginas} placeholder="0/8" onBlur={(e) => set(i, "paginas", e.target.value)} />
+            <button className="od-x" onClick={() => onChange(items.filter((_, idx) => idx !== i))}><Icon name="x" size={13} /></button>
+          </div>
+          <div className="od-strip-r2">
+            <input className="od-strip-set" defaultValue={it.set} placeholder={t("colSetDesc")} onBlur={(e) => set(i, "set", e.target.value)} />
+            <input className="od-strip-chars" defaultValue={it.personajes} placeholder={t("colChars")} onBlur={(e) => set(i, "personajes", e.target.value)} />
+          </div>
+        </div>
+      ))}
+      <button className="cp-btn cp-btn-acc od-add" onClick={() => onChange([...items, vacia])}><Icon name="plus" size={13} /> {t("addScene")}</button>
     </div>
   );
 }

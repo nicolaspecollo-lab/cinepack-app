@@ -2688,3 +2688,81 @@
   .cp-dash .sb-elenco-edit{ width:100%; }
   .cp-dash .hp-carpeta-grid{ grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); }
 }
+
+/* ===========================================================================
+   ORDEN DEL DÍA (call sheet) — vista en-app cinematográfica.
+   La impresión/exportación usa CallsheetPrint (.cs-print), intacto.
+   Acento fijo en cian: el call sheet es un documento de Producción.
+   =========================================================================== */
+.cp-dash .od-actionbar{ display:flex; gap:8px; padding:14px var(--gutter) 0; }
+.cp-dash .od-head{ display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; padding:16px var(--gutter); }
+.cp-dash .od-head-l{ flex:1; min-width:200px; display:flex; flex-direction:column; gap:7px; }
+.cp-dash .od-pill{ align-self:flex-start; font-family:'Poppins',sans-serif; font-weight:700; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; background:var(--cyan); color:#0D0D12; padding:3px 9px; }
+.cp-dash .od-titlewrap{ display:flex; flex-direction:column; gap:2px; }
+.cp-dash .od-mainset{ font-family:'Poppins',sans-serif; font-weight:800; font-size:25px; line-height:1.05; color:var(--text); background:none; border:none; border-bottom:1px solid transparent; padding:0; }
+.cp-dash .od-mainset:focus{ outline:none; border-bottom-color:var(--cyan); }
+.cp-dash .od-prodco{ font-size:12px; color:var(--muted); background:none; border:none; padding:0; }
+.cp-dash .od-prodco:focus{ outline:none; }
+.cp-dash .od-head-r{ display:flex; gap:9px; flex-wrap:wrap; }
+.cp-dash .od-metric{ background:var(--bg-2); border:1px solid var(--line); padding:9px 13px; text-align:center; display:flex; flex-direction:column; gap:3px; min-width:78px; }
+.cp-dash .od-metric-l{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; }
+.cp-dash .od-metric-v{ font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; color:var(--text); background:none; border:none; text-align:center; padding:0; }
+.cp-dash .od-metric-v:focus{ outline:none; }
+.cp-dash .od-day{ width:54px; }
+.cp-dash .od-date{ width:130px; font-size:13px; }
+.cp-dash .od-metric-acc{ border-color:var(--cyan); }
+.cp-dash .od-metric-acc .od-metric-l{ color:var(--cyan); }
+.cp-dash .od-call{ font-family:'Courier New',monospace; font-size:22px; color:var(--cyan); }
+
+.cp-dash .od-cond{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:11px var(--gutter); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.cp-dash .od-cond-chips{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; color:var(--yellow); }
+.cp-dash .od-chip{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; color:var(--text); background:var(--hl2); border:1px solid var(--line); padding:3px 9px; }
+.cp-dash .od-cond-edit{ flex:1; min-width:200px; font-size:12px; color:var(--muted); background:none; border:none; border-bottom:1px dashed var(--line); padding:4px 0; }
+.cp-dash .od-cond-edit:focus{ outline:none; border-bottom-color:var(--cyan); color:var(--text); }
+
+.cp-dash .od-meta{ display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; padding:14px var(--gutter); }
+.cp-dash .od-field{ display:flex; flex-direction:column; gap:3px; }
+.cp-dash .od-field span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .od-field input{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:13px; color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:6px 9px; }
+.cp-dash .od-field input:focus{ outline:none; border-color:var(--cyan); }
+
+.cp-dash .od-sec-wrap{ padding:0; }
+.cp-dash .od-sec{ display:flex; align-items:center; gap:9px; padding:14px var(--gutter) 9px; border-top:1px solid var(--line); }
+.cp-dash .od-sec-ico{ color:var(--cyan); display:flex; }
+.cp-dash .od-sec-t{ font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text); }
+.cp-dash .od-sec-x{ margin-left:auto; font-size:11px; color:var(--muted); }
+.cp-dash .od-2col{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0 24px; }
+
+.cp-dash .od-list{ display:flex; flex-direction:column; gap:5px; padding:0 var(--gutter) 8px; }
+.cp-dash .od-list-row{ display:flex; align-items:center; gap:8px; }
+.cp-dash .od-list-label{ flex:1; min-width:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:13px; color:var(--text); background:var(--bg-2); border:1px solid var(--line); padding:6px 9px; }
+.cp-dash .od-list-val{ width:140px; font-family:'Courier New',monospace; font-size:13px; color:var(--text); background:var(--bg-2); border:1px solid var(--line); padding:6px 9px; }
+.cp-dash .od-list-label:focus, .cp-dash .od-list-val:focus{ outline:none; border-color:var(--cyan); }
+.cp-dash .od-x{ background:none; border:none; color:#55555f; cursor:pointer; padding:4px; flex-shrink:0; }
+.cp-dash .od-x:hover{ color:var(--rose); }
+.cp-dash .od-add{ align-self:flex-start; margin-top:3px; }
+
+.cp-dash .od-plan{ display:flex; flex-direction:column; gap:5px; padding:0 var(--gutter) 8px; }
+.cp-dash .od-strip{ border:1px solid var(--line); border-left-width:5px; background:var(--bg-2); padding:8px 11px; display:flex; flex-direction:column; gap:6px; }
+.cp-dash .od-intdia{ border-left-color:#F4F4F6; }
+.cp-dash .od-intnoche{ border-left-color:var(--blue); background:rgba(31,125,226,0.08); }
+.cp-dash .od-extdia{ border-left-color:var(--yellow); background:rgba(245,226,106,0.06); }
+.cp-dash .od-extnoche{ border-left-color:var(--green); background:rgba(82,236,100,0.06); }
+.cp-dash .od-strip-r1{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.cp-dash .od-strip-r2{ display:flex; align-items:center; gap:10px; }
+.cp-dash .od-strip-hora{ width:60px; font-family:'Courier New',monospace; font-weight:700; font-size:13px; color:var(--cyan); background:none; border:1px solid var(--line); padding:4px 6px; text-align:center; }
+.cp-dash .od-strip-esc{ width:42px; font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; color:var(--text); background:none; border:none; text-align:center; padding:0; }
+.cp-dash .od-strip-esc:focus, .cp-dash .od-strip-hora:focus{ outline:none; }
+.cp-dash .od-strip-pag{ width:54px; font-family:'Courier New',monospace; font-weight:700; font-size:13px; color:var(--text); background:none; border:1px solid var(--line); padding:4px 6px; text-align:center; margin-left:auto; }
+.cp-dash .od-strip-pag:focus{ outline:none; border-color:var(--cyan); }
+.cp-dash .od-strip-set{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-weight:600; font-size:13px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .od-strip-chars{ width:160px; font-size:12px; color:var(--muted); background:none; border:none; border-left:1px solid var(--line); padding:0 0 0 10px; }
+.cp-dash .od-strip-set:focus, .cp-dash .od-strip-chars:focus{ outline:none; }
+.cp-dash .od-notas{ margin:0 var(--gutter) 10px; width:calc(100% - 2*var(--gutter)); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:13px; color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:9px; resize:vertical; }
+.cp-dash .od-notas:focus{ outline:none; border-color:var(--cyan); }
+
+@media (max-width:640px){
+  .cp-dash .od-head-r{ width:100%; }
+  .cp-dash .od-strip-chars{ width:100%; border-left:none; padding-left:0; border-top:1px dashed var(--line); padding-top:5px; }
+  .cp-dash .od-strip-r2{ flex-direction:column; align-items:stretch; }
+}

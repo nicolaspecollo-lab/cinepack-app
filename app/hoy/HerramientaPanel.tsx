@@ -141,7 +141,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
 // (que arrastra el desplegable del SO y rompe la estética). Celdas que se
 // seleccionan, esquinas rectas; la activa se colorea por su tono semántico
 // (verde/ámbar/rojo/cian) con texto casi-negro, o por el acento del depto.
-function EstadoSeg({
+export function EstadoSeg({
   valor,
   opciones,
   onPick,
@@ -3546,7 +3546,7 @@ function bytesLegibles(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function CarpetaArchivos({
+export function CarpetaArchivos({
   departamento,
   herramientaId,
   editable,
