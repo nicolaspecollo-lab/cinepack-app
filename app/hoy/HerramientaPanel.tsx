@@ -409,6 +409,7 @@ function HerramientaData({
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
           editable={editable}
+          departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
@@ -973,6 +974,9 @@ const PLANO_BOARD_IDS = new Set([
   "foto-plan-camara",
   "foto-guion-tecnico",
   "foto-orden-dia-camara",
+  "foto-movimientos",
+  "foto-plan-iluminacion",
+  "luz-plan-iluminacion",
 ]);
 // La orden del día es una secuencia de ejecución del día, no un agrupado
 // por escena (un mismo set puede mezclar varias escenas en el orden real).
@@ -982,6 +986,7 @@ function PlanoBoard({
   columnas,
   filas,
   editable,
+  departamento,
   herramientaId,
   onCrear,
   onGuardar,
@@ -990,6 +995,7 @@ function PlanoBoard({
   columnas: Columna[];
   filas: Fila[];
   editable: boolean;
+  departamento: string;
   herramientaId: string;
   onCrear: () => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
@@ -1111,6 +1117,17 @@ function PlanoBoard({
           </div>
         )}
         {colLink && <LinkCell valor={f.datos?.[colLink.key] ?? ""} editable={editable} onSave={(v) => set(f, colLink.key, v)} />}
+        {colArchivo && (
+          <ArchivoCell
+            path={f.datos?.[colArchivo.key] ?? ""}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey={colArchivo.key}
+            onSave={(v) => set(f, colArchivo.key, v)}
+          />
+        )}
         {colsNotas.map((c) => (
           <label className="hp-plano-note" key={c.key}>
             <span>{c.label}</span>
