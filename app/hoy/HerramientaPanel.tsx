@@ -135,7 +135,9 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
     id === "prod-transporte" ||
+    id === "prod-hojas-ruta" ||
     id === "prod-plan-semana" ||
+    id === "prod-plan-locaciones-jornada" ||
     CATERING_IDS.has(id)
   );
 }
@@ -674,7 +676,7 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.id === "prod-transporte" && (
+      {(herramienta.id === "prod-transporte" || herramienta.id === "prod-hojas-ruta") && (
         <TransporteBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -696,7 +698,7 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.id === "prod-plan-semana" && (
+      {(herramienta.id === "prod-plan-semana" || herramienta.id === "prod-plan-locaciones-jornada") && (
         <PlanSemanaBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -1967,6 +1969,7 @@ const FICHA_EQUIPO_IDS = new Set([
   "arte-ficha-maquillaje",
   "prod-localizaciones-scouting",
   "prod-material-prestado",
+  "prod-proveedores-detalle",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -2136,7 +2139,7 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo", "prod-agenda-coord"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo", "prod-agenda-coord", "prod-partes-diarios"]);
 
 function AgendaDia({
   columnas,
@@ -3201,6 +3204,7 @@ const DOC_STATUS_IDS = new Set([
   "ej-cronograma-produccion",
   "prod-permisos",
   "prod-equipo-tecnico",
+  "prod-reporte-incidencias-loc",
 ]);
 
 function DocStatusBoard({
@@ -3997,11 +4001,14 @@ function TransporteBoard({
   const t = useTranslations("hp");
   const label = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
   const colEstado = columnas.find((c) => c.tipo === "estado");
-  const colNotas = columnas.find((c) => c.tipo === "largo");
+  const colNotas = columnas.find((c) => c.tipo === "largo" && c.key !== "pasajeros");
+  const kSalida = columnas.find((c) => c.key === "hora_salida" || c.key === "salida")?.key ?? "hora_salida";
+  const kLlegada = columnas.find((c) => c.key === "hora_llegada" || c.key === "llegada")?.key ?? "hora_llegada";
+  const hasConductor = columnas.some((c) => c.key === "conductor");
   function set(f: Fila, k: string, v: string) {
     onGuardar(f.id, { ...f.datos, [k]: v }, f);
   }
-  const ordenadas = [...filas].sort((a, b) => (a.datos?.hora_salida ?? "").localeCompare(b.datos?.hora_salida ?? ""));
+  const ordenadas = [...filas].sort((a, b) => (a.datos?.[kSalida] ?? "").localeCompare(b.datos?.[kSalida] ?? ""));
 
   function Tarjeta(f: Fila) {
     return (
@@ -4018,10 +4025,10 @@ function TransporteBoard({
           <input className="tr-loc" defaultValue={f.datos?.destino ?? ""} placeholder={label("destino")} readOnly={!editable} onBlur={(e) => set(f, "destino", e.target.value)} />
         </div>
         <div className="tr-meta">
-          <span className="tr-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.hora_salida ?? ""} placeholder={label("hora_salida")} readOnly={!editable} onBlur={(e) => set(f, "hora_salida", e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.hora_llegada ?? ""} placeholder={label("hora_llegada")} readOnly={!editable} onBlur={(e) => set(f, "hora_llegada", e.target.value)} /></span>
+          <span className="tr-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.[kSalida] ?? ""} placeholder={label(kSalida)} readOnly={!editable} onBlur={(e) => set(f, kSalida, e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.[kLlegada] ?? ""} placeholder={label(kLlegada)} readOnly={!editable} onBlur={(e) => set(f, kLlegada, e.target.value)} /></span>
         </div>
         <div className="tr-people">
-          <label className="tr-field"><span>{label("conductor")}</span><input defaultValue={f.datos?.conductor ?? ""} readOnly={!editable} onBlur={(e) => set(f, "conductor", e.target.value)} /></label>
+          {hasConductor && <label className="tr-field"><span>{label("conductor")}</span><input defaultValue={f.datos?.conductor ?? ""} readOnly={!editable} onBlur={(e) => set(f, "conductor", e.target.value)} /></label>}
           <label className="tr-field"><span>{label("pasajeros")}</span><input defaultValue={f.datos?.pasajeros ?? ""} readOnly={!editable} onBlur={(e) => set(f, "pasajeros", e.target.value)} /></label>
         </div>
         {colNotas && (
@@ -4154,6 +4161,10 @@ function PlanSemanaBoard({
   const label = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
   const colEstado = columnas.find((c) => c.tipo === "estado");
   const colNotas = columnas.find((c) => c.tipo === "largo");
+  const kLoc = columnas.find((c) => c.key === "localizacion" || c.key === "locacion")?.key ?? "localizacion";
+  const kFin = columnas.find((c) => c.key === "hora_fin_estimada" || c.key === "hora_fin")?.key ?? "hora_fin_estimada";
+  const hasCrew = columnas.some((c) => c.key === "crew_necesario");
+  const hasExtras = columnas.some((c) => c.key === "extras_necesarios");
   function set(f: Fila, k: string, v: string) {
     onGuardar(f.id, { ...f.datos, [k]: v }, f);
   }
@@ -4168,13 +4179,15 @@ function PlanSemanaBoard({
           {colEstado && <EstadoSeg valor={estadoVal} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={editable} chip color />}
           {editable && <button className="od-x" onClick={() => onBorrar(f.id)} title={t("delete")}><Icon name="x" size={13} /></button>}
         </div>
-        <input className="ps-loc" defaultValue={f.datos?.localizacion ?? ""} placeholder={label("localizacion")} readOnly={!editable} onBlur={(e) => set(f, "localizacion", e.target.value)} />
+        <input className="ps-loc" defaultValue={f.datos?.[kLoc] ?? ""} placeholder={label(kLoc)} readOnly={!editable} onBlur={(e) => set(f, kLoc, e.target.value)} />
         <input className="ps-esc" defaultValue={f.datos?.escenas ?? ""} placeholder={label("escenas")} readOnly={!editable} onBlur={(e) => set(f, "escenas", e.target.value)} />
-        <div className="ps-counts">
-          <span className="ps-count"><Icon name="users" size={13} /><input type="number" defaultValue={f.datos?.crew_necesario ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, "crew_necesario", e.target.value)} /><span>{label("crew_necesario")}</span></span>
-          <span className="ps-count"><input type="number" defaultValue={f.datos?.extras_necesarios ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, "extras_necesarios", e.target.value)} /><span>{label("extras_necesarios")}</span></span>
-        </div>
-        <div className="ps-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.hora_inicio ?? ""} readOnly={!editable} placeholder={label("hora_inicio")} onBlur={(e) => set(f, "hora_inicio", e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.hora_fin_estimada ?? ""} readOnly={!editable} placeholder={label("hora_fin_estimada")} onBlur={(e) => set(f, "hora_fin_estimada", e.target.value)} /></div>
+        {(hasCrew || hasExtras) && (
+          <div className="ps-counts">
+            {hasCrew && <span className="ps-count"><Icon name="users" size={13} /><input type="number" defaultValue={f.datos?.crew_necesario ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, "crew_necesario", e.target.value)} /><span>{label("crew_necesario")}</span></span>}
+            {hasExtras && <span className="ps-count"><input type="number" defaultValue={f.datos?.extras_necesarios ?? ""} readOnly={!editable} placeholder="0" onBlur={(e) => set(f, "extras_necesarios", e.target.value)} /><span>{label("extras_necesarios")}</span></span>}
+          </div>
+        )}
+        <div className="ps-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.hora_inicio ?? ""} readOnly={!editable} placeholder={label("hora_inicio")} onBlur={(e) => set(f, "hora_inicio", e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.[kFin] ?? ""} readOnly={!editable} placeholder={label(kFin)} onBlur={(e) => set(f, kFin, e.target.value)} /></div>
         {colNotas && <textarea className="ps-notas" defaultValue={f.datos?.[colNotas.key] ?? ""} placeholder={colNotas.label} readOnly={!editable} rows={1} onBlur={(e) => set(f, colNotas.key, e.target.value)} />}
       </div>
     );
