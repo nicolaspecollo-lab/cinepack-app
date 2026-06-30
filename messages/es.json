@@ -385,7 +385,8 @@
     "visMini": "Visionar",
     "visMiniDone": "Visionado ✓",
     "noCharacter": "Sin personaje",
-    "noScene": "Sin escena"
+    "noScene": "Sin escena",
+    "pendMoveTo": "Mover a…"
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",

@@ -417,7 +417,23 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "tabla" && herramienta.id !== "foto-marcas-foco" && !PLANO_BOARD_IDS.has(herramienta.id) && (
+      {herramienta.tipo === "tabla" && PENDIENTES_BOARD_IDS.has(herramienta.id) && (
+        <PendientesBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" &&
+        herramienta.id !== "foto-marcas-foco" &&
+        !PLANO_BOARD_IDS.has(herramienta.id) &&
+        !PENDIENTES_BOARD_IDS.has(herramienta.id) && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -1174,6 +1190,183 @@ function PlanoBoard({
         ))
       ) : (
         <div className="hp-plano-grid">{ordenar(filas).map(Tarjeta)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Tablero de pendientes (procurement kanban) ----
+// Props pendientes de conseguir, petición de equipo de iluminación: el
+// trabajo real acá es "¿qué nos falta todavía y qué tan urgente es?", no
+// una fila de tabla. Columnas Kanban por estado (en el orden que ya definía
+// la herramienta), tarjeta con prioridad/urgencia destacada.
+const PENDIENTES_BOARD_IDS = new Set(["arte-props-pendientes", "luz-peticion-equipo"]);
+
+function PendientesBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colEstado = columnas.find((c) => c.tipo === "estado" && c.key === "estado");
+  const colTitulo = columnas[0];
+  const colPrioridad = columnas.find((c) => c.tipo === "estado" && (c.key === "prioridad" || c.key === "urgencia"));
+  const colArchivo = columnas.find((c) => c.tipo === "archivo");
+  const colLink = columnas.find((c) => c.tipo === "link");
+  const usados = new Set(
+    [colEstado?.key, colTitulo?.key, colPrioridad?.key, colArchivo?.key, colLink?.key].filter(Boolean) as string[]
+  );
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
+
+  function Tarjeta(f: Fila) {
+    const prioVal = colPrioridad ? f.datos?.[colPrioridad.key] ?? "" : "";
+    return (
+      <div className="hp-pend-card" key={f.id}>
+        <div className="hp-pend-head">
+          <input
+            className="hp-pend-titulo"
+            defaultValue={colTitulo ? f.datos?.[colTitulo.key] ?? "" : ""}
+            placeholder={colTitulo?.label ?? ""}
+            readOnly={!editable}
+            onBlur={(e) => colTitulo && set(f, colTitulo.key, e.target.value)}
+          />
+          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        {colPrioridad && (
+          <select
+            className={`hp-pend-prio tono-${estadoTono(prioVal)}`}
+            defaultValue={prioVal}
+            disabled={!editable}
+            onChange={(e) => set(f, colPrioridad.key, e.target.value)}
+          >
+            <option value="">{t("noStatus")}</option>
+            {(colPrioridad.opciones ?? []).map((op) => (
+              <option key={op} value={op}>{op}</option>
+            ))}
+          </select>
+        )}
+        {colsChip.length > 0 && (
+          <div className="hp-pend-specs">
+            {colsChip.map((c) => (
+              <label className="hp-pend-chip" key={c.key}>
+                <span className="hp-pend-chip-label">{c.label}</span>
+                {c.tipo === "estado" ? (
+                  <select
+                    className="hp-pend-chip-select"
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    disabled={!editable}
+                    onChange={(e) => set(f, c.key, e.target.value)}
+                  >
+                    <option value="">—</option>
+                    {(c.opciones ?? []).map((op) => (
+                      <option key={op} value={op}>{op}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="hp-pend-chip-input"
+                    type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : c.tipo === "money" ? "number" : "text"}
+                    defaultValue={f.datos?.[c.key] ?? ""}
+                    readOnly={!editable}
+                    placeholder="—"
+                    onBlur={(e) => set(f, c.key, e.target.value)}
+                  />
+                )}
+              </label>
+            ))}
+          </div>
+        )}
+        {colsNotas.map((c) => (
+          <textarea
+            key={c.key}
+            className="hp-pend-nota"
+            defaultValue={c.key in (f.datos ?? {}) ? f.datos[c.key] : ""}
+            placeholder={c.label}
+            readOnly={!editable}
+            onBlur={(e) => set(f, c.key, e.target.value)}
+            rows={2}
+          />
+        ))}
+        {colLink && <LinkCell valor={f.datos?.[colLink.key] ?? ""} editable={editable} onSave={(v) => set(f, colLink.key, v)} />}
+        {colArchivo && (
+          <ArchivoCell
+            path={f.datos?.[colArchivo.key] ?? ""}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey={colArchivo.key}
+            onSave={(v) => set(f, colArchivo.key, v)}
+          />
+        )}
+        {editable && colEstado && (
+          <select
+            className="hp-pend-mover"
+            value={f.datos?.[colEstado.key] ?? ""}
+            onChange={(e) => set(f, colEstado.key, e.target.value)}
+          >
+            <option value="" disabled>{t("pendMoveTo")}</option>
+            {(colEstado.opciones ?? []).map((op) => (
+              <option key={op} value={op}>{op}</option>
+            ))}
+          </select>
+        )}
+      </div>
+    );
+  }
+
+  if (!colEstado) return null;
+  const columnasKanban = [...(colEstado.opciones ?? []), t("noStatus")];
+  const porEstado = columnasKanban.map((op) => ({
+    nombre: op,
+    filas: filas.filter((f) => (f.datos?.[colEstado.key] ?? "") === op || (!f.datos?.[colEstado.key] && op === t("noStatus"))),
+  }));
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-pend-board">
+          {porEstado.map((col) => (
+            <div className={`hp-pend-col tono-${estadoTono(col.nombre)}`} key={col.nombre}>
+              <div className="hp-pend-col-head">
+                <span>{col.nombre}</span>
+                <span className="hp-pend-col-count">{col.filas.length}</span>
+              </div>
+              <div className="hp-pend-col-body">{col.filas.map(Tarjeta)}</div>
+            </div>
+          ))}
+        </div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">

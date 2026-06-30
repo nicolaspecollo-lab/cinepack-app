@@ -385,7 +385,8 @@
     "visMini": "View",
     "visMiniDone": "Viewed ✓",
     "noCharacter": "No character",
-    "noScene": "No scene"
+    "noScene": "No scene",
+    "pendMoveTo": "Move to…"
   },
   "herr": {
     "accesos-equipo": "Team access",

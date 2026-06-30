@@ -385,7 +385,8 @@
     "visMini": "Visiona",
     "visMiniDone": "Visionat ✓",
     "noCharacter": "Sense personatge",
-    "noScene": "Sense escena"
+    "noScene": "Sense escena",
+    "pendMoveTo": "Mou a…"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

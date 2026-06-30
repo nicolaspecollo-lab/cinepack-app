@@ -2060,3 +2060,68 @@
 @media (max-width:640px){
   .cp-dash .hp-plano-grid{ grid-template-columns:1fr; padding:var(--sp-3) var(--gutter); gap:var(--sp-3); }
 }
+
+/* Tablero de pendientes (procurement kanban): props/equipo por conseguir,
+   organizado por estado real de gestión — la pregunta que importa es
+   "¿qué falta y qué tan urgente es?", no una lista plana. */
+.cp-dash .hp-pend-board{
+  display:flex; gap:var(--sp-3); padding:var(--sp-3) var(--gutter) var(--sp-4);
+  overflow-x:auto; align-items:flex-start;
+}
+.cp-dash .hp-pend-col{
+  flex:0 0 270px; background:var(--hl1); border:1px solid var(--line); border-top:3px solid var(--muted);
+  display:flex; flex-direction:column; max-height:calc(100vh - 260px);
+}
+.cp-dash .hp-pend-col.tono-ok{ border-top-color:var(--lime); }
+.cp-dash .hp-pend-col.tono-warn{ border-top-color:var(--amber); }
+.cp-dash .hp-pend-col.tono-bad{ border-top-color:var(--rose); }
+.cp-dash .hp-pend-col.tono-info{ border-top-color:var(--cyan); }
+.cp-dash .hp-pend-col-head{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2);
+  padding:var(--sp-2) var(--sp-3); font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-sm);
+  color:var(--text); border-bottom:1px solid var(--line); flex-shrink:0;
+}
+.cp-dash .hp-pend-col-count{
+  font-size:var(--fs-xs); color:var(--muted); background:var(--hl3); padding:1px 7px; border-radius:10px;
+}
+.cp-dash .hp-pend-col-body{ display:flex; flex-direction:column; gap:var(--sp-2); padding:var(--sp-2); overflow-y:auto; }
+.cp-dash .hp-pend-card{
+  background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-2) var(--sp-3);
+  display:flex; flex-direction:column; gap:6px;
+}
+.cp-dash .hp-pend-head{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-pend-titulo{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text);
+  background:none; border:none; padding:0; flex:1; min-width:0;
+}
+.cp-dash .hp-pend-titulo:focus{ outline:none; }
+.cp-dash .hp-pend-prio{
+  align-self:flex-start; font-size:var(--fs-xs); font-weight:600; font-family:'Poppins',sans-serif;
+  border:none; padding:2px 8px; background:var(--hl2); color:var(--muted); cursor:pointer;
+}
+.cp-dash .hp-pend-prio.tono-ok{ background:rgba(159,232,112,0.14); color:var(--lime); }
+.cp-dash .hp-pend-prio.tono-warn{ background:rgba(245,166,35,0.14); color:var(--amber); }
+.cp-dash .hp-pend-prio.tono-bad{ background:rgba(255,107,107,0.14); color:var(--rose); }
+.cp-dash .hp-pend-prio.tono-info{ background:rgba(17,194,220,0.12); color:var(--cyan); }
+.cp-dash .hp-pend-specs{ display:flex; flex-wrap:wrap; gap:6px; }
+.cp-dash .hp-pend-chip{ display:flex; flex-direction:column; gap:1px; background:var(--hl1); border:1px solid var(--line); padding:3px 7px; }
+.cp-dash .hp-pend-chip-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-pend-chip-input, .cp-dash .hp-pend-chip-select{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:var(--fs-xs); color:var(--text); background:none; border:none; padding:0; min-width:30px;
+}
+.cp-dash .hp-pend-chip-input:focus, .cp-dash .hp-pend-chip-select:focus{ outline:none; }
+.cp-dash .hp-pend-nota{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical;
+}
+.cp-dash .hp-pend-nota:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+.cp-dash .hp-pend-mover{
+  align-self:flex-start; font-size:11px; font-family:'Poppins',sans-serif; color:var(--muted);
+  background:none; border:1px solid var(--line); padding:3px 7px; cursor:pointer;
+}
+.cp-dash .hp-pend-mover:hover{ border-color:var(--acc); color:var(--text); }
+
+@media (max-width:640px){
+  .cp-dash .hp-pend-col{ flex-basis:78vw; }
+}
