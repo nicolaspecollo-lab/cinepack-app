@@ -2337,3 +2337,8 @@
   .cp-dash .hp-agenda-card{ flex-direction:column; }
   .cp-dash .hp-agenda-card .hp-archivo{ width:100%; }
 }
+
+/* Ficha de equipo: chip especial para una segunda columna de tipo
+   "archivo" (ej. foto de estado actual + foto de resultado) — necesita
+   más ancho que un chip de texto normal. */
+.cp-dash .hp-fe-chip-archivo{ flex-basis:100%; }

@@ -1781,6 +1781,10 @@ const FICHA_EQUIPO_IDS = new Set([
   "arte-inventario-atrezzo",
   "arte-tabla-vestuario",
   "maq-inventario-productos",
+  "arte-armamento-especial",
+  "vest-mantenimiento",
+  "arte-ambientacion-ext",
+  "arte-localizaciones-arte",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -1879,33 +1883,53 @@ function FichaEquipo({
           )}
           {colsChip.length > 0 && (
             <div className="hp-fe-specs">
-              {colsChip.map((c) => (
-                <label className="hp-fe-chip" key={c.key}>
-                  <span className="hp-fe-chip-label">{c.label}</span>
-                  {c.tipo === "estado" ? (
-                    <select
-                      className="hp-fe-chip-select"
-                      defaultValue={f.datos?.[c.key] ?? ""}
-                      disabled={!editable}
-                      onChange={(e) => set(f, c.key, e.target.value)}
-                    >
-                      <option value="">—</option>
-                      {(c.opciones ?? []).map((op) => (
-                        <option key={op} value={op}>{op}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      className="hp-fe-chip-input"
-                      type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : c.tipo === "money" ? "number" : "text"}
-                      defaultValue={f.datos?.[c.key] ?? ""}
-                      readOnly={!editable}
-                      placeholder="—"
-                      onBlur={(e) => set(f, c.key, e.target.value)}
+              {colsChip.map((c) =>
+                c.tipo === "archivo" ? (
+                  <div className="hp-fe-chip hp-fe-chip-archivo" key={c.key}>
+                    <span className="hp-fe-chip-label">{c.label}</span>
+                    <ArchivoCell
+                      path={f.datos?.[c.key] ?? ""}
+                      editable={editable}
+                      departamento={departamento}
+                      herramientaId={herramientaId}
+                      filaId={f.id}
+                      colKey={c.key}
+                      onSave={(v) => set(f, c.key, v)}
                     />
-                  )}
-                </label>
-              ))}
+                  </div>
+                ) : c.tipo === "link" ? (
+                  <div className="hp-fe-chip" key={c.key}>
+                    <span className="hp-fe-chip-label">{c.label}</span>
+                    <LinkCell valor={f.datos?.[c.key] ?? ""} editable={editable} onSave={(v) => set(f, c.key, v)} />
+                  </div>
+                ) : (
+                  <label className="hp-fe-chip" key={c.key}>
+                    <span className="hp-fe-chip-label">{c.label}</span>
+                    {c.tipo === "estado" ? (
+                      <select
+                        className="hp-fe-chip-select"
+                        defaultValue={f.datos?.[c.key] ?? ""}
+                        disabled={!editable}
+                        onChange={(e) => set(f, c.key, e.target.value)}
+                      >
+                        <option value="">—</option>
+                        {(c.opciones ?? []).map((op) => (
+                          <option key={op} value={op}>{op}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        className="hp-fe-chip-input"
+                        type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : c.tipo === "money" ? "number" : "text"}
+                        defaultValue={f.datos?.[c.key] ?? ""}
+                        readOnly={!editable}
+                        placeholder="—"
+                        onBlur={(e) => set(f, c.key, e.target.value)}
+                      />
+                    )}
+                  </label>
+                )
+              )}
             </div>
           )}
           {colsNotas.map((c) => (
