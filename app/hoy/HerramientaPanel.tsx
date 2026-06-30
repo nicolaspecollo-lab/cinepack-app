@@ -430,6 +430,19 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && FICHA_EQUIPO_IDS.has(herramienta.id) && (
+        <FichaEquipo
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "maq-efectos-especiales-maq" && (
         <FxAntesDespues
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -459,7 +472,8 @@ function HerramientaData({
         herramienta.id !== "arte-timeline-decorados" &&
         herramienta.id !== "maq-efectos-especiales-maq" &&
         !PLANO_BOARD_IDS.has(herramienta.id) &&
-        !PENDIENTES_BOARD_IDS.has(herramienta.id) && (
+        !PENDIENTES_BOARD_IDS.has(herramienta.id) &&
+        !FICHA_EQUIPO_IDS.has(herramienta.id) && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -1717,6 +1731,181 @@ function FxAntesDespues({
         </div>
       ) : (
         <div className="hp-fx-grid">{filas.map(Tarjeta)}</div>
+      )}
+      {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Ficha de equipo (catálogo de inventario) ----
+// Inventarios de cámara, luces, atrezzo, vestuario y maquillaje comparten
+// la misma realidad: son un catálogo de objetos físicos, no filas de
+// datos. Se hojean como un catálogo — foto grande, nombre, estado y
+// specs clave de un vistazo — no se leen como una tabla contable.
+const FICHA_EQUIPO_IDS = new Set([
+  "foto-inventario",
+  "foto-inventario-camara",
+  "luz-inventario-equipo",
+  "arte-inventario-atrezzo",
+  "arte-tabla-vestuario",
+  "maq-inventario-productos",
+]);
+// arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
+// identifica al objeto del catálogo es la prenda — el personaje pasa a
+// subtítulo (qué buena pareja: "Prenda" / "de quién es").
+const FICHA_EQUIPO_TITULO: Record<string, string> = { "arte-tabla-vestuario": "prenda" };
+
+function FichaEquipo({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const colFoto = columnas.find((c) => c.tipo === "archivo");
+  const tituloKey = FICHA_EQUIPO_TITULO[herramientaId];
+  const colTitulo = tituloKey ? columnas.find((c) => c.key === tituloKey) : columnas[0];
+  const colEstado = columnas.find((c) => c.tipo === "estado" && c.key === "estado");
+  const colSubtitulo = columnas.find(
+    (c) => c.key !== colTitulo?.key && c.key !== colFoto?.key && c.key !== colEstado?.key && (!c.tipo || c.tipo === "texto")
+  );
+  const usados = new Set(
+    [colFoto?.key, colTitulo?.key, colEstado?.key, colSubtitulo?.key].filter(Boolean) as string[]
+  );
+  const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
+  const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
+
+  function Tarjeta(f: Fila) {
+    const estadoVal = colEstado ? f.datos?.[colEstado.key] ?? "" : "";
+    return (
+      <div className="hp-fe-card" key={f.id}>
+        <div className="hp-fe-photo">
+          {colFoto ? (
+            <ArchivoCell
+              path={f.datos?.[colFoto.key] ?? ""}
+              editable={editable}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              filaId={f.id}
+              colKey={colFoto.key}
+              onSave={(v) => set(f, colFoto.key, v)}
+            />
+          ) : (
+            <span className="hp-fe-photo-placeholder hex" />
+          )}
+        </div>
+        <div className="hp-fe-body">
+          <div className="hp-fe-head">
+            <input
+              className="hp-fe-titulo"
+              defaultValue={colTitulo ? f.datos?.[colTitulo.key] ?? "" : ""}
+              placeholder={colTitulo?.label ?? ""}
+              readOnly={!editable}
+              onBlur={(e) => colTitulo && set(f, colTitulo.key, e.target.value)}
+            />
+            {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+          </div>
+          {colSubtitulo && (
+            <input
+              className="hp-fe-subtitulo"
+              defaultValue={f.datos?.[colSubtitulo.key] ?? ""}
+              placeholder={colSubtitulo.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, colSubtitulo.key, e.target.value)}
+            />
+          )}
+          {colEstado && (
+            <select
+              className={`hp-fe-estado tono-${estadoTono(estadoVal)}`}
+              defaultValue={estadoVal}
+              disabled={!editable}
+              onChange={(e) => set(f, colEstado.key, e.target.value)}
+            >
+              <option value="">{t("noStatus")}</option>
+              {(colEstado.opciones ?? []).map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
+            </select>
+          )}
+          {colsChip.length > 0 && (
+            <div className="hp-fe-specs">
+              {colsChip.map((c) => (
+                <label className="hp-fe-chip" key={c.key}>
+                  <span className="hp-fe-chip-label">{c.label}</span>
+                  {c.tipo === "estado" ? (
+                    <select
+                      className="hp-fe-chip-select"
+                      defaultValue={f.datos?.[c.key] ?? ""}
+                      disabled={!editable}
+                      onChange={(e) => set(f, c.key, e.target.value)}
+                    >
+                      <option value="">—</option>
+                      {(c.opciones ?? []).map((op) => (
+                        <option key={op} value={op}>{op}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      className="hp-fe-chip-input"
+                      type={c.tipo === "num" ? "number" : c.tipo === "fecha" ? "date" : c.tipo === "money" ? "number" : "text"}
+                      defaultValue={f.datos?.[c.key] ?? ""}
+                      readOnly={!editable}
+                      placeholder="—"
+                      onBlur={(e) => set(f, c.key, e.target.value)}
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          )}
+          {colsNotas.map((c) => (
+            <textarea
+              key={c.key}
+              className="hp-fe-nota"
+              defaultValue={c.key in (f.datos ?? {}) ? f.datos[c.key] : ""}
+              placeholder={c.label}
+              readOnly={!editable}
+              onBlur={(e) => set(f, c.key, e.target.value)}
+              rows={2}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-fe-grid">{filas.map(Tarjeta)}</div>
       )}
       {editable && filas.length > 0 && (
         <div className="hp-actions">

@@ -2236,3 +2236,50 @@
   .cp-dash .hp-fx-photos{ flex-direction:column; }
   .cp-dash .hp-fx-arrow{ transform:rotate(90deg); }
 }
+
+/* Ficha de equipo (catálogo de inventario): cámara, luces, atrezzo,
+   vestuario, maquillaje — se hojea como catálogo, foto grande primero. */
+.cp-dash .hp-fe-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+  gap:var(--sp-3); padding:var(--sp-3) var(--gutter) var(--sp-4);
+}
+.cp-dash .hp-fe-card{
+  background:var(--bg-2); border:1px solid var(--line); display:flex; flex-direction:column; overflow:hidden;
+}
+.cp-dash .hp-fe-photo{ padding:var(--sp-2); border-bottom:1px solid var(--line); background:var(--hl1); }
+.cp-dash .hp-fe-photo-placeholder{
+  display:block; width:22px; height:19px; background:var(--hl4); margin:10px auto;
+}
+.cp-dash .hp-fe-body{ display:flex; flex-direction:column; gap:6px; padding:var(--sp-2) var(--sp-3) var(--sp-3); }
+.cp-dash .hp-fe-head{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-fe-titulo{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text);
+  background:none; border:none; padding:0; flex:1; min-width:0;
+}
+.cp-dash .hp-fe-titulo:focus{ outline:none; }
+.cp-dash .hp-fe-subtitulo{
+  font-size:var(--fs-sm); color:var(--muted); background:none; border:none; padding:0; width:100%;
+}
+.cp-dash .hp-fe-subtitulo:focus{ outline:none; }
+.cp-dash .hp-fe-estado{
+  align-self:flex-start; font-size:10px; font-weight:600; font-family:'Poppins',sans-serif;
+  border:none; padding:2px 8px; background:var(--hl2); color:var(--muted); cursor:pointer;
+}
+.cp-dash .hp-fe-estado.tono-ok{ background:rgba(159,232,112,0.14); color:var(--lime); }
+.cp-dash .hp-fe-estado.tono-warn{ background:rgba(245,166,35,0.14); color:var(--amber); }
+.cp-dash .hp-fe-estado.tono-bad{ background:rgba(255,107,107,0.14); color:var(--rose); }
+.cp-dash .hp-fe-estado.tono-info{ background:rgba(17,194,220,0.12); color:var(--cyan); }
+.cp-dash .hp-fe-specs{ display:flex; flex-wrap:wrap; gap:5px; margin-top:2px; }
+.cp-dash .hp-fe-chip{ display:flex; flex-direction:column; gap:1px; background:var(--hl1); border:1px solid var(--line); padding:3px 6px; }
+.cp-dash .hp-fe-chip-label{ font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-fe-chip-input, .cp-dash .hp-fe-chip-select{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  font-size:11px; color:var(--text); background:none; border:none; padding:0; min-width:30px;
+}
+.cp-dash .hp-fe-chip-input:focus, .cp-dash .hp-fe-chip-select:focus{ outline:none; }
+.cp-dash .hp-fe-chip-select{ cursor:pointer; }
+.cp-dash .hp-fe-nota{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical;
+}
+.cp-dash .hp-fe-nota:focus{ outline:none; border-color:var(--acc); color:var(--text); }
