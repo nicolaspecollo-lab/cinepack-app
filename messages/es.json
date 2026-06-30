@@ -377,6 +377,8 @@
     "myTools": "Mis herramientas",
     "personalBadge": "personales",
     "toolsOf": "Herramientas de {dept}",
+    "deptViewNote": "Vista completa del departamento (solo lectura). Para editar o crear, andá a Exclusivas — tus herramientas por cargo.",
+    "sharedGroup": "Compartidas del departamento",
     "noExclusiveTools": "Sin herramientas exclusivas",
     "noExclusiveToolsDesc": "Este departamento todavía no tiene herramientas exclusivas de cargo en el mapa.",
     "yourRole": "tu cargo",

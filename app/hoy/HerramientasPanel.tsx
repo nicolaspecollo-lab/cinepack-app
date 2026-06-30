@@ -247,57 +247,36 @@ export default function HerramientasPanel({
             </button>
           </div>
         )}
+        {seccion === "departamento" && (
+          <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
+        )}
         {esCasting && vista === "personajes" ? (
           <CandidatosPorPersonajePanel departamento={departamento} />
         ) : (
-          <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} />
+          <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} editable={seccion === "cargo"} />
         )}
       </div>
     );
   }
 
   if (seccion === "departamento") {
-    const tools = deptTools(departamento).filter((h) => !ocultas.has(h.id));
+    // Panorama completo del departamento (visionado): TODAS las herramientas
+    // del depto — las compartidas y las de todos los cargos — para que cualquier
+    // integrante VEA todo. La edición/creación vive en Exclusivas (tu cargo).
+    const seen = new Set<string>();
+    const tools = [...deptTools(departamento), ...cargoGroups(departamento).flatMap((g) => g.tools)]
+      .filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos")
+      .filter((h) => (seen.has(h.id) ? false : (seen.add(h.id), true)));
     return (
       <div className="hp-index">
-        <button className={`btn${creandoEspacio ? "" : " acc"}`} style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
-          {creandoEspacio ? t("closeWorkspace") : t("openWorkspace")}
-        </button>
-        {creandoEspacio && (
-          <EspacioTrabajoCreator
-            departamento={departamento}
-            fullName={fullName}
-            onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
-          />
-        )}
-        {tools.length === 0 && personalTools.length === 0 && (
+        <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
+        {tools.length === 0 ? (
           <div className="soon-box">
             <span className="hex"></span>
             <h4>{t("noDeptTools")}</h4>
             <p>{t("noDeptToolsDesc")}</p>
           </div>
-        )}
-        {personalTools.length > 0 && (
-          <section className="hp-group hp-group-personal">
-            <span className="hp-group-label">
-              <span className="hex" style={{ width: "8px", height: "7px" }} />
-              {t("myTools")}
-              <span className="hp-mine">{t("personalBadge")}</span>
-            </span>
-            <div className="hp-cards">
-              {personalTools.map((pt) => (
-                <button key={pt.id} className="hcard hcard-personal" onClick={() => abrirPersonal(pt)}>
-                  <div className="hcard-accent" />
-                  <div className="hcard-title">{pt.titulo}</div>
-                  <div className="hcard-meta">
-                    <span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-        {tools.length > 0 && (
+        ) : (
           <section className="hp-group">
             <span className="hp-group-label">{t("toolsOf", { dept: departamento })}</span>
             <div className="hp-cards">
@@ -311,11 +290,13 @@ export default function HerramientasPanel({
     );
   }
 
-  // seccion === "cargo": agrupadas por cargo, todas las del departamento.
+  // seccion === "cargo" (Exclusivas): el espacio EDITABLE — herramientas
+  // compartidas del depto + las de cada cargo + tus herramientas personales.
+  const sharedTools = deptTools(departamento).filter((h) => !ocultas.has(h.id));
   const groups = cargoGroups(departamento)
     .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id)) }))
     .filter((g) => g.tools.length > 0);
-  if (groups.length === 0 && personalTools.length === 0 && !creandoEspacio) {
+  if (groups.length === 0 && sharedTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
         <button className="btn acc" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
@@ -358,6 +339,19 @@ export default function HerramientasPanel({
                   <span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>
                 </div>
               </button>
+            ))}
+          </div>
+        </section>
+      )}
+      {sharedTools.length > 0 && (
+        <section className="hp-group">
+          <span className="hp-group-label">
+            <span className="hex" style={{ width: "8px", height: "7px" }} />
+            {t("sharedGroup")}
+          </span>
+          <div className="hp-cards">
+            {sharedTools.map((h) => (
+              <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} cargo conteo={conteos[h.id]} />
             ))}
           </div>
         </section>

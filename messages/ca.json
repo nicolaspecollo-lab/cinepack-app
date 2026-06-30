@@ -377,6 +377,8 @@
     "myTools": "Les meves eines",
     "personalBadge": "personals",
     "toolsOf": "Eines de {dept}",
+    "deptViewNote": "Vista completa del departament (només lectura). Per editar o crear, vés a Exclusives — les teves eines per càrrec.",
+    "sharedGroup": "Compartides del departament",
     "noExclusiveTools": "Sense eines exclusives",
     "noExclusiveToolsDesc": "Aquest departament encara no té eines exclusives de càrrec al mapa.",
     "yourRole": "el teu càrrec",

@@ -377,6 +377,8 @@
     "myTools": "My tools",
     "personalBadge": "personal",
     "toolsOf": "{dept} tools",
+    "deptViewNote": "Full department view (read-only). To edit or create, go to Exclusives — your tools by role.",
+    "sharedGroup": "Shared across the department",
     "noExclusiveTools": "No exclusive tools",
     "noExclusiveToolsDesc": "This department doesn't have role-exclusive tools in the map yet.",
     "yourRole": "your role",
