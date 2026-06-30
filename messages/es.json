@@ -415,7 +415,8 @@
     "sbNoDay": "Sin día asignado",
     "sbDayTotals": "{escenas} escenas · {pag} pág",
     "sbIntExt": "Interior o exterior",
-    "sbDayNight": "Momento del día"
+    "sbDayNight": "Momento del día",
+    "pdTitle": "Parte de producción"
   },
   "herr": {
     "accesos-equipo": "Accesos del equipo",

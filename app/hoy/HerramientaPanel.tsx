@@ -724,7 +724,17 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "ficha" && herramienta.id !== "ej-kpis" && (
+      {herramienta.tipo === "ficha" && herramienta.id === "prod-parte-diario" && (
+        <ParteDiario
+          campos={[...(herramienta.campos ?? []), ...extraCampos]}
+          fila={filas[0]}
+          editable={editable}
+          asegurar={asegurarSingle}
+          onGuardar={guardarFila}
+        />
+      )}
+
+      {herramienta.tipo === "ficha" && herramienta.id !== "ej-kpis" && herramienta.id !== "prod-parte-diario" && (
         <FichaTool
           campos={[...(herramienta.campos ?? []), ...extraCampos]}
           fila={filas[0]}
@@ -3832,6 +3842,100 @@ function StripboardTool({
           );
         })
       )}
+    </div>
+  );
+}
+
+// ---- Parte de producción diario — el documento maestro del día ----
+// Reemplaza la ficha genérica de campos por un parte: cómo fue la jornada
+// (horario + horas extra), qué se logró (escenas/páginas/figuración como
+// cifras grandes), incidencias destacadas y firmas de cierre.
+function ParteDiario({
+  campos,
+  fila,
+  editable,
+  asegurar,
+  onGuardar,
+}: {
+  campos: Columna[];
+  fila: Fila | undefined;
+  editable: boolean;
+  asegurar: () => Promise<Fila>;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+}) {
+  const t = useTranslations("hp");
+  async function set(key: string, v: string) {
+    const f = fila ?? (await asegurar());
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+  const v = (k: string) => fila?.datos?.[k] ?? "";
+  const lbl = (k: string) => campos.find((c) => c.key === k)?.label ?? k;
+  const horasExtra = ejNum(v("horas_extra"));
+
+  function Campo({ k, cls, type }: { k: string; cls: string; type?: string }) {
+    return (
+      <input className={cls} type={type ?? "text"} defaultValue={v(k)} readOnly={!editable} placeholder="—" onBlur={(e) => set(k, e.target.value)} />
+    );
+  }
+  function Stat({ k }: { k: string }) {
+    return (
+      <div className="pd-stat">
+        <Campo k={k} cls="pd-stat-v" />
+        <span className="pd-stat-l">{lbl(k)}</span>
+      </div>
+    );
+  }
+  function Incidencia({ k, tono }: { k: string; tono: "bad" | "warn" }) {
+    return (
+      <label className={`pd-inc tono-${tono}`}>
+        <span className="pd-inc-l">{lbl(k)}</span>
+        <textarea defaultValue={v(k)} readOnly={!editable} rows={2} placeholder="—" onBlur={(e) => set(k, e.target.value)} />
+      </label>
+    );
+  }
+
+  return (
+    <div className="pd">
+      <div className="pd-head">
+        <span className="pd-pill">{t("pdTitle")}</span>
+        <div className="pd-head-row">
+          <div className="pd-metric"><span className="pd-metric-l">{lbl("fecha")}</span><Campo k="fecha" cls="pd-metric-v" type="date" /></div>
+          <div className="pd-metric"><span className="pd-metric-l">{lbl("dia")}</span><Campo k="dia" cls="pd-metric-v" /></div>
+          <div className="pd-metric pd-metric-grow"><span className="pd-metric-l">{lbl("locacion")}</span><Campo k="locacion" cls="pd-metric-v" /></div>
+        </div>
+      </div>
+
+      <div className="pd-jornada">
+        <div className="pd-time"><Icon name="clock" size={15} /><Campo k="hora_inicio" cls="pd-time-v" /><span className="pd-time-arrow">→</span><Campo k="hora_fin" cls="pd-time-v" /></div>
+        <label className={`pd-extra ${horasExtra > 0 ? "pd-extra-on" : ""}`}>
+          <span>{lbl("horas_extra")}</span>
+          <Campo k="horas_extra" cls="pd-extra-v" type="number" />
+        </label>
+      </div>
+
+      <div className="pd-stats">
+        <Stat k="escenas_rodadas" />
+        <Stat k="paginas_rodadas" />
+        <Stat k="paginas_pendientes" />
+        <Stat k="extras" />
+      </div>
+
+      <div className="pd-incs">
+        <Incidencia k="accidentes" tono="bad" />
+        <Incidencia k="retrasos" tono="warn" />
+      </div>
+
+      <label className="pd-notas-wrap">
+        <span className="pd-sec-l"><Icon name="file-text" size={13} /> {lbl("notas")}</span>
+        <textarea className="pd-notas" defaultValue={v("notas")} readOnly={!editable} rows={3} placeholder="—" onBlur={(e) => set("notas", e.target.value)} />
+      </label>
+
+      <div className="pd-firmas">
+        <label className="pd-firma"><span>{lbl("firma_dir")}</span><Campo k="firma_dir" cls="pd-firma-v" /></label>
+        <label className="pd-firma"><span>{lbl("firma_prod")}</span><Campo k="firma_prod" cls="pd-firma-v" /></label>
+      </div>
+
+      {!fila && <p className="hp-kpi-hint">{editable ? t("startAddingRow") : t("waitForData")}</p>}
     </div>
   );
 }

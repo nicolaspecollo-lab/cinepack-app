@@ -415,7 +415,8 @@
     "sbNoDay": "Sense dia assignat",
     "sbDayTotals": "{escenas} escenes · {pag} pàg",
     "sbIntExt": "Interior o exterior",
-    "sbDayNight": "Moment del dia"
+    "sbDayNight": "Moment del dia",
+    "pdTitle": "Comunicat de producció"
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

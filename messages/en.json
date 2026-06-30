@@ -415,7 +415,8 @@
     "sbNoDay": "No day assigned",
     "sbDayTotals": "{escenas} scenes · {pag} pg",
     "sbIntExt": "Interior or exterior",
-    "sbDayNight": "Time of day"
+    "sbDayNight": "Time of day",
+    "pdTitle": "Production report"
   },
   "herr": {
     "accesos-equipo": "Team access",

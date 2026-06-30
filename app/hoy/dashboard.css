@@ -2766,3 +2766,55 @@
   .cp-dash .od-strip-chars{ width:100%; border-left:none; padding-left:0; border-top:1px dashed var(--line); padding-top:5px; }
   .cp-dash .od-strip-r2{ flex-direction:column; align-items:stretch; }
 }
+
+/* ===========================================================================
+   PARTE DE PRODUCCIÓN DIARIO — documento maestro del día (acento cian)
+   =========================================================================== */
+.cp-dash .pd{ padding:16px var(--gutter) 22px; display:flex; flex-direction:column; gap:16px; }
+.cp-dash .pd-head{ display:flex; flex-direction:column; gap:9px; }
+.cp-dash .pd-pill{ align-self:flex-start; font-family:'Poppins',sans-serif; font-weight:700; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; background:var(--cyan); color:#0D0D12; padding:3px 9px; }
+.cp-dash .pd-head-row{ display:flex; gap:10px; flex-wrap:wrap; }
+.cp-dash .pd-metric{ background:var(--bg-2); border:1px solid var(--line); padding:9px 13px; display:flex; flex-direction:column; gap:3px; min-width:120px; }
+.cp-dash .pd-metric-grow{ flex:1; min-width:180px; }
+.cp-dash .pd-metric-l{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; }
+.cp-dash .pd-metric-v{ font-family:'Poppins',sans-serif; font-weight:600; font-size:15px; color:var(--text); background:none; border:none; padding:0; }
+.cp-dash .pd-metric-v:focus{ outline:none; }
+
+.cp-dash .pd-jornada{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--cyan); padding:11px 14px; }
+.cp-dash .pd-time{ display:flex; align-items:center; gap:8px; color:var(--cyan); }
+.cp-dash .pd-time-v{ font-family:'Courier New',monospace; font-weight:700; font-size:18px; color:var(--text); background:none; border:none; width:64px; text-align:center; padding:0; }
+.cp-dash .pd-time-v:focus{ outline:none; }
+.cp-dash .pd-time-arrow{ color:var(--muted); }
+.cp-dash .pd-extra{ display:flex; flex-direction:column; gap:2px; margin-left:auto; text-align:right; }
+.cp-dash .pd-extra span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .pd-extra-v{ font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; color:var(--text); background:none; border:none; width:70px; text-align:right; padding:0; }
+.cp-dash .pd-extra-v:focus{ outline:none; }
+.cp-dash .pd-extra-on .pd-extra-v{ color:var(--amber); }
+.cp-dash .pd-extra-on span{ color:var(--amber); }
+
+.cp-dash .pd-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; }
+.cp-dash .pd-stat{ background:var(--bg-2); border:1px solid var(--line); border-top:3px solid var(--cyan); padding:13px; display:flex; flex-direction:column; gap:4px; }
+.cp-dash .pd-stat-v{ font-family:'Poppins',sans-serif; font-weight:700; font-size:24px; color:var(--text); background:none; border:none; padding:0; width:100%; }
+.cp-dash .pd-stat-v:focus{ outline:none; }
+.cp-dash .pd-stat-l{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+
+.cp-dash .pd-incs{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
+.cp-dash .pd-inc{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .pd-inc-l{ font-size:10px; text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .pd-inc.tono-bad .pd-inc-l{ color:var(--rose); }
+.cp-dash .pd-inc.tono-warn .pd-inc-l{ color:var(--amber); }
+.cp-dash .pd-inc textarea{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:13px; color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:8px; resize:vertical; }
+.cp-dash .pd-inc.tono-bad textarea{ border-left:3px solid var(--rose); }
+.cp-dash .pd-inc.tono-warn textarea{ border-left:3px solid var(--amber); }
+.cp-dash .pd-inc textarea:focus{ outline:none; border-color:var(--cyan); }
+
+.cp-dash .pd-notas-wrap{ display:flex; flex-direction:column; gap:5px; }
+.cp-dash .pd-sec-l{ display:flex; align-items:center; gap:6px; font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--cyan); }
+.cp-dash .pd-notas{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:13px; color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:9px; resize:vertical; }
+.cp-dash .pd-notas:focus{ outline:none; border-color:var(--cyan); }
+
+.cp-dash .pd-firmas{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; border-top:1px solid var(--line); padding-top:16px; }
+.cp-dash .pd-firma{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .pd-firma span{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .pd-firma-v{ font-family:'Poppins',sans-serif; font-size:15px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:6px 0; }
+.cp-dash .pd-firma-v:focus{ outline:none; border-bottom-color:var(--cyan); }
