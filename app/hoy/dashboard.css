@@ -3827,3 +3827,12 @@
   .cp-dash .cal-chip{ font-size:8.5px; padding:1px 3px; }
   .cp-dash .ct-progress-bar{ max-width:38vw; }
 }
+
+/* Fondo de patrón hexagonal detrás de la línea de tiempo (mismo patrón que .wtabs) */
+.cp-dash .ct-rail{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(159%2C232%2C112%2C0.08)' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size:120px 104px;
+}
+.cp-dash.cp-light .ct-rail{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(13%2C13%2C18%2C0.06)' stroke-width='1.5'/%3E%3C/svg%3E");
+}
