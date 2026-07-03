@@ -3836,3 +3836,7 @@
 .cp-dash.cp-light .ct-rail{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(13%2C13%2C18%2C0.06)' stroke-width='1.5'/%3E%3C/svg%3E");
 }
+
+/* Placa opaca detrás del isotipo: tapa la línea de tiempo dentro del marcador */
+.cp-dash .ct-mark-plate{ position:absolute; left:0; transform:translateX(-50%); background:var(--bg); transition:transform .12s; }
+.cp-dash .ct-ev:hover .ct-mark-plate{ transform:translateX(-50%) scale(1.22); }

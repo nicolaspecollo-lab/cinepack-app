@@ -190,6 +190,7 @@ export default function CicloTimeline() {
                   <div className="ct-lab-d">{fmt(p.fecha)}</div>
                 </div>
                 <div className={`ct-stem ${above ? "up" : "down"}`} />
+                <span className="ct-mark-plate" style={{ width: size, height: size, top: 100 - size / 2 }} />
                 <span className="cp-iso ct-mark" style={{ width: size, height: size, top: 100 - size / 2, background: isSel ? "var(--text)" : color }} />
               </div>
             );
