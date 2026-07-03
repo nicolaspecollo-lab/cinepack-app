@@ -164,9 +164,10 @@ export default function HerramientasPanel({
     const candidatos =
       seccion === "departamento"
         ? [...deptTools(departamento), ...cargoGroups(departamento).flatMap((g) => g.tools)]
-        : cargo
-          ? cargoGroups(departamento).find((g) => g.cargo === cargo)?.tools ?? []
-          : [];
+        : [
+            ...deptTools(departamento),
+            ...(cargo ? cargoGroups(departamento).find((g) => g.cargo === cargo)?.tools ?? [] : []),
+          ];
     const h = candidatos.find((t) => t.id === id);
     if (h) setAbierta(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -319,13 +320,14 @@ export default function HerramientasPanel({
     );
   }
 
-  // seccion === "cargo" (Exclusivas): SOLO el espacio editable del usuario —
-  // las herramientas de SU cargo + sus herramientas personales (Espacio de
-  // trabajo). Las compartidas del depto y las de otros cargos se ven (en
-  // visionado) en la pestaña Departamento.
+  // seccion === "cargo" (Exclusivas): el espacio EDITABLE del usuario. Incluye
+  // (1) las herramientas COMPARTIDAS del departamento —editables por cualquier
+  // integrante—, (2) las de SU cargo y (3) sus herramientas personales. Las de
+  // OTROS cargos siguen viéndose en modo visionado en la pestaña Departamento.
+  const compartidasEditables = deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos");
   const miGrupo = cargo ? cargoGroups(departamento).find((g) => g.cargo === cargo) : undefined;
   const misCargoTools = (miGrupo?.tools ?? []).filter((h) => !ocultas.has(h.id));
-  if (misCargoTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
+  if (compartidasEditables.length === 0 && misCargoTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
         <button className="btn acc" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
@@ -368,6 +370,19 @@ export default function HerramientasPanel({
                   <span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>
                 </div>
               </button>
+            ))}
+          </div>
+        </section>
+      )}
+      {compartidasEditables.length > 0 && (
+        <section className="hp-group">
+          <span className="hp-group-label">
+            <span className="hex" style={{ width: "8px", height: "7px" }} />
+            {t("sharedGroup")}
+          </span>
+          <div className="hp-cards">
+            {compartidasEditables.map((h) => (
+              <ToolCard key={`shared-edit-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
             ))}
           </div>
         </section>

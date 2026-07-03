@@ -6,16 +6,19 @@ import { useTranslations } from "next-intl";
 import HoyPanel from "./HoyPanel";
 import GeneralesPanel, { type Sub as GeneralesSub } from "./GeneralesPanel";
 import ModoRodajePanel from "./ModoRodajePanel";
+import CicloTimeline from "./CicloTimeline";
+import CalendarioProyecto from "./CalendarioProyecto";
 import HerramientasPanel, { useNombreHerramienta } from "./HerramientasPanel";
 import ArchivosPanel from "./ArchivosPanel";
 import AdminPanel from "./AdminPanel";
+import ControlDeptoPanel from "./ControlDeptoPanel";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
 import CommandPalette, { type PaletteItem } from "./CommandPalette";
 import InboxPanel, { type InboxItem } from "./InboxPanel";
 import { deptTools, cargoGroups } from "../herramientas";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
-import { CLIENTE_DEPT } from "../constants";
+import { CLIENTE_DEPT, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import "./dashboard.css";
 
 type Tab = "pulso" | "generales" | "departamento" | "exclusivas" | "archivos" | "admin";
@@ -26,12 +29,14 @@ export default function DepartmentDashboard({
   fullName,
   cargo,
   avatarUrl,
+  isAdmin,
 }: {
   nombre: string;
   accent: string;
   fullName: string;
   cargo?: string | null;
   avatarUrl?: string | null;
+  isAdmin?: boolean;
 }) {
   const tNav = useTranslations("nav");
   const nombreDe = useNombreHerramienta();
@@ -74,6 +79,11 @@ export default function DepartmentDashboard({
     })();
   }, []);
   const accVar = `var(--${accent})`;
+  // El "jefe" del departamento = primer cargo de la jerarquía. Ese rol (o un
+  // superadmin) ve la pestaña "Control" para administrar su departamento.
+  const jefeCargo = JERARQUIA_POR_DEPARTAMENTO[nombre]?.[0];
+  const esJefe = !!cargo && cargo === jefeCargo;
+  const puedeControl = nombre === "Ejecutivo" || esJefe || !!isAdmin;
 
   useEffect(() => {
     (async () => {
@@ -178,7 +188,7 @@ export default function DepartmentDashboard({
       { id: "tab-exclusivas", label: tNav("exclusivas"), group: tNav("palSection"), onSelect: () => setTab("exclusivas") },
       { id: "tab-archivos", label: tNav("archivo"), group: tNav("palSection"), onSelect: () => setTab("archivos") },
     ];
-    if (nombre === "Ejecutivo") {
+    if (puedeControl) {
       items.push({ id: "tab-control", label: tNav("control"), group: tNav("palSection"), onSelect: () => setTab("admin") });
     }
     for (const h of deptTools(nombre)) {
@@ -306,7 +316,7 @@ export default function DepartmentDashboard({
           <button className={`wtab ${tab === "departamento" ? "active" : ""}`} onClick={() => setTab("departamento")}>{tNav("departamentos")}</button>
           <button className={`wtab ${tab === "exclusivas" ? "active" : ""}`} onClick={() => setTab("exclusivas")}>{tNav("exclusivas")}</button>
           <button className={`wtab ${tab === "archivos" ? "active" : ""}`} onClick={() => setTab("archivos")}>{tNav("archivo")}</button>
-          {nombre === "Ejecutivo" && (
+          {puedeControl && (
             <button className={`wtab ${tab === "admin" ? "active" : ""}`} onClick={() => setTab("admin")}>{tNav("control")}</button>
           )}
           <div style={{ flex: 1 }} />
@@ -316,7 +326,9 @@ export default function DepartmentDashboard({
 
       {tab === "pulso" && (
         <div className="tpanel active">
+          <CicloTimeline />
           <ModoRodajePanel onVerOrden={irAOrdenRodaje} />
+          <CalendarioProyecto departamento={nombre} cargo={cargo} isAdmin={isAdmin} fullName={fullName} />
           <HoyPanel deDepartamento={nombre} fullName={fullName} />
           <ProyectoPulsoPanel />
           <div className="note">
@@ -349,9 +361,9 @@ export default function DepartmentDashboard({
         </div>
       )}
 
-      {tab === "admin" && nombre === "Ejecutivo" && (
+      {tab === "admin" && puedeControl && (
         <div className="tpanel active">
-          <AdminPanel />
+          {nombre === "Ejecutivo" ? <AdminPanel /> : <ControlDeptoPanel departamento={nombre} />}
         </div>
       )}
 

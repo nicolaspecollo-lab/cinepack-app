@@ -503,10 +503,11 @@ const sinopsisEscaleta: Herramienta = {
   nombre: "Sinopsis y escaleta",
   tipo: "tabla",
   columnas: [
+    { key: "acto", label: "Acto", tipo: "estado", opciones: ["Acto I", "Acto II", "Acto III"] },
     { key: "num", label: "Nº" },
     { key: "secuencia", label: "Secuencia / Bloque" },
-    { key: "resumen", label: "Resumen", tipo: "largo" },
     { key: "funcion", label: "Función dramática" },
+    { key: "resumen", label: "Resumen", tipo: "largo" },
   ],
 };
 const desgloseEscenas: Herramienta = {

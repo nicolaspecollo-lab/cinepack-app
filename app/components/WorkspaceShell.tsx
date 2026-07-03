@@ -19,6 +19,9 @@ export default function WorkspaceShell({
   isAdmin,
   homeDept,
   onDeptChange,
+  cargoOverride,
+  cargosDisponibles,
+  onCargoChange,
   children,
 }: {
   fullName: string;
@@ -28,6 +31,9 @@ export default function WorkspaceShell({
   isAdmin?: boolean;
   homeDept?: string;
   onDeptChange?: (dept: string) => void;
+  cargoOverride?: string | null;
+  cargosDisponibles?: string[];
+  onCargoChange?: (cargo: string) => void;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -37,6 +43,7 @@ export default function WorkspaceShell({
   const [, startLangTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
+  const [cargoOpen, setCargoOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [proyecto, setProyecto] = useState(proyectoProp ?? "Marea Oscura");
   const [menuTop, setMenuTop] = useState<number | null>(null);
@@ -171,16 +178,6 @@ export default function WorkspaceShell({
                 <span className="muted">{t("comingSoon")}</span>
               </button>
 
-              {isAdmin && (
-                <>
-                  <div className="cp-menu-div"></div>
-                  <Link href="/admin" className="cp-menu-item" onClick={() => setOpen(false)}>
-                    <span>{t("adminPanel")}</span>
-                    <span className="muted">{t("adminPanelSub")}</span>
-                  </Link>
-                </>
-              )}
-
               {isAdmin && onDeptChange && (
                 <>
                   <div className="cp-menu-div"></div>
@@ -198,6 +195,7 @@ export default function WorkspaceShell({
                           onClick={() => {
                             onDeptChange(d);
                             setDeptOpen(false);
+                            setCargoOpen(false);
                             setOpen(false);
                           }}
                         >
@@ -211,6 +209,7 @@ export default function WorkspaceShell({
                           onClick={() => {
                             onDeptChange(homeDept);
                             setDeptOpen(false);
+                            setCargoOpen(false);
                             setOpen(false);
                           }}
                           style={{ color: "var(--lime)" }}
@@ -219,6 +218,32 @@ export default function WorkspaceShell({
                         </button>
                       )}
                     </div>
+                  )}
+                  {cargosDisponibles && cargosDisponibles.length > 0 && onCargoChange && (
+                    <>
+                      <button className="cp-menu-item" onClick={() => setCargoOpen((v) => !v)}>
+                        <span>{t("testCargo")}</span>
+                        <span className="muted">{cargoOverride ? cargoOverride : (cargoOpen ? "▲" : "▼")}</span>
+                      </button>
+                      {cargoOpen && (
+                        <div className="cp-menu-deptlist">
+                          {cargosDisponibles.map((c) => (
+                            <button
+                              key={c}
+                              className={`cp-menu-item cp-menu-dept ${c === cargoOverride ? "active" : ""}`}
+                              onClick={() => {
+                                onCargoChange(c);
+                                setCargoOpen(false);
+                                setOpen(false);
+                              }}
+                            >
+                              <span>{c}</span>
+                              {c === cargoOverride && <span className="muted">✓</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </>
               )}

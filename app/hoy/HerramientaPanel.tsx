@@ -138,7 +138,35 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "prod-hojas-ruta" ||
     id === "prod-plan-semana" ||
     id === "prod-plan-locaciones-jornada" ||
-    CATERING_IDS.has(id)
+    CATERING_IDS.has(id) ||
+    DESGLOSE_DIR_IDS.has(id) ||
+    PLAN_FIGURACION_IDS.has(id) ||
+    id === "dir-partes-script" ||
+    id === "dir-script-log" ||
+    id === "dir-cambios-guion" ||
+    id === "guion-sinopsis-escaleta" ||
+    id === "guion-historial" ||
+    id === "guion-desglose-escenas" ||
+    id === "guion-comentarios" ||
+    id === "cast-candidatos" ||
+    id === "cast-breakdown-actores" ||
+    id === "cast-tabla-disponibilidad" ||
+    CAST_EVAL_IDS.has(id) ||
+    id === "rep-notas-escenas-detalle" ||
+    id === "rep-vest-maq" ||
+    id === "rep-pronunciacion" ||
+    SON_MIC_IDS.has(id) ||
+    id === "son-plan-directo" ||
+    id === "son-control-baterias" ||
+    id === "son-playlist-musica-temp" ||
+    id === "post-versiones-corte" ||
+    id === "post-guia-color" ||
+    id === "rrhh-descansos" ||
+    id === "sost-indicadores" ||
+    id === "mkt-plan" ||
+    id === "dif-medios" ||
+    id === "dist-festivales" ||
+    id === "mo-cal-publicaciones"
   );
 }
 
@@ -492,63 +520,73 @@ function HerramientaData({
       {esTabla && vista === "tablero" && (
         <>
       {herramienta.tipo === "tabla" && herramienta.id === "foto-marcas-foco" && (
+        <VistaConEjemplos ejemplos={EJ_FOCO} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <FocoCueSheet
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && PLANO_BOARD_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_PLANO} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PlanoBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && PENDIENTES_BOARD_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_PENDIENTES} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PendientesBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "luz-generador" && (
+        <VistaConEjemplos ejemplos={EJ_GENERADOR} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <ControlGenerador
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && CONTINUIDAD_PERSONAJE_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_CONTINUIDAD_G} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <ContinuidadPersonaje
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && AGENDA_DIA_IDS.has(herramienta.id) && (
@@ -558,7 +596,8 @@ function HerramientaData({
           editable={editable}
           departamento={departamento}
           herramientaId={herramienta.id}
-          onCrear={() => crearFila({})}
+          ejemplos={EJEMPLOS_POR_ID[herramienta.id]}
+          onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
@@ -571,72 +610,83 @@ function HerramientaData({
           editable={editable}
           departamento={departamento}
           herramientaId={herramienta.id}
-          onCrear={() => crearFila({})}
+          ejemplos={EJEMPLOS_POR_ID[herramienta.id]}
+          onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "maq-efectos-especiales-maq" && (
+        <VistaConEjemplos ejemplos={EJ_FX} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <FxAntesDespues
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "arte-timeline-decorados" && (
+        <VistaConEjemplos ejemplos={EJ_TIMELINE_DEC} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <TimelineDecorados
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && PRESUPUESTO_BOARD_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_PRESUP} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PresupuestoBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && CASHFLOW_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_CASHFLOW} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <CashflowChart
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && FINANCIACION_PIPELINE_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_PIPELINE} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <FinanciacionPipeline
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && DOC_STATUS_IDS.has(herramienta.id) && (
@@ -646,21 +696,24 @@ function HerramientaData({
           editable={editable}
           departamento={departamento}
           herramientaId={herramienta.id}
-          onCrear={() => crearFila({})}
+          ejemplos={EJEMPLOS_POR_ID[herramienta.id]}
+          onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "ej-modelo-financiero" && (
+        <VistaConEjemplos ejemplos={EJ_MODELO} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <ModeloFinanciero
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.id === "prod-stripboard" && (
@@ -704,6 +757,322 @@ function HerramientaData({
           filas={filas}
           editable={editable}
           onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && DESGLOSE_DIR_IDS.has(herramienta.id) && (
+        <DesgloseDir
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "dir-partes-script" && (
+        <PartesScript
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "dir-script-log" && (
+        <ScriptLog
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "dir-cambios-guion" && (
+        <CambiosGuion
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && PLAN_FIGURACION_IDS.has(herramienta.id) && (
+        <PlanFiguracion
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-sinopsis-escaleta" && (
+        <EscaletaCorkboard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-historial" && (
+        <HistorialVersiones
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-desglose-escenas" && (
+        <DesgloseGuion
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-comentarios" && (
+        <ComentariosGuion
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "cast-candidatos" && (
+        <CastingWall
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "cast-breakdown-actores" && (
+        <BreakdownActores
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "cast-tabla-disponibilidad" && (
+        <DisponibilidadMatriz
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && CAST_EVAL_IDS.has(herramienta.id) && (
+        <EvaluacionCasting
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "rep-notas-escenas-detalle" && (
+        <ActorScenes
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "rep-vest-maq" && (
+        <VestMaqReparto
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "rep-pronunciacion" && (
+        <GuiaPronunciacion
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && SON_MIC_IDS.has(herramienta.id) && (
+        <MicMapa
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "son-plan-directo" && (
+        <PlanDirecto
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "son-control-baterias" && (
+        <BateriasControl
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "son-playlist-musica-temp" && (
+        <PlaylistMusica
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "post-versiones-corte" && (
+        <VersionesCorte
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "post-guia-color" && (
+        <GuiaColorLook
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "rrhh-descansos" && (
+        <DescansoLegal
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "sost-indicadores" && (
+        <IndicadoresImpacto
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "mkt-plan" && (
+        <CampanasMarketing
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "dif-medios" && (
+        <PrensaMedios
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "dist-festivales" && (
+        <Festivales
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "mo-cal-publicaciones" && (
+        <CalendarioPublicaciones
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
@@ -1970,6 +2339,12 @@ const FICHA_EQUIPO_IDS = new Set([
   "prod-localizaciones-scouting",
   "prod-material-prestado",
   "prod-proveedores-detalle",
+  "cast-ficha-reparto",
+  "cast-ficha-agencia",
+  "son-inventario",
+  "rrhh-listado-equipo",
+  "sost-proveedores",
+  "bts-contactos-prensa",
 ]);
 // arte-tabla-vestuario tiene "personaje" como primera columna, pero lo que
 // identifica al objeto del catálogo es la prenda — el personaje pasa a
@@ -1979,9 +2354,10 @@ const FICHA_EQUIPO_TITULO: Record<string, string> = { "arte-tabla-vestuario": "p
 function FichaEquipo({
   columnas,
   filas,
-  editable,
+  editable: editableProp,
   departamento,
   herramientaId,
+  ejemplos,
   onCrear,
   onGuardar,
   onBorrar,
@@ -1991,11 +2367,17 @@ function FichaEquipo({
   editable: boolean;
   departamento: string;
   herramientaId: string;
-  onCrear: () => void;
+  ejemplos?: Ejemplo[];
+  onCrear: (datos?: Record<string, string>) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
+  // "Nunca en blanco": si no hay filas y hay ejemplos, se renderizan fantasmas
+  // en solo-lectura (editable sombreado a false) + barra de adopción.
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(ejemplos ?? []);
+  const editable = editableProp && hayFilas;
 
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
@@ -2116,18 +2498,19 @@ function FichaEquipo({
 
   return (
     <>
-      {filas.length === 0 ? (
+      {!hayFilas && editableProp && (ejemplos?.length ?? 0) > 0 && <AdoptarEjemplos ejemplos={ejemplos!} onCrear={onCrear} />}
+      {filasEff.length === 0 ? (
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editableProp && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : (
-        <div className="hp-fe-grid">{filas.map(Tarjeta)}</div>
+        <div className={`hp-fe-grid ${!hayFilas ? "cp-ghost-grid" : ""}`}>{filasEff.map(Tarjeta)}</div>
       )}
-      {editable && filas.length > 0 && (
+      {editableProp && hayFilas && (
         <div className="hp-actions">
-          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -2139,14 +2522,15 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo", "prod-agenda-coord", "prod-partes-diarios"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo", "prod-agenda-coord", "prod-partes-diarios", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts"]);
 
 function AgendaDia({
   columnas,
   filas,
-  editable,
+  editable: editableProp,
   departamento,
   herramientaId,
+  ejemplos,
   onCrear,
   onGuardar,
   onBorrar,
@@ -2156,12 +2540,16 @@ function AgendaDia({
   editable: boolean;
   departamento: string;
   herramientaId: string;
-  onCrear: () => void;
+  ejemplos?: Ejemplo[];
+  onCrear: (datos?: Record<string, string>) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
   const label = (key: string) => columnas.find((c) => c.key === key)?.label ?? key;
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(ejemplos ?? []);
+  const editable = editableProp && hayFilas;
 
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
@@ -2318,7 +2706,7 @@ function AgendaDia({
 
   const grupos = colFecha
     ? Object.entries(
-        filas.reduce<Record<string, Fila[]>>((acc, f) => {
+        filasEff.reduce<Record<string, Fila[]>>((acc, f) => {
           const fecha = (f.datos?.[colFecha.key] ?? "").trim() || t("noScene");
           (acc[fecha] ??= []).push(f);
           return acc;
@@ -2328,29 +2716,32 @@ function AgendaDia({
 
   return (
     <>
-      {filas.length === 0 ? (
+      {!hayFilas && editableProp && (ejemplos?.length ?? 0) > 0 && <AdoptarEjemplos ejemplos={ejemplos!} onCrear={onCrear} />}
+      {filasEff.length === 0 ? (
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editableProp && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : grupos ? (
-        grupos.map(([fecha, fs]) => (
-          <div className="hp-gal-group" key={fecha}>
-            <div className="hp-gal-group-head">
-              <span className="hex"></span>
-              <span>{fecha}</span>
-              <span className="hp-gal-group-count">{fs.length}</span>
+        <div className={!hayFilas ? "cp-ghost-grid" : ""}>
+          {grupos.map(([fecha, fs]) => (
+            <div className="hp-gal-group" key={fecha}>
+              <div className="hp-gal-group-head">
+                <span className="hex"></span>
+                <span>{fecha}</span>
+                <span className="hp-gal-group-count">{fs.length}</span>
+              </div>
+              <div className="hp-agenda-list">{ordenarPorHora(fs).map(Cita)}</div>
             </div>
-            <div className="hp-agenda-list">{ordenarPorHora(fs).map(Cita)}</div>
-          </div>
-        ))
+          ))}
+        </div>
       ) : (
-        <div className="hp-agenda-list">{ordenarPorHora(filas).map(Cita)}</div>
+        <div className={`hp-agenda-list ${!hayFilas ? "cp-ghost-grid" : ""}`}>{ordenarPorHora(filasEff).map(Cita)}</div>
       )}
-      {editable && filas.length > 0 && (
+      {editableProp && hayFilas && (
         <div className="hp-actions">
-          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -3205,14 +3596,52 @@ const DOC_STATUS_IDS = new Set([
   "prod-permisos",
   "prod-equipo-tecnico",
   "prod-reporte-incidencias-loc",
+  "cast-contratos-reparto",
+  "son-adr",
+  "son-plan-adr",
+  "son-plan-mezcla",
+  "son-sinc-audio",
+  "son-entrega-post",
+  "son-problemas-set",
+  "son-reportes",
+  "son-reporte-boom",
+  "post-plan-montaje",
+  "post-notas-visionado",
+  "post-lista-vfx",
+  "post-plan-entregas",
+  "post-notas-corte-escena",
+  "post-vfx-tracking",
+  "post-dcp-deliverables",
+  "post-licencias-musica",
+  "post-timeline-montaje",
+  "post-sesiones-etalonaje",
+  "post-tracking-vfx",
+  "post-cal-maestro",
+  "rrhh-altas-bajas",
+  "rrhh-incidencias",
+  "sost-huella",
+  "sost-residuos",
+  "sost-registro-residuos",
+  "mkt-solicitudes-piezas",
+  "dif-notas-prensa",
+  "dif-tracking-envios",
+  "dist-plan",
+  "dist-acuerdos",
+  "dist-inscripciones",
+  "mo-material",
+  "mo-banco-cortes",
+  "bts-inventario-material",
+  "bts-plan-contenido",
+  "mo-entrevistas",
 ]);
 
 function DocStatusBoard({
   columnas,
   filas,
-  editable,
+  editable: editableProp,
   departamento,
   herramientaId,
+  ejemplos,
   onCrear,
   onGuardar,
   onBorrar,
@@ -3222,11 +3651,15 @@ function DocStatusBoard({
   editable: boolean;
   departamento: string;
   herramientaId: string;
-  onCrear: () => void;
+  ejemplos?: Ejemplo[];
+  onCrear: (datos?: Record<string, string>) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(ejemplos ?? []);
+  const editable = editableProp && hayFilas;
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
   }
@@ -3355,19 +3788,20 @@ function DocStatusBoard({
   const etapas = [...(colGrupo.opciones ?? []), t("noStatus")];
   const porEtapa = etapas.map((op) => ({
     nombre: op,
-    fs: filas.filter((f) => (f.datos?.[colGrupo.key] ?? "") === op || (!f.datos?.[colGrupo.key] && op === t("noStatus"))),
+    fs: filasEff.filter((f) => (f.datos?.[colGrupo.key] ?? "") === op || (!f.datos?.[colGrupo.key] && op === t("noStatus"))),
   }));
 
   return (
     <>
-      {filas.length === 0 ? (
+      {!hayFilas && editableProp && (ejemplos?.length ?? 0) > 0 && <AdoptarEjemplos ejemplos={ejemplos!} onCrear={onCrear} />}
+      {filasEff.length === 0 ? (
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>{t("emptyTitle")}</p>
-          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+          {editableProp && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : (
-        <div className="hp-pend-board">
+        <div className={`hp-pend-board ${!hayFilas ? "cp-ghost-grid" : ""}`}>
           {porEtapa.map((col) => (
             <div className={`hp-pend-col tono-${estadoTono(col.nombre)}`} key={col.nombre}>
               <div className="hp-pend-col-head">
@@ -3379,9 +3813,9 @@ function DocStatusBoard({
           ))}
         </div>
       )}
-      {editable && filas.length > 0 && (
+      {editableProp && hayFilas && (
         <div className="hp-actions">
-          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button>
         </div>
       )}
     </>
@@ -5699,6 +6133,2405 @@ function ChecklistTool({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ============================================================
+// EJEMPLOS — "nunca en blanco". Al abrir una herramienta sin filas se muestra
+// el diagrama YA planteado con tarjetas de ejemplo (fantasma): contenido
+// realista que enseña QUÉ va en cada campo. El usuario decide: "Comenzar con
+// este ejemplo" (los adopta como filas reales editables) o "Empezar en blanco".
+// Nunca un vacío con solo "Agregar". Reusable en todos los departamentos.
+// ============================================================
+type Ejemplo = Record<string, string>;
+
+function ghostFilas(ejemplos: Ejemplo[]): Fila[] {
+  return ejemplos.map((datos, i) => ({
+    id: `__ej_${i}`,
+    datos,
+    orden: i,
+    registro: [],
+    visionado_por: [],
+    autor_nombre: null,
+    editor_nombre: null,
+    updated_at: "",
+    _ej: true,
+  } as Fila & { _ej: true }));
+}
+function esGhost(f: Fila): boolean {
+  return (f as Fila & { _ej?: boolean })._ej === true;
+}
+
+// Barra de adopción que acompaña a las tarjetas-ejemplo cuando la herramienta
+// está vacía y es editable. Siembra los ejemplos como filas reales o arranca en blanco.
+function AdoptarEjemplos({
+  ejemplos,
+  onCrear,
+}: {
+  ejemplos: Ejemplo[];
+  onCrear: (datos?: Record<string, string>) => void;
+}) {
+  const t = useTranslations("hp");
+  return (
+    <div className="cp-ejbar">
+      <div className="cp-ejbar-txt"><b>{t("ejTitle")}</b> {t("ejDesc")}</div>
+      <div className="cp-ejbar-actions">
+        <button className="cp-btn cp-btn-acc" onClick={() => ejemplos.forEach((e) => onCrear(e))}>{t("ejUse")}</button>
+        <button className="cp-btn" onClick={() => onCrear({})}>{t("ejBlank")}</button>
+      </div>
+    </div>
+  );
+}
+
+// Wrapper "nunca en blanco" para vistas de 1ª generación (Foto/Arte/Ejecutivo)
+// SIN tocar su interior: cuando no hay filas, inyecta filas-ejemplo (fantasma)
+// en solo-lectura + barra de adopción. Render-prop: children(filasEfectivas, editableEfectivo).
+function VistaConEjemplos({ ejemplos, filas, editable, onCrear, children }: {
+  ejemplos: Ejemplo[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos: Record<string, string>) => void;
+  children: (filas: Fila[], editable: boolean) => React.ReactNode;
+}) {
+  const hay = filas.length > 0;
+  const fs = hay ? filas : ghostFilas(ejemplos);
+  return (
+    <>
+      {!hay && editable && <AdoptarEjemplos ejemplos={ejemplos} onCrear={(d) => onCrear(d ?? {})} />}
+      <div className={!hay ? "cp-ghost-grid" : ""}>{children(fs, editable && hay)}</div>
+    </>
+  );
+}
+
+// Ejemplos genéricos por componente 1ª gen (demuestran la estructura para
+// cualquier herramienta que use ese componente — "Marea Oscura").
+const EJ_FOCO: Ejemplo[] = [
+  { escena: "12", a: "A — puerta del faro", b: "B — mesa de la bitácora", c: "C — ventana a la niebla", optica: "35mm", notas: "El foco sigue a Marea de A a C." },
+  { escena: "8", a: "A — Marea en el muelle", b: "B — barca al fondo", c: "", optica: "50mm", notas: "Rack focus cuando llega la barca." },
+];
+const EJ_PLANO: Ejemplo[] = [
+  { escena: "1", plano: "1A", num_plano: "1", objeto: "Plano general del faro al amanecer.", estado: "Pendiente" },
+  { escena: "1", plano: "1B", num_plano: "2", objeto: "Primer plano de Marea observando la luz apagada.", estado: "Rodado" },
+  { escena: "8", plano: "8A", num_plano: "1", objeto: "Travelling del muelle con figuración.", estado: "Pendiente" },
+];
+const EJ_PENDIENTES: Ejemplo[] = [
+  { objeto: "Farol de aceite (atrezzo)", descripcion: "Se necesita para la escena 1 del faro.", estado: "Pendiente", prioridad: "Alta" },
+  { objeto: "Cuaderno de bitácora", descripcion: "Con nombres tachados, encargado a utilería.", estado: "En proceso", prioridad: "Media" },
+];
+const EJ_TIMELINE_DEC: Ejemplo[] = [
+  { decorado: "Interior del faro", inicio_construccion: "2026-06-20", fin_construccion: "2026-07-01", montaje: "2026-07-10", rodaje: "2026-07-14", desmontaje: "2026-07-16", responsable: "Dir. de arte", estado: "En construcción" },
+  { decorado: "Casa de Elsa", inicio_construccion: "2026-07-02", fin_construccion: "2026-07-12", montaje: "2026-07-15", rodaje: "2026-07-16", desmontaje: "2026-07-18", responsable: "Ayudantía de arte", estado: "Pendiente" },
+];
+const EJ_FX: Ejemplo[] = [
+  { escena: "20", personaje: "Elsa", tipo_efecto: "Herida", descripcion_tecnica: "Corte en la ceja con látex y sangre.", materiales: "Látex, sangre artificial, paleta.", foto_proceso: "", foto_resultado: "" },
+  { escena: "14", personaje: "Marea", tipo_efecto: "Cansancio", descripcion_tecnica: "Ojeras y palidez para el clímax.", materiales: "Sombras, base pálida.", foto_proceso: "", foto_resultado: "" },
+];
+const EJ_GENERADOR: Ejemplo[] = [
+  { jornada: "2026-07-14", localizacion: "Faro (exterior)", kw_consumidos: "18", kw_disponibles: "25", combustible_inicio: "100", combustible_fin: "40", incidencias: "Sin incidencias." },
+  { jornada: "2026-07-15", localizacion: "Puerto", kw_consumidos: "22", kw_disponibles: "25", combustible_inicio: "80", combustible_fin: "15", incidencias: "Repostar antes de la próxima jornada." },
+];
+const EJ_CONTINUIDAD_G: Ejemplo[] = [
+  { personaje: "Marea", escena: "1", estado: "Confirmado", fecha: "2026-07-14" },
+  { personaje: "Marea", escena: "8", estado: "Pendiente", fecha: "2026-07-15" },
+];
+const EJ_PRESUP: Ejemplo[] = [
+  { partida: "Equipo de cámara", presupuestado: "12000", real: "11200", estado: "En presupuesto" },
+  { partida: "Localizaciones", presupuestado: "8000", real: "9500", estado: "Sobrepasado" },
+];
+const EJ_CASHFLOW: Ejemplo[] = [
+  { periodo: "Semana 1", ingresos: "50000", egresos: "32000", saldo: "18000" },
+  { periodo: "Semana 2", ingresos: "0", egresos: "28000", saldo: "-10000" },
+];
+const EJ_PIPELINE: Ejemplo[] = [
+  { fuente: "ICAA (ayuda selectiva)", importe: "180000", estado: "En negociación", estado_firma: "Pendiente" },
+  { fuente: "Coproducción Francia", importe: "120000", estado: "Acordado", estado_firma: "Parcial" },
+];
+const EJ_MODELO: Ejemplo[] = [
+  { escenario: "Optimista", margen: "22", ingresos: "900000", gastos: "700000" },
+  { escenario: "Base", margen: "10", ingresos: "780000", gastos: "700000" },
+  { escenario: "Conservador", margen: "-4", ingresos: "670000", gastos: "700000" },
+];
+
+// Registro central de ejemplos por herramienta, para las herramientas que
+// reutilizan patrones compartidos (FichaEquipo / AgendaDia / DocStatusBoard).
+// Los componentes bespoke definen sus ejemplos inline; estos son para el resto.
+const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+  "cast-cal-audiciones": [
+    { fecha: "2026-07-10", hora: "10:00", candidato: "Lucía Fernández", personaje: "Marea", sala: "Sala A", tipo: "Callback", resultado: "En lista corta", notas: "Gran química en la escena del faro. Repetir con el otro Elsa." },
+    { fecha: "2026-07-10", hora: "11:30", candidato: "Diego Molina", personaje: "Farero", sala: "Sala A", tipo: "Prueba cámara", resultado: "Seleccionado", notas: "Presencia física ideal. Confirmar disponibilidad de fechas." },
+    { fecha: "2026-07-11", hora: "16:00", candidato: "Ana Ruiz", personaje: "Elsa", sala: "Online", tipo: "Self-tape", resultado: "Pendiente", notas: "Recibido self-tape, a revisar con dirección." },
+  ],
+  "cast-agentes": [
+    { agente: "María Soto — Talento Sur", actor: "Lucía Fernández", fecha: "2026-07-02", asunto: "Disponibilidad para callback y rango de caché.", estado: "En conversación" },
+    { agente: "Kepa Aguirre — Norte Actores", actor: "Diego Molina", fecha: "2026-06-28", asunto: "Confirmada disponibilidad todo julio. Envían contrato tipo.", estado: "Cerrado" },
+  ],
+  "cast-ficha-reparto": [
+    { actor: "Lucía Fernández", personaje: "Marea", tipo: "Protagonista", contacto: "María Soto (agencia)", contrato: "Firmado", foto: "" },
+    { actor: "Diego Molina", personaje: "Farero", tipo: "Principal", contacto: "Kepa Aguirre (agencia)", contrato: "Pendiente", foto: "" },
+    { actor: "Ana Ruiz", personaje: "Elsa", tipo: "Principal", contacto: "directo", contrato: "Pendiente", foto: "" },
+  ],
+  "cast-ficha-agencia": [
+    { agencia: "Talento Sur", pais: "España", contacto_principal: "María Soto", email: "maria@talentosur.es", telefono: "+34 600 123 456", actores_con_ellos: "Lucía Fernández, Diego Ramos", comision_pct: "10", notas: "Responden rápido. Buen catálogo de jóvenes." },
+    { agencia: "Norte Actores", pais: "España", contacto_principal: "Kepa Aguirre", email: "kepa@norteactores.com", telefono: "+34 688 555 010", actores_con_ellos: "Diego Molina", comision_pct: "12", notas: "Especializados en actores de carácter." },
+  ],
+  "cast-contratos-reparto": [
+    { actor: "Lucía Fernández", personaje: "Marea", cache: "18000", jornadas: "22", imagen: "Firmada", estado: "Firmado", adjunto: "" },
+    { actor: "Diego Molina", personaje: "Farero", cache: "9000", jornadas: "10", imagen: "Pendiente", estado: "Enviado", adjunto: "" },
+    { actor: "Ana Ruiz", personaje: "Elsa", cache: "9000", jornadas: "12", imagen: "Pendiente", estado: "Pendiente", adjunto: "" },
+  ],
+  "rep-citaciones": [
+    { fecha: "2026-07-14", convocatoria: "07:30", set: "Faro (exterior)", escenas: "1, 3", myp: "06:00 maq. + pelo" },
+    { fecha: "2026-07-15", convocatoria: "09:00", set: "Puerto — muelle norte", escenas: "8", myp: "07:30 solo peinado" },
+  ],
+  "rep-agenda-personal": [
+    { fecha: "2026-07-14", hora_citacion: "06:00", localizacion: "Faro (exterior)", escenas: "1, 3", hora_fin: "18:00", estado: "Confirmada", notas: "Escena del amanecer: llegar con el texto de la 3 memorizado." },
+    { fecha: "2026-07-15", hora_citacion: "07:30", localizacion: "Puerto — muelle norte", escenas: "8", hora_fin: "15:00", estado: "Pendiente", notas: "Confirmar transporte desde el hotel." },
+  ],
+  "rep-agenda-personal-principal": [
+    { fecha: "2026-07-16", hora_citacion: "08:00", localizacion: "Casa de Elsa", escenas: "20", estado: "Confirmada", notas: "Escena de la carta. Repasar subtexto con dirección antes." },
+    { fecha: "2026-07-18", hora_citacion: "10:00", localizacion: "Faro (linterna)", escenas: "14", estado: "Pendiente", notas: "Clímax. Ensayo previo el día 17." },
+  ],
+  "son-inventario": [
+    { equipo: "Grabador Sound Devices 833", categoria: "Grabador", cantidad: "1", proveedor: "Alquiler Pro Audio", numero_serie: "SD833-2291", estado: "OK", propietario: "Alquilado", seguro: "Sí", fecha_devolucion: "2026-08-30" },
+    { equipo: "Lavalier DPA 4060 (x4)", categoria: "Micrófono", cantidad: "4", proveedor: "Propio", numero_serie: "DPA-4060-A/D", estado: "OK", propietario: "Propio", seguro: "No", fecha_devolucion: "" },
+  ],
+  "son-adr": [
+    { escena: "14", personaje: "Marea", motivo: "Ruido de viento tapa el diálogo del clímax.", prioridad: "Alta", estado: "Pendiente" },
+    { escena: "8", personaje: "Farero", motivo: "Mejorar intención en la última frase.", prioridad: "Media", estado: "Grabado" },
+  ],
+  "son-plan-adr": [
+    { escena: "14", dialogo_original: "La luz lleva tres noches apagada.", actor: "Lucía Fernández", motivo: "Ruido", fecha_sesion_adr: "2026-09-05", estudio: "Estudio Aural", estado: "Pendiente" },
+    { escena: "8", dialogo_original: "Aquí ya no queda nadie.", actor: "Diego Molina", motivo: "Interpretación", fecha_sesion_adr: "2026-09-06", estudio: "Estudio Aural", estado: "Grabado" },
+  ],
+  "son-plan-mezcla": [
+    { elemento: "Diálogos (DX)", responsable: "Mezclador jefe", formato: "Pro Tools stems", fecha: "2026-09-20", estado: "En mezcla" },
+    { elemento: "Ambientes (FX)", responsable: "Editor de sonido", formato: "5.1 stems", fecha: "2026-09-22", estado: "Pendiente" },
+  ],
+  "son-sinc-audio": [
+    { escena: "1", toma: "3", pista_video: "A001_C003.mov", pista_audio: "ZOOM0003.wav", timecode_in: "01:15:02:12", claqueta: "1/3", estado: "Sincronizado", notas: "La buena marcada por script." },
+    { escena: "8", toma: "2", pista_video: "A004_C002.mov", pista_audio: "ZOOM0021.wav", timecode_in: "03:22:10:04", claqueta: "8/2", estado: "Pendiente", notas: "Revisar deriva de TC." },
+  ],
+  "son-entrega-post": [
+    { stem: "DX — Diálogos", descripcion: "Diálogos limpios sin ambiente.", formato: "WAV 24bit", sample_rate: "48000", bit_depth: "24", archivo_final: "", fecha_entrega: "2026-09-25", estado: "En mezcla" },
+    { stem: "MX — Música", descripcion: "Score final del compositor.", formato: "WAV 24bit", sample_rate: "48000", bit_depth: "24", archivo_final: "", fecha_entrega: "2026-09-28", estado: "Pendiente" },
+  ],
+  "son-problemas-set": [
+    { dia: "2026-07-14", escena: "1", tipo: "Viento", descripcion: "Rachas fuertes en el exterior del faro.", solucion: "Zeppelin + peluche, wildtrack de ambiente.", requiere_adr: "Por confirmar" },
+    { dia: "2026-07-15", escena: "8", tipo: "Ruido externo", descripcion: "Barco de pesca al fondo durante la toma.", solucion: "Esperar paso del barco, repetir.", requiere_adr: "No" },
+  ],
+  "son-reportes": [
+    { escena: "1 / T3", archivo: "ZOOM0003 · 01:15:02", canales: "1-2 boom, 3-4 lav", ok: "OK", circunstancias_sonido: "Exterior con viento", temperatura_ambiente: "14", humedad: "80", nivel_ruido_ambiente_db: "42", observaciones_post: "Viento controlado con zeppelin.", notas: "Wildtrack de olas grabado aparte." },
+    { escena: "8 / T2", archivo: "ZOOM0021 · 03:22:10", canales: "1-2 boom", ok: "NG", circunstancias_sonido: "Exterior urbano", temperatura_ambiente: "18", humedad: "65", nivel_ruido_ambiente_db: "55", observaciones_post: "Barco al fondo.", notas: "Repetida en T3." },
+  ],
+  "son-reporte-boom": [
+    { escena: "1 / T3", angulo: "Cenital frontal", ruido_fondo: "Limpio", alternativa: "—", wildtrack: "Sí", notas: "Buena cobertura, sin sombras de boom." },
+    { escena: "8 / T2", angulo: "Lateral bajo", ruido_fondo: "Ruidoso", alternativa: "Lavalier Farero", wildtrack: "No", notas: "Ciudad al fondo, se pasa a lav." },
+  ],
+  "post-plan-montaje": [
+    { hito: "Primer ensamblado (assembly)", inicio: "2026-08-03", fin: "2026-08-20", responsable: "Montador jefe", estado: "En curso" },
+    { hito: "Fine cut", inicio: "2026-08-21", fin: "2026-09-10", responsable: "Montador jefe", estado: "Pendiente" },
+  ],
+  "post-notas-visionado": [
+    { escena: "14", tc: "01:12:04", nota: "El corte al plano de Elsa llega tarde, se pierde tensión.", autor: "Dirección", estado: "Abierta" },
+    { escena: "1", tc: "00:03:20", nota: "Alargar el amanecer 2 segundos.", autor: "Montaje", estado: "Resuelta" },
+  ],
+  "post-lista-vfx": [
+    { plano: "VFX_012", escena: "12", tipo: "Cielo", desc: "Sustituir cielo plano por cielo tormentoso.", complejidad: "Media" },
+    { plano: "VFX_034", escena: "20", tipo: "Limpieza", desc: "Borrar cable de la barra de lluvia.", complejidad: "Baja" },
+  ],
+  "post-plan-entregas": [
+    { master: "Master DCP cine", formato: "DCP JPEG2000", destino: "Distribuidora", fecha: "2026-10-15", estado: "Pendiente" },
+    { master: "Master plataformas", formato: "ProRes 4444", destino: "Filmin", fecha: "2026-10-20", estado: "En proceso" },
+  ],
+  "post-notas-corte-escena": [
+    { escena: "1", num_cortes: "8", duracion_escena: "2:15", observaciones_montaje: "Ritmo lento a propósito para el amanecer.", musica_temp: "", decision_final: "Queda", notas: "Ojo con la música temp." },
+    { escena: "14", num_cortes: "22", duracion_escena: "3:40", observaciones_montaje: "Demasiados cortes en la confrontación.", musica_temp: "", decision_final: "Reducir", notas: "Bajar a ~16 cortes." },
+  ],
+  "post-vfx-tracking": [
+    { shot_id: "VFX_012", descripcion: "Cielo tormentoso sobre el faro.", tipo_vfx: "Compositing", empresa_vfx: "Píxel Norte", complejidad: "Media", precio: "1200", fecha_entrega: "2026-09-15", link_revision: "", estado: "En proceso" },
+    { shot_id: "VFX_034", descripcion: "Limpieza de cable.", tipo_vfx: "Paint", empresa_vfx: "Píxel Norte", complejidad: "Baja", precio: "300", fecha_entrega: "2026-09-05", link_revision: "", estado: "Aprobado" },
+  ],
+  "post-dcp-deliverables": [
+    { version: "OV (original)", resolucion: "4K", ratio: "2.39", audio_config: "5.1", idioma: "Español", subtitulos: "—", encriptacion: "No", archivo_dcp: "", fecha_creacion: "2026-10-10", estado: "QC" },
+    { version: "VF subtitulada", resolucion: "2K", ratio: "2.39", audio_config: "5.1", idioma: "Español", subtitulos: "Inglés", encriptacion: "Sí", archivo_dcp: "", fecha_creacion: "2026-10-12", estado: "Pendiente" },
+  ],
+  "post-licencias-musica": [
+    { tema: "The Sea, The Sea", compositor: "Ólafur Arnalds", editorial: "Mercury KX", tipo_uso: "Sincronización", fee: "3500", territorio: "Mundial", duracion: "0:45", archivo_licencia: "", estado: "En negociación" },
+    { tema: "Score original", compositor: "Compositor del film", editorial: "Propia", tipo_uso: "Master", fee: "0", territorio: "Mundial", duracion: "—", archivo_licencia: "", estado: "Aprobado" },
+  ],
+  "post-timeline-montaje": [
+    { secuencia: "Acto I — El faro", duracion: "18:30", orden: "1", estado: "Montada" },
+    { secuencia: "Acto II — El pueblo", duracion: "24:10", orden: "2", estado: "Sin montar" },
+  ],
+  "post-sesiones-etalonaje": [
+    { escena: "1", ajustes: "Bajar temperatura, potenciar azules del amanecer.", fecha: "2026-09-18", estado: "A revisar" },
+    { escena: "8", ajustes: "Contraste alto, look desaturado del puerto.", fecha: "2026-09-19", estado: "Aprobado" },
+  ],
+  "post-tracking-vfx": [
+    { plano: "VFX_012", proveedor: "Píxel Norte", version: "v3", entrega: "2026-09-15", estado: "Review" },
+    { plano: "VFX_034", proveedor: "Píxel Norte", version: "v1", entrega: "2026-09-05", estado: "Aprobado" },
+  ],
+  "post-cal-maestro": [
+    { hito: "Picture lock", area: "Montaje", fecha: "2026-09-10", responsable: "Montaje + Dirección", estado: "Pendiente" },
+    { hito: "Entrega DCP", area: "Entrega", fecha: "2026-10-15", responsable: "Coordinación post", estado: "Pendiente" },
+  ],
+  "rrhh-listado-equipo": [
+    { nombre: "Marta Ruiz", depto: "Guion", cargo: "Guionista", tel: "+34 600 111 222", email: "marta@marea.film" },
+    { nombre: "Kepa Aguirre", depto: "Fotografía", cargo: "Director de fotografía", tel: "+34 688 333 444", email: "kepa@marea.film" },
+  ],
+  "rrhh-control-horas": [
+    { fecha: "2026-07-14", persona: "Equipo cámara", entrada: "06:00", salida: "19:30", extra: "1.5" },
+    { fecha: "2026-07-14", persona: "Equipo arte", entrada: "05:30", salida: "18:00", extra: "0.5" },
+  ],
+  "rrhh-altas-bajas": [
+    { nombre: "Ana Soler", depto: "Producción", tipo: "Alta", fecha: "2026-07-01", estado: "Hecho" },
+    { nombre: "Luis Vidal", depto: "Eléctricos", tipo: "Baja", fecha: "2026-07-20", estado: "Tramitando" },
+  ],
+  "rrhh-incidencias": [
+    { fecha: "2026-07-15", tipo: "Seguridad", desc: "Suelo resbaladizo en el muelle durante el rodaje.", estado: "En gestión" },
+    { fecha: "2026-07-12", tipo: "Laboral", desc: "Reclamación de horas extra del día 10.", estado: "Resuelta" },
+  ],
+  // --- Sostenibilidad ---
+  "sost-huella": [
+    { fuente: "Transporte de equipo", categoria: "Transporte", actividad: "1.200 km en furgonetas diésel", co2: "320" },
+    { fuente: "Generadores en set", categoria: "Energía", actividad: "180 L de gasoil", co2: "480" },
+  ],
+  "sost-energia": [
+    { fecha: "2026-07-14", fuente: "Generador", consumo: "180", set: "Faro (exterior)" },
+    { fecha: "2026-07-15", fuente: "Red", consumo: "95", set: "Casa de Elsa" },
+  ],
+  "sost-residuos": [
+    { residuo: "Cartón y embalajes", gestion: "Reciclaje", responsable: "Producción", notas: "Punto limpio en base." },
+    { residuo: "Restos de catering", gestion: "Compost", responsable: "Catering", notas: "Acuerdo con huerto local." },
+  ],
+  "sost-registro-residuos": [
+    { fecha: "2026-07-14", tipo: "Plástico", cantidad: "12", destino: "Reciclaje" },
+    { fecha: "2026-07-14", tipo: "Orgánico", cantidad: "8", destino: "Compost" },
+  ],
+  "sost-proveedores": [
+    { proveedor: "EcoCatering Norte", servicio: "Catering", criterio: "Producto de km 0, sin plásticos de un solo uso.", cert: "ISO 14001" },
+    { proveedor: "Alquiler Verde", servicio: "Transporte", criterio: "Flota híbrida y eléctrica.", cert: "—" },
+  ],
+  // --- Marketing ---
+  "mkt-cal-redes": [
+    { fecha: "2026-10-01", canal: "Instagram", contenido: "Teaser del primer plano del faro.", estado: "Programado" },
+    { fecha: "2026-10-05", canal: "TikTok", contenido: "Clip BTS del amanecer.", estado: "Planeado" },
+  ],
+  "mkt-publicaciones-metricas": [
+    { fecha: "2026-10-01", canal: "Instagram", pieza: "Teaser faro", alcance: "24000", interaccion: "1800" },
+    { fecha: "2026-10-05", canal: "TikTok", pieza: "BTS amanecer", alcance: "51000", interaccion: "6400" },
+  ],
+  "mkt-solicitudes-piezas": [
+    { pieza: "Póster teaser", brief: "Faro entre niebla, tono frío, título abajo.", formato: "A2 + digital", deadline: "2026-09-20", estado: "En diseño" },
+    { pieza: "Banners RRSS", brief: "Set de 5 formatos para lanzamiento.", formato: "1:1, 9:16, 16:9", deadline: "2026-09-25", estado: "Solicitada" },
+  ],
+  // --- Difusión ---
+  "dif-notas-prensa": [
+    { titulo: "Marea Oscura inicia rodaje en la costa norte", fecha: "2026-07-10", angulo: "Rodaje local, empleo y paisaje.", estado: "Enviada" },
+    { titulo: "El faro protagonista: localización real", fecha: "2026-08-01", angulo: "Historia del faro y su restauración.", estado: "Borrador" },
+  ],
+  "dif-tracking-envios": [
+    { medio: "Diario de la Costa", envio: "Nota de prensa + fotos", fecha: "2026-07-10", respuesta: "Interesados en entrevista a la directora.", estado: "Interesado" },
+    { medio: "Radio Norte", envio: "Nota de prensa", fecha: "2026-07-10", respuesta: "", estado: "Sin respuesta" },
+  ],
+  // --- Distribución ---
+  "dist-plan": [
+    { ventana: "Festivales (circuito A)", territorio: "Internacional", fecha: "2026-11-01", condiciones: "Estreno mundial en festival clase A.", estado: "Objetivo" },
+    { ventana: "Salas España", territorio: "España", fecha: "2027-03-01", condiciones: "Estreno limitado + expansión.", estado: "En negociación" },
+  ],
+  "dist-acuerdos": [
+    { contraparte: "Filmin", territorio: "España", ventana: "SVOD", importe: "40000", estado: "En negociación" },
+    { contraparte: "Distribuidora Europa", territorio: "Francia + Benelux", ventana: "Salas", importe: "75000", estado: "Acordado" },
+  ],
+  "dist-inscripciones": [
+    { festival: "San Sebastián", fecha: "2026-06-30", material: "Screener + prensakit + DCP de respaldo.", estado: "Inscrito" },
+    { festival: "Berlinale", fecha: "2026-11-15", material: "Screener online.", estado: "Preparando" },
+  ],
+  // --- Making of ---
+  "mo-cal-editorial": [
+    { fecha: "2026-07-20", pieza: "Reel primera semana", formato: "Reel", responsable: "Community", estado: "En edición" },
+    { fecha: "2026-07-25", pieza: "Entrevista a la directora", formato: "Entrevista", responsable: "Cámara BTS", estado: "En grabación" },
+  ],
+  "mo-cobertura-bts": [
+    { jornada: "2026-07-14", momento: "Rodaje escena 1 (amanecer)", objetivo: "Capturar la niebla real y el equipo montando.", equipo: "Cámara BTS + foto fija" },
+    { jornada: "2026-07-15", momento: "Escena 8 (puerto)", objetivo: "Ambiente de puerto, interacción con figurantes.", equipo: "Cámara BTS" },
+  ],
+  "mo-hoja-rodaje-bts": [
+    { jornada: "2026-07-14", planos: "Timelapse de montaje, entrevista rápida a dirección de foto.", equipo: "1 cámara + gimbal", notas: "No molestar en tomas de sonido directo." },
+    { jornada: "2026-07-15", planos: "Cobertura de figuración, detalles de atrezzo.", equipo: "1 cámara", notas: "" },
+  ],
+  "mo-redes-metricas": [
+    { fecha: "2026-07-21", canal: "Instagram", pieza: "Reel semana 1", alcance: "32000", engagement: "2900" },
+    { fecha: "2026-07-26", canal: "TikTok", pieza: "BTS niebla", alcance: "68000", engagement: "8100" },
+  ],
+  "mo-plan-rodaje-bts": [
+    { jornada: "2026-07-14", escenas_previstas: "Escena 1 y montaje del faro.", crew_bts: "Ana (cámara)", equipo_bts: "Sony FX3 + gimbal", objetivo_contenido: "Reel de arranque de rodaje.", resultado_horas: "3", material_aprobado: "Aprobado" },
+    { jornada: "2026-07-15", escenas_previstas: "Escena 8 en puerto.", crew_bts: "Ana (cámara)", equipo_bts: "Sony FX3", objetivo_contenido: "Contenido de figuración.", resultado_horas: "2", material_aprobado: "Pendiente" },
+  ],
+  "mo-material": [
+    { fecha: "2026-07-14", clip: "BTS_D01_001.mp4", contenido: "Montaje del faro al amanecer.", ubicacion: "Disco BTS 01", estado: "Seleccionado", carpeta: "" },
+    { fecha: "2026-07-15", clip: "BTS_D02_004.mp4", contenido: "Figuración en el puerto.", ubicacion: "Disco BTS 01", estado: "Crudo", carpeta: "" },
+  ],
+  "mo-banco-cortes": [
+    { clip: "Amanecer faro (timelapse)", destino: "Reel semana 1", duracion: "0:15", estado: "Aprobado" },
+    { clip: "Entrevista directora", destino: "Pieza larga YouTube", duracion: "2:30", estado: "En edición" },
+  ],
+  "bts-inventario-material": [
+    { tipo: "Video", fecha: "2026-07-14", escena_relacionada: "1", descripcion: "Montaje del faro y niebla.", archivo_master: "", aprobado_publicacion: "Aprobado", fecha_publicacion: "2026-07-21" },
+    { tipo: "Foto", fecha: "2026-07-15", escena_relacionada: "8", descripcion: "Foto fija del puerto.", archivo_master: "", aprobado_publicacion: "Pendiente", fecha_publicacion: "" },
+  ],
+  "bts-plan-contenido": [
+    { semana: "Semana 1", plataforma: "Instagram", tipo_contenido: "Reels", descripcion: "Arranque de rodaje, teaser de localización.", recurso_necesario: "Cámara BTS + edición rápida.", responsable: "Community", estado: "En producción" },
+    { semana: "Semana 2", plataforma: "TikTok", tipo_contenido: "Story", descripcion: "Día a día del equipo.", recurso_necesario: "Móvil.", responsable: "Community", estado: "Planificado" },
+  ],
+  "mo-entrevistas": [
+    { entrevistado: "Marta Ruiz", cargo: "Directora", fecha: "2026-07-25", temas_tratados: "Origen del proyecto, el faro como personaje.", duracion_min: "35", archivo_video: "", fragmentos_usables: "El bloque sobre la niebla (min 12-15).", estado: "Grabada" },
+    { entrevistado: "Kepa Aguirre", cargo: "Director de fotografía", fecha: "2026-07-26", temas_tratados: "Luz natural y el reto del amanecer.", duracion_min: "28", archivo_video: "", fragmentos_usables: "", estado: "Pendiente" },
+  ],
+  "bts-contactos-prensa": [
+    { medio: "Fotogramas", periodista: "Elena Ríos", email: "elena@fotogramas.es", telefono: "+34 600 777 888", tipo_cobertura: "Set visit", estado_acreditacion: "Acreditado", notas: "Visita prevista semana 3." },
+    { medio: "Cinemanía", periodista: "Pau Grau", email: "pau@cinemania.es", telefono: "+34 655 111 999", tipo_cobertura: "Entrevista", estado_acreditacion: "Pendiente", notas: "" },
+  ],
+};
+
+// ============================================================
+// DIRECCIÓN — vistas a medida. Acento: var(--lime).
+// CSS: dd-* / psc-* / sclog-* / cgn-* / pfig-*
+// ============================================================
+
+// ---- Desglose técnico por escena ----
+// Tarjetas ordenadas por nº de escena: número grande, decorado, actores
+// como chips, alertas de FX/permisos/equipo especial, borde coloreado por estado.
+const DESGLOSE_DIR_IDS = new Set(["dir-breakdown-tecnico"]);
+
+const EJ_BREAKDOWN: Ejemplo[] = [
+  { escena: "12", decorado: "Faro — base de la torre", actores_necesarios: "Marea, Elsa", efectos_especiales: "Niebla artificial en el exterior.", hora_dorada: "Sí", permisos_necesarios: "Permiso de rodaje nocturno del ayuntamiento.", equipo_especial: "Grúa pequeña para el plano cenital.", estado: "En preparación" },
+  { escena: "8", decorado: "Puerto — muelle norte", actores_necesarios: "Marea, Pescadores", efectos_especiales: "", hora_dorada: "No", permisos_necesarios: "Corte de tráfico en el paseo marítimo.", equipo_especial: "", estado: "Listo" },
+  { escena: "20", decorado: "Casa de Elsa — Salón", actores_necesarios: "Elsa", efectos_especiales: "Lluvia en ventana (barra de lluvia).", hora_dorada: "No", permisos_necesarios: "", equipo_especial: "Barra de lluvia + bomba de agua.", estado: "Pendiente" },
+];
+function DesgloseDir({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const val = (f: Fila, k: string) => f.datos?.[k] ?? "";
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  function set(f: Fila, k: string, v: string) { onGuardar(f.id, { ...f.datos, [k]: v }, f); }
+
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colHoraDorada = columnas.find((c) => c.key === "hora_dorada");
+  const largoKeys = ["efectos_especiales", "permisos_necesarios", "equipo_especial"] as const;
+
+  function borderCls(f: Fila) {
+    const e = val(f, "estado");
+    if (/listo/i.test(e)) return "dd-border-ok";
+    if (/preparac/i.test(e)) return "dd-border-warn";
+    return "dd-border-pend";
+  }
+
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(EJ_BREAKDOWN);
+  const edEff = editable && hayFilas;
+  const sorted = [...filasEff].sort((a, b) => {
+    const na = parseInt(val(a, "escena")) || 999;
+    const nb = parseInt(val(b, "escena")) || 999;
+    return na !== nb ? na - nb : val(a, "escena").localeCompare(val(b, "escena"), "es", { numeric: true });
+  });
+
+  return (
+    <div className="dd-board">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_BREAKDOWN} onCrear={onCrear} />}
+      <div className="dd-grid">
+        {sorted.map((f) => {
+          const actors = val(f, "actores_necesarios").split(/[,;\/]/).map((s) => s.trim()).filter(Boolean);
+          return (
+            <div key={f.id} className={`dd-card ${borderCls(f)} ${!hayFilas ? "cp-ghost" : ""}`}>
+              {!hayFilas && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="dd-head">
+                {edEff
+                  ? <input className="dd-num" defaultValue={val(f, "escena")} placeholder="Esc." onBlur={(e) => set(f, "escena", e.target.value)} />
+                  : <span className="dd-num">{val(f, "escena") || "?"}</span>}
+                <div className="dd-head-right">
+                  <input className="dd-decorado" defaultValue={val(f, "decorado")} placeholder={lbl("decorado")} readOnly={!edEff} onBlur={(e) => set(f, "decorado", e.target.value)} />
+                  {!edEff && actors.length > 0 && (
+                    <div className="dd-actors">{actors.map((a, i) => <span key={i} className="dd-actor">{a}</span>)}</div>
+                  )}
+                  {val(f, "hora_dorada") === "Sí" && <span className="dd-gold-badge">◈ {lbl("hora_dorada")}</span>}
+                </div>
+                {edEff && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+
+              {edEff && (
+                <label className="dd-field">
+                  <span>{lbl("actores_necesarios")}</span>
+                  <input className="dd-field-input" defaultValue={val(f, "actores_necesarios")} placeholder="Marc, Sofía…" onBlur={(e) => set(f, "actores_necesarios", e.target.value)} />
+                </label>
+              )}
+
+              {largoKeys.map((k) => (edEff || val(f, k)) ? (
+                <label key={k} className="dd-field">
+                  <span>{lbl(k)}</span>
+                  <textarea className="dd-field-ta" defaultValue={stripHtml(val(f, k))} placeholder={edEff ? "—" : ""} readOnly={!edEff} rows={2} onBlur={(e) => set(f, k, e.target.value)} />
+                </label>
+              ) : null)}
+
+              {colHoraDorada && edEff && (
+                <div className="dd-seg-row">
+                  <span>{lbl("hora_dorada")}</span>
+                  <EstadoSeg valor={val(f, "hora_dorada")} opciones={colHoraDorada.opciones ?? []} onPick={(v) => set(f, "hora_dorada", v)} editable={edEff} chip />
+                </div>
+              )}
+
+              {colEstado && (
+                <div className="dd-foot">
+                  <EstadoSeg valor={val(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={edEff} color />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Partes de script / continuidad por escena ----
+// Raccord notes como contenido hero. Left border por estado.
+// Por rodar=amber, Rodada=lime, Pendiente repetir=rose.
+const EJ_PARTES: Ejemplo[] = [
+  { escena: "8", toma: "3 OK · 1 NG", duracion: "0:45", raccord: "Marea entra por la izquierda con el farol en la mano derecha. La puerta queda entornada.", estado: "Rodada" },
+  { escena: "12", toma: "—", duracion: "1:10", raccord: "Ojo: posición del cuaderno debe coincidir con la escena 20.", estado: "Por rodar" },
+  { escena: "5", toma: "2 NG", duracion: "0:30", raccord: "El té debe estar servido antes del corte. Repetir por foco.", estado: "Pendiente repetir" },
+];
+function PartesScript({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const val = (f: Fila, k: string) => f.datos?.[k] ?? "";
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  function set(f: Fila, k: string, v: string) { onGuardar(f.id, { ...f.datos, [k]: v }, f); }
+
+  const colEstado = columnas.find((c) => c.key === "estado");
+
+  function borderCls(f: Fila) {
+    const e = val(f, "estado");
+    if (/rodada/i.test(e) && !/pendiente/i.test(e)) return "psc-border-ok";
+    if (/pendiente.*repetir/i.test(e)) return "psc-border-bad";
+    return "psc-border-warn";
+  }
+
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(EJ_PARTES);
+  const edEff = editable && hayFilas;
+  const sorted = [...filasEff].sort((a, b) => {
+    const na = parseInt(val(a, "escena")) || 999;
+    const nb = parseInt(val(b, "escena")) || 999;
+    return na !== nb ? na - nb : val(a, "escena").localeCompare(val(b, "escena"), "es", { numeric: true });
+  });
+
+  return (
+    <div className="psc-board">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_PARTES} onCrear={onCrear} />}
+      {sorted.map((f) => (
+        <div key={f.id} className={`psc-card ${borderCls(f)} ${!hayFilas ? "cp-ghost" : ""}`}>
+          {!hayFilas && <span className="cp-ej-chip">{t("ejChip")}</span>}
+          <div className="psc-top">
+            <div className="psc-left">
+              {edEff
+                ? <input className="psc-esc-num" defaultValue={val(f, "escena")} placeholder="Esc." onBlur={(e) => set(f, "escena", e.target.value)} />
+                : <span className="psc-esc-num">{val(f, "escena") || "?"}</span>}
+              <div className="psc-meta">
+                {(edEff || val(f, "toma")) ? (
+                  <label className="psc-row">
+                    <span>{lbl("toma")}</span>
+                    <input className="psc-toma" defaultValue={val(f, "toma")} placeholder="3 OK / 2 NG" readOnly={!edEff} onBlur={(e) => set(f, "toma", e.target.value)} />
+                  </label>
+                ) : null}
+                {(edEff || val(f, "duracion")) ? (
+                  <label className="psc-row">
+                    <span>{lbl("duracion")}</span>
+                    <input className="psc-duracion" defaultValue={val(f, "duracion")} placeholder="0:45" readOnly={!edEff} onBlur={(e) => set(f, "duracion", e.target.value)} />
+                  </label>
+                ) : null}
+              </div>
+            </div>
+            <div className="psc-raccord">
+              <span className="psc-raccord-label">{lbl("raccord")}</span>
+              <textarea
+                className="psc-raccord-ta"
+                defaultValue={stripHtml(val(f, "raccord"))}
+                placeholder={edEff ? "Notas de raccord y continuidad…" : ""}
+                readOnly={!edEff}
+                rows={3}
+                onBlur={(e) => set(f, "raccord", e.target.value)}
+              />
+            </div>
+            {edEff && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+          </div>
+          {colEstado && (
+            <div className="psc-foot">
+              <EstadoSeg valor={val(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={edEff} color />
+            </div>
+          )}
+        </div>
+      ))}
+      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Log de tomas (Script supervisor) ----
+// Filas compactas agrupadas por escena. Resultado coloreado:
+// OK=lime / NG=rose / HOLD=amber / Print=cyan / Falsa=muted.
+const EJ_SCRIPTLOG: Ejemplo[] = [
+  { escena: "8", toma: "1", resultado: "OK", timecode: "01:12:04:10", duracion: "0:45", observaciones: "Buena toma, foco perfecto." },
+  { escena: "8", toma: "2", resultado: "NG", timecode: "01:13:20:00", duracion: "0:42", observaciones: "Sombra de micro en el plano." },
+  { escena: "8", toma: "3", resultado: "Print", timecode: "01:15:02:12", duracion: "0:46", observaciones: "La buena. Marcada para montaje." },
+  { escena: "12", toma: "1", resultado: "HOLD", timecode: "02:04:00:00", duracion: "1:05", observaciones: "A la espera de decisión de dirección." },
+];
+function ScriptLog({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const val = (f: Fila, k: string) => f.datos?.[k] ?? "";
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  function set(f: Fila, k: string, v: string) { onGuardar(f.id, { ...f.datos, [k]: v }, f); }
+
+  const colResultado = columnas.find((c) => c.key === "resultado");
+
+  function resultadoCls(r: string): string {
+    const v = r.trim().toUpperCase();
+    if (v === "OK") return "sclog-ok";
+    if (v === "NG") return "sclog-ng";
+    if (v === "HOLD") return "sclog-hold";
+    if (v === "PRINT") return "sclog-print";
+    return "sclog-falsa";
+  }
+
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(EJ_SCRIPTLOG);
+  const edEff = editable && hayFilas;
+
+  const grupos = filasEff.reduce<Record<string, Fila[]>>((acc, f) => {
+    const esc = (val(f, "escena") || t("noScene")).trim();
+    (acc[esc] ??= []).push(f);
+    return acc;
+  }, {});
+  const gruposSorted = Object.entries(grupos).sort(([a], [b]) =>
+    a.localeCompare(b, "es", { numeric: true })
+  );
+
+  function tomaStats(fs: Fila[]): string {
+    const counts: Record<string, number> = {};
+    fs.forEach((f) => {
+      const r = val(f, "resultado").toUpperCase() || "—";
+      counts[r] = (counts[r] ?? 0) + 1;
+    });
+    return Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(" · ");
+  }
+
+  return (
+    <div className="sclog-board">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_SCRIPTLOG} onCrear={onCrear} />}
+      {gruposSorted.map(([escena, fs]) => {
+        const fsSorted = [...fs].sort((a, b) => {
+          const na = parseInt(val(a, "toma")) || 0;
+          const nb = parseInt(val(b, "toma")) || 0;
+          return na - nb;
+        });
+        return (
+          <div key={escena} className={`sclog-grupo ${!hayFilas ? "cp-ghost" : ""}`}>
+            <div className="sclog-ghdr">
+              <span className="sclog-gesc">{lbl("escena")} {escena}</span>
+              <span className="sclog-gstats">{tomaStats(fs)}</span>
+              {!hayFilas && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              {edEff && (
+                <button className="cp-btn sclog-add" onClick={() => onCrear({ escena })}>
+                  <Icon name="plus" size={10} /> {lbl("toma")}
+                </button>
+              )}
+            </div>
+            <div className="sclog-rows">
+              {fsSorted.map((f) => (
+                <div key={f.id} className={`sclog-row ${resultadoCls(val(f, "resultado"))}`}>
+                  <input className="sclog-toma" type="number" defaultValue={val(f, "toma")} placeholder="T" readOnly={!edEff} onBlur={(e) => set(f, "toma", e.target.value)} />
+                  {colResultado && (
+                    <EstadoSeg valor={val(f, "resultado")} opciones={colResultado.opciones ?? []} onPick={(v) => set(f, "resultado", v)} editable={edEff} chip color />
+                  )}
+                  <input className="sclog-tc" defaultValue={val(f, "timecode")} placeholder="00:00:00:00" readOnly={!edEff} onBlur={(e) => set(f, "timecode", e.target.value)} />
+                  <input className="sclog-dur" defaultValue={val(f, "duracion")} placeholder="0:00" readOnly={!edEff} onBlur={(e) => set(f, "duracion", e.target.value)} />
+                  <input className="sclog-obs" defaultValue={val(f, "observaciones")} placeholder={edEff ? lbl("observaciones") : ""} readOnly={!edEff} onBlur={(e) => set(f, "observaciones", e.target.value)} />
+                  {edEff && <button className="hp-del sclog-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      {hayFilas && editable && (
+        <div className="hp-actions">
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Cambios de guión en set ----
+// Agrupados por fecha. Vista de diff: versión anterior muted/italic,
+// versión nueva con borde lime y texto prominente.
+const EJ_CAMBIOS: Ejemplo[] = [
+  { fecha: "2026-06-18", escena: "14", version_anterior: "MAREA: ¿Dónde está mi padre?", version_nueva: "MAREA: (sin preguntar, ya lo sabe) La luz lleva tres noches apagada.", motivo: "Ganar subtexto: que no pregunte lo que ya intuye.", aprobado_por: "Dirección" },
+  { fecha: "2026-06-18", escena: "14", version_anterior: "Entran juntos a la torre.", version_nueva: "Marea sube sola; Elsa se queda abajo.", motivo: "Separar a los personajes de cara al clímax.", aprobado_por: "Dirección" },
+];
+function CambiosGuion({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const val = (f: Fila, k: string) => f.datos?.[k] ?? "";
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  function set(f: Fila, k: string, v: string) { onGuardar(f.id, { ...f.datos, [k]: v }, f); }
+
+  const colFecha = columnas.find((c) => c.tipo === "fecha");
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(EJ_CAMBIOS);
+  const edEff = editable && hayFilas;
+
+  function CambioCard(f: Fila) {
+    return (
+      <div key={f.id} className={`cgn-card ${!hayFilas ? "cp-ghost" : ""}`}>
+        {!hayFilas && <span className="cp-ej-chip">{t("ejChip")}</span>}
+        <div className="cgn-head">
+          {edEff ? (
+            <>
+              <input className="cgn-esc-input" defaultValue={val(f, "escena")} placeholder={lbl("escena")} onBlur={(e) => set(f, "escena", e.target.value)} />
+              <input className="cgn-ap-input" defaultValue={val(f, "aprobado_por")} placeholder={lbl("aprobado_por")} onBlur={(e) => set(f, "aprobado_por", e.target.value)} />
+              {colFecha && <input className="cgn-fecha-input" type="date" defaultValue={val(f, colFecha.key)} onBlur={(e) => set(f, colFecha.key, e.target.value)} />}
+              <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>
+            </>
+          ) : (
+            <>
+              <span className="cgn-esc">Esc. {val(f, "escena") || "—"}</span>
+              {val(f, "aprobado_por") && <span className="cgn-aprobado">{val(f, "aprobado_por")}</span>}
+            </>
+          )}
+        </div>
+        <div className="cgn-antes">
+          <span className="cgn-label cgn-label-antes">{lbl("version_anterior")}</span>
+          <textarea className="cgn-ta cgn-ta-antes" defaultValue={stripHtml(val(f, "version_anterior"))} placeholder={edEff ? "—" : ""} readOnly={!edEff} rows={2} onBlur={(e) => set(f, "version_anterior", e.target.value)} />
+        </div>
+        <div className="cgn-ahora">
+          <span className="cgn-label cgn-label-ahora">{lbl("version_nueva")}</span>
+          <textarea className="cgn-ta cgn-ta-ahora" defaultValue={stripHtml(val(f, "version_nueva"))} placeholder={edEff ? "—" : ""} readOnly={!edEff} rows={2} onBlur={(e) => set(f, "version_nueva", e.target.value)} />
+        </div>
+        {(edEff || val(f, "motivo")) ? (
+          <label className="cgn-motivo">
+            <span>{lbl("motivo")}</span>
+            <textarea defaultValue={stripHtml(val(f, "motivo"))} placeholder={edEff ? "—" : ""} readOnly={!edEff} rows={2} onBlur={(e) => set(f, "motivo", e.target.value)} />
+          </label>
+        ) : null}
+      </div>
+    );
+  }
+
+  const grupos = colFecha
+    ? Object.entries(
+        filasEff.reduce<Record<string, Fila[]>>((acc, f) => {
+          const fecha = val(f, colFecha.key) || t("pendMoveTo");
+          (acc[fecha] ??= []).push(f);
+          return acc;
+        }, {})
+      ).sort(([a], [b]) => a.localeCompare(b))
+    : null;
+
+  return (
+    <div className="cgn-board">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_CAMBIOS} onCrear={onCrear} />}
+      {grupos ? (
+        grupos.map(([fecha, fs]) => (
+          <div key={fecha} className="cgn-grupo">
+            <div className="cgn-ghdr">
+              <span className="hex" />
+              <span>{fecha}</span>
+              <span className="cgn-gcount">{fs.length}</span>
+            </div>
+            {fs.map(CambioCard)}
+          </div>
+        ))
+      ) : (
+        filasEff.map(CambioCard)
+      )}
+      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Plan de figuración / extras ----
+// Número de figurantes como dato hero (Poppins 800, coloreado por estado).
+// Agrupado por fecha (dir-plan-extras) o por escena (dir-figuracion-escena).
+const PLAN_FIGURACION_IDS = new Set(["dir-plan-extras", "dir-figuracion-escena"]);
+const EJ_FIGURACION: Ejemplo[] = [
+  { escena: "8", fecha: "2026-07-03", tipo_figurante: "Pescadores", tipo: "Pescadores", cantidad: "12", descripcion_perfil: "Hombres y mujeres 40-70, aspecto curtido de mar.", indicaciones: "Aspecto curtido de mar, ropa de faena.", que_llevan: "Ropa de faena propia (gris/azul).", hora_citacion: "06:30", estado: "Confirmado" },
+  { escena: "8", fecha: "2026-07-03", tipo_figurante: "Niños del pueblo", tipo: "Niños del pueblo", cantidad: "4", descripcion_perfil: "Niños 8-11 con autorización de rodaje.", indicaciones: "Con autorización de rodaje.", que_llevan: "Ropa de calle neutra.", hora_citacion: "09:00", estado: "Por cubrir" },
+  { escena: "20", fecha: "2026-07-05", tipo_figurante: "Asistentes al funeral", tipo: "Asistentes al funeral", cantidad: "25", descripcion_perfil: "Adultos de luto riguroso.", indicaciones: "Vestidos de luto riguroso.", que_llevan: "Ropa negra formal.", hora_citacion: "07:45", estado: "Convocado" },
+];
+
+function PlanFiguracion({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const val = (f: Fila, k: string) => f.datos?.[k] ?? "";
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+  function set(f: Fila, k: string, v: string) { onGuardar(f.id, { ...f.datos, [k]: v }, f); }
+
+  const colEstado = columnas.find((c) => c.tipo === "estado");
+  const colFecha = columnas.find((c) => c.tipo === "fecha");
+  const colCantidad = columnas.find((c) => c.tipo === "num" && c.key === "cantidad");
+  const colTipo = columnas.find((c) => c.key === "tipo_figurante" || c.key === "tipo");
+  const colHora = columnas.find((c) => c.key === "hora_citacion");
+  const largos = columnas.filter((c) => c.tipo === "largo");
+
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(EJ_FIGURACION);
+  const edEff = editable && hayFilas;
+
+  const grupoKey = colFecha ? colFecha.key : "escena";
+  const grupos = Object.entries(
+    filasEff.reduce<Record<string, Fila[]>>((acc, f) => {
+      const g = val(f, grupoKey) || "—";
+      (acc[g] ??= []).push(f);
+      return acc;
+    }, {})
+  ).sort(([a], [b]) => a.localeCompare(b, "es", { numeric: true }));
+
+  function cantidadTono(f: Fila): string {
+    const e = val(f, colEstado?.key ?? "estado");
+    if (/confirmad/i.test(e)) return "tono-ok";
+    if (/convocad/i.test(e)) return "tono-info";
+    if (/cancelad/i.test(e)) return "tono-bad";
+    return "tono-warn";
+  }
+
+  function Tarjeta(f: Fila) {
+    const cantKey = colCantidad?.key ?? "cantidad";
+    const tipoKey = colTipo?.key ?? "tipo";
+    return (
+      <div key={f.id} className={`pfig-card ${!hayFilas ? "cp-ghost" : ""}`}>
+        {!hayFilas && <span className="cp-ej-chip">{t("ejChip")}</span>}
+        <div className="pfig-head">
+          <div className={`pfig-count ${cantidadTono(f)}`}>
+            {edEff
+              ? <input className="pfig-count-input" type="number" defaultValue={val(f, cantKey)} placeholder="0" onBlur={(e) => set(f, cantKey, e.target.value)} />
+              : <span className="pfig-count-num">{val(f, cantKey) || "—"}</span>}
+            <span className="pfig-count-lbl">{colCantidad?.label ?? lbl(cantKey)}</span>
+          </div>
+          <div className="pfig-tipo-wrap">
+            {edEff
+              ? <input className="pfig-tipo-input" defaultValue={val(f, tipoKey)} placeholder={colTipo?.label ?? lbl(tipoKey)} onBlur={(e) => set(f, tipoKey, e.target.value)} />
+              : <span className="pfig-tipo-label">{val(f, tipoKey) || "—"}</span>}
+            <div className="pfig-meta">
+              {colFecha && edEff && (
+                <input className="pfig-fecha" type="date" defaultValue={val(f, colFecha.key)} onBlur={(e) => set(f, colFecha.key, e.target.value)} />
+              )}
+              {edEff
+                ? <input className="pfig-esc" defaultValue={val(f, "escena")} placeholder={lbl("escena")} onBlur={(e) => set(f, "escena", e.target.value)} />
+                : val(f, "escena") ? <span className="pfig-esc-badge">Esc. {val(f, "escena")}</span> : null}
+              {colHora && (
+                <label className="pfig-hora">
+                  <span>{colHora.label}</span>
+                  <input className="pfig-hora-input" defaultValue={val(f, colHora.key)} placeholder="06:30" readOnly={!edEff} onBlur={(e) => set(f, colHora.key, e.target.value)} />
+                </label>
+              )}
+            </div>
+          </div>
+          {edEff && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        {largos.map((c) => (edEff || val(f, c.key)) ? (
+          <label key={c.key} className="pfig-field">
+            <span>{c.label}</span>
+            <textarea className="pfig-field-ta" defaultValue={stripHtml(val(f, c.key))} placeholder={edEff ? "—" : ""} readOnly={!edEff} rows={2} onBlur={(e) => set(f, c.key, e.target.value)} />
+          </label>
+        ) : null)}
+        {colEstado && (
+          <div className="pfig-foot">
+            <EstadoSeg valor={val(f, colEstado.key)} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, colEstado.key, v)} editable={edEff} color />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="pfig-board">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_FIGURACION} onCrear={onCrear} />}
+      {grupos.map(([grupo, fs]) => (
+        <div key={grupo} className="pfig-grupo">
+          <div className="pfig-ghdr">
+            <span className="hex" />
+            <span>{colFecha ? grupo : `Esc. ${grupo}`}</span>
+            <span className="pfig-gcount">
+              {fs.reduce((s, f) => s + (parseInt(val(f, colCantidad?.key ?? "cantidad")) || 0), 0)} fig.
+            </span>
+          </div>
+          <div className="pfig-grid">{fs.map(Tarjeta)}</div>
+        </div>
+      ))}
+      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ============================================================
+// GUION — vistas a medida. Acento: var(--acc) (yellow).
+// CSS: gesc-* (escaleta corcho) / ghist-* (timeline versiones) /
+//      gdes-* (desglose) / gcom-* (comentarios). Todas "nunca en blanco".
+// ============================================================
+
+const gVal = (f: Fila, k: string) => f.datos?.[k] ?? "";
+const gLbl = (columnas: Columna[], k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+const gChips = (s: string) => s.split(/[,;\/]/).map((x) => x.trim()).filter(Boolean);
+const gNum = (s: string) => { const n = parseInt(s, 10); return isNaN(n) ? 9999 : n; };
+
+// ---- Sinopsis y escaleta: fichas de corcho agrupadas por acto ----
+const EJ_ESCALETA: Ejemplo[] = [
+  { acto: "Acto I", num: "1", secuencia: "Amanecer en el faro", funcion: "Detonante", resumen: "Marea despierta antes del alba y descubre que la luz del faro lleva tres noches apagada. Algo no encaja." },
+  { acto: "Acto I", num: "2", secuencia: "El pueblo que calla", funcion: "Presentación", resumen: "Baja al puerto. Nadie menciona al farero. Conocemos a Elsa, que sabe más de lo que dice." },
+  { acto: "Acto I", num: "3", secuencia: "La carta sin remite", funcion: "Giro de acto I", resumen: "Bajo la puerta aparece una carta con la caligrafía del farero. Marea decide subir a la torre." },
+  { acto: "Acto II", num: "4", secuencia: "Lo que guarda la linterna", funcion: "Punto medio", resumen: "Dentro del mecanismo, un cuaderno de bitácora con nombres tachados. El de Elsa entre ellos." },
+  { acto: "Acto II", num: "5", secuencia: "Marea contra el pueblo", funcion: "Crisis", resumen: "Confronta a Elsa. La verdad parte en dos su idea de casa. La niebla cierra el único camino." },
+];
+const ACTO_ORDER = ["Acto I", "Acto II", "Acto III"];
+
+function EscaletaCorkboard({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_ESCALETA);
+  const actos = [...new Set(base.map((f) => gVal(f, "acto") || "—"))].sort((a, b) => {
+    const ia = ACTO_ORDER.indexOf(a), ib = ACTO_ORDER.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+
+  return (
+    <div className="gesc-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_ESCALETA} onCrear={onCrear} />}
+      {actos.map((acto) => {
+        const grupo = base.filter((f) => (gVal(f, "acto") || "—") === acto).sort((a, b) => gNum(gVal(a, "num")) - gNum(gVal(b, "num")));
+        return (
+          <div key={acto} className="gesc-acto">
+            <div className="gesc-acto-hdr"><span>{acto === "—" ? t("noScene") : acto}</span><i /></div>
+            <div className="gesc-grid">
+              {grupo.map((f) => {
+                const gh = esGhost(f); const ed = editable && !gh;
+                return (
+                  <div key={f.id} className={`gesc-card ${gh ? "cp-ghost" : ""}`}>
+                    {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+                    <span className="gesc-pin" />
+                    <div className="gesc-card-in">
+                      <div className="gesc-top">
+                        {ed
+                          ? <input className="gesc-num" defaultValue={gVal(f, "num")} placeholder="1" onBlur={(e) => set(f, "num", e.target.value)} />
+                          : <span className="gesc-num">{gVal(f, "num") || "•"}</span>}
+                        {ed
+                          ? <input className="gesc-fn" defaultValue={gVal(f, "funcion")} placeholder={gLbl(columnas, "funcion")} onBlur={(e) => set(f, "funcion", e.target.value)} />
+                          : gVal(f, "funcion") ? <span className="gesc-fn">{gVal(f, "funcion")}</span> : null}
+                        {ed && <button className="hp-del gesc-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                      </div>
+                      {ed
+                        ? <input className="gesc-seq" defaultValue={gVal(f, "secuencia")} placeholder={gLbl(columnas, "secuencia")} onBlur={(e) => set(f, "secuencia", e.target.value)} />
+                        : <div className="gesc-seq">{gVal(f, "secuencia") || t("untitled")}</div>}
+                      {ed
+                        ? <textarea className="gesc-body" defaultValue={stripHtml(gVal(f, "resumen"))} placeholder={t("phEscaletaResumen")} rows={3} onBlur={(e) => set(f, "resumen", e.target.value)} />
+                        : <div className="gesc-body">{stripHtml(gVal(f, "resumen"))}</div>}
+                    </div>
+                  </div>
+                );
+              })}
+              {ed_actoAdd(acto, editable, hayFilas, onCrear, t)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+// Botón "＋ secuencia" al final de cada acto (solo con datos reales).
+function ed_actoAdd(acto: string, editable: boolean, hayFilas: boolean, onCrear: (d?: Record<string, string>) => void, t: ReturnType<typeof useTranslations>) {
+  if (!editable || !hayFilas) return null;
+  return (
+    <button className="gesc-card gesc-add" onClick={() => onCrear(acto === "—" ? {} : { acto })}>
+      <span className="gesc-add-plus">+</span>
+      <span className="gesc-add-lbl">{t("addSequence")}</span>
+    </button>
+  );
+}
+
+// ---- Historial de versiones: línea de tiempo vertical de drafts ----
+const EJ_HISTORIAL: Ejemplo[] = [
+  { version: "v3.0", fecha: "2026-06-20", autor: "Marta Ruiz", cambios: "Reescritura del tercer acto: nuevo clímax en la torre. Se elimina la subtrama del hermano.", estado: "Aprobado" },
+  { version: "v2.1", fecha: "2026-05-08", autor: "Marta Ruiz", cambios: "Pulido de diálogos de Elsa. Ajuste de tono en secuencias 4 y 5 tras notas de dirección.", estado: "En revisión" },
+  { version: "v1.0", fecha: "2026-03-15", autor: "Marta Ruiz", cambios: "Primer borrador completo a partir de la escaleta aprobada.", estado: "Borrador" },
+];
+function HistorialVersiones({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_HISTORIAL);
+  const sorted = [...base].sort((a, b) => (gVal(b, "fecha") || "").localeCompare(gVal(a, "fecha") || ""));
+
+  return (
+    <div className="ghist-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_HISTORIAL} onCrear={onCrear} />}
+      <div className="ghist-line">
+        {sorted.map((f, i) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`ghist-node ${gh ? "cp-ghost" : ""} ${i === 0 ? "ghist-latest" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="ghist-dot"><span /></div>
+              <div className="ghist-card">
+                <div className="ghist-head">
+                  {ed
+                    ? <input className="ghist-ver" defaultValue={gVal(f, "version")} placeholder="v1.0" onBlur={(e) => set(f, "version", e.target.value)} />
+                    : <span className="ghist-ver">{gVal(f, "version") || "v—"}</span>}
+                  {i === 0 && <span className="ghist-current">{t("versionCurrent")}</span>}
+                  <div className="ghist-meta">
+                    {ed
+                      ? <input type="date" className="ghist-fecha" defaultValue={gVal(f, "fecha")} onBlur={(e) => set(f, "fecha", e.target.value)} />
+                      : <span className="ghist-fecha">{gVal(f, "fecha")}</span>}
+                    {ed
+                      ? <input className="ghist-autor" defaultValue={gVal(f, "autor")} placeholder={gLbl(columnas, "autor")} onBlur={(e) => set(f, "autor", e.target.value)} />
+                      : gVal(f, "autor") ? <span className="ghist-autor">{gVal(f, "autor")}</span> : null}
+                  </div>
+                  {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                </div>
+                {ed
+                  ? <textarea className="ghist-cambios" defaultValue={stripHtml(gVal(f, "cambios"))} placeholder={t("phHistorialCambios")} rows={2} onBlur={(e) => set(f, "cambios", e.target.value)} />
+                  : <div className="ghist-cambios">{stripHtml(gVal(f, "cambios"))}</div>}
+                {colEstado && (
+                  <div className="ghist-foot">
+                    <EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} color />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addVersion")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Desglose de escenas ----
+const EJ_DESGLOSE_G: Ejemplo[] = [
+  { escena: "1", loc: "INT. Faro — Linterna / Noche", personajes: "Marea, Elsa", atrezzo: "Cuaderno de bitácora, farol de aceite, mecanismo de la linterna.", notas: "Luz práctica motivada por el farol. Ojo raccord del cuaderno abierto." },
+  { escena: "2", loc: "EXT. Puerto / Amanecer", personajes: "Marea, Pescadores (figuración)", atrezzo: "Redes, cajas de pescado, bicicleta de Marea.", notas: "Se rueda a hora dorada. Marea llega en bici desde el faro." },
+  { escena: "3", loc: "INT. Casa de Elsa — Cocina / Día", personajes: "Marea, Elsa", atrezzo: "Carta sin remite, servicio de té, fotos antiguas en la pared.", notas: "La carta debe quedar legible en primer plano." },
+];
+function DesgloseGuion({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_DESGLOSE_G);
+  const sorted = [...base].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
+  const largos = ["atrezzo", "notas"] as const;
+
+  return (
+    <div className="gdes-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_DESGLOSE_G} onCrear={onCrear} />}
+      <div className="gdes-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          const pers = gChips(gVal(f, "personajes"));
+          return (
+            <div key={f.id} className={`gdes-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="gdes-head">
+                {ed
+                  ? <input className="gdes-esc" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
+                  : <span className="gdes-esc">{gVal(f, "escena") || "•"}</span>}
+                <div className="gdes-head-r">
+                  {ed
+                    ? <input className="gdes-loc" defaultValue={gVal(f, "loc")} placeholder={gLbl(columnas, "loc")} onBlur={(e) => set(f, "loc", e.target.value)} />
+                    : <div className="gdes-loc">{gVal(f, "loc") || t("noScene")}</div>}
+                </div>
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              {ed
+                ? <input className="gdes-pers-in" defaultValue={gVal(f, "personajes")} placeholder={gLbl(columnas, "personajes") + " (coma)"} onBlur={(e) => set(f, "personajes", e.target.value)} />
+                : pers.length > 0 ? <div className="gdes-pers">{pers.map((p, i) => <span key={i} className="gdes-chip">{p}</span>)}</div> : null}
+              {largos.map((k) => (ed || gVal(f, k)) ? (
+                <label key={k} className="gdes-field">
+                  <span>{gLbl(columnas, k)}</span>
+                  <textarea className="gdes-ta" defaultValue={stripHtml(gVal(f, k))} placeholder={k === "atrezzo" ? t("phDesgloseAtrezzo") : t("phDesgloseNotas")} readOnly={!ed} rows={2} onBlur={(e) => set(f, k, e.target.value)} />
+                </label>
+              ) : null)}
+            </div>
+          );
+        })}
+      </div>
+      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Comentarios y sugerencias por escena: tablero por estado ----
+const EJ_COMENTARIOS: Ejemplo[] = [
+  { escena: "4", comentario: "El punto medio llega tarde. Adelantar el hallazgo del cuaderno para ganar tensión antes.", tipo: "Estructura", estado: "Abierto" },
+  { escena: "2", comentario: "El diálogo de Elsa suena expositivo. Dejar que el subtexto haga el trabajo.", tipo: "Diálogo", estado: "Abierto" },
+  { escena: "1", comentario: "Se aplicó el nuevo detonante: la luz apagada funciona mejor que el disparo original.", tipo: "Ritmo", estado: "Aplicado" },
+  { escena: "3", comentario: "Se descartó el flashback: rompía el punto de vista de Marea.", tipo: "Personaje", estado: "Descartado" },
+];
+const GCOM_TIPO_CLS: Record<string, string> = { "Diálogo": "gcom-dialogo", "Estructura": "gcom-estructura", "Personaje": "gcom-personaje", "Ritmo": "gcom-ritmo" };
+function ComentariosGuion({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colTipo = columnas.find((c) => c.key === "tipo");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const estados = colEstado?.opciones ?? ["Abierto", "Aplicado", "Descartado"];
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_COMENTARIOS);
+
+  return (
+    <div className="gcom-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_COMENTARIOS} onCrear={onCrear} />}
+      <div className="gcom-cols">
+        {estados.map((est) => {
+          const grupo = base.filter((f) => (gVal(f, "estado") || estados[0]) === est);
+          return (
+            <div key={est} className="gcom-col">
+              <div className="gcom-col-hdr"><span>{est}</span><span className="gcom-count">{grupo.length}</span></div>
+              <div className="gcom-list">
+                {grupo.map((f) => {
+                  const gh = esGhost(f); const ed = editable && !gh;
+                  const tipoCls = GCOM_TIPO_CLS[gVal(f, "tipo")] ?? "gcom-neutral";
+                  return (
+                    <div key={f.id} className={`gcom-card ${tipoCls} ${gh ? "cp-ghost" : ""}`}>
+                      {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+                      <div className="gcom-top">
+                        <span className="gcom-esc">{t("sceneShort")} {ed
+                          ? <input className="gcom-esc-in" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
+                          : (gVal(f, "escena") || "—")}</span>
+                        {colTipo && <EstadoSeg valor={gVal(f, "tipo")} opciones={colTipo.opciones ?? []} onPick={(v) => set(f, "tipo", v)} editable={ed} chip />}
+                        {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                      </div>
+                      {ed
+                        ? <textarea className="gcom-body" defaultValue={stripHtml(gVal(f, "comentario"))} placeholder={t("phComentario")} rows={3} onBlur={(e) => set(f, "comentario", e.target.value)} />
+                        : <div className="gcom-body">{stripHtml(gVal(f, "comentario"))}</div>}
+                      {colEstado && (
+                        <div className="gcom-foot">
+                          <EstadoSeg valor={gVal(f, "estado")} opciones={estados} onPick={(v) => set(f, "estado", v)} editable={ed} color />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {editable && hayFilas && (
+                  <button className="gcom-add" onClick={() => onCrear({ estado: est })}><span>+</span> {t("addComment")}</button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// CASTING — vistas a medida. Acento: var(--acc) (orange).
+// CSS: cwall-* (muro de casting) / cbrk-* (breakdown de actores) /
+//      cdispo-* (matriz disponibilidad) / ceval-* (evaluación). "Nunca en blanco".
+// ============================================================
+
+// ---- Muro de casting: headshots agrupados por personaje ----
+const EJ_CANDIDATOS: Ejemplo[] = [
+  { personaje: "Marea", candidato: "Lucía Fernández", agencia: "Talento Sur", fase: "Callback", notas: "Gran verdad en la mirada. Química con el Farero.", foto: "", reel: "" },
+  { personaje: "Marea", candidato: "Nerea Gil", agencia: "Directo", fase: "1ª audición", notas: "Buena voz, algo joven para el rango del personaje.", foto: "", reel: "" },
+  { personaje: "Farero", candidato: "Diego Molina", agencia: "Norte Actores", fase: "Prueba de cámara", notas: "Presencia física ideal. Confirmar disponibilidad.", foto: "", reel: "" },
+  { personaje: "Elsa", candidato: "Ana Ruiz", agencia: "Directo", fase: "Propuesto", notas: "Self-tape prometedor, a ver en callback.", foto: "", reel: "" },
+];
+function CastingWall({ columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colFase = columnas.find((c) => c.key === "fase");
+  const colFoto = columnas.find((c) => c.tipo === "archivo");
+  const colReel = columnas.find((c) => c.tipo === "link");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_CANDIDATOS);
+  const personajes = [...new Set(base.map((f) => gVal(f, "personaje") || "—"))];
+
+  return (
+    <div className="cwall-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_CANDIDATOS} onCrear={onCrear} />}
+      {personajes.map((pers) => {
+        const grupo = base.filter((f) => (gVal(f, "personaje") || "—") === pers);
+        return (
+          <div key={pers} className="cwall-pers">
+            <div className="cwall-pers-hdr"><span>{pers === "—" ? t("noScene") : pers}</span><span className="cwall-count">{grupo.length}</span><i /></div>
+            <div className="cwall-grid">
+              {grupo.map((f) => {
+                const gh = esGhost(f); const ed = editable && !gh;
+                return (
+                  <div key={f.id} className={`cwall-card ${gh ? "cp-ghost" : ""}`}>
+                    {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+                    <div className="cwall-photo">
+                      {colFoto && !gh ? (
+                        <ArchivoCell path={gVal(f, colFoto.key)} editable={ed} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey={colFoto.key} onSave={(v) => set(f, colFoto.key, v)} />
+                      ) : <span className="cwall-photo-ph hex" />}
+                    </div>
+                    <div className="cwall-body">
+                      {ed
+                        ? <input className="cwall-name" defaultValue={gVal(f, "candidato")} placeholder={gLbl(columnas, "candidato")} onBlur={(e) => set(f, "candidato", e.target.value)} />
+                        : <div className="cwall-name">{gVal(f, "candidato") || t("untitled")}</div>}
+                      {ed
+                        ? <input className="cwall-agencia" defaultValue={gVal(f, "agencia")} placeholder={gLbl(columnas, "agencia")} onBlur={(e) => set(f, "agencia", e.target.value)} />
+                        : gVal(f, "agencia") ? <div className="cwall-agencia">{gVal(f, "agencia")}</div> : null}
+                      {colFase && <EstadoSeg valor={gVal(f, "fase")} opciones={colFase.opciones ?? []} onPick={(v) => set(f, "fase", v)} editable={ed} color />}
+                      {(ed || gVal(f, "notas")) ? (
+                        <textarea className="cwall-notas" defaultValue={stripHtml(gVal(f, "notas"))} placeholder={t("phCastNotas")} readOnly={!ed} rows={2} onBlur={(e) => set(f, "notas", e.target.value)} />
+                      ) : null}
+                      {colReel && !gh && (
+                        <div className="cwall-reel"><span className="cwall-reel-lbl">{colReel.label}</span><LinkCell valor={gVal(f, colReel.key)} editable={ed} onSave={(v) => set(f, colReel.key, v)} /></div>
+                      )}
+                      {ed && <button className="hp-del cwall-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                    </div>
+                  </div>
+                );
+              })}
+              {editable && hayFilas && (
+                <button className="cwall-card cwall-add" onClick={() => onCrear(pers === "—" ? {} : { personaje: pers })}>
+                  <span className="cwall-add-plus">+</span><span className="cwall-add-lbl">{t("addCandidate")}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---- Breakdown de actores: perfil buscado por personaje ----
+const EJ_BREAKDOWN_ACT: Ejemplo[] = [
+  { personaje: "Marea", genero: "M", edad_min: "22", edad_max: "30", tipo_fisico: "Complexión atlética, aspecto de quien vive junto al mar.", habilidades_especiales: "Nadar, remar. Se valora buceo.", disponibilidad_requerida: "Rodaje completo (8 semanas) + 2 de ensayos.", importancia: "Principal", estado_casting: "En proceso" },
+  { personaje: "Farero", genero: "H", edad_min: "55", edad_max: "70", tipo_fisico: "Corpulento, manos grandes, rostro curtido.", habilidades_especiales: "Manejo de barca de remos.", disponibilidad_requerida: "4 semanas centrales del rodaje.", importancia: "Principal", estado_casting: "Cerrado" },
+  { personaje: "Elsa", genero: "M", edad_min: "45", edad_max: "60", tipo_fisico: "Elegante, contenida.", habilidades_especiales: "Acento del norte.", disponibilidad_requerida: "6 jornadas repartidas.", importancia: "Secundario", estado_casting: "Abierto" },
+];
+function BreakdownActores({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colGenero = columnas.find((c) => c.key === "genero");
+  const colImportancia = columnas.find((c) => c.key === "importancia");
+  const colEstado = columnas.find((c) => c.key === "estado_casting");
+  const largos = ["tipo_fisico", "habilidades_especiales", "disponibilidad_requerida"] as const;
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_BREAKDOWN_ACT);
+
+  return (
+    <div className="cbrk-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_BREAKDOWN_ACT} onCrear={onCrear} />}
+      <div className="cbrk-grid">
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          const edadMin = gVal(f, "edad_min"), edadMax = gVal(f, "edad_max");
+          return (
+            <div key={f.id} className={`cbrk-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="cbrk-head">
+                {ed
+                  ? <input className="cbrk-pers" defaultValue={gVal(f, "personaje")} placeholder={gLbl(columnas, "personaje")} onBlur={(e) => set(f, "personaje", e.target.value)} />
+                  : <span className="cbrk-pers">{gVal(f, "personaje") || t("untitled")}</span>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="cbrk-tags">
+                {colGenero && <EstadoSeg valor={gVal(f, "genero")} opciones={colGenero.opciones ?? []} onPick={(v) => set(f, "genero", v)} editable={ed} chip />}
+                {ed ? (
+                  <span className="cbrk-edad">
+                    <input className="cbrk-edad-in" type="number" defaultValue={edadMin} placeholder="edad" onBlur={(e) => set(f, "edad_min", e.target.value)} />–
+                    <input className="cbrk-edad-in" type="number" defaultValue={edadMax} placeholder="edad" onBlur={(e) => set(f, "edad_max", e.target.value)} />
+                  </span>
+                ) : (edadMin || edadMax) ? <span className="cbrk-edad-badge">{edadMin || "?"}–{edadMax || "?"} {t("years")}</span> : null}
+                {colImportancia && <EstadoSeg valor={gVal(f, "importancia")} opciones={colImportancia.opciones ?? []} onPick={(v) => set(f, "importancia", v)} editable={ed} chip color />}
+              </div>
+              {largos.map((k) => (ed || gVal(f, k)) ? (
+                <label key={k} className="cbrk-field">
+                  <span>{gLbl(columnas, k)}</span>
+                  <textarea className="cbrk-ta" defaultValue={stripHtml(gVal(f, k))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, k, e.target.value)} />
+                </label>
+              ) : null)}
+              {colEstado && <div className="cbrk-foot"><EstadoSeg valor={gVal(f, "estado_casting")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado_casting", v)} editable={ed} color /></div>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addCharacter")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Matriz de disponibilidad: actor × semanas ----
+const EJ_DISPO: Ejemplo[] = [
+  { actor: "Lucía Fernández", personaje: "Marea", sem1: "Disponible", sem2: "Disponible", sem3: "Con restricción", sem4: "Disponible", restricciones: "Semana 3: teatro por las tardes.", contacto_representante: "María Soto — 600 123 456" },
+  { actor: "Diego Molina", personaje: "Farero", sem1: "No disponible", sem2: "Disponible", sem3: "Disponible", sem4: "Disponible", restricciones: "Semana 1 rodando otra cosa.", contacto_representante: "Kepa Aguirre — 688 555 010" },
+  { actor: "Ana Ruiz", personaje: "Elsa", sem1: "Disponible", sem2: "Disponible", sem3: "Disponible", sem4: "Con restricción", restricciones: "Semana 4: solo primeras horas.", contacto_representante: "Directo — 611 222 333" },
+];
+function DisponibilidadMatriz({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const semCols = columnas.filter((c) => /^sem\d+$/.test(c.key));
+  const colRestr = columnas.find((c) => c.key === "restricciones");
+  const colContacto = columnas.find((c) => c.key === "contacto_representante");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_DISPO);
+
+  return (
+    <div className="cdispo-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_DISPO} onCrear={onCrear} />}
+      <div className={`cdispo-table ${!hayFilas ? "cp-ghost-grid" : ""}`}>
+        <div className="cdispo-hrow">
+          <div className="cdispo-hactor">{gLbl(columnas, "actor")}</div>
+          {semCols.map((c) => <div key={c.key} className="cdispo-hsem">{c.label}</div>)}
+        </div>
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`cdispo-row ${gh ? "cp-ghost" : ""}`}>
+              <div className="cdispo-actor">
+                {ed
+                  ? <input className="cdispo-actor-in" defaultValue={gVal(f, "actor")} placeholder={gLbl(columnas, "actor")} onBlur={(e) => set(f, "actor", e.target.value)} />
+                  : <span className="cdispo-actor-name">{gVal(f, "actor") || t("untitled")}</span>}
+                {gVal(f, "personaje") && <span className="cdispo-pers">{gVal(f, "personaje")}</span>}
+                {(ed || gVal(f, "restricciones") || gVal(f, "contacto_representante")) ? (
+                  <div className="cdispo-extra">
+                    {colRestr && (ed || gVal(f, "restricciones")) && (
+                      <input className="cdispo-restr" defaultValue={gVal(f, "restricciones")} placeholder={colRestr.label} readOnly={!ed} onBlur={(e) => set(f, "restricciones", e.target.value)} />
+                    )}
+                    {colContacto && (ed || gVal(f, "contacto_representante")) && (
+                      <input className="cdispo-contacto" defaultValue={gVal(f, "contacto_representante")} placeholder={colContacto.label} readOnly={!ed} onBlur={(e) => set(f, "contacto_representante", e.target.value)} />
+                    )}
+                  </div>
+                ) : null}
+              </div>
+              {semCols.map((c) => (
+                <div key={c.key} className={`cdispo-cell tono-${estadoTono(gVal(f, c.key))}`}>
+                  <EstadoSeg valor={gVal(f, c.key)} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={ed} chip color />
+                </div>
+              ))}
+              {ed && <button className="hp-del cdispo-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addActor")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Evaluación de candidatos (comparativa / resultados / sesiones) ----
+const CAST_EVAL_IDS = new Set(["cast-comparativa", "cast-resultados", "cast-sesiones-prueba"]);
+const EJ_EVAL: Record<string, Ejemplo[]> = {
+  "cast-comparativa": [
+    { personaje: "Marea", candidato: "Lucía Fernández", fortaleza: "Verdad emocional, gran escucha.", debilidad: "Poca experiencia en cámara.", opinion_dir: "Mi favorita. Transmite la fragilidad justa.", estado: "Favorito", selfTape: "" },
+    { personaje: "Marea", candidato: "Nerea Gil", fortaleza: "Muy técnica, versátil.", debilidad: "Le falta la crudeza del personaje.", opinion_dir: "Buena, pero más luminosa de lo que buscamos.", estado: "Reserva", selfTape: "" },
+  ],
+  "cast-resultados": [
+    { candidato: "Lucía Fernández", personaje: "Marea", fecha: "2026-07-10", valoracion: "Callback muy sólido. Química inmediata con el Farero.", decision: "Avanza" },
+    { candidato: "Diego Molina", personaje: "Farero", fecha: "2026-07-10", valoracion: "Prueba de cámara excelente. Físico y voz ideales.", decision: "Elegido" },
+  ],
+  "cast-sesiones-prueba": [
+    { actor: "Lucía Fernández", fecha_sesion: "2026-07-10", tipo: "Presencial", escenas_leidas: "Esc. 1 (faro), Esc. 14 (confrontación).", resultado: "Avanza", notas_director: "Muy presente, decisiones valientes.", notas_casting: "Puntual, preparada, buena actitud." },
+    { actor: "Ana Ruiz", fecha_sesion: "2026-07-11", tipo: "Video-llamada", escenas_leidas: "Esc. 3 (cocina).", resultado: "En lista corta", notas_director: "Interesante, verla en persona.", notas_casting: "Conexión algo justa por vídeo." },
+  ],
+};
+function EvaluacionCasting({ columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colPersonaje = columnas.find((c) => c.key === "personaje");
+  const colActor = columnas.find((c) => c.key === "candidato" || c.key === "actor");
+  const groupCol = colPersonaje ?? colActor;
+  const tituloCol = colActor ?? colPersonaje;
+  const colFecha = columnas.find((c) => c.tipo === "fecha");
+  const colArchivo = columnas.find((c) => c.tipo === "archivo");
+  const decisionKeys = ["decision", "resultado", "estado"];
+  const colDecision = columnas.find((c) => c.tipo === "estado" && decisionKeys.includes(c.key));
+  const chipEstados = columnas.filter((c) => c.tipo === "estado" && c.key !== colDecision?.key);
+  const largos = columnas.filter((c) => c.tipo === "largo");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_EVAL[herramientaId] ?? []);
+  const grupos = [...new Set(base.map((f) => (groupCol ? gVal(f, groupCol.key) : "") || "—"))];
+
+  function Card(f: Fila) {
+    const gh = esGhost(f); const ed = editable && !gh;
+    return (
+      <div key={f.id} className={`ceval-card ${gh ? "cp-ghost" : ""}`}>
+        {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+        <div className="ceval-head">
+          {tituloCol && (ed
+            ? <input className="ceval-name" defaultValue={gVal(f, tituloCol.key)} placeholder={tituloCol.label} onBlur={(e) => set(f, tituloCol.key, e.target.value)} />
+            : <span className="ceval-name">{gVal(f, tituloCol.key) || t("untitled")}</span>)}
+          {colFecha && (ed
+            ? <input className="ceval-fecha" type="date" defaultValue={gVal(f, colFecha.key)} onBlur={(e) => set(f, colFecha.key, e.target.value)} />
+            : gVal(f, colFecha.key) ? <span className="ceval-fecha">{gVal(f, colFecha.key)}</span> : null)}
+          {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        {chipEstados.length > 0 && (
+          <div className="ceval-chips">
+            {chipEstados.map((c) => <EstadoSeg key={c.key} valor={gVal(f, c.key)} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={ed} chip />)}
+          </div>
+        )}
+        {largos.map((c) => (ed || gVal(f, c.key)) ? (
+          <label key={c.key} className="ceval-field">
+            <span>{c.label}</span>
+            <textarea className="ceval-ta" defaultValue={stripHtml(gVal(f, c.key))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, c.key, e.target.value)} />
+          </label>
+        ) : null)}
+        {colArchivo && !gh && (
+          <div className="ceval-file"><span className="ceval-file-lbl">{colArchivo.label}</span>
+            <ArchivoCell path={gVal(f, colArchivo.key)} editable={ed} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey={colArchivo.key} onSave={(v) => set(f, colArchivo.key, v)} />
+          </div>
+        )}
+        {colDecision && <div className="ceval-foot"><EstadoSeg valor={gVal(f, colDecision.key)} opciones={colDecision.opciones ?? []} onPick={(v) => set(f, colDecision.key, v)} editable={ed} color /></div>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ceval-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_EVAL[herramientaId] ?? []} onCrear={onCrear} />}
+      {groupCol ? grupos.map((g) => {
+        const fs = base.filter((f) => (gVal(f, groupCol.key) || "—") === g);
+        return (
+          <div key={g} className="ceval-grupo">
+            <div className="ceval-ghdr"><span className="hex" /><span>{g === "—" ? t("noScene") : g}</span><span className="ceval-gcount">{fs.length}</span></div>
+            <div className="ceval-grid">{fs.map(Card)}</div>
+          </div>
+        );
+      }) : <div className="ceval-grid">{base.map(Card)}</div>}
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ============================================================
+// REPARTO — vistas a medida. Acento: var(--acc) (white).
+// CSS: rasc-* (worksheet del actor) / rvm-* (vestuario/maq) / rpron-* (pronunciación).
+// El punto de vista es el del ACTOR preparando su papel. "Nunca en blanco".
+// ============================================================
+
+// ---- Worksheet del actor por escena: análisis de interpretación ----
+const EJ_ACTOR_SCENES: Ejemplo[] = [
+  { escena: "1", paginas_guion: "1-2", objetivo_escena: "Entender por qué la luz del faro está apagada.", emociones_personaje: "Inquietud contenida, presentimiento.", relacion_con: "Con el recuerdo del padre ausente.", obstaculos: "El pueblo evita el tema; nadie le da respuestas.", beats_clave: "Descubrir la luz apagada → decidir investigar.", notas_del_director: "Menos gesto, más mirada. Que el miedo se intuya." },
+  { escena: "14", paginas_guion: "22-24", objetivo_escena: "Sacarle la verdad a Elsa aunque duela.", emociones_personaje: "Rabia que tapa el miedo a perder su hogar.", relacion_con: "Elsa — figura casi materna que la traiciona.", obstaculos: "Elsa se cierra; la niebla la aísla.", beats_clave: "Pregunta directa → silencio → estallido → quiebre.", notas_del_director: "El estallido es un instante; enseguida vuelve el niño asustado." },
+];
+function ActorScenes({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const otrosLargos = ["emociones_personaje", "relacion_con", "obstaculos", "beats_clave"] as const;
+  const colDir = columnas.find((c) => c.key === "notas_del_director");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_ACTOR_SCENES);
+  const sorted = [...base].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
+
+  return (
+    <div className="rasc-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_ACTOR_SCENES} onCrear={onCrear} />}
+      <div className="rasc-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`rasc-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="rasc-head">
+                {ed
+                  ? <input className="rasc-esc" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
+                  : <span className="rasc-esc">{gVal(f, "escena") || "•"}</span>}
+                <label className="rasc-pags">
+                  <span>{gLbl(columnas, "paginas_guion")}</span>
+                  <input className="rasc-pags-in" defaultValue={gVal(f, "paginas_guion")} placeholder="1-2" readOnly={!ed} onBlur={(e) => set(f, "paginas_guion", e.target.value)} />
+                </label>
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="rasc-obj">
+                <span className="rasc-obj-lbl">{gLbl(columnas, "objetivo_escena")}</span>
+                <textarea className="rasc-obj-ta" defaultValue={stripHtml(gVal(f, "objetivo_escena"))} placeholder={t("phActorObjetivo")} readOnly={!ed} rows={2} onBlur={(e) => set(f, "objetivo_escena", e.target.value)} />
+              </div>
+              <div className="rasc-fields">
+                {otrosLargos.map((k) => (ed || gVal(f, k)) ? (
+                  <label key={k} className="rasc-field">
+                    <span>{gLbl(columnas, k)}</span>
+                    <textarea className="rasc-ta" defaultValue={stripHtml(gVal(f, k))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, k, e.target.value)} />
+                  </label>
+                ) : null)}
+              </div>
+              {colDir && (ed || gVal(f, "notas_del_director")) ? (
+                <div className="rasc-dir">
+                  <span className="rasc-dir-lbl">{colDir.label}</span>
+                  <textarea className="rasc-dir-ta" defaultValue={stripHtml(gVal(f, "notas_del_director"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "notas_del_director", e.target.value)} />
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Vestuario y maquillaje asignado por escena ----
+const EJ_VESTMAQ: Ejemplo[] = [
+  { escena: "1", vestuario: "Jersey de lana gastado, pantalón impermeable, botas de agua.", maquillaje: "Piel lavada, ojeras marcadas, pelo húmedo por la niebla.", notas: "Continuidad: el jersey debe verse igual de sucio que en la esc. 3." },
+  { escena: "20", vestuario: "Abrigo negro de luto, guantes.", maquillaje: "Maquillaje neutro, ojos ligeramente enrojecidos.", notas: "El guante izquierdo se quita al leer la carta — ojo raccord." },
+];
+function VestMaqReparto({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_VESTMAQ);
+  const sorted = [...base].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
+
+  return (
+    <div className="rvm-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_VESTMAQ} onCrear={onCrear} />}
+      <div className="rvm-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`rvm-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="rvm-head">
+                {ed
+                  ? <input className="rvm-esc" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
+                  : <span className="rvm-esc">{gVal(f, "escena") || "•"}</span>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="rvm-cols">
+                <label className="rvm-col">
+                  <span>{gLbl(columnas, "vestuario")}</span>
+                  <textarea className="rvm-ta" defaultValue={stripHtml(gVal(f, "vestuario"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={3} onBlur={(e) => set(f, "vestuario", e.target.value)} />
+                </label>
+                <label className="rvm-col">
+                  <span>{gLbl(columnas, "maquillaje")}</span>
+                  <textarea className="rvm-ta" defaultValue={stripHtml(gVal(f, "maquillaje"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={3} onBlur={(e) => set(f, "maquillaje", e.target.value)} />
+                </label>
+              </div>
+              {(ed || gVal(f, "notas")) ? (
+                <label className="rvm-notas">
+                  <span>{gLbl(columnas, "notas")}</span>
+                  <textarea className="rvm-notas-ta" defaultValue={stripHtml(gVal(f, "notas"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "notas", e.target.value)} />
+                </label>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Guía de pronunciación (dialect coach) ----
+const EJ_PRONUNCIACION: Ejemplo[] = [
+  { palabra_frase: "Aberri", pronunciacion_fonotica: "/aˈβe.ri/", idioma: "Acento especial", grabacion: "", aprobado: "Aprobado" },
+  { palabra_frase: "The lighthouse keeper", pronunciacion_fonotica: "/ðə ˈlaɪt.haʊs ˌkiː.pər/", idioma: "Inglés", grabacion: "", aprobado: "Pendiente" },
+];
+function GuiaPronunciacion({ columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colIdioma = columnas.find((c) => c.key === "idioma");
+  const colAprobado = columnas.find((c) => c.key === "aprobado");
+  const colAudio = columnas.find((c) => c.tipo === "archivo");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_PRONUNCIACION);
+
+  return (
+    <div className="rpron-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_PRONUNCIACION} onCrear={onCrear} />}
+      <div className="rpron-grid">
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`rpron-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="rpron-top">
+                {ed
+                  ? <input className="rpron-palabra" defaultValue={gVal(f, "palabra_frase")} placeholder={gLbl(columnas, "palabra_frase")} onBlur={(e) => set(f, "palabra_frase", e.target.value)} />
+                  : <div className="rpron-palabra">{gVal(f, "palabra_frase") || t("untitled")}</div>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              {ed
+                ? <input className="rpron-fon" defaultValue={gVal(f, "pronunciacion_fonotica")} placeholder="/…/" onBlur={(e) => set(f, "pronunciacion_fonotica", e.target.value)} />
+                : gVal(f, "pronunciacion_fonotica") ? <div className="rpron-fon">{gVal(f, "pronunciacion_fonotica")}</div> : null}
+              <div className="rpron-meta">
+                {colIdioma && <EstadoSeg valor={gVal(f, "idioma")} opciones={colIdioma.opciones ?? []} onPick={(v) => set(f, "idioma", v)} editable={ed} chip />}
+              </div>
+              {colAudio && !gh && (
+                <div className="rpron-audio"><span className="rpron-audio-lbl">{colAudio.label}</span>
+                  <ArchivoCell path={gVal(f, colAudio.key)} editable={ed} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey={colAudio.key} onSave={(v) => set(f, colAudio.key, v)} />
+                </div>
+              )}
+              {colAprobado && <div className="rpron-foot"><EstadoSeg valor={gVal(f, "aprobado")} opciones={colAprobado.opciones ?? []} onPick={(v) => set(f, "aprobado", v)} editable={ed} color /></div>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ============================================================
+// SONIDO — vistas a medida. Acento: var(--acc) (gold).
+// CSS: smic-* (mapa de micros) / sdir-* (plan de directo) /
+//      sbat-* (control de baterías) / splay-* (playlist temp). "Nunca en blanco".
+// ============================================================
+
+// ---- Mapa/lista de micrófonos por escena ----
+const SON_MIC_IDS = new Set(["son-lista-micros", "son-mapa-micros-escena"]);
+const EJ_MICROS: Ejemplo[] = [
+  { escena: "1", personaje: "Marea", micro: "Lavalier", tipo_micro: "Inalámbrico", frecuencia: "606.250 MHz", canal_grabacion: "1", nivel_grabacion: "-12", notas: "Oculto bajo el jersey de lana." },
+  { escena: "1", personaje: "Farero", micro: "Pértiga", tipo_micro: "Boom", frecuencia: "—", canal_grabacion: "2", nivel_grabacion: "-10", notas: "Cenital, cuidado sombra." },
+  { escena: "8", personaje: "Marea", micro: "Lavalier", tipo_micro: "Inalámbrico", frecuencia: "606.250 MHz", canal_grabacion: "1", nivel_grabacion: "-14", notas: "Viento: peluche en la cápsula." },
+];
+function MicMapa({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colMicro = columnas.find((c) => c.key === "micro" || c.key === "tipo_micro");
+  const colFreq = columnas.find((c) => c.key === "frecuencia");
+  const colCanal = columnas.find((c) => c.key === "canal_grabacion");
+  const colNivel = columnas.find((c) => c.key === "nivel_grabacion");
+  const colNotas = columnas.find((c) => c.tipo === "largo");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_MICROS);
+  const escenas = [...new Set(base.map((f) => gVal(f, "escena") || "—"))].sort((a, b) => gNum(a) - gNum(b));
+
+  return (
+    <div className="smic-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_MICROS} onCrear={onCrear} />}
+      {escenas.map((esc) => {
+        const grupo = base.filter((f) => (gVal(f, "escena") || "—") === esc);
+        return (
+          <div key={esc} className="smic-grupo">
+            <div className="smic-ghdr"><span className="smic-esc">{t("sceneShort")} {esc}</span><i /><span className="smic-count">{grupo.length}</span></div>
+            <div className="smic-rows">
+              {grupo.map((f) => {
+                const gh = esGhost(f); const ed = editable && !gh;
+                return (
+                  <div key={f.id} className={`smic-row ${gh ? "cp-ghost" : ""}`}>
+                    {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+                    <div className="smic-pers">
+                      {ed
+                        ? <input className="smic-pers-in" defaultValue={gVal(f, "personaje")} placeholder={gLbl(columnas, "personaje")} onBlur={(e) => set(f, "personaje", e.target.value)} />
+                        : <span className="smic-pers-name">{gVal(f, "personaje") || "—"}</span>}
+                    </div>
+                    {colMicro && <div className="smic-mic"><EstadoSeg valor={gVal(f, colMicro.key)} opciones={colMicro.opciones ?? []} onPick={(v) => set(f, colMicro.key, v)} editable={ed} chip color /></div>}
+                    {colFreq && <label className="smic-chip"><span>{colFreq.label}</span><input className="smic-mono" defaultValue={gVal(f, "frecuencia")} placeholder="MHz" readOnly={!ed} onBlur={(e) => set(f, "frecuencia", e.target.value)} /></label>}
+                    {colCanal && <label className="smic-chip smic-chip-sm"><span>CH</span><input className="smic-mono" type="number" defaultValue={gVal(f, "canal_grabacion")} readOnly={!ed} onBlur={(e) => set(f, "canal_grabacion", e.target.value)} /></label>}
+                    {colNivel && <label className="smic-chip smic-chip-sm"><span>dB</span><input className="smic-mono" type="number" defaultValue={gVal(f, "nivel_grabacion")} readOnly={!ed} onBlur={(e) => set(f, "nivel_grabacion", e.target.value)} /></label>}
+                    {colNotas && (ed || gVal(f, colNotas.key)) ? <input className="smic-notas" defaultValue={gVal(f, colNotas.key)} placeholder={colNotas.label} readOnly={!ed} onBlur={(e) => set(f, colNotas.key, e.target.value)} /> : null}
+                    {ed && <button className="hp-del smic-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                  </div>
+                );
+              })}
+              {editable && hayFilas && <button className="smic-add" onClick={() => onCrear(esc === "—" ? {} : { escena: esc })}><span>+</span> {gLbl(columnas, "personaje")}</button>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---- Plan de sonido directo por escena ----
+const EJ_PLANDIR: Ejemplo[] = [
+  { escena: "1", estrategia: "Boom cenital + lavaliers ocultos. Priorizar diálogo íntimo sobre ambiente.", retos: "Viento del mar y olas constantes. Faro con eco interior.", wildtrack: "Olas, viento, mecanismo del faro" },
+  { escena: "8", estrategia: "Lavaliers por el ruido del puerto; boom de apoyo.", retos: "Barcos, gaviotas, gente al fondo.", wildtrack: "Ambiente de puerto, gaviotas" },
+];
+function PlanDirecto({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_PLANDIR);
+  const sorted = [...base].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
+
+  return (
+    <div className="sdir-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_PLANDIR} onCrear={onCrear} />}
+      <div className="sdir-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`sdir-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="sdir-head">
+                {ed
+                  ? <input className="sdir-esc" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
+                  : <span className="sdir-esc">{gVal(f, "escena") || "•"}</span>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="sdir-estrat">
+                <span className="sdir-lbl">{gLbl(columnas, "estrategia")}</span>
+                <textarea className="sdir-estrat-ta" defaultValue={stripHtml(gVal(f, "estrategia"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "estrategia", e.target.value)} />
+              </div>
+              {(ed || gVal(f, "retos")) ? (
+                <label className="sdir-field">
+                  <span>{gLbl(columnas, "retos")}</span>
+                  <textarea className="sdir-ta" defaultValue={stripHtml(gVal(f, "retos"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "retos", e.target.value)} />
+                </label>
+              ) : null}
+              {(ed || gVal(f, "wildtrack")) ? (
+                <div className="sdir-wild"><span className="sdir-wild-lbl">{gLbl(columnas, "wildtrack")}</span>
+                  <input className="sdir-wild-in" defaultValue={gVal(f, "wildtrack")} placeholder={ed ? "—" : ""} readOnly={!ed} onBlur={(e) => set(f, "wildtrack", e.target.value)} /></div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Control de baterías por jornada (inicio → mediodía → fin) ----
+const EJ_BATERIAS: Ejemplo[] = [
+  { dispositivo: "TX Marea (lavalier)", tipo_pila: "AA litio", inicio: "100%", medio_dia: "50%", fin: "25%", notas: "Reemplazar en cada corte de comida." },
+  { dispositivo: "TX Farero (lavalier)", tipo_pila: "AA litio", inicio: "100%", medio_dia: "75%", fin: "50%", notas: "" },
+  { dispositivo: "Grabador 833", tipo_pila: "L-mount", inicio: "100%", medio_dia: "Reemplazada", fin: "75%", notas: "Batería de repuesto lista." },
+];
+function bateriaTono(v: string): string {
+  if (/reemplazada|100|75/i.test(v)) return "tono-ok";
+  if (/50/i.test(v)) return "tono-warn";
+  if (/25/i.test(v)) return "tono-bad";
+  return "tono-neutral";
+}
+function BateriasControl({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const momentos = ["inicio", "medio_dia", "fin"].map((k) => columnas.find((c) => c.key === k)).filter(Boolean) as Columna[];
+  const colNotas = columnas.find((c) => c.tipo === "largo");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_BATERIAS);
+
+  return (
+    <div className="sbat-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_BATERIAS} onCrear={onCrear} />}
+      <div className={`sbat-grid ${!hayFilas ? "cp-ghost-grid" : ""}`}>
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`sbat-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="sbat-head">
+                {ed
+                  ? <input className="sbat-disp" defaultValue={gVal(f, "dispositivo")} placeholder={gLbl(columnas, "dispositivo")} onBlur={(e) => set(f, "dispositivo", e.target.value)} />
+                  : <span className="sbat-disp">{gVal(f, "dispositivo") || "—"}</span>}
+                {ed
+                  ? <input className="sbat-pila" defaultValue={gVal(f, "tipo_pila")} placeholder={gLbl(columnas, "tipo_pila")} onBlur={(e) => set(f, "tipo_pila", e.target.value)} />
+                  : gVal(f, "tipo_pila") ? <span className="sbat-pila">{gVal(f, "tipo_pila")}</span> : null}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="sbat-timeline">
+                {momentos.map((c, i) => (
+                  <div key={c.key} className={`sbat-mom ${bateriaTono(gVal(f, c.key))}`}>
+                    <span className="sbat-mom-lbl">{c.label}</span>
+                    <EstadoSeg valor={gVal(f, c.key)} opciones={c.opciones ?? []} onPick={(v) => set(f, c.key, v)} editable={ed} chip />
+                    {i < momentos.length - 1 && <span className="sbat-arrow">→</span>}
+                  </div>
+                ))}
+              </div>
+              {colNotas && (ed || gVal(f, colNotas.key)) ? (
+                <input className="sbat-notas" defaultValue={gVal(f, colNotas.key)} placeholder={colNotas.label} readOnly={!ed} onBlur={(e) => set(f, colNotas.key, e.target.value)} />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addDevice")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Playlist de música temporal ----
+const EJ_PLAYLIST: Ejemplo[] = [
+  { escena: "1", cancion: "The Sea, The Sea", artista: "Ólafur Arnalds", sello_discografico: "Mercury KX", duracion: "3:42", uso: "Score temp", derechos_disponibles: "Por gestionar", link: "" },
+  { escena: "20", cancion: "Re: Stacks", artista: "Bon Iver", sello_discografico: "Jagjaguwar", duracion: "6:40", uso: "Ambiente", derechos_disponibles: "No", link: "" },
+];
+function PlaylistMusica({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colUso = columnas.find((c) => c.key === "uso");
+  const colDerechos = columnas.find((c) => c.key === "derechos_disponibles");
+  const colLink = columnas.find((c) => c.tipo === "link");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_PLAYLIST);
+
+  return (
+    <div className="splay-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_PLAYLIST} onCrear={onCrear} />}
+      <div className="splay-grid">
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`splay-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="splay-top">
+                <span className="splay-play">▶</span>
+                <div className="splay-title">
+                  {ed
+                    ? <input className="splay-cancion" defaultValue={gVal(f, "cancion")} placeholder={gLbl(columnas, "cancion")} onBlur={(e) => set(f, "cancion", e.target.value)} />
+                    : <div className="splay-cancion">{gVal(f, "cancion") || t("untitled")}</div>}
+                  {ed
+                    ? <input className="splay-artista" defaultValue={gVal(f, "artista")} placeholder={gLbl(columnas, "artista")} onBlur={(e) => set(f, "artista", e.target.value)} />
+                    : <div className="splay-artista">{gVal(f, "artista")}</div>}
+                </div>
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="splay-meta">
+                {(ed || gVal(f, "sello_discografico")) ? <input className="splay-sello" defaultValue={gVal(f, "sello_discografico")} placeholder={gLbl(columnas, "sello_discografico")} readOnly={!ed} onBlur={(e) => set(f, "sello_discografico", e.target.value)} /> : null}
+                {(ed || gVal(f, "duracion")) ? <input className="splay-dur" defaultValue={gVal(f, "duracion")} placeholder="0:00" readOnly={!ed} onBlur={(e) => set(f, "duracion", e.target.value)} /> : null}
+                {gVal(f, "escena") && !ed ? <span className="splay-esc">{t("sceneShort")} {gVal(f, "escena")}</span> : null}
+              </div>
+              <div className="splay-chips">
+                {colUso && <EstadoSeg valor={gVal(f, "uso")} opciones={colUso.opciones ?? []} onPick={(v) => set(f, "uso", v)} editable={ed} chip />}
+                {colDerechos && <EstadoSeg valor={gVal(f, "derechos_disponibles")} opciones={colDerechos.opciones ?? []} onPick={(v) => set(f, "derechos_disponibles", v)} editable={ed} chip color />}
+              </div>
+              {colLink && !gh && <div className="splay-link"><LinkCell valor={gVal(f, colLink.key)} editable={ed} onSave={(v) => set(f, colLink.key, v)} /></div>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addTrack")}</button></div>}
+    </div>
+  );
+}
+
+// ============================================================
+// POSTPRODUCCIÓN — vistas a medida. Acento: var(--acc) (rose).
+// CSS: pcut-* (versiones de corte) / pcol-* (guía de color). "Nunca en blanco".
+// ============================================================
+
+// ---- Versiones de corte (EDL) con doble aprobación ----
+const EJ_VERSIONES: Ejemplo[] = [
+  { version: "Picture Lock v1", fecha: "2026-09-10", duracion: "1:38:20", duracion_exacta: "01:38:20:04", timecode_in: "01:00:00:00", timecode_out: "02:38:20:04", cambios: "Cerrado el tercer acto. Eliminada la subtrama del hermano.", link_visionado: "", aprobado_dir: "Aprobado", aprobado_prod: "Aprobado", notas_dir: "Por fin respira el clímax.", notas_prod: "Dentro de metraje objetivo.", estado: "Picture lock" },
+  { version: "Fine cut v3", fecha: "2026-08-28", duracion: "1:42:10", duracion_exacta: "01:42:10:12", timecode_in: "01:00:00:00", timecode_out: "02:42:10:12", cambios: "Ajustado ritmo del segundo acto, -2 min.", link_visionado: "", aprobado_dir: "Cambios", aprobado_prod: "Aprobado", notas_dir: "Reducir aún la escena 14.", notas_prod: "OK.", estado: "Fine cut" },
+  { version: "Rough cut v1", fecha: "2026-08-05", duracion: "1:51:00", duracion_exacta: "01:51:00:00", timecode_in: "01:00:00:00", timecode_out: "02:51:00:00", cambios: "Primer ensamblado completo.", link_visionado: "", aprobado_dir: "Pendiente", aprobado_prod: "Pendiente", notas_dir: "", notas_prod: "", estado: "Rough cut" },
+];
+function VersionesCorte({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colAprDir = columnas.find((c) => c.key === "aprobado_dir");
+  const colAprProd = columnas.find((c) => c.key === "aprobado_prod");
+  const colLink = columnas.find((c) => c.tipo === "link");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_VERSIONES);
+  const sorted = [...base].sort((a, b) => (gVal(b, "fecha") || "").localeCompare(gVal(a, "fecha") || ""));
+
+  function stageCls(f: Fila) {
+    const e = gVal(f, "estado").toLowerCase();
+    if (/picture lock/.test(e)) return "pcut-lock";
+    if (/fine/.test(e)) return "pcut-fine";
+    return "pcut-rough";
+  }
+
+  return (
+    <div className="pcut-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_VERSIONES} onCrear={onCrear} />}
+      <div className="pcut-line">
+        {sorted.map((f, i) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`pcut-node ${gh ? "cp-ghost" : ""} ${i === 0 ? "pcut-latest" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="pcut-dot"><span /></div>
+              <div className={`pcut-card ${stageCls(f)}`}>
+                <div className="pcut-head">
+                  {ed
+                    ? <input className="pcut-ver" defaultValue={gVal(f, "version")} placeholder={gLbl(columnas, "version")} onBlur={(e) => set(f, "version", e.target.value)} />
+                    : <span className="pcut-ver">{gVal(f, "version") || "—"}</span>}
+                  {colEstado && <div className="pcut-stage"><EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} chip color /></div>}
+                  {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                </div>
+                <div className="pcut-meta">
+                  {ed
+                    ? <input type="date" className="pcut-fecha" defaultValue={gVal(f, "fecha")} onBlur={(e) => set(f, "fecha", e.target.value)} />
+                    : gVal(f, "fecha") ? <span className="pcut-fecha">{gVal(f, "fecha")}</span> : null}
+                  {(ed || gVal(f, "duracion")) ? <label className="pcut-dur"><span>{gLbl(columnas, "duracion")}</span><input defaultValue={gVal(f, "duracion")} placeholder="0:00:00" readOnly={!ed} onBlur={(e) => set(f, "duracion", e.target.value)} /></label> : null}
+                  {(ed || gVal(f, "duracion_exacta")) ? <label className="pcut-tc"><span>TC</span><input defaultValue={gVal(f, "duracion_exacta")} placeholder="00:00:00:00" readOnly={!ed} onBlur={(e) => set(f, "duracion_exacta", e.target.value)} /></label> : null}
+                </div>
+                {(ed || gVal(f, "cambios")) ? (
+                  <div className="pcut-cambios">
+                    <span className="pcut-lbl">{gLbl(columnas, "cambios")}</span>
+                    <textarea defaultValue={stripHtml(gVal(f, "cambios"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "cambios", e.target.value)} />
+                  </div>
+                ) : null}
+                <div className="pcut-aprobaciones">
+                  {colAprDir && <div className="pcut-apr"><span className="pcut-apr-lbl">{colAprDir.label}</span><EstadoSeg valor={gVal(f, "aprobado_dir")} opciones={colAprDir.opciones ?? []} onPick={(v) => set(f, "aprobado_dir", v)} editable={ed} chip color /></div>}
+                  {colAprProd && <div className="pcut-apr"><span className="pcut-apr-lbl">{colAprProd.label}</span><EstadoSeg valor={gVal(f, "aprobado_prod")} opciones={colAprProd.opciones ?? []} onPick={(v) => set(f, "aprobado_prod", v)} editable={ed} chip color /></div>}
+                </div>
+                {colLink && !gh && <div className="pcut-link"><span className="pcut-apr-lbl">{colLink.label}</span><LinkCell valor={gVal(f, colLink.key)} editable={ed} onSave={(v) => set(f, colLink.key, v)} /></div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addVersion")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Guía de color / LUT por escena ----
+const EJ_GUIACOLOR: Ejemplo[] = [
+  { escena: "1", look: "Frío y azulado, luz de amanecer entre niebla. Sombras densas.", lut: "LUT_Marea_Amanecer_v2", estado: "Etalonado" },
+  { escena: "8", look: "Desaturado, grises del puerto. Contraste alto en las caras.", lut: "LUT_Puerto_v1", estado: "Por etalonar" },
+  { escena: "20", look: "Cálido interior, contraste de la lámpara contra la lluvia fría en ventana.", lut: "LUT_Casa_Elsa", estado: "Aprobado" },
+];
+function GuiaColorLook({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_GUIACOLOR);
+  const sorted = [...base].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
+
+  return (
+    <div className="pcol-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_GUIACOLOR} onCrear={onCrear} />}
+      <div className="pcol-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`pcol-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="pcol-head">
+                {ed
+                  ? <input className="pcol-esc" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
+                  : <span className="pcol-esc">{gVal(f, "escena") || "•"}</span>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="pcol-look">
+                <span className="pcol-lbl">{gLbl(columnas, "look")}</span>
+                <textarea className="pcol-look-ta" defaultValue={stripHtml(gVal(f, "look"))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={3} onBlur={(e) => set(f, "look", e.target.value)} />
+              </div>
+              {(ed || gVal(f, "lut")) ? (
+                <div className="pcol-lut"><span className="pcol-lut-icon">◑</span>
+                  <input className="pcol-lut-in" defaultValue={gVal(f, "lut")} placeholder={gLbl(columnas, "lut")} readOnly={!ed} onBlur={(e) => set(f, "lut", e.target.value)} /></div>
+              ) : null}
+              {colEstado && <div className="pcol-foot"><EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} color /></div>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+    </div>
+  );
+}
+
+// ============================================================
+// RRHH — vista a medida. Acento: var(--acc) (sky).
+// CSS: rdesc-* (descansos legales / turnaround). "Nunca en blanco".
+// ============================================================
+const EJ_DESCANSOS: Ejemplo[] = [
+  { fecha: "2026-07-14", fin: "19:30", siguiente: "07:30", descanso: "12", ok: "Sí" },
+  { fecha: "2026-07-15", fin: "22:00", siguiente: "08:00", descanso: "10", ok: "Revisar" },
+  { fecha: "2026-07-16", fin: "23:30", siguiente: "07:00", descanso: "7.5", ok: "No" },
+];
+function DescansoLegal({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colOk = columnas.find((c) => c.key === "ok");
+  const colFecha = columnas.find((c) => c.tipo === "fecha");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_DESCANSOS);
+  const sorted = [...base].sort((a, b) => (gVal(a, colFecha?.key ?? "fecha") || "").localeCompare(gVal(b, colFecha?.key ?? "fecha") || ""));
+  const okTono = (v: string) => /sí|si/i.test(v) ? "tono-ok" : /revisar/i.test(v) ? "tono-warn" : /no/i.test(v) ? "tono-bad" : "tono-neutral";
+
+  return (
+    <div className="rdesc-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_DESCANSOS} onCrear={onCrear} />}
+      <div className="rdesc-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`rdesc-card ${okTono(gVal(f, "ok"))} ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="rdesc-head">
+                {ed && colFecha
+                  ? <input type="date" className="rdesc-fecha" defaultValue={gVal(f, colFecha.key)} onBlur={(e) => set(f, colFecha.key, e.target.value)} />
+                  : <span className="rdesc-fecha">{gVal(f, colFecha?.key ?? "fecha") || "—"}</span>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="rdesc-turn">
+                <label className="rdesc-t">
+                  <span>{gLbl(columnas, "fin")}</span>
+                  <input className="rdesc-hora" defaultValue={gVal(f, "fin")} placeholder="22:00" readOnly={!ed} onBlur={(e) => set(f, "fin", e.target.value)} />
+                </label>
+                <span className="rdesc-arrow">→</span>
+                <label className="rdesc-t">
+                  <span>{gLbl(columnas, "siguiente")}</span>
+                  <input className="rdesc-hora" defaultValue={gVal(f, "siguiente")} placeholder="07:00" readOnly={!ed} onBlur={(e) => set(f, "siguiente", e.target.value)} />
+                </label>
+              </div>
+              <div className="rdesc-gauge">
+                {ed
+                  ? <input className="rdesc-num" type="number" step="0.5" defaultValue={gVal(f, "descanso")} placeholder="12" onBlur={(e) => set(f, "descanso", e.target.value)} />
+                  : <span className="rdesc-num">{gVal(f, "descanso") || "—"}</span>}
+                <span className="rdesc-unit">h {t("rest")}</span>
+              </div>
+              {colOk && <div className="rdesc-foot"><EstadoSeg valor={gVal(f, "ok")} opciones={colOk.opciones ?? []} onPick={(v) => set(f, "ok", v)} editable={ed} color /></div>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ============================================================
+// SOSTENIBILIDAD / MARKETING / DIFUSIÓN / DISTRIBUCIÓN / MAKING OF
+// Vistas a medida (faro por depto). Acento var(--acc) por departamento.
+// CSS: simp-* / mktc-* / dmed-* / fest-* / mopub-*. "Nunca en blanco".
+// ============================================================
+const cpMoney = (v: string) => { const n = parseFloat(String(v).replace(/[^\d.-]/g, "")); return isNaN(n) ? "" : n.toLocaleString("es-ES") + " €"; };
+
+// ---- Sostenibilidad: panel de indicadores de impacto ----
+const EJ_INDICADORES: Ejemplo[] = [
+  { indicador: "Huella CO₂", valor: "18.4", unidad: "t CO₂e", objetivo: "15", tendencia: "Empeora" },
+  { indicador: "Energía", valor: "3200", unidad: "kWh", objetivo: "3500", tendencia: "Mejora" },
+  { indicador: "Residuos", valor: "72", unidad: "% reciclado", objetivo: "80", tendencia: "Estable" },
+];
+function IndicadoresImpacto({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colInd = columnas.find((c) => c.key === "indicador");
+  const colTend = columnas.find((c) => c.key === "tendencia");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_INDICADORES);
+  const tendData = (v: string) => /mejora/i.test(v) ? { cls: "tono-ok", ar: "↑" } : /empeora/i.test(v) ? { cls: "tono-bad", ar: "↓" } : { cls: "tono-neutral", ar: "→" };
+
+  return (
+    <div className="simp-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_INDICADORES} onCrear={onCrear} />}
+      <div className="simp-grid">
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          const td = tendData(gVal(f, "tendencia"));
+          return (
+            <div key={f.id} className={`simp-card ${td.cls} ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="simp-head">
+                {colInd && <EstadoSeg valor={gVal(f, "indicador")} opciones={colInd.opciones ?? []} onPick={(v) => set(f, "indicador", v)} editable={ed} chip />}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="simp-val">
+                {ed
+                  ? <input className="simp-num" type="number" defaultValue={gVal(f, "valor")} placeholder="0" onBlur={(e) => set(f, "valor", e.target.value)} />
+                  : <span className="simp-num">{gVal(f, "valor") || "—"}</span>}
+                {ed
+                  ? <input className="simp-unit" defaultValue={gVal(f, "unidad")} placeholder={gLbl(columnas, "unidad")} onBlur={(e) => set(f, "unidad", e.target.value)} />
+                  : <span className="simp-unit">{gVal(f, "unidad")}</span>}
+              </div>
+              <div className="simp-foot">
+                <span className="simp-obj">{t("goal")}: {ed ? <input className="simp-obj-in" type="number" defaultValue={gVal(f, "objetivo")} onBlur={(e) => set(f, "objetivo", e.target.value)} /> : <b>{gVal(f, "objetivo") || "—"}</b>}</span>
+                {colTend && <span className="simp-tend"><span className="simp-arrow">{td.ar}</span>{ed ? <EstadoSeg valor={gVal(f, "tendencia")} opciones={colTend.opciones ?? []} onPick={(v) => set(f, "tendencia", v)} editable chip /> : gVal(f, "tendencia")}</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addRow")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Marketing: campañas ----
+const EJ_CAMPANAS: Ejemplo[] = [
+  { campana: "Teaser de lanzamiento", objetivo: "Generar expectativa antes del primer tráiler.", canal: "Instagram, TikTok", inicio: "2026-10-01", presup: "8000", estado: "En curso" },
+  { campana: "Campaña de festivales", objetivo: "Posicionar la película ante programadores y prensa.", canal: "Prensa, LinkedIn", inicio: "2026-11-01", presup: "5000", estado: "Idea" },
+];
+function CampanasMarketing({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colInicio = columnas.find((c) => c.tipo === "fecha");
+  const colPresup = columnas.find((c) => c.tipo === "money");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_CAMPANAS);
+
+  return (
+    <div className="mktc-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_CAMPANAS} onCrear={onCrear} />}
+      <div className="mktc-grid">
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`mktc-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="mktc-head">
+                {ed
+                  ? <input className="mktc-name" defaultValue={gVal(f, "campana")} placeholder={gLbl(columnas, "campana")} onBlur={(e) => set(f, "campana", e.target.value)} />
+                  : <span className="mktc-name">{gVal(f, "campana") || t("untitled")}</span>}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              {(ed || gVal(f, "objetivo")) ? (
+                <textarea className="mktc-obj" defaultValue={stripHtml(gVal(f, "objetivo"))} placeholder={ed ? gLbl(columnas, "objetivo") : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "objetivo", e.target.value)} />
+              ) : null}
+              <div className="mktc-meta">
+                {(ed || gVal(f, "canal")) ? <input className="mktc-canal" defaultValue={gVal(f, "canal")} placeholder={gLbl(columnas, "canal")} readOnly={!ed} onBlur={(e) => set(f, "canal", e.target.value)} /> : null}
+                {colInicio && (ed
+                  ? <input className="mktc-fecha" type="date" defaultValue={gVal(f, colInicio.key)} onBlur={(e) => set(f, colInicio.key, e.target.value)} />
+                  : gVal(f, colInicio.key) ? <span className="mktc-fecha">{gVal(f, colInicio.key)}</span> : null)}
+              </div>
+              <div className="mktc-bottom">
+                {colPresup && (ed
+                  ? <span className="mktc-presup-wrap"><input className="mktc-presup-in" type="number" defaultValue={gVal(f, colPresup.key)} placeholder="0" onBlur={(e) => set(f, colPresup.key, e.target.value)} /><span>€</span></span>
+                  : gVal(f, colPresup.key) ? <span className="mktc-presup">{cpMoney(gVal(f, colPresup.key))}</span> : <span />)}
+                {colEstado && <EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} color />}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addCampaign")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Difusión: directorio de medios con temperatura de relación ----
+const EJ_MEDIOS: Ejemplo[] = [
+  { medio: "Diario de la Costa", tipo: "Prensa", contacto: "Rosa Lima", email: "rosa@diariocosta.es", relacion: "Confirmado" },
+  { medio: "Radio Norte", tipo: "Radio", contacto: "Jon Aranda", email: "jon@radionorte.es", relacion: "Contactado" },
+  { medio: "@cinefila", tipo: "Influencer", contacto: "—", email: "dm", relacion: "Frío" },
+];
+function PrensaMedios({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colTipo = columnas.find((c) => c.key === "tipo");
+  const colRel = columnas.find((c) => c.key === "relacion");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_MEDIOS);
+  const relTono = (v: string) => /confirmad/i.test(v) ? "tono-ok" : /contactad/i.test(v) ? "tono-warn" : "tono-bad";
+
+  return (
+    <div className="dmed-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_MEDIOS} onCrear={onCrear} />}
+      <div className="dmed-grid">
+        {base.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`dmed-card ${colRel ? relTono(gVal(f, "relacion")) : ""} ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="dmed-head">
+                {ed
+                  ? <input className="dmed-medio" defaultValue={gVal(f, "medio")} placeholder={gLbl(columnas, "medio")} onBlur={(e) => set(f, "medio", e.target.value)} />
+                  : <span className="dmed-medio">{gVal(f, "medio") || t("untitled")}</span>}
+                {colTipo && <EstadoSeg valor={gVal(f, "tipo")} opciones={colTipo.opciones ?? []} onPick={(v) => set(f, "tipo", v)} editable={ed} chip />}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="dmed-contacto">
+                {(ed || gVal(f, "contacto")) ? <input className="dmed-cont-in" defaultValue={gVal(f, "contacto")} placeholder={gLbl(columnas, "contacto")} readOnly={!ed} onBlur={(e) => set(f, "contacto", e.target.value)} /> : null}
+                {(ed || gVal(f, "email")) ? <input className="dmed-email" defaultValue={gVal(f, "email")} placeholder={gLbl(columnas, "email")} readOnly={!ed} onBlur={(e) => set(f, "email", e.target.value)} /> : null}
+              </div>
+              {colRel && <div className="dmed-foot"><span className="dmed-rel-lbl">{colRel.label}</span><EstadoSeg valor={gVal(f, "relacion")} opciones={colRel.opciones ?? []} onPick={(v) => set(f, "relacion", v)} editable={ed} color /></div>}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addMedia")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Distribución: festivales con cuenta atrás de deadline ----
+const EJ_FESTIVALES: Ejemplo[] = [
+  { festival: "San Sebastián", categoria: "Sección oficial", deadline: "2026-06-30", cuota: "75", prioridad: "Alta", estado: "Inscrito" },
+  { festival: "Berlinale", categoria: "Panorama", deadline: "2026-11-15", cuota: "60", prioridad: "Alta", estado: "Objetivo" },
+  { festival: "Málaga", categoria: "Largometraje", deadline: "2026-12-01", cuota: "40", prioridad: "Media", estado: "Objetivo" },
+];
+function Festivales({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colDeadline = columnas.find((c) => c.tipo === "fecha");
+  const colCuota = columnas.find((c) => c.tipo === "money");
+  const colPrioridad = columnas.find((c) => c.key === "prioridad");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_FESTIVALES);
+  const sorted = [...base].sort((a, b) => (gVal(a, colDeadline?.key ?? "deadline") || "9").localeCompare(gVal(b, colDeadline?.key ?? "deadline") || "9"));
+  const dias = (d: string) => { if (!d) return null; const ms = new Date(d).getTime(); if (isNaN(ms)) return null; return Math.ceil((ms - Date.now()) / 86400000); };
+
+  return (
+    <div className="fest-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_FESTIVALES} onCrear={onCrear} />}
+      <div className="fest-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          const dl = colDeadline ? gVal(f, colDeadline.key) : "";
+          const d = dias(dl);
+          const dcls = d == null ? "" : d < 0 ? "tono-bad" : d <= 14 ? "tono-warn" : "tono-ok";
+          return (
+            <div key={f.id} className={`fest-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="fest-head">
+                {ed
+                  ? <input className="fest-name" defaultValue={gVal(f, "festival")} placeholder={gLbl(columnas, "festival")} onBlur={(e) => set(f, "festival", e.target.value)} />
+                  : <span className="fest-name">{gVal(f, "festival") || t("untitled")}</span>}
+                {colPrioridad && <EstadoSeg valor={gVal(f, "prioridad")} opciones={colPrioridad.opciones ?? []} onPick={(v) => set(f, "prioridad", v)} editable={ed} chip color />}
+                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              {(ed || gVal(f, "categoria")) ? <input className="fest-cat" defaultValue={gVal(f, "categoria")} placeholder={gLbl(columnas, "categoria")} readOnly={!ed} onBlur={(e) => set(f, "categoria", e.target.value)} /> : null}
+              <div className="fest-deadline">
+                {colDeadline && (ed
+                  ? <input className="fest-dl-in" type="date" defaultValue={dl} onBlur={(e) => set(f, colDeadline.key, e.target.value)} />
+                  : dl ? <span className="fest-dl">{dl}</span> : null)}
+                {d != null && !ed && <span className={`fest-count ${dcls}`}>{d < 0 ? t("closed") : t("inDays", { n: d })}</span>}
+              </div>
+              <div className="fest-bottom">
+                {colCuota && (ed
+                  ? <span className="fest-cuota-wrap"><input className="fest-cuota-in" type="number" defaultValue={gVal(f, colCuota.key)} placeholder="0" onBlur={(e) => set(f, colCuota.key, e.target.value)} /><span>€</span></span>
+                  : gVal(f, colCuota.key) ? <span className="fest-cuota">{cpMoney(gVal(f, colCuota.key))}</span> : <span />)}
+                {colEstado && <EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} color />}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFestival")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Making of: calendario de publicaciones (bilingüe) ----
+const EJ_PUBLICACIONES: Ejemplo[] = [
+  { fecha: "2026-10-01", canal: "Instagram", pieza: "Teaser faro", copy_es: "La luz lleva tres noches apagada. Muy pronto.", copy_en: "The light's been out for three nights. Coming soon.", imagen_principal: "", hashtags: "#MareaOscura #cine", plataforma_principal: "Instagram", resultado_alcance: "24000", estado: "Programado" },
+  { fecha: "2026-10-05", canal: "TikTok", pieza: "BTS amanecer", copy_es: "Rodar el amanecer real. Sin trucos.", copy_en: "Shooting the real sunrise. No tricks.", imagen_principal: "", hashtags: "#BTS #filmmaking", plataforma_principal: "TikTok", resultado_alcance: "51000", estado: "Borrador" },
+];
+function CalendarioPublicaciones({ columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar }: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colFecha = columnas.find((c) => c.tipo === "fecha");
+  const colFoto = columnas.find((c) => c.tipo === "archivo");
+  const colPlat = columnas.find((c) => c.key === "plataforma_principal");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colAlcance = columnas.find((c) => c.key === "resultado_alcance");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_PUBLICACIONES);
+  const sorted = [...base].sort((a, b) => (gVal(a, colFecha?.key ?? "fecha") || "").localeCompare(gVal(b, colFecha?.key ?? "fecha") || ""));
+
+  return (
+    <div className="mopub-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_PUBLICACIONES} onCrear={onCrear} />}
+      <div className="mopub-grid">
+        {sorted.map((f) => {
+          const gh = esGhost(f); const ed = editable && !gh;
+          return (
+            <div key={f.id} className={`mopub-card ${gh ? "cp-ghost" : ""}`}>
+              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+              <div className="mopub-photo">
+                {colFoto && !gh ? <ArchivoCell path={gVal(f, colFoto.key)} editable={ed} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey={colFoto.key} onSave={(v) => set(f, colFoto.key, v)} /> : <span className="mopub-photo-ph hex" />}
+              </div>
+              <div className="mopub-body">
+                <div className="mopub-top">
+                  {colFecha && (ed ? <input className="mopub-fecha" type="date" defaultValue={gVal(f, colFecha.key)} onBlur={(e) => set(f, colFecha.key, e.target.value)} /> : <span className="mopub-fecha">{gVal(f, colFecha.key)}</span>)}
+                  {colPlat && <EstadoSeg valor={gVal(f, "plataforma_principal")} opciones={colPlat.opciones ?? []} onPick={(v) => set(f, "plataforma_principal", v)} editable={ed} chip />}
+                  {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                </div>
+                {ed
+                  ? <input className="mopub-pieza" defaultValue={gVal(f, "pieza")} placeholder={gLbl(columnas, "pieza")} onBlur={(e) => set(f, "pieza", e.target.value)} />
+                  : gVal(f, "pieza") ? <div className="mopub-pieza">{gVal(f, "pieza")}</div> : null}
+                <div className="mopub-copies">
+                  <label className="mopub-copy"><span>ES</span><textarea defaultValue={stripHtml(gVal(f, "copy_es"))} placeholder={ed ? "Copy español…" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "copy_es", e.target.value)} /></label>
+                  <label className="mopub-copy"><span>EN</span><textarea defaultValue={stripHtml(gVal(f, "copy_en"))} placeholder={ed ? "English copy…" : ""} readOnly={!ed} rows={2} onBlur={(e) => set(f, "copy_en", e.target.value)} /></label>
+                </div>
+                {(ed || gVal(f, "hashtags")) ? <input className="mopub-hashtags" defaultValue={gVal(f, "hashtags")} placeholder={gLbl(columnas, "hashtags")} readOnly={!ed} onBlur={(e) => set(f, "hashtags", e.target.value)} /> : null}
+                <div className="mopub-foot">
+                  {colAlcance && (gVal(f, "resultado_alcance") || ed) ? <span className="mopub-alcance">{gVal(f, "resultado_alcance") ? Number(gVal(f, "resultado_alcance")).toLocaleString("es-ES") : "—"} <em>{t("reach")}</em></span> : <span />}
+                  {colEstado && <EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} color />}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addPost")}</button></div>}
     </div>
   );
 }

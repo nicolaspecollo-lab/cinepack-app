@@ -13,12 +13,14 @@ export default async function HoyPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, departamento, is_admin, avatar_url, cargo, pais_residencia, provincia_residencia, pais_produccion, provincia_produccion")
+    .select("full_name, departamento, is_admin, app_role, avatar_url, cargo, pais_residencia, provincia_residencia, pais_produccion, provincia_produccion")
     .eq("id", user.id)
     .single();
 
+  const isSuperAdmin = !!profile?.is_admin || profile?.app_role === "super_admin";
+
   if (
-    profile && !profile.is_admin &&
+    profile && !isSuperAdmin &&
     (!profile.full_name || !profile.cargo || !profile.pais_residencia || !profile.provincia_residencia ||
       !profile.pais_produccion || !profile.provincia_produccion)
   ) {
@@ -46,7 +48,7 @@ export default async function HoyPage() {
     <HoyWorkspace
       fullName={profile.full_name}
       departamento={profile.departamento}
-      isAdmin={!!profile.is_admin}
+      isAdmin={isSuperAdmin}
       avatarUrl={profile.avatar_url}
       cargo={profile.cargo}
     />
