@@ -194,7 +194,6 @@ export default function CalendarioProyecto({
         <div className="cal-prev">
           <div className="cal-prev-head">
             <span className="cal-prev-fecha">{new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${selDia}T00:00:00`))}</span>
-            {puedeEditar && <button className="cp-btn cp-btn-acc" onClick={() => setEdit("nuevo")}>{t("newEvent")}</button>}
           </div>
           {chipsDelDia.length === 0 ? (
             <p className="cal-prev-empty">{t("noEvents")}</p>

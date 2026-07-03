@@ -133,8 +133,9 @@
 
 /* ===== HOY (uniforme) ===== */
 .cp-dash .today{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; padding:24px 30px; }
-.cp-dash .tcard{ border:1px solid var(--line); background:var(--panel); padding:18px; display:flex; flex-direction:column; gap:10px; }
-.cp-dash .tcard h4{ font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; display:flex; align-items:center; gap:8px; color:var(--muted); }
+.cp-dash .tcard{ border:1px solid var(--line); border-top:2px solid var(--acc); background:var(--panel); padding:16px 18px; display:flex; flex-direction:column; gap:11px; transition:background var(--dur-fast), border-color var(--dur-fast); }
+.cp-dash .tcard:hover{ background:var(--hl2); }
+.cp-dash .tcard h4{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; display:flex; align-items:center; gap:8px; color:var(--text); }
 .cp-dash .tcard h4 .hex{ width:12px; height:10px; background:var(--acc); flex-shrink:0; }
 .cp-dash .tcard .big{ font-family:'Poppins',sans-serif; font-weight:800; font-size:1.3rem; }
 .cp-dash .tcard .big small{ font-size:12px; color:var(--muted); font-weight:500; }

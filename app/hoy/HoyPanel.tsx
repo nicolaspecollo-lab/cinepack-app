@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { DEPARTAMENTOS, ESTADO_COLOR } from "../constants";
-import { CICLO_SELECT, fechasCicloDesdeFila, resumenCiclo, type EtapaResumen } from "./cicloVida";
 
 type Pill = "warn" | "mut" | "bad" | "info" | "ok";
 
@@ -47,15 +46,6 @@ const PILL_LABEL_KEY: Record<Pill, string> = {
 
 type GestionTipo = "tarea" | "alerta" | "jornada";
 
-function etapaEstadoLabel(estado: EtapaResumen["estado"], dias: number | null, t: ReturnType<typeof useTranslations>): string {
-  switch (estado) {
-    case "completada": return t("stageCompleted", { n: dias ?? 0 });
-    case "pendiente": return t("stagePending", { n: dias ?? 0 });
-    case "en_curso": return t("stageInProgress", { n: dias ?? 0 });
-    case "sin_fecha": return t("stageNoDate");
-  }
-}
-
 export default function HoyPanel({
   deDepartamento,
   fullName,
@@ -64,12 +54,10 @@ export default function HoyPanel({
   fullName: string;
 }) {
   const t = useTranslations("hoyPanel");
-  const tEtapas = useTranslations("etapas");
   const [jornada, setJornada] = useState<Jornada | null>(null);
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ciclo, setCiclo] = useState<EtapaResumen[]>([]);
 
   const [showForm, setShowForm] = useState(false);
   const [gestionTipo, setGestionTipo] = useState<GestionTipo>("tarea");
@@ -101,7 +89,7 @@ export default function HoyPanel({
     }
     const supabase = createClient();
 
-    const [{ data: jornadaData }, { data: tareasData }, { data: alertasData }, { data: proyectoData }] = await Promise.all([
+    const [{ data: jornadaData }, { data: tareasData }, { data: alertasData }] = await Promise.all([
       supabase
         .from("jornadas")
         .select("*")
@@ -122,17 +110,11 @@ export default function HoyPanel({
         .eq("project_id", projectId)
         .eq("leida", false)
         .order("created_at", { ascending: false }),
-      supabase
-        .from("proyectos")
-        .select(CICLO_SELECT)
-        .eq("id", projectId)
-        .single(),
     ]);
 
     setJornada(jornadaData ?? null);
     setTareas((tareasData ?? []).filter((t) => !t.para_departamento || t.para_departamento === deDepartamento));
     setAlertas((alertasData ?? []).filter((a) => !a.para_departamento || a.para_departamento === deDepartamento));
-    setCiclo(resumenCiclo(fechasCicloDesdeFila(proyectoData)));
     setLoading(false);
   }, [deDepartamento]);
 
@@ -257,26 +239,6 @@ export default function HoyPanel({
   return (
     <>
       <div className="today">
-        <div className="tcard">
-          <h4>
-            <span className="hex"></span>{t("lifecycleTitle")}
-          </h4>
-          {loading && <p>{t("loading")}</p>}
-          {!loading && ciclo.every((e) => e.estado === "sin_fecha") && (
-            <p>{t("noDatesYet")}</p>
-          )}
-          {!loading && ciclo.some((e) => e.estado !== "sin_fecha") && (
-            <ul>
-              {ciclo.map((e) => (
-                <li key={e.key} className={e.enCurso ? "etapa-actual" : undefined}>
-                  <span>{tEtapas(e.key)}</span>
-                  <span>{etapaEstadoLabel(e.estado, e.dias, t)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
         <div className="tcard">
           <h4>
             <span className="hex"></span>{t("pendingForMe")}
