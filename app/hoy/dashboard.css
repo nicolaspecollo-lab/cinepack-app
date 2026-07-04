@@ -3840,3 +3840,6 @@
 /* Placa opaca detrás del isotipo: tapa la línea de tiempo dentro del marcador */
 .cp-dash .ct-mark-plate{ position:absolute; left:0; transform:translateX(-50%); background:var(--bg); transition:transform .12s; }
 .cp-dash .ct-ev:hover .ct-mark-plate{ transform:translateX(-50%) scale(1.22); }
+
+/* La placa toma la silueta rellena del isotipo (no un cuadrado) */
+.cp-dash .ct-mark-plate{ -webkit-mask:url(/iso-solid.png) center/contain no-repeat; mask:url(/iso-solid.png) center/contain no-repeat; }
