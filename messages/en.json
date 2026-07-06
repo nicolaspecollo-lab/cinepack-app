@@ -2519,7 +2519,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "confirmDelete": "Delete this event?",
-    "openDossier": "Open dossier",
+    "openDossier": "Open event",
     "dossierTitle": "Call dossier",
     "dossierNote": "Opens from the timeline and the calendar",
     "tab_bases": "Rules",
@@ -2533,6 +2533,9 @@
     "emptyFolder": "Empty folder. Upload files or create a folder.",
     "confirmDeleteFile": "Delete this file?",
     "confirmDeleteFolder": "Delete the folder and all its contents?",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "editInfo": "Edit info",
+    "linkLabel": "Event link",
+    "openLink": "View event"
   }
 }

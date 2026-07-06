@@ -2519,7 +2519,7 @@
     "save": "Desar",
     "cancel": "Cancel·lar",
     "confirmDelete": "Voleu eliminar aquest esdeveniment?",
-    "openDossier": "Obrir dossier",
+    "openDossier": "Obrir esdeveniment",
     "dossierTitle": "Dossier de convocatòria",
     "dossierNote": "S'obre des de la línia de temps i el calendari",
     "tab_bases": "Bases",
@@ -2533,6 +2533,9 @@
     "emptyFolder": "Carpeta buida. Puja arxius o crea una carpeta.",
     "confirmDeleteFile": "Voleu eliminar aquest arxiu?",
     "confirmDeleteFolder": "Voleu eliminar la carpeta i tot el seu contingut?",
-    "loading": "Carregant…"
+    "loading": "Carregant…",
+    "editInfo": "Editar info",
+    "linkLabel": "Enllaç de l'esdeveniment",
+    "openLink": "Veure esdeveniment"
   }
 }
