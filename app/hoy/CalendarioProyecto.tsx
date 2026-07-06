@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { CarpetaArchivos } from "./HerramientaPanel";
+import DossierConvocatoria from "./DossierConvocatoria";
 import {
   CAMPOS_POR_TIPO,
   CAMPO_TITULAR,
@@ -43,6 +44,7 @@ export default function CalendarioProyecto({
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [selDia, setSelDia] = useState<string | null>(iso(hoy));
   const [edit, setEdit] = useState<EventoProyecto | "nuevo" | null>(null);
+  const [dossier, setDossier] = useState<EventoProyecto | null>(null);
   const [editablesDeptos, setEditablesDeptos] = useState<string[]>([]);
 
   const jefeCargo = JERARQUIA_POR_DEPARTAMENTO[departamento]?.[0];
@@ -81,6 +83,17 @@ export default function CalendarioProyecto({
     window.addEventListener("cp-cal-open", h);
     return () => window.removeEventListener("cp-cal-open", h);
   }, []);
+
+  // La línea de tiempo puede pedir abrir el dossier de un evento por id.
+  useEffect(() => {
+    const h = (e: Event) => {
+      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      const ev = eventos.find((x) => x.id === id);
+      if (ev) setDossier(ev);
+    };
+    window.addEventListener("cp-dossier-open", h);
+    return () => window.removeEventListener("cp-dossier-open", h);
+  }, [eventos]);
 
   const porDia = useMemo(() => {
     const map = new Map<string, ChipEvento[]>();
@@ -204,12 +217,11 @@ export default function CalendarioProyecto({
                   <div className="cal-prev-item-head">
                     <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA[c.ev.tipo] }}>{tEt(c.ev.tipo)}</span>
                     <span className="cal-prev-item-title">{c.ev.titulo || tEt(c.ev.tipo)}</span>
-                    {puedeEditar && (
-                      <span className="cal-prev-item-actions">
-                        <button className="cp-btn" onClick={() => setEdit(c.ev)}>{t("edit")}</button>
-                        <button className="cp-btn" onClick={() => borrar(c.ev.id)}>{t("delete")}</button>
-                      </span>
-                    )}
+                    <span className="cal-prev-item-actions">
+                      <button className="cp-btn cp-btn-acc" onClick={() => setDossier(c.ev)}>{t("openDossier")}</button>
+                      {puedeEditar && <button className="cp-btn" onClick={() => setEdit(c.ev)}>{t("edit")}</button>}
+                      {puedeEditar && <button className="cp-btn" onClick={() => borrar(c.ev.id)}>{t("delete")}</button>}
+                    </span>
                   </div>
                   <div className="cal-prev-fields">
                     {CAMPOS_POR_TIPO[c.ev.tipo].filter((f) => c.ev.datos?.[f.key]).map((f) => (
@@ -235,6 +247,8 @@ export default function CalendarioProyecto({
           )}
         </div>
       ) : null}
+
+      {dossier && <DossierConvocatoria evento={dossier} editable={puedeEditar} onClose={() => setDossier(null)} />}
     </div>
   );
 }

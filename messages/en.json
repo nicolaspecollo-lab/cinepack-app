@@ -2518,6 +2518,21 @@
     "fAlert": "Alert (days before)",
     "save": "Save",
     "cancel": "Cancel",
-    "confirmDelete": "Delete this event?"
+    "confirmDelete": "Delete this event?",
+    "openDossier": "Open dossier",
+    "dossierTitle": "Call dossier",
+    "dossierNote": "Opens from the timeline and the calendar",
+    "tab_bases": "Rules",
+    "tab_entregas": "Submissions",
+    "tab_recibidos": "Received",
+    "newFolder": "Folder",
+    "folderNamePrompt": "Folder name",
+    "upload": "Upload file",
+    "uploading": "Uploading…",
+    "root": "Dossier",
+    "emptyFolder": "Empty folder. Upload files or create a folder.",
+    "confirmDeleteFile": "Delete this file?",
+    "confirmDeleteFolder": "Delete the folder and all its contents?",
+    "loading": "Loading…"
   }
 }

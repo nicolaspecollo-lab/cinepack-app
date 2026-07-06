@@ -2518,6 +2518,21 @@
     "fAlert": "Avís (dies abans)",
     "save": "Desar",
     "cancel": "Cancel·lar",
-    "confirmDelete": "Voleu eliminar aquest esdeveniment?"
+    "confirmDelete": "Voleu eliminar aquest esdeveniment?",
+    "openDossier": "Obrir dossier",
+    "dossierTitle": "Dossier de convocatòria",
+    "dossierNote": "S'obre des de la línia de temps i el calendari",
+    "tab_bases": "Bases",
+    "tab_entregas": "Lliuraments",
+    "tab_recibidos": "Rebuts",
+    "newFolder": "Carpeta",
+    "folderNamePrompt": "Nom de la carpeta",
+    "upload": "Pujar arxiu",
+    "uploading": "Pujant…",
+    "root": "Dossier",
+    "emptyFolder": "Carpeta buida. Puja arxius o crea una carpeta.",
+    "confirmDeleteFile": "Voleu eliminar aquest arxiu?",
+    "confirmDeleteFolder": "Voleu eliminar la carpeta i tot el seu contingut?",
+    "loading": "Carregant…"
   }
 }

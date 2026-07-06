@@ -2518,6 +2518,21 @@
     "fAlert": "Aviso (días antes)",
     "save": "Guardar",
     "cancel": "Cancelar",
-    "confirmDelete": "¿Eliminar este evento?"
+    "confirmDelete": "¿Eliminar este evento?",
+    "openDossier": "Abrir dossier",
+    "dossierTitle": "Dossier de convocatoria",
+    "dossierNote": "Se abre desde la línea de tiempo y desde el calendario",
+    "tab_bases": "Bases",
+    "tab_entregas": "Entregas",
+    "tab_recibidos": "Recibidos",
+    "newFolder": "Carpeta",
+    "folderNamePrompt": "Nombre de la carpeta",
+    "upload": "Subir archivo",
+    "uploading": "Subiendo…",
+    "root": "Dossier",
+    "emptyFolder": "Carpeta vacía. Subí archivos o creá una carpeta.",
+    "confirmDeleteFile": "¿Eliminar este archivo?",
+    "confirmDeleteFolder": "¿Eliminar la carpeta y todo su contenido?",
+    "loading": "Cargando…"
   }
 }

@@ -123,6 +123,10 @@ export default function CicloTimeline() {
     document.getElementById("cp-calendario")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function abrirDossier(id: string) {
+    window.dispatchEvent(new CustomEvent("cp-dossier-open", { detail: { id } }));
+  }
+
   if (loading) return null;
   if (!etapaActual && puntos.length === 0) {
     return (
@@ -206,7 +210,10 @@ export default function CicloTimeline() {
               <div className="ct-det-title">{selPunto.ev.titulo || selPunto.ev.datos?.[CAMPO_TITULAR[selPunto.ev.tipo]] || tEt(selPunto.ev.tipo)}</div>
               <div className="ct-det-date">{fmt(selPunto.ev.fecha)}</div>
             </div>
-            <button className="cp-btn" onClick={() => abrirEnCalendario(selPunto.ev.fecha)}>{t("openInCalendar")}</button>
+            <div className="ct-det-actions">
+              <button className="cp-btn cp-btn-acc" onClick={() => abrirDossier(selPunto.ev.id)}>{t("openDossier")}</button>
+              <button className="cp-btn" onClick={() => abrirEnCalendario(selPunto.ev.fecha)}>{t("openInCalendar")}</button>
+            </div>
           </div>
           <div className="ct-det-fields">
             {CAMPOS_POR_TIPO[selPunto.ev.tipo]
