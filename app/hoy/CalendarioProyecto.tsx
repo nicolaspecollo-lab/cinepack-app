@@ -215,7 +215,7 @@ export default function CalendarioProyecto({
               {chipsDelDia.map((c, k) => c.kind === "evento" ? (
                 <div key={k} className="cal-prev-item" style={{ borderLeftColor: COLOR_ETAPA[c.ev.tipo] }}>
                   <div className="cal-prev-item-head">
-                    <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA[c.ev.tipo] }}>{tEt(c.ev.tipo)}</span>
+                    <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA[c.ev.tipo] }}>{c.ev.datos?.categoria || tEt(c.ev.tipo)}</span>
                     <span className="cal-prev-item-title">{c.ev.titulo || tEt(c.ev.tipo)}</span>
                     <span className="cal-prev-item-actions">
                       <button className="cp-btn cp-btn-acc" onClick={() => setDossier(c.ev)}>{t("openDossier")}</button>
@@ -302,7 +302,21 @@ function EventoForm({
           <span>{t("fDate")}</span>
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
         </label>
-        {campos.map((c) => (
+        {campos.map((c) => c.tipo === "opciones" ? (
+          <div key={c.key} className="cal-field wide">
+            <span>{c.label}</span>
+            <div className="cal-seg">
+              {(c.opciones ?? []).map((op) => (
+                <button key={op} type="button"
+                  className={`cal-seg-btn ${datos[c.key] === op ? "on" : ""}`}
+                  style={datos[c.key] === op ? { background: COLOR_ETAPA[tipo], borderColor: COLOR_ETAPA[tipo], color: "#0D0D12" } : undefined}
+                  onClick={() => setDatos((d) => ({ ...d, [c.key]: datos[c.key] === op ? "" : op }))}>
+                  {op}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
           <label key={c.key} className={`cal-field ${c.tipo === "largo" ? "wide" : ""}`}>
             <span>{c.label}</span>
             {c.tipo === "largo" ? (

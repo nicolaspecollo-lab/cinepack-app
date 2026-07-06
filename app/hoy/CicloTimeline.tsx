@@ -183,7 +183,7 @@ export default function CicloTimeline() {
             const color = p.kind === "hito" ? COLOR_ETAPA[p.etapa] : COLOR_ETAPA[p.ev.tipo];
             const size = p.kind === "hito" ? 24 : 20;
             const titulo = p.kind === "hito" ? tEt(p.etapa) : (p.ev.titulo || p.ev.datos?.[CAMPO_TITULAR[p.ev.tipo]] || tEt(p.ev.tipo));
-            const sub = p.kind === "hito" ? t("stageMilestone") : tEt(p.ev.tipo);
+            const sub = p.kind === "hito" ? t("stageMilestone") : (p.ev.datos?.categoria || tEt(p.ev.tipo));
             const isSel = id === sel;
             return (
               <div key={id} className="ct-ev" style={{ left: p.x }}
@@ -206,7 +206,7 @@ export default function CicloTimeline() {
         <div className="ct-det" style={{ borderLeftColor: COLOR_ETAPA[selPunto.ev.tipo] }}>
           <div className="ct-det-head">
             <div>
-              <div className="ct-det-tipo" style={{ color: COLOR_ETAPA[selPunto.ev.tipo] }}>{tEt(selPunto.ev.tipo)}</div>
+              <div className="ct-det-tipo" style={{ color: COLOR_ETAPA[selPunto.ev.tipo] }}>{selPunto.ev.datos?.categoria || tEt(selPunto.ev.tipo)}</div>
               <div className="ct-det-title">{selPunto.ev.titulo || selPunto.ev.datos?.[CAMPO_TITULAR[selPunto.ev.tipo]] || tEt(selPunto.ev.tipo)}</div>
               <div className="ct-det-date">{fmt(selPunto.ev.fecha)}</div>
             </div>

@@ -64,7 +64,7 @@ export default function DossierConvocatoria({
         ) : (
           <div className="dsr-head">
             <div className="dsr-head-main">
-              <div className="dsr-tipo" style={{ color }}>{tEt(ev.tipo)}</div>
+              <div className="dsr-tipo" style={{ color }}>{ev.datos?.categoria || tEt(ev.tipo)}</div>
               <div className="dsr-titulo">{titulo}</div>
               <div className="dsr-fecha">{fmt(ev.fecha)}</div>
               {enlace && (
@@ -149,7 +149,21 @@ function InfoForm({
       </div>
       <div className="cal-form-grid">
         <label className="cal-field"><span>{t("fDate")}</span><input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} /></label>
-        {campos.map((c) => (
+        {campos.map((c) => c.tipo === "opciones" ? (
+          <div key={c.key} className="cal-field wide">
+            <span>{c.label}</span>
+            <div className="cal-seg">
+              {(c.opciones ?? []).map((op) => (
+                <button key={op} type="button"
+                  className={`cal-seg-btn ${datos[c.key] === op ? "on" : ""}`}
+                  style={datos[c.key] === op ? { background: COLOR_ETAPA[tipo], borderColor: COLOR_ETAPA[tipo], color: "#0D0D12" } : undefined}
+                  onClick={() => set(c.key, datos[c.key] === op ? "" : op)}>
+                  {op}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
           <label key={c.key} className={`cal-field ${c.tipo === "largo" ? "wide" : ""}`}>
             <span>{c.label}</span>
             {c.tipo === "largo"

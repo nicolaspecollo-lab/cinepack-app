@@ -8,8 +8,22 @@ export type EventoTipo = EtapaKey;
 export type CampoEvento = {
   key: string;
   label: string;
-  tipo?: "text" | "fecha" | "money" | "largo";
+  tipo?: "text" | "fecha" | "money" | "largo" | "opciones";
+  opciones?: string[];
 };
+
+// Categorías de un evento de financiación (mercado, ayuda, lab…). Se muestran
+// como la etiqueta chica del evento en la línea de tiempo, el calendario y el
+// dossier, para distinguir un mercado de una ayuda de un vistazo.
+export const CATEGORIAS_FINANCIACION = [
+  "Ayuda pública",
+  "Subvención",
+  "Lab de desarrollo",
+  "Mercado / Foro",
+  "Pitching",
+  "Coproducción",
+  "Preventa",
+];
 
 // Color por etapa/tipo, con la paleta oficial (var(--*) de cp-theme.css).
 export const COLOR_ETAPA: Record<EtapaKey, string> = {
@@ -40,6 +54,7 @@ export const CAMPOS_POR_TIPO: Record<EventoTipo, CampoEvento[]> = {
     { key: "detalle", label: "Detalle", tipo: "largo" },
   ],
   financiacion: [
+    { key: "categoria", label: "Categoría", tipo: "opciones", opciones: CATEGORIAS_FINANCIACION },
     { key: "convocatoria", label: "Convocatoria" },
     { key: "organismo", label: "Organismo" },
     { key: "premio", label: "Premio (cash o especie)" },
