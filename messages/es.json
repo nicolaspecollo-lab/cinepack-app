@@ -1262,6 +1262,8 @@
     "noRole": "Sin cargo",
     "errNoInvite": "No se pudo generar la invitación.",
     "inviteCreated": "Invitación creada. Copia el enlace y envíaselo.",
+    "inviteEmailSent": "Invitación creada y mail de bienvenida enviado. También tenés el enlace por si acaso.",
+    "inviteEmailFailed": "Invitación creada, pero no se pudo enviar el mail. Usá el enlace para compartirla igual.",
     "copied": "Copiado ✓",
     "copyLink": "Copiar enlace",
     "generating": "Generando…",

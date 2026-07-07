@@ -1262,6 +1262,8 @@
     "noRole": "Sense càrrec",
     "errNoInvite": "No s'ha pogut generar la invitació.",
     "inviteCreated": "Invitació creada. Copia l'enllaç i envia-l'hi.",
+    "inviteEmailSent": "Invitació creada i correu de benvinguda enviat. També tens l'enllaç per si de cas.",
+    "inviteEmailFailed": "Invitació creada, però no s'ha pogut enviar el correu. Fes servir l'enllaç per compartir-la igualment.",
     "copied": "Copiat ✓",
     "copyLink": "Copia l'enllaç",
     "generating": "Generant…",

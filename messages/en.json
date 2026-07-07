@@ -1262,6 +1262,8 @@
     "noRole": "No role",
     "errNoInvite": "Could not generate the invitation.",
     "inviteCreated": "Invitation created. Copy the link and send it.",
+    "inviteEmailSent": "Invitation created and welcome email sent. You also have the link just in case.",
+    "inviteEmailFailed": "Invitation created, but the email could not be sent. Use the link to share it instead.",
     "copied": "Copied ✓",
     "copyLink": "Copy link",
     "generating": "Generating…",

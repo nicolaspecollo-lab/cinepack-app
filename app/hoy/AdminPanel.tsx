@@ -251,10 +251,20 @@ export default function AdminPanel() {
       setDepartamentosProyecto(nuevos);
     }
     setInviteLink(`${window.location.origin}/invitacion/${data.token}`);
-    setInviteMsg({ type: "ok", text: t("inviteCreated") });
     setInviteNombre("");
     setInviteEmail("");
     setInviteCargo("");
+
+    try {
+      const res = await fetch("/api/invitaciones/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: data.token }),
+      });
+      setInviteMsg(res.ok ? { type: "ok", text: t("inviteEmailSent") } : { type: "err", text: t("inviteEmailFailed") });
+    } catch {
+      setInviteMsg({ type: "err", text: t("inviteEmailFailed") });
+    }
   }
 
   if (loading) {
