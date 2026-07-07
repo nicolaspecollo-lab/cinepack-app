@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
+import { LOGO_CP_DARK_BASE64 } from "./logo";
 
 export const runtime = "nodejs";
 
@@ -155,25 +154,28 @@ export async function POST(req: Request) {
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const link = `${APP_URL}/invitacion/${token}`;
-  const logoBuffer = await readFile(path.join(process.cwd(), "public", "logo-cp-dark.png"));
 
-  const { error: sendError } = await resend.emails.send({
-    from: REMITENTE,
-    to: inv.email,
-    subject: `Te han invitado al proyecto «${inv.proyecto_nombre}» en CINE PACK`,
-    html: emailHtml(inv, link),
-    attachments: [
-      {
-        filename: "logo-cp-dark.png",
-        content: logoBuffer,
-        contentId: LOGO_CID,
-      },
-    ],
-  });
+  try {
+    const { error: sendError } = await resend.emails.send({
+      from: REMITENTE,
+      to: inv.email,
+      subject: `Te han invitado al proyecto «${inv.proyecto_nombre}» en CINE PACK`,
+      html: emailHtml(inv, link),
+      attachments: [
+        {
+          filename: "logo-cp-dark.png",
+          content: Buffer.from(LOGO_CP_DARK_BASE64, "base64"),
+          contentId: LOGO_CID,
+        },
+      ],
+    });
 
-  if (sendError) {
-    return NextResponse.json({ error: sendError.message }, { status: 502 });
+    if (sendError) {
+      return NextResponse.json({ error: sendError.message }, { status: 502 });
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error desconocido al enviar el mail";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
-
-  return NextResponse.json({ ok: true });
 }
