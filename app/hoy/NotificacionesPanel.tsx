@@ -66,8 +66,26 @@ export default function NotificacionesPanel() {
       const supabase = createClient();
       const projectId = localStorage.getItem("cinepack-proyecto-id");
 
-      const [cambiosRes, consultasRes, comunicadosRes, accesosRes] = await Promise.all([
-        supabase.from("perfil_cambios").select("*").order("created_at", { ascending: false }).limit(100),
+      // Cambios de perfil: solo de usuarios que integran ESTE proyecto (no toda
+      // la plataforma). Se resuelve primero la lista de miembros del proyecto.
+      let cambiosRes: { data: any[] | null } = { data: [] };
+      if (projectId) {
+        const { data: miembros } = await supabase
+          .from("project_members")
+          .select("user_id")
+          .eq("project_id", projectId);
+        const userIds = (miembros ?? []).map((m) => m.user_id);
+        cambiosRes = userIds.length
+          ? await supabase
+              .from("perfil_cambios")
+              .select("*")
+              .in("user_id", userIds)
+              .order("created_at", { ascending: false })
+              .limit(100)
+          : { data: [] };
+      }
+
+      const [consultasRes, comunicadosRes, accesosRes] = await Promise.all([
         projectId
           ? supabase.from("consultas").select("*").eq("project_id", projectId).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
