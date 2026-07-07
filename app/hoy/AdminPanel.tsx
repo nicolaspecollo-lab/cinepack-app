@@ -124,11 +124,16 @@ export default function AdminPanel() {
       setConteosCargo(cCargo);
     }
 
-    const { data: cambiosData } = await supabase
-      .from("perfil_cambios")
-      .select("user_nombre, campo, valor_anterior, valor_nuevo, created_at")
-      .order("created_at", { ascending: false })
-      .limit(20);
+    // Actividad reciente: solo de integrantes de ESTE proyecto (userIds ya
+    // resuelto arriba desde project_members) — nunca perfil_cambios global.
+    const { data: cambiosData } = userIds.length > 0
+      ? await supabase
+          .from("perfil_cambios")
+          .select("user_nombre, campo, valor_anterior, valor_nuevo, created_at")
+          .in("user_id", userIds)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      : { data: [] };
     setCambios(cambiosData ?? []);
 
     setLoading(false);

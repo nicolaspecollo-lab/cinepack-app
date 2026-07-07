@@ -86,15 +86,25 @@ export default function ControlDeptoPanel({ departamento }: { departamento: stri
     setHerramientasOcultas(new Set((data ?? []).map((r) => r.herramienta)));
   }
 
-  async function cargarMiembros(supabase: ReturnType<typeof createClient>, dept: string) {
+  async function cargarMiembros(supabase: ReturnType<typeof createClient>, pid: string, dept: string) {
+    // Los integrantes del depto son quienes tienen fila en project_members
+    // PARA ESTE proyecto con rol=dept — nunca filtrar profiles.departamento
+    // directo, ese campo es global de la cuenta (se pisa entre proyectos).
+    const { data: members } = await supabase
+      .from("project_members")
+      .select("user_id")
+      .eq("project_id", pid)
+      .eq("rol", dept);
+    const memberIds = (members ?? []).map((m) => m.user_id);
+    if (memberIds.length === 0) {
+      setMiembros([]);
+      return;
+    }
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, full_name, cargo, avatar_url")
-      .eq("departamento", dept);
-    const ids = (profiles ?? []).map((p) => p.id);
-    const { data: roles } = ids.length > 0
-      ? await supabase.from("user_roles").select("user_id, cargo").in("user_id", ids)
-      : { data: [] as { user_id: string; cargo: string }[] };
+      .in("id", memberIds);
+    const { data: roles } = await supabase.from("user_roles").select("user_id, cargo").in("user_id", memberIds);
     setMiembros(
       (profiles ?? []).map((p) => ({
         user_id: p.id,
@@ -111,7 +121,7 @@ export default function ControlDeptoPanel({ departamento }: { departamento: stri
     if (!pid) return;
     setProjectId(pid);
     const supabase = createClient();
-    cargarMiembros(supabase, departamento);
+    cargarMiembros(supabase, pid, departamento);
     cargarCargosCustom(supabase, pid, departamento);
     cargarVisibilidad(supabase, pid, departamento);
   }, [departamento]);
