@@ -70,7 +70,9 @@ export default function HerramientasPanel({
   const tNav = useTranslations("nav");
   const tEsp = useTranslations("espacio");
   const nombreDe = useNombreHerramienta();
-  const bloqueado = !MODULOS_BETA_ACTIVOS.includes(departamento) && !isAdmin;
+  const esModuloBeta = MODULOS_BETA_ACTIVOS.includes(departamento);
+  const bloqueado = !esModuloBeta && !isAdmin;
+  const proximamente = !esModuloBeta;
   const [abierta, setAbierta] = useState<Herramienta | null>(null);
   const [vista, setVista] = useState<"tabla" | "personajes">("tabla");
   const [conteos, setConteos] = useState<Record<string, number>>({});
@@ -300,7 +302,7 @@ export default function HerramientasPanel({
             </span>
             <div className="hp-cards">
               {shared.map((h) => (
-                <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
+                <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
               ))}
             </div>
           </section>
@@ -316,7 +318,7 @@ export default function HerramientasPanel({
               </span>
               <div className="hp-cards">
                 {g.tools.map((h) => (
-                  <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
+                  <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
                 ))}
               </div>
             </section>
@@ -388,7 +390,7 @@ export default function HerramientasPanel({
           </span>
           <div className="hp-cards">
             {compartidasEditables.map((h) => (
-              <ToolCard key={`shared-edit-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
+              <ToolCard key={`shared-edit-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
             ))}
           </div>
         </section>
@@ -402,7 +404,7 @@ export default function HerramientasPanel({
           </span>
           <div className="hp-cards">
             {misCargoTools.map((h) => (
-              <ToolCard key={`mine-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
+              <ToolCard key={`mine-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
             ))}
           </div>
         </section>
@@ -434,12 +436,14 @@ function ToolCard({
   onClick,
   conteo,
   bloqueada,
+  proximamente,
 }: {
   h: Herramienta;
   onClick: () => void;
   cargo?: boolean;
   conteo?: number;
   bloqueada?: boolean;
+  proximamente?: boolean;
 }) {
   const t = useTranslations("hp");
   const nombreDe = useNombreHerramienta();
@@ -462,7 +466,7 @@ function ToolCard({
           <span className="hcard-badge">{t("emptyBadge")}</span>
         )}
       </div>
-      {bloqueada && (
+      {(bloqueada || proximamente) && (
         <div className="hcard-soon">
           <span>{t("comingSoon")}</span>
         </div>
