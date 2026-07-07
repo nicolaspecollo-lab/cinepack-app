@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
 
@@ -6,6 +8,7 @@ export const runtime = "nodejs";
 
 const APP_URL = "https://app.cinepack.es";
 const REMITENTE = "CINE PACK <invitaciones@cinepack.es>";
+const LOGO_CID = "logo-cinepack";
 
 type Invitacion = {
   email: string;
@@ -41,7 +44,7 @@ const CYAN = "#19CBE6"; // mismo acento que usa el botón real de /invitacion/[t
 // Mismo patrón hexagonal de fondo que .hexbg en cp-theme.css (login, registro,
 // invitación), reescalado para una tarjeta de email más chica.
 const HEXBG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='78' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(255,255,255,0.07)' stroke-width='1.5'/%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='78' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(255,255,255,0.09)' stroke-width='1.5'/%3E%3C/svg%3E";
 
 function emailHtml(inv: Invitacion, link: string) {
   const acento = ACENTO_DEPTO[inv.departamento] ?? "#9EEE6A";
@@ -57,38 +60,32 @@ function emailHtml(inv: Invitacion, link: string) {
   </head>
   <body style="margin:0;padding:0;background:#0D0D12;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-      ${nombrePila}, te están esperando en "${inv.proyecto_nombre}".
+      ${nombrePila}, te están esperando en «${inv.proyecto_nombre}».
     </div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0D0D12;padding:48px 20px;">
       <tr>
         <td align="center">
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#16161D;border:1px solid rgba(255,255,255,0.08);">
             <tr>
-              <td style="padding:34px 36px;text-align:center;background-color:#16161D;background-image:url('${HEXBG}');background-repeat:repeat;">
-                <img src="${APP_URL}/logo-cp-dark.png" alt="CINE PACK" height="30" style="height:30px;width:auto;display:inline-block;" />
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:28px 36px 0 36px;text-align:center;">
-                <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a95;">
-                  Te invitaron a un proyecto
+              <td style="padding:34px 36px 26px 36px;text-align:center;background-color:#16161D;background-image:url('${HEXBG}');background-repeat:repeat;">
+                <img src="cid:${LOGO_CID}" alt="CINE PACK" height="30" style="height:30px;width:auto;display:inline-block;" />
+                <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a95;margin-top:22px;">
+                  Te han invitado a un proyecto
                 </div>
                 <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.25;color:#F4F4F6;margin-top:10px;">
                   ${inv.proyecto_nombre}
                 </div>
+                <div style="margin-top:16px;">
+                  <span style="display:inline-block;border:1px solid ${acento};color:${acento};font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 14px;background:#16161D;">
+                    ${rol}
+                  </span>
+                </div>
               </td>
             </tr>
             <tr>
-              <td style="padding:18px 36px 0 36px;text-align:center;">
-                <span style="display:inline-block;border:1px solid ${acento};color:${acento};font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 14px;">
-                  ${rol}
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:26px 36px 0 36px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#c8cad4;">
+              <td style="padding:28px 36px 0 36px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#c8cad4;">
                 <p style="margin:0 0 14px;color:#F4F4F6;font-weight:700;">Hola ${nombrePila}, ¡enhorabuena!</p>
-                <p style="margin:0;">Ya tenés un lugar reservado en el equipo. Creá tu cuenta con un clic y vas a encontrar tu departamento, tus tareas y todo lo que el equipo fue cargando, listo para trabajar.</p>
+                <p style="margin:0;">Ya tienes un lugar reservado en el equipo. Crea tu cuenta con un clic y encontrarás tu departamento, tus tareas y todo lo que el equipo ya haya ido cargando, listo para trabajar.</p>
               </td>
             </tr>
             <tr>
@@ -100,7 +97,7 @@ function emailHtml(inv: Invitacion, link: string) {
             </tr>
             <tr>
               <td style="padding:16px 36px 0 36px;text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#6f6f7a;">
-                Al crear tu cuenta aceptás nuestra <a href="${APP_URL}/legal/privacidad" style="color:#8a8a95;">política de privacidad</a>.
+                Al crear tu cuenta aceptas nuestra <a href="${APP_URL}/legal/privacidad" style="color:#8a8a95;">política de privacidad</a>.
               </td>
             </tr>
             <tr>
@@ -110,7 +107,7 @@ function emailHtml(inv: Invitacion, link: string) {
             </tr>
             <tr>
               <td style="padding:18px 36px 32px 36px;font-family:Helvetica,Arial,sans-serif;font-size:11.5px;line-height:1.6;color:#6f6f7a;text-align:center;">
-                Si el botón no funciona, copiá este enlace en tu navegador:<br />
+                Si el botón no funciona, copia este enlace en tu navegador:<br />
                 <a href="${link}" style="color:#8a8a95;word-break:break-all;">${link}</a>
               </td>
             </tr>
@@ -119,6 +116,11 @@ function emailHtml(inv: Invitacion, link: string) {
             <tr>
               <td style="padding:20px 12px 0;text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#5a5a63;">
                 CINE PACK — gestión de producción audiovisual · cinepack.es
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 20px 0;text-align:justify;font-family:Helvetica,Arial,sans-serif;font-size:9.5px;line-height:1.55;color:#4a4a52;">
+                La información contenida en este mensaje y/o archivo(s) adjunto(s), enviada por El Vínculo Producciones a través de CINE PACK, es confidencial/privilegiada y está destinada a ser leída solo por la(s) persona(s) a la(s) que va dirigida. Le recordamos que sus datos han sido incorporados al sistema de tratamiento de El Vínculo Producciones y que, siempre que se cumplan los requisitos exigidos por la normativa, podrá ejercer sus derechos de acceso, rectificación, limitación del tratamiento, supresión ("derecho al olvido"), portabilidad, oposición y revocación, en los términos que establece la normativa vigente y aplicable en materia de protección de datos, dirigiendo su petición a la dirección postal Passeig de Mallorca 14A, Palma de Mallorca, o bien a través del correo electrónico <a href="mailto:info@elvinculoproducciones.es" style="color:#6a6a72;">info@elvinculoproducciones.es</a>. Si usted lee este mensaje y no es el destinatario señalado, la persona trabajadora o el agente responsable de entregarlo al destinatario, o lo ha recibido por error, le informamos de que está totalmente prohibida, y puede ser ilegal, cualquier divulgación, distribución o reproducción de esta comunicación, y le rogamos que nos lo notifique de inmediato y nos devuelva el mensaje original a la dirección arriba mencionada. Gracias.
               </td>
             </tr>
           </table>
@@ -153,12 +155,20 @@ export async function POST(req: Request) {
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   const link = `${APP_URL}/invitacion/${token}`;
+  const logoBuffer = await readFile(path.join(process.cwd(), "public", "logo-cp-dark.png"));
 
   const { error: sendError } = await resend.emails.send({
     from: REMITENTE,
     to: inv.email,
-    subject: `Te invitaron al proyecto "${inv.proyecto_nombre}" en CINE PACK`,
+    subject: `Te han invitado al proyecto «${inv.proyecto_nombre}» en CINE PACK`,
     html: emailHtml(inv, link),
+    attachments: [
+      {
+        filename: "logo-cp-dark.png",
+        content: logoBuffer,
+        contentId: LOGO_CID,
+      },
+    ],
   });
 
   if (sendError) {
