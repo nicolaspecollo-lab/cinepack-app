@@ -36,6 +36,12 @@ export const DEPARTAMENTOS = [
 // Departamento virtual para invitados externos con vista de solo lectura (clientes/productoras)
 export const CLIENTE_DEPT = "Cliente / Productora";
 
+// BETA cerrado (jul-2026): solo estos 4 departamentos tienen sus herramientas habilitadas
+// para usuarios comunes. El resto se ve (para transmitir la propuesta completa del producto)
+// pero cada herramienta se muestra bloqueada con un cartel "Próximamente". Super_admin
+// siempre accede sin restricción, para poder ir habilitando y probando de a uno.
+export const MODULOS_BETA_ACTIVOS = ["Ejecutivo", "Dirección", "Guion", "Producción"];
+
 // Estados de tareas, consistentes en toda la app (Pulso, Kanban, Inbox).
 export const ESTADOS_TAREA = ["pendiente", "en_curso", "hecho"] as const;
 export type EstadoTarea = (typeof ESTADOS_TAREA)[number];

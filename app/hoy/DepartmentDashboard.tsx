@@ -345,13 +345,13 @@ export default function DepartmentDashboard({
 
       {tab === "departamento" && (
         <div className="tpanel active">
-          <HerramientasPanel departamento={nombre} cargo={cargo} fullName={fullName} seccion="departamento" />
+          <HerramientasPanel departamento={nombre} cargo={cargo} fullName={fullName} seccion="departamento" isAdmin={isAdmin} />
         </div>
       )}
 
       {tab === "exclusivas" && (
         <div className="tpanel active">
-          <HerramientasPanel departamento={nombre} cargo={cargo} fullName={fullName} seccion="cargo" />
+          <HerramientasPanel departamento={nombre} cargo={cargo} fullName={fullName} seccion="cargo" isAdmin={isAdmin} />
         </div>
       )}
 

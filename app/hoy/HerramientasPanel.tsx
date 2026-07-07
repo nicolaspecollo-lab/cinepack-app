@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
+import { MODULOS_BETA_ACTIVOS } from "../constants";
 import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
@@ -57,16 +58,19 @@ export default function HerramientasPanel({
   cargo,
   fullName,
   seccion,
+  isAdmin,
 }: {
   departamento: string;
   cargo?: string | null;
   fullName: string;
   seccion: "departamento" | "cargo";
+  isAdmin?: boolean;
 }) {
   const t = useTranslations("hp");
   const tNav = useTranslations("nav");
   const tEsp = useTranslations("espacio");
   const nombreDe = useNombreHerramienta();
+  const bloqueado = !MODULOS_BETA_ACTIVOS.includes(departamento) && !isAdmin;
   const [abierta, setAbierta] = useState<Herramienta | null>(null);
   const [vista, setVista] = useState<"tabla" | "personajes">("tabla");
   const [conteos, setConteos] = useState<Record<string, number>>({});
@@ -127,6 +131,7 @@ export default function HerramientasPanel({
   }, [departamento, seccion]);
 
   function abrir(h: Herramienta) {
+    if (bloqueado) return;
     setAbierta(h);
     localStorage.setItem(openKey(departamento, seccion), h.id);
   }
@@ -159,6 +164,7 @@ export default function HerramientasPanel({
   // Restaura la herramienta que estaba abierta en esta pestaña (Departamento/Exclusivas)
   // al volver a ella, leyendo de localStorage por departamento + seccion.
   useEffect(() => {
+    if (bloqueado) return;
     const id = localStorage.getItem(openKey(departamento, seccion));
     if (!id) return;
     const candidatos =
@@ -294,7 +300,7 @@ export default function HerramientasPanel({
             </span>
             <div className="hp-cards">
               {shared.map((h) => (
-                <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+                <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
               ))}
             </div>
           </section>
@@ -310,7 +316,7 @@ export default function HerramientasPanel({
               </span>
               <div className="hp-cards">
                 {g.tools.map((h) => (
-                  <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+                  <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
                 ))}
               </div>
             </section>
@@ -382,7 +388,7 @@ export default function HerramientasPanel({
           </span>
           <div className="hp-cards">
             {compartidasEditables.map((h) => (
-              <ToolCard key={`shared-edit-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+              <ToolCard key={`shared-edit-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
             ))}
           </div>
         </section>
@@ -396,7 +402,7 @@ export default function HerramientasPanel({
           </span>
           <div className="hp-cards">
             {misCargoTools.map((h) => (
-              <ToolCard key={`mine-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} />
+              <ToolCard key={`mine-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} />
             ))}
           </div>
         </section>
@@ -427,17 +433,23 @@ function ToolCard({
   h,
   onClick,
   conteo,
+  bloqueada,
 }: {
   h: Herramienta;
   onClick: () => void;
   cargo?: boolean;
   conteo?: number;
+  bloqueada?: boolean;
 }) {
   const t = useTranslations("hp");
   const nombreDe = useNombreHerramienta();
   const unidad = t(h.tipo === "checklist" ? "unitItems" : h.tipo === "galeria" ? "unitPhotos" : "unitRows");
   return (
-    <button className="hcard" onClick={onClick}>
+    <button
+      className={`hcard${bloqueada ? " hcard-locked" : ""}`}
+      onClick={bloqueada ? undefined : onClick}
+      aria-disabled={bloqueada}
+    >
       <div className="hcard-accent" />
       <div className="hcard-title">{nombreDe(h)}</div>
       {h.hint && <div className="hcard-desc">{h.hint}</div>}
@@ -450,6 +462,11 @@ function ToolCard({
           <span className="hcard-badge">{t("emptyBadge")}</span>
         )}
       </div>
+      {bloqueada && (
+        <div className="hcard-soon">
+          <span>{t("comingSoon")}</span>
+        </div>
+      )}
     </button>
   );
 }

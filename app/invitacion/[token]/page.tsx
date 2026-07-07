@@ -33,6 +33,9 @@ export default function InvitacionPage() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [aceptaDatos, setAceptaDatos] = useState(false);
+  const [aceptaNotificaciones, setAceptaNotificaciones] = useState(false);
+  const [aceptaNewsletter, setAceptaNewsletter] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState<"session" | "confirm" | null>(null);
@@ -65,6 +68,11 @@ export default function InvitacionPage() {
       return;
     }
 
+    if (!aceptaDatos) {
+      setMsg({ type: "err", text: t("errLegalRequired") });
+      return;
+    }
+
     setSubmitting(true);
     setMsg(null);
 
@@ -82,7 +90,12 @@ export default function InvitacionPage() {
     }
 
     if (data.session) {
-      const { error: errAccept } = await supabase.rpc("accept_invitation", { p_token: token });
+      const { error: errAccept } = await supabase.rpc("accept_invitation", {
+        p_token: token,
+        p_acepta_datos: aceptaDatos,
+        p_acepta_notificaciones: aceptaNotificaciones,
+        p_acepta_newsletter: aceptaNewsletter,
+      });
       setSubmitting(false);
 
       if (errAccept) {
@@ -93,6 +106,10 @@ export default function InvitacionPage() {
       setDone("session");
     } else {
       localStorage.setItem("cinepack-pending-invite-token", token);
+      localStorage.setItem(
+        "cinepack-pending-invite-consent",
+        JSON.stringify({ datos: aceptaDatos, notificaciones: aceptaNotificaciones, newsletter: aceptaNewsletter })
+      );
       setSubmitting(false);
       setDone("confirm");
     }
@@ -249,6 +266,41 @@ export default function InvitacionPage() {
                 required
                 minLength={6}
               />
+
+              <div className="aconsent-group">
+                <label className="aconsent">
+                  <input
+                    type="checkbox"
+                    checked={aceptaDatos}
+                    onChange={(e) => setAceptaDatos(e.target.checked)}
+                  />
+                  <span className="aconsent-required">
+                    {t.rich("legalDatos", {
+                      link: (chunks) => (
+                        <a href="/legal/privacidad" target="_blank" rel="noopener noreferrer">{chunks}</a>
+                      ),
+                    })}
+                  </span>
+                </label>
+
+                <label className="aconsent">
+                  <input
+                    type="checkbox"
+                    checked={aceptaNotificaciones}
+                    onChange={(e) => setAceptaNotificaciones(e.target.checked)}
+                  />
+                  <span>{t("legalNotificaciones")}</span>
+                </label>
+
+                <label className="aconsent">
+                  <input
+                    type="checkbox"
+                    checked={aceptaNewsletter}
+                    onChange={(e) => setAceptaNewsletter(e.target.checked)}
+                  />
+                  <span>{t("legalNewsletter")}</span>
+                </label>
+              </div>
 
               {msg && (
                 <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>

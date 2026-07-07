@@ -368,6 +368,7 @@
     "unitPhotos": "fotos",
     "unitRows": "files",
     "emptyBadge": "buit",
+    "comingSoon": "Properament",
     "confirmDeletePersonal": "Vols eliminar aquesta eina personal i totes les seves dades?",
     "table": "Taula",
     "byCharacter": "Per personatge",
@@ -2199,8 +2200,12 @@
     "creatingAccount": "Creant compte...",
     "createAndEnter": "Crea el compte i entra",
     "errPasswordsMismatch": "Les contrasenyes no coincideixen.",
+    "errLegalRequired": "Cal acceptar el tractament de dades per crear el compte.",
     "email": "Email",
-    "fullName": "Nom complet"
+    "fullName": "Nom complet",
+    "legalDatos": "Accepto el tractament de les meves dades personals segons la <link>Política de Privacitat</link> de CINE PACK.",
+    "legalNotificaciones": "Vull rebre emails amb alertes i notificacions del meu projecte.",
+    "legalNewsletter": "Vull subscriure'm a la newsletter de CINE PACK per estar al corrent de novetats del sector i de l'app."
   },
   "perfil": {
     "loading": "Carregant perfil…",

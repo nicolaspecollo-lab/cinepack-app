@@ -269,6 +269,14 @@
 .amsg.err{ color:var(--pink); }
 .amsg.ok{ color:var(--lime); }
 
+.aconsent-group{ display:flex; flex-direction:column; gap:10px; margin-top:2px; }
+.aconsent{ display:flex; align-items:flex-start; gap:10px; font-size:12.5px; color:var(--muted); line-height:1.5; cursor:pointer; }
+.aconsent input[type="checkbox"]{ width:16px; height:16px; margin-top:2px; flex-shrink:0; accent-color:var(--lime); cursor:pointer; }
+.apanel.register .aconsent input[type="checkbox"]{ accent-color:var(--cyan); }
+.aconsent-required::after{ content:"*"; color:var(--pink); margin-left:3px; }
+.aconsent a{ color:var(--text); text-decoration:underline; }
+.aconsent a:hover{ color:var(--lime); }
+
 /* ===================================================================
    Selección de proyecto
 =================================================================== */

@@ -368,6 +368,7 @@
     "unitPhotos": "fotos",
     "unitRows": "filas",
     "emptyBadge": "vacía",
+    "comingSoon": "Próximamente",
     "confirmDeletePersonal": "¿Eliminar esta herramienta personal y todos sus datos?",
     "table": "Tabla",
     "byCharacter": "Por personaje",
@@ -2199,8 +2200,12 @@
     "creatingAccount": "Creando cuenta...",
     "createAndEnter": "Crear cuenta y entrar",
     "errPasswordsMismatch": "Las contraseñas no coinciden.",
+    "errLegalRequired": "Tenés que aceptar el tratamiento de datos para crear la cuenta.",
     "email": "Email",
-    "fullName": "Nombre completo"
+    "fullName": "Nombre completo",
+    "legalDatos": "Acepto el tratamiento de mis datos personales según la <link>Política de Privacidad</link> de CINE PACK.",
+    "legalNotificaciones": "Quiero recibir emails con alertas y notificaciones de mi proyecto.",
+    "legalNewsletter": "Quiero suscribirme a la newsletter de CINE PACK para enterarme de novedades de la industria y de la app."
   },
   "perfil": {
     "loading": "Cargando perfil…",

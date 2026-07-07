@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { HERRAMIENTA_POR_ID } from "../herramientas";
 import { useNombreHerramienta } from "./HerramientasPanel";
+import { MODULOS_BETA_ACTIVOS } from "../constants";
 
 type DialogoLinea = { personaje: string; parentetico?: string; texto: string };
 
@@ -83,7 +84,11 @@ export default function EscenasPanel({ departamento }: { departamento: string })
         .order("orden", { ascending: true })
         .order("numero", { ascending: true }),
       supabase.from("planos").select("*").eq("project_id", projectId),
-      supabase.from("herramienta_filas").select("departamento, herramienta_id, datos").eq("project_id", projectId),
+      supabase
+        .from("herramienta_filas")
+        .select("departamento, herramienta_id, datos")
+        .eq("project_id", projectId)
+        .in("departamento", MODULOS_BETA_ACTIVOS),
     ]);
     setEscenas(esc ?? []);
     setPlanos(pl ?? []);

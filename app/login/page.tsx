@@ -38,9 +38,20 @@ export default function LoginPage() {
 
     const pendingToken = localStorage.getItem("cinepack-pending-invite-token");
     if (pendingToken) {
-      const { error: errAccept } = await supabase.rpc("accept_invitation", { p_token: pendingToken });
+      let consent = { datos: false, notificaciones: false, newsletter: false };
+      try {
+        const raw = localStorage.getItem("cinepack-pending-invite-consent");
+        if (raw) consent = JSON.parse(raw);
+      } catch {}
+      const { error: errAccept } = await supabase.rpc("accept_invitation", {
+        p_token: pendingToken,
+        p_acepta_datos: consent.datos,
+        p_acepta_notificaciones: consent.notificaciones,
+        p_acepta_newsletter: consent.newsletter,
+      });
       if (!errAccept) {
         localStorage.removeItem("cinepack-pending-invite-token");
+        localStorage.removeItem("cinepack-pending-invite-consent");
       }
     }
 
