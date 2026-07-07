@@ -121,13 +121,13 @@ export default function ConsultasPanel({
       const supabase = createClient();
       const { data } = await supabase
         .from("project_members")
-        .select("user_id, profiles(full_name, departamento)")
+        .select("user_id, rol, profiles(full_name)")
         .eq("project_id", projectId);
       const lista = (data ?? [])
         .map((row) => {
-          const p = row.profiles as unknown as { full_name: string; departamento: string } | null;
+          const p = row.profiles as unknown as { full_name: string } | null;
           if (!p) return null;
-          return { user_id: row.user_id as string, full_name: p.full_name, departamento: p.departamento };
+          return { user_id: row.user_id as string, full_name: p.full_name, departamento: row.rol as string };
         })
         .filter((m): m is MiembroProyecto => m !== null);
       setMiembrosProyecto(lista);
