@@ -16,26 +16,109 @@ type Invitacion = {
   used: boolean;
 };
 
+// Paleta oficial de acentos por departamento (ver memoria "paleta de colores
+// oficial" — únicos hex válidos, armonizados al logo real de CINE PACK).
+const ACENTO_DEPTO: Record<string, string> = {
+  "Dirección": "#9EEE6A",
+  "Fotografía": "#1F7DE2",
+  "Arte": "#F37FB5",
+  "Guion": "#F5E26A",
+  "Producción": "#19CBE6",
+  "Ejecutivo": "#C98AF2",
+  "Casting": "#EE9962",
+  "Reparto": "#F4F4F6",
+  "Making of": "#5BEDD6",
+  "Sonido": "#E6B019",
+  "Postproducción": "#F07A7A",
+  "RRHH": "#66C3EE",
+  "Sostenibilidad": "#52EC64",
+  "Marketing": "#E8A330",
+  "Difusión": "#5F70ED",
+  "Distribución": "#F18E80",
+};
+const CYAN = "#19CBE6"; // mismo acento que usa el botón real de /invitacion/[token]
+
 function emailHtml(inv: Invitacion, link: string) {
-  return `
-  <div style="background:#0D0D12;padding:40px 24px;font-family:'Helvetica Neue',Arial,sans-serif;">
-    <div style="max-width:480px;margin:0 auto;background:#16161d;border:1px solid #2a2a35;border-radius:0;overflow:hidden;">
-      <div style="padding:32px 32px 0;text-align:center;">
-        <div style="display:inline-block;width:32px;height:32px;background:#E8FF6B;transform:rotate(45deg);margin-bottom:16px;"></div>
-        <h1 style="color:#fff;font-size:20px;margin:0 0 8px;">CINE PACK</h1>
-      </div>
-      <div style="padding:8px 32px 32px;color:#c8c8d0;font-size:14px;line-height:1.6;">
-        <p style="color:#fff;font-size:16px;">Hola ${inv.full_name},</p>
-        <p>Te sumaron al proyecto <strong style="color:#fff;">${inv.proyecto_nombre}</strong> en CINE PACK, como <strong style="color:#fff;">${inv.departamento}${inv.cargo ? ` · ${inv.cargo}` : ""}</strong>.</p>
-        <p>Hacé click abajo para crear tu cuenta y entrar directo al proyecto.</p>
-        <div style="text-align:center;margin:28px 0;">
-          <a href="${link}" style="display:inline-block;background:#E8FF6B;color:#0D0D12;text-decoration:none;font-weight:700;font-size:14px;padding:14px 28px;letter-spacing:0.02em;">CREAR MI CUENTA</a>
-        </div>
-        <p style="color:#8a8a95;font-size:12px;">Si el botón no funciona, copiá y pegá este link en tu navegador:<br>
-        <a href="${link}" style="color:#8a8a95;word-break:break-all;">${link}</a></p>
-      </div>
+  const acento = ACENTO_DEPTO[inv.departamento] ?? "#9EEE6A";
+  const rol = inv.cargo ? `${inv.departamento} · ${inv.cargo}` : inv.departamento;
+
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invitación a CINE PACK</title>
+  </head>
+  <body style="margin:0;padding:0;background:#0D0D12;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+      ${inv.full_name.split(" ")[0]}, te están esperando en "${inv.proyecto_nombre}".
     </div>
-  </div>`;
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0D0D12;padding:48px 20px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#16161D;border:1px solid rgba(255,255,255,0.08);">
+            <tr>
+              <td style="padding:36px 36px 0 36px;text-align:center;">
+                <div style="width:22px;height:22px;background:${acento};transform:rotate(45deg);margin:0 auto 18px;"></div>
+                <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.18em;color:#F4F4F6;text-transform:uppercase;">
+                  Cine Pack
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:26px 36px 0 36px;text-align:center;">
+                <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a95;">
+                  Te invitaron a un proyecto
+                </div>
+                <div style="font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.25;color:#F4F4F6;margin-top:10px;">
+                  ${inv.proyecto_nombre}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 36px 0 36px;text-align:center;">
+                <span style="display:inline-block;border:1px solid ${acento};color:${acento};font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:700;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 14px;">
+                  ${rol}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:26px 36px 0 36px;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#c8cad4;">
+                <p style="margin:0 0 14px;">Hola ${inv.full_name.split(" ")[0]},</p>
+                <p style="margin:0;">Ya tenés un lugar reservado en el equipo. Creá tu cuenta con un clic y vas a encontrar tu departamento, tus tareas y todo lo que el equipo fue cargando, listo para trabajar.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 36px 6px 36px;text-align:center;">
+                <a href="${link}" style="display:inline-block;background:${CYAN};color:#0D0D12;text-decoration:none;font-family:'Poppins',Helvetica,Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.04em;text-transform:uppercase;padding:15px 30px;">
+                  Crear mi cuenta →
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:22px 36px 0 36px;">
+                <div style="height:1px;background:rgba(255,255,255,0.08);"></div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 36px 32px 36px;font-family:Helvetica,Arial,sans-serif;font-size:11.5px;line-height:1.6;color:#6f6f7a;text-align:center;">
+                Si el botón no funciona, copiá este enlace en tu navegador:<br />
+                <a href="${link}" style="color:#8a8a95;word-break:break-all;">${link}</a>
+              </td>
+            </tr>
+          </table>
+          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+            <tr>
+              <td style="padding:20px 12px 0;text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#5a5a63;">
+                CINE PACK — gestión de producción audiovisual · cinepack.es
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 }
 
 export async function POST(req: Request) {
