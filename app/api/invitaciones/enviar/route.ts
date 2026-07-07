@@ -42,8 +42,12 @@ const CYAN = "#19CBE6"; // mismo acento que usa el botón real de /invitacion/[t
 
 // Mismo patrón hexagonal de fondo que .hexbg en cp-theme.css (login, registro,
 // invitación), reescalado para una tarjeta de email más chica.
+// Las comillas del SVG van percent-encoded (%27) a propósito: si quedan como
+// comillas simples literales, chocan con las comillas simples del url('...')
+// que las envuelve en el style del email y rompen TODO ese atributo style
+// (fondo, patrón y centrado) en clientes como Apple Mail.
 const HEXBG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='78' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(255,255,255,0.09)' stroke-width='1.5'/%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2790%27 height=%2778%27 viewBox=%270 0 120 104%27%3E%3Cpolygon points=%2730,0 90,0 120,52 90,104 30,104 0,52%27 fill=%27none%27 stroke=%27rgba(255,255,255,0.09)%27 stroke-width=%271.5%27/%3E%3C/svg%3E";
 
 function emailHtml(inv: Invitacion, link: string) {
   const acento = ACENTO_DEPTO[inv.departamento] ?? "#9EEE6A";
@@ -55,6 +59,8 @@ function emailHtml(inv: Invitacion, link: string) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="supported-color-schemes" content="dark" />
     <title>Invitación a CINE PACK</title>
   </head>
   <body style="margin:0;padding:0;background:#0D0D12;">
