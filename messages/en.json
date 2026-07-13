@@ -1210,7 +1210,12 @@
     "errNoLink": "Could not generate the link.",
     "notificationsTitle": "Notifications",
     "goComunicados": "Announcements",
-    "goConsultas": "Queries"
+    "goConsultas": "Queries",
+    "projectProgress": "Project progress",
+    "noProgressData": "The executive producer hasn't set the stage dates yet.",
+    "progressPct": "{pct}% complete",
+    "teamTitle": "Team",
+    "noTeam": "No members in the project yet."
   },
   "cmdk": {
     "searchPlaceholder": "Search…",

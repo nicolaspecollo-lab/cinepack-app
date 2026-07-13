@@ -1210,7 +1210,12 @@
     "errNoLink": "No se pudo generar el enlace.",
     "notificationsTitle": "Notificaciones",
     "goComunicados": "Comunicados",
-    "goConsultas": "Consultas"
+    "goConsultas": "Consultas",
+    "projectProgress": "Avance del proyecto",
+    "noProgressData": "El productor ejecutivo aún no ha definido las fechas de las etapas.",
+    "progressPct": "{pct}% completado",
+    "teamTitle": "Equipo",
+    "noTeam": "Aún no hay miembros en el proyecto."
   },
   "cmdk": {
     "searchPlaceholder": "Buscar…",

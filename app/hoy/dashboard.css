@@ -178,6 +178,12 @@
 }
 .cp-dash .cp-notif-acceso-txt{ flex:1; font-family:'Poppins',sans-serif; font-weight:700; font-size:12.5px; }
 
+/* Listado de equipo en el Pulso */
+.cp-dash .cp-pulso-equipo{ list-style:none; display:flex; flex-direction:column; gap:8px; margin:4px 0 0; padding:0; }
+.cp-dash .cp-pulso-equipo li{ display:flex; flex-direction:column; gap:1px; }
+.cp-dash .cp-pulso-equipo-nombre{ font-size:12.5px; font-weight:600; color:var(--text); }
+.cp-dash .cp-pulso-equipo-rol{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+
 /* ===== Pipeline strip ===== */
 .cp-dash .pipe{ display:flex; align-items:center; gap:0; margin:22px 30px 0; flex-wrap:wrap; row-gap:10px; }
 .cp-dash .pipe-step{ display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted); }
@@ -1169,7 +1175,7 @@
 
 /* Modo día de rodaje */
 .cp-dash .rodaje-banner{
-  margin:24px 30px; padding:18px 22px; border:1px solid var(--acc); border-radius:0;
+  margin:0 0 14px; padding:18px 22px; border:1px solid var(--acc); border-radius:0;
   background:linear-gradient(135deg, var(--hl3) 0%, var(--panel) 100%);
   display:flex; flex-direction:column; gap:14px;
 }
@@ -1194,7 +1200,7 @@
 }
 
 @media (max-width: 720px){
-  .cp-dash .rodaje-banner{ margin:18px 16px; padding:14px 16px; }
+  .cp-dash .rodaje-banner{ margin:0 0 14px; padding:14px 16px; }
   .cp-dash .rodaje-grid{ grid-template-columns:1fr 1fr; }
 }
 

@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import HoyPanel from "./HoyPanel";
 import GeneralesPanel, { type Sub as GeneralesSub } from "./GeneralesPanel";
 import ModoRodajePanel from "./ModoRodajePanel";
 import CicloTimeline from "./CicloTimeline";
@@ -13,6 +12,7 @@ import ArchivosPanel from "./ArchivosPanel";
 import AdminPanel from "./AdminPanel";
 import ControlDeptoPanel from "./ControlDeptoPanel";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
+import { prepararTareasPersonales } from "./tareasPersonales";
 import CommandPalette, { type PaletteItem } from "./CommandPalette";
 import InboxPanel, { type InboxItem } from "./InboxPanel";
 import { deptTools, cargoGroups } from "../herramientas";
@@ -329,11 +329,16 @@ export default function DepartmentDashboard({
           <CicloTimeline />
           <ModoRodajePanel onVerOrden={irAOrdenRodaje} />
           <CalendarioProyecto departamento={nombre} cargo={cargo} isAdmin={isAdmin} fullName={fullName} />
-          <HoyPanel deDepartamento={nombre} fullName={fullName} onAbrirTareas={() => setTab("exclusivas")} />
-          <ProyectoPulsoPanel onIrAGenerales={(sub) => {
-            setGeneralesJump((prev) => ({ sub, token: (prev?.token ?? 0) + 1 }));
-            setTab("generales");
-          }} />
+          <ProyectoPulsoPanel
+            onIrAGenerales={(sub) => {
+              setGeneralesJump((prev) => ({ sub, token: (prev?.token ?? 0) + 1 }));
+              setTab("generales");
+            }}
+            onAbrirTareas={async () => {
+              await prepararTareasPersonales(nombre);
+              setTab("exclusivas");
+            }}
+          />
           <div className="note">
             {tNav("pulsoNote", { pulso: "Pulso", generales: "Generales", departamento: "Departamento", exclusivas: "Exclusivas" })}
           </div>

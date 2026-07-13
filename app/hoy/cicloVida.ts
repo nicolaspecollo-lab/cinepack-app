@@ -105,6 +105,44 @@ export function resumenCiclo(fechas: FechasCiclo): EtapaResumen[] {
   });
 }
 
+/**
+ * Avance global del proyecto según su ciclo de vida completo (0-100), pensado
+ * para una barra tipo "30% completado". Reparte el 100% de forma pareja entre
+ * las 6 etapas: cada etapa vale 1/6. Suma las etapas ya completadas + la
+ * fracción interna de la etapa en curso (transcurrido / duración de la etapa;
+ * si es la última etapa con fecha y no hay fin de referencia, se cuenta a la
+ * mitad). Devuelve null si el Ejecutivo no ha definido ninguna fecha todavía.
+ */
+export function avanceProyectoPct(fechas: FechasCiclo): number | null {
+  const ciclo = resumenCiclo(fechas);
+  const hoy = new Date();
+  const conFecha = ETAPAS.map((e) => ({ key: e.key, inicio: fechas[e.key] }))
+    .filter((e): e is { key: EtapaKey; inicio: string } => !!e.inicio)
+    .map((e) => ({ ...e, inicioDate: new Date(`${e.inicio}T00:00:00`) }));
+  if (conFecha.length === 0) return null;
+
+  const total = ETAPAS.length; // 6
+  let acumulado = 0;
+
+  for (const etapa of ciclo) {
+    if (etapa.estado === "completada") {
+      acumulado += 1;
+    } else if (etapa.enCurso) {
+      const idx = conFecha.findIndex((e) => e.key === etapa.key);
+      const inicioDate = conFecha[idx]?.inicioDate;
+      const finDate = conFecha[idx + 1]?.inicioDate ?? null;
+      if (inicioDate && finDate && finDate > inicioDate) {
+        const frac = (hoy.getTime() - inicioDate.getTime()) / (finDate.getTime() - inicioDate.getTime());
+        acumulado += Math.min(1, Math.max(0, frac));
+      } else {
+        acumulado += 0.5; // última etapa en curso sin fin de referencia
+      }
+    }
+  }
+
+  return Math.min(100, Math.max(0, Math.round((acumulado / total) * 100)));
+}
+
 /** Días transcurridos de rodaje (1 = primer día) o 0 si todavía no empezó / no tiene fecha definida. */
 export function diaDeRodaje(fechaInicioRodaje: string | null): number {
   if (!fechaInicioRodaje) return 0;

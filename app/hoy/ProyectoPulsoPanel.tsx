@@ -5,22 +5,19 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { CLIENTE_DEPT } from "../constants";
 import Icon from "../components/Icon";
+import { CICLO_SELECT, fechasCicloDesdeFila, avanceProyectoPct } from "./cicloVida";
 
 type Conteo = { nombre: string; total: number };
 
-type Item = { texto: string; hecho: boolean };
+type MiembroEquipo = { user_id: string; full_name: string; departamento: string; cargo: string | null };
 
 type Pulso = {
   tareasTotal: number;
   tareasPorDepto: Conteo[];
   alertasTotal: number;
   alertasPorDepto: Conteo[];
-  checklistsTotal: number;
-  checklistItemsHechos: number;
-  checklistItemsTotal: number;
-  presupuestado: number;
-  comprometido: number;
-  real: number;
+  avancePct: number | null;
+  equipo: MiembroEquipo[];
 };
 
 type ContratoVence = { empresa: string; tipo: string; fecha_fin: string; diasRestantes: number };
@@ -54,9 +51,6 @@ function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   return t("timeDaysAgo", { n: days });
 }
 
-const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-
 function agrupar(rows: { para_departamento: string | null }[]): Conteo[] {
   const map = new Map<string, number>();
   for (const r of rows) {
@@ -70,8 +64,10 @@ function agrupar(rows: { para_departamento: string | null }[]): Conteo[] {
 
 export default function ProyectoPulsoPanel({
   onIrAGenerales,
+  onAbrirTareas,
 }: {
   onIrAGenerales?: (sub: "comunicados" | "consultas") => void;
+  onAbrirTareas?: () => void;
 }) {
   const t = useTranslations("pulso");
   const [pulso, setPulso] = useState<Pulso | null>(null);
@@ -94,7 +90,7 @@ export default function ProyectoPulsoPanel({
 
       const { data: proyectoCreditos } = await supabase
         .from("proyectos")
-        .select("nombre, escrito_por, dirigido_por, producido_por")
+        .select(`nombre, escrito_por, dirigido_por, producido_por, ${CICLO_SELECT}`)
         .eq("id", projectId)
         .single();
       if (proyectoCreditos) {
@@ -105,13 +101,26 @@ export default function ProyectoPulsoPanel({
           producido_por: (proyectoCreditos.producido_por as string[]) ?? [],
         });
       }
+      const avancePct = avanceProyectoPct(fechasCicloDesdeFila(proyectoCreditos as Record<string, string | null> | null));
 
-      const [{ data: tareasData }, { data: alertasData }, { data: filasData }] =
+      const [{ data: tareasData }, { data: alertasData }, { data: miembrosEquipo }] =
         await Promise.all([
           supabase.from("tareas").select("para_departamento").eq("project_id", projectId).eq("completada", false),
           supabase.from("alertas").select("para_departamento").eq("project_id", projectId).eq("leida", false),
-          supabase.from("herramienta_filas").select("herramienta_id, departamento, datos").eq("project_id", projectId),
+          supabase.from("project_members").select("user_id, rol, profiles(full_name, cargo)").eq("project_id", projectId),
         ]);
+
+      const equipo: MiembroEquipo[] = (miembrosEquipo ?? [])
+        .map((m) => {
+          const p = m.profiles as unknown as { full_name: string; cargo: string | null } | null;
+          return {
+            user_id: m.user_id as string,
+            full_name: p?.full_name ?? "—",
+            departamento: (m.rol as string) ?? "—",
+            cargo: p?.cargo ?? null,
+          };
+        })
+        .sort((a, b) => a.departamento.localeCompare(b.departamento) || a.full_name.localeCompare(b.full_name));
 
       const [{ data: tareasRecientes }, { data: alertasRecientes }, { data: filasRecientes }] =
         await Promise.all([
@@ -204,45 +213,13 @@ export default function ProyectoPulsoPanel({
         }
       }
 
-      let checklistsTotal = 0;
-      let checklistItemsHechos = 0;
-      let checklistItemsTotal = 0;
-      let presupuestado = 0;
-      let comprometido = 0;
-      let real = 0;
-
-      for (const fila of filasData ?? []) {
-        const datos = (fila.datos ?? {}) as Record<string, string>;
-        if (typeof datos.items === "string") {
-          try {
-            const items = JSON.parse(datos.items) as Item[];
-            if (items.length > 0) {
-              checklistsTotal += 1;
-              checklistItemsTotal += items.length;
-              checklistItemsHechos += items.filter((i) => i.hecho).length;
-            }
-          } catch {
-            // ignora checklists con datos corruptos
-          }
-        }
-        if (fila.herramienta_id === "ej-presupuesto-general") {
-          presupuestado += parseFloat(datos.presup || "0") || 0;
-          comprometido += parseFloat(datos.comprometido || "0") || 0;
-          real += parseFloat(datos.real || "0") || 0;
-        }
-      }
-
       setPulso({
         tareasTotal: tareasData?.length ?? 0,
         tareasPorDepto: agrupar(tareasData ?? []),
         alertasTotal: alertasData?.length ?? 0,
         alertasPorDepto: agrupar(alertasData ?? []),
-        checklistsTotal,
-        checklistItemsHechos,
-        checklistItemsTotal,
-        presupuestado,
-        comprometido,
-        real,
+        avancePct,
+        equipo,
       });
       setLoading(false);
     })();
@@ -262,10 +239,6 @@ export default function ProyectoPulsoPanel({
     );
   }
 
-  const checklistPct =
-    pulso.checklistItemsTotal > 0 ? Math.round((pulso.checklistItemsHechos / pulso.checklistItemsTotal) * 100) : null;
-  const presupuestoPct = pulso.presupuestado > 0 ? Math.min(100, Math.round((pulso.real / pulso.presupuestado) * 100)) : null;
-
   return (
     <div className="pulso">
       {creditos && (creditos.escrito_por.length > 0 || creditos.dirigido_por.length > 0 || creditos.producido_por.length > 0) && (
@@ -282,32 +255,6 @@ export default function ProyectoPulsoPanel({
               <li><span style={{ color: "var(--muted)" }}>{t("producedBy")}</span> {creditos.producido_por.join(", ")}</li>
             )}
           </ul>
-        </div>
-      )}
-
-      {esEjecutivo && (
-        <div className="tcard pulso-card cp-ej-briefing">
-          <h4><span className="hex"></span>{t("execBriefing")}</h4>
-          <div className="cp-ej-briefing-grid">
-            <div className="cp-ej-briefing-item">
-              <span className="cp-ej-briefing-label">{t("openTasks")}</span>
-              <span className={`cp-ej-briefing-val ${pulso.tareasTotal > 5 ? "tono-bad" : pulso.tareasTotal > 2 ? "tono-warn" : "tono-ok"}`}>{pulso.tareasTotal}</span>
-            </div>
-            <div className="cp-ej-briefing-item">
-              <span className="cp-ej-briefing-label">{t("activeAlerts")}</span>
-              <span className={`cp-ej-briefing-val ${pulso.alertasTotal > 3 ? "tono-bad" : pulso.alertasTotal > 0 ? "tono-warn" : "tono-ok"}`}>{pulso.alertasTotal}</span>
-            </div>
-            <div className="cp-ej-briefing-item">
-              <span className="cp-ej-briefing-label">{t("expiringContracts")}</span>
-              <span className={`cp-ej-briefing-val ${contratosVencen.length > 0 ? "tono-warn" : "tono-ok"}`}>{contratosVencen.length}</span>
-            </div>
-            {presupuestoPct !== null && (
-              <div className="cp-ej-briefing-item">
-                <span className="cp-ej-briefing-label">{t("budgetExecuted")}</span>
-                <span className={`cp-ej-briefing-val ${presupuestoPct > 90 ? "tono-bad" : presupuestoPct > 70 ? "tono-warn" : "tono-ok"}`}>{presupuestoPct}%</span>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -354,20 +301,20 @@ export default function ProyectoPulsoPanel({
       )}
 
       <div className="pulso-grid">
-        <div className="tcard pulso-card">
-          <h4>
-            <span className="hex"></span>{t("pendingTasks")}
-          </h4>
-          <div className="pulso-big-num">{pulso.tareasTotal}</div>
-          {pulso.tareasPorDepto.length === 0 && <p>{t("noPendingTasks")}</p>}
-          {pulso.tareasPorDepto.length > 0 && (
-            <ul>
-              {pulso.tareasPorDepto.slice(0, 6).map((c) => (
-                <li key={c.nombre}><span>{c.nombre}</span><span className="pulso-count">{c.total}</span></li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {onAbrirTareas && (
+          <div className="tcard pulso-card">
+            <h4>
+              <span className="hex"></span>{t("pendingTasks")}
+            </h4>
+            <div className="cp-notif-accesos">
+              <button className="cp-notif-acceso" onClick={onAbrirTareas}>
+                <span className="cp-notif-acceso-ic"><Icon name="checklist" size={15} /></span>
+                <span className="cp-notif-acceso-txt">{t("openBoard")}</span>
+                <Icon name="arrow-right" size={13} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {onIrAGenerales && (
           <div className="tcard pulso-card">
@@ -391,36 +338,33 @@ export default function ProyectoPulsoPanel({
 
         <div className="tcard pulso-card">
           <h4>
-            <span className="hex"></span>{t("checklists")}
+            <span className="hex"></span>{t("projectProgress")}
           </h4>
-          {checklistPct === null ? (
-            <p>{t("noChecklistItems")}</p>
+          {pulso.avancePct === null ? (
+            <p>{t("noProgressData")}</p>
           ) : (
             <>
-              <div className="hp-check-bar pulso-bar"><span style={{ width: `${checklistPct}%` }}></span></div>
-              <div className="pulso-bar-label">
-                {t("checklistProgress", { done: pulso.checklistItemsHechos, total: pulso.checklistItemsTotal, pct: checklistPct, n: pulso.checklistsTotal })}
-              </div>
+              <div className="hp-check-bar pulso-bar"><span style={{ width: `${pulso.avancePct}%` }}></span></div>
+              <div className="pulso-bar-label">{t("progressPct", { pct: pulso.avancePct })}</div>
             </>
           )}
         </div>
 
         <div className="tcard pulso-card">
           <h4>
-            <span className="hex"></span>{t("generalBudget")}
+            <span className="hex"></span>{t("teamTitle")}
           </h4>
-          {presupuestoPct === null ? (
-            <p>{t("noBudgetData")}</p>
+          {pulso.equipo.length === 0 ? (
+            <p>{t("noTeam")}</p>
           ) : (
-            <>
-              <div className="hp-check-bar pulso-bar"><span style={{ width: `${presupuestoPct}%` }}></span></div>
-              <div className="pulso-bar-label">{t("budgetExecutedPct", { pct: presupuestoPct })}</div>
-              <ul>
-                <li><span>{t("budgeted")}</span><span>{fmtMoney(pulso.presupuestado)} €</span></li>
-                <li><span>{t("committed")}</span><span>{fmtMoney(pulso.comprometido)} €</span></li>
-                <li><span>{t("actual")}</span><span>{fmtMoney(pulso.real)} €</span></li>
-              </ul>
-            </>
+            <ul className="cp-pulso-equipo">
+              {pulso.equipo.map((m) => (
+                <li key={m.user_id}>
+                  <span className="cp-pulso-equipo-nombre">{m.full_name}</span>
+                  <span className="cp-pulso-equipo-rol">{m.cargo ? `${m.departamento} · ${m.cargo}` : m.departamento}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
