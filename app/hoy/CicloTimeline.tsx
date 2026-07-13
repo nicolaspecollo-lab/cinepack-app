@@ -24,6 +24,11 @@ type Punto =
 
 const DIA = 86400000;
 const ms = (iso: string) => new Date(`${iso}T00:00:00`).getTime();
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 8;
+const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
+  Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
 export default function CicloTimeline() {
   const t = useTranslations("ciclo");
@@ -35,6 +40,9 @@ export default function CicloTimeline() {
   const [eventos, setEventos] = useState<EventoProyecto[]>([]);
   const [sel, setSel] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(zoom);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
 
   const load = useCallback(async () => {
     const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
@@ -85,7 +93,7 @@ export default function CicloTimeline() {
     const max = Math.max(...fechasTodas) + 20 * DIA;
     const dias = Math.max(1, (max - min) / DIA);
     const pad = 60;
-    const pxDia = Math.min(3.4, Math.max(1.4, 1300 / dias));
+    const pxDia = Math.min(3.4, Math.max(1.4, 1300 / dias)) * zoom;
     const width = Math.max(700, dias * pxDia + pad * 2);
     const xDe = (m: number) => pad + ((m - min) / DIA) * pxDia;
 
@@ -101,9 +109,12 @@ export default function CicloTimeline() {
     });
 
     return { puntos, width, hoyX: xDe(Date.now()), segmentos };
-  }, [fechas, eventos]);
+  }, [fechas, eventos, zoom]);
 
-  // Arrastre horizontal.
+  // Arrastre horizontal + zoom (rueda con Ctrl = pellizco de trackpad, y
+  // pellizco táctil real con 2 dedos). Efecto montado una sola vez (no
+  // depende de `width`, que cambia con cada paso de zoom) para no perder el
+  // estado de un gesto de pellizco a mitad de camino.
   useEffect(() => {
     const el = railRef.current;
     if (!el) return;
@@ -115,8 +126,47 @@ export default function CicloTimeline() {
     window.addEventListener("pointermove", mv);
     window.addEventListener("pointerup", up);
     (el as HTMLElement & { _moved?: () => boolean })._moved = () => moved;
-    return () => { el.removeEventListener("pointerdown", dn); window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); };
-  }, [width]);
+
+    // Trackpad: los navegadores emiten "wheel" con ctrlKey=true cuando el
+    // usuario hace un gesto de pellizco (pinch) sobre el trackpad.
+    const wh = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setZoom((z) => clampZoom(z * (1 - e.deltaY * 0.01)));
+    };
+    el.addEventListener("wheel", wh, { passive: false });
+
+    // Táctil: pellizco real con 2 dedos (móvil/tablet).
+    let pinchDist = 0;
+    let pinchZoom = 1;
+    const ts = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchDist = distTouch(e.touches[0], e.touches[1]);
+        pinchZoom = zoomRef.current;
+      }
+    };
+    const tm = (e: TouchEvent) => {
+      if (e.touches.length === 2 && pinchDist > 0) {
+        e.preventDefault();
+        const d = distTouch(e.touches[0], e.touches[1]);
+        setZoom(clampZoom(pinchZoom * (d / pinchDist)));
+      }
+    };
+    const te = () => { pinchDist = 0; };
+    el.addEventListener("touchstart", ts, { passive: true });
+    el.addEventListener("touchmove", tm, { passive: false });
+    el.addEventListener("touchend", te);
+
+    return () => {
+      el.removeEventListener("pointerdown", dn);
+      window.removeEventListener("pointermove", mv);
+      window.removeEventListener("pointerup", up);
+      el.removeEventListener("wheel", wh);
+      el.removeEventListener("touchstart", ts);
+      el.removeEventListener("touchmove", tm);
+      el.removeEventListener("touchend", te);
+    };
+  }, []);
 
   function abrirEnCalendario(fecha: string) {
     window.dispatchEvent(new CustomEvent("cp-cal-open", { detail: { fecha } }));
@@ -166,6 +216,12 @@ export default function CicloTimeline() {
             <span className="ct-progress-txt">{t("dayOf", { n: etapaActual.dias ?? 0 })}</span>
           </div>
         )}
+      </div>
+
+      <div className="ct-zoom">
+        <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z / 1.4))} disabled={zoom <= ZOOM_MIN} aria-label={t("zoomOut")}>−</button>
+        <span className="ct-zoom-pct">{Math.round(zoom * 100)}%</span>
+        <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z * 1.4))} disabled={zoom >= ZOOM_MAX} aria-label={t("zoomIn")}>+</button>
       </div>
 
       <div className="ct-rail" ref={railRef}>

@@ -2573,7 +2573,9 @@
     "loading": "Carregant…",
     "editInfo": "Editar info",
     "linkLabel": "Enllaç de l'esdeveniment",
-    "openLink": "Veure esdeveniment"
+    "openLink": "Veure esdeveniment",
+    "zoomIn": "Apropa",
+    "zoomOut": "Allunya"
   },
   "carpetaMaestra": {
     "title": "Carpeta mestra — {nombre}",

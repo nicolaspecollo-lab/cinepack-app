@@ -2573,7 +2573,9 @@
     "loading": "Loading…",
     "editInfo": "Edit info",
     "linkLabel": "Event link",
-    "openLink": "View event"
+    "openLink": "View event",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
   },
   "carpetaMaestra": {
     "title": "Master folder — {nombre}",

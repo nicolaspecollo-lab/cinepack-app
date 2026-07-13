@@ -3779,7 +3779,16 @@
 .cp-dash .ct-progress-bar span{ display:block; height:3px; }
 .cp-dash .ct-progress-txt{ font-family:'Courier New',monospace; font-size:10.5px; color:var(--muted); margin-top:5px; display:block; }
 
-.cp-dash .ct-rail{ overflow-x:auto; cursor:grab; margin-top:14px; padding-bottom:4px; touch-action:pan-x; }
+.cp-dash .ct-zoom{ display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:10px; }
+.cp-dash .ct-zoom-btn{
+  width:26px; height:26px; border-radius:0; background:none; border:1px solid var(--line); color:var(--text);
+  font-size:15px; font-weight:700; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.cp-dash .ct-zoom-btn:hover:not(:disabled){ border-color:var(--acc); color:var(--acc); }
+.cp-dash .ct-zoom-btn:disabled{ opacity:0.35; cursor:default; }
+.cp-dash .ct-zoom-pct{ font-family:'Courier New',monospace; font-size:11px; color:var(--muted); min-width:38px; text-align:center; }
+
+.cp-dash .ct-rail{ overflow-x:auto; cursor:grab; margin-top:0; padding-bottom:4px; touch-action:pan-x; }
 .cp-dash .ct-track{ position:relative; height:212px; }
 .cp-dash .ct-line{ position:absolute; top:100px; height:1px; background:var(--line); }
 .cp-dash .ct-seg{ position:absolute; top:99px; height:4px; }
