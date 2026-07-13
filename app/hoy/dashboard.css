@@ -181,6 +181,7 @@
 /* Equipo (Generales) — secciones por departamento, sello + panal + degradado,
    mismo shell que Hcard.tsx pero para agrupar personas en vez de herramientas. */
 .cp-dash .cp-equipo-secciones{ display:flex; flex-direction:column; gap:10px; margin:0 30px 30px; }
+.cp-dash .cp-equipo-toolbar{ display:flex; justify-content:flex-end; margin-bottom:2px; }
 .cp-dash .cp-equipo-depto{ position:relative; overflow:hidden; border:1px solid var(--line); background:var(--bg-2); }
 .cp-dash .cp-equipo-depto-hexbg{
   position:absolute; inset:0; z-index:0; pointer-events:none;

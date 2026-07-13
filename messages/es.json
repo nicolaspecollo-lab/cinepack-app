@@ -1006,7 +1006,10 @@
     "noMembersDesc": "Cuando se añadan personas al proyecto, aparecerán aquí agrupadas por departamento.",
     "noRole": "Sin cargo asignado",
     "memberCount": "{n, plural, one {# persona} other {# personas}}",
-    "yourDept": "Tu depto."
+    "yourDept": "Tu depto.",
+    "exportPdf": "Exportar PDF",
+    "exportingPdf": "Generando PDF…",
+    "pdfTitle": "Equipo — {proyecto}"
   },
   "accesos": {
     "loading": "Cargando solicitudes…",

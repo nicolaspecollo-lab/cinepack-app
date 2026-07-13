@@ -9,6 +9,7 @@ export type MiembroProyecto = {
   full_name: string;
   cargo: string | null;
   avatar_url: string | null;
+  telefono: string | null;
 };
 
 export type GrupoDepartamento = {
@@ -35,7 +36,7 @@ export function useEquipoProyecto() {
       const supabase = createClient();
       const { data } = await supabase
         .from("project_members")
-        .select("user_id, profiles(full_name, departamento, cargo, avatar_url)")
+        .select("user_id, profiles(full_name, departamento, cargo, avatar_url, telefono)")
         .eq("project_id", proyectoId);
 
       const porDepto = new Map<string, MiembroProyecto[]>();
@@ -45,6 +46,7 @@ export function useEquipoProyecto() {
           departamento: string;
           cargo: string | null;
           avatar_url: string | null;
+          telefono: string | null;
         } | null;
         if (!p) continue;
         const lista = porDepto.get(p.departamento) ?? [];
@@ -53,6 +55,7 @@ export function useEquipoProyecto() {
           full_name: p.full_name,
           cargo: p.cargo,
           avatar_url: p.avatar_url,
+          telefono: p.telefono,
         });
         porDepto.set(p.departamento, lista);
       }

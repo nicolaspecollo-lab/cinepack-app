@@ -1006,7 +1006,10 @@
     "noMembersDesc": "Quan s'afegeixin persones al projecte, apareixeran aquí agrupades per departament.",
     "noRole": "Sense càrrec assignat",
     "memberCount": "{n, plural, one {# persona} other {# persones}}",
-    "yourDept": "El teu depto."
+    "yourDept": "El teu depto.",
+    "exportPdf": "Exporta PDF",
+    "exportingPdf": "Generant PDF…",
+    "pdfTitle": "Equip — {proyecto}"
   },
   "accesos": {
     "loading": "Carregant sol·licituds…",
