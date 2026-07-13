@@ -1144,7 +1144,10 @@
     "noPreview": "No se puede mostrar una vista previa de este archivo",
     "dropHere": "Arrastra archivos aquí o haz clic para subir",
     "createFolderToStart": "Crea una carpeta para empezar a organizar tus archivos",
-    "rootLabel": "Archivos"
+    "rootLabel": "Archivos",
+    "view": "Ver",
+    "download": "Descargar",
+    "delete": "Borrar"
   },
   "pulso": {
     "statusOk": "OK",

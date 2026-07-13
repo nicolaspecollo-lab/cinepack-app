@@ -59,7 +59,6 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   const [previewFile, setPreviewFile] = useState<Archivo | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
   const [me, setMe] = useState<{ id: string; nombre: string | null } | null>(null);
 
@@ -143,7 +142,6 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     setCarpetas(c);
     setArchivos(a);
     setLoading(false);
-    generarMiniaturas(a);
   }
 
   useEffect(() => { load(); }, [departamento, pathStack.join("/")]); // eslint-disable-line
@@ -167,34 +165,6 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     if (!ctx) return null;
     await page.render({ canvasContext: ctx, viewport } as Parameters<typeof page.render>[0]).promise;
     return canvas.toDataURL("image/png");
-  }
-
-  async function generarMiniaturas(files: Archivo[]) {
-    const imagenes = files.filter((f) => /\.(jpg|jpeg|png|gif|webp)$/i.test(f.nombre));
-    const pdfs = files.filter((f) => /\.(pdf)$/i.test(f.nombre));
-
-    if (imagenes.length > 0) {
-      const supabase = createClient();
-      const { data } = await supabase.storage.from(BUCKET).createSignedUrls(imagenes.map((f) => f.path), 3600);
-      if (data) {
-        setThumbs((prev) => {
-          const next = { ...prev };
-          data.forEach((d, i) => {
-            if (d.signedUrl) next[imagenes[i].path] = d.signedUrl;
-          });
-          return next;
-        });
-      }
-    }
-
-    for (const f of pdfs) {
-      try {
-        const url = await renderPdfThumbnail(f.path, 0.5);
-        if (url) setThumbs((prev) => ({ ...prev, [f.path]: url }));
-      } catch (err) {
-        console.error("Error al generar miniatura de PDF:", err);
-      }
-    }
   }
 
   async function crearCarpeta() {
@@ -389,49 +359,24 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
           )}
 
           {archivos.length > 0 && (
-            <div className="arc-files-grid">
+            <div className="arc-files-list">
               {archivos.map((f, i) => {
                 const isImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.nombre);
                 const isPdf = /\.(pdf)$/i.test(f.nombre);
                 const conPreview = isImagen || isPdf;
                 return (
-                  <div key={i} className="arc-file-card" style={{ position: "relative" }}>
-                    {conPreview ? (
-                      <button
-                        className="arc-file-thumb"
-                        onClick={() => abrirPreview(f)}
-                        style={{
-                          width: "100%",
-                          height: "120px",
-                          background: "var(--hl3)",
-                          border: "1px solid var(--line)",
-                          borderRadius: "4px",
-                          padding: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {thumbs[f.path] ? (
-                          <img
-                            src={thumbs[f.path]}
-                            alt={f.nombre}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        ) : (
-                          <span style={{ fontSize: "48px" }}>{fileIcon(f.nombre)}</span>
-                        )}
-                      </button>
-                    ) : (
-                      <span className="arc-file-icon">{fileIcon(f.nombre)}</span>
-                    )}
-                    <span className="arc-file-name">{f.nombre}</span>
-                    <span className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at, t)}</span>
+                  <div key={i} className="arc-file-row">
+                    <span className="arc-file-row-icon">{fileIcon(f.nombre)}</span>
+                    <div className="arc-file-row-info">
+                      <div className="arc-file-name">{f.nombre}</div>
+                      <div className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at, t)}</div>
+                    </div>
                     <div className="arc-file-actions">
-                      <button className="arc-btn" onClick={() => descargar(f.path, f.nombre)}>⬇</button>
-                      <button className="arc-btn arc-btn-del" onClick={() => eliminar(f)}>✕</button>
+                      {conPreview && (
+                        <button className="arc-icon-btn" onClick={() => abrirPreview(f)} title={t("view")}>👁</button>
+                      )}
+                      <button className="arc-icon-btn" onClick={() => descargar(f.path, f.nombre)} title={t("download")}>⬇</button>
+                      <button className="arc-icon-btn danger" onClick={() => eliminar(f)} title={t("delete")}>✕</button>
                     </div>
                   </div>
                 );

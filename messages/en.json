@@ -1144,7 +1144,10 @@
     "noPreview": "A preview cannot be shown for this file",
     "dropHere": "Drag files here or click to upload",
     "createFolderToStart": "Create a folder to start organizing your files",
-    "rootLabel": "Files"
+    "rootLabel": "Files",
+    "view": "View",
+    "download": "Download",
+    "delete": "Delete"
   },
   "pulso": {
     "statusOk": "OK",

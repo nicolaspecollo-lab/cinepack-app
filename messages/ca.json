@@ -1144,7 +1144,10 @@
     "noPreview": "No es pot mostrar una vista prèvia d'aquest fitxer",
     "dropHere": "Arrossega fitxers aquí o fes clic per pujar",
     "createFolderToStart": "Crea una carpeta per començar a organitzar els teus fitxers",
-    "rootLabel": "Fitxers"
+    "rootLabel": "Fitxers",
+    "view": "Veure",
+    "download": "Descarrega",
+    "delete": "Esborra"
   },
   "pulso": {
     "statusOk": "OK",
