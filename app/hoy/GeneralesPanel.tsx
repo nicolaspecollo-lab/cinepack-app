@@ -20,6 +20,7 @@ import { ACCENTS } from "../constants";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 import Icon from "../components/Icon";
+import Hcard from "./Hcard";
 
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
 // que despliega sub-pestañas. Iguales para todo el proyecto.
@@ -45,6 +46,26 @@ const PROPIETARIOS: Partial<Record<Sub, string[] | null>> = {
   contactos:  ["Producción"],
   wrap:       ["Producción"],
   escena3d:   [],           // vista agregada, sin edición directa
+};
+
+// Ícono del sello hexagonal de cada herramienta general — ver Hcard.tsx.
+const ICON_POR_SUB: Record<Sub, React.ComponentProps<typeof Icon>["name"]> = {
+  comunicados: "message",
+  consultas: "message",
+  notificaciones: "bell",
+  guion: "file-text",
+  guiontec: "film",
+  calendario: "calendar",
+  plan: "clock",
+  orden: "list",
+  escena3d: "cube",
+  espacio: "layout",
+  visionado: "image",
+  equipo: "users",
+  accesos: "key",
+  pipeline: "briefcase",
+  contactos: "phone",
+  wrap: "checklist",
 };
 
 function canEditSub(sub: Sub, departamento: string): boolean {
@@ -172,20 +193,20 @@ export default function GeneralesPanel({
           </div>
           <div className="hp-cards">
             {subs.map((s) => (
-              <button key={s.id} className="hcard" onClick={() => setSub(s.id)}>
-                <div className="hcard-accent" />
-                {!!pendientesPorSub[s.id] && (
-                  <span className="wtab-badge" style={{ position: "absolute", top: "10px", right: "10px" }}>
-                    {pendientesPorSub[s.id]}
-                  </span>
-                )}
-                <div className="hcard-title">{tG(`${s.id}.label`)}</div>
-                <div className="hcard-desc">{tG(`${s.id}.desc`)}</div>
-                <div className="hcard-meta">
-                  <DeptHexes label={<Icon name="pencil" size={11} />} depts={s.editores} />
-                  <DeptHexes label={<Icon name="eye" size={11} />} depts={s.visores} />
-                </div>
-              </button>
+              <Hcard
+                key={s.id}
+                icon={ICON_POR_SUB[s.id]}
+                title={tG(`${s.id}.label`)}
+                desc={tG(`${s.id}.desc`)}
+                badgeCount={pendientesPorSub[s.id]}
+                onClick={() => setSub(s.id)}
+                footer={
+                  <>
+                    <DeptHexes label={<Icon name="pencil" size={11} />} depts={s.editores} />
+                    <DeptHexes label={<Icon name="eye" size={11} />} depts={s.visores} />
+                  </>
+                }
+              />
             ))}
           </div>
         </div>

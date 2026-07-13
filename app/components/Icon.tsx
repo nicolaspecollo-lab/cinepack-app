@@ -10,7 +10,8 @@ type IconName =
   | "chevron-down" | "highlighter" | "type" | "text-color"
   | "filter" | "sliders" | "download" | "sort" | "maximize" | "minimize" | "plus" | "search" | "replace"
   | "folder" | "paperclip" | "grip-vertical" | "upload" | "map-pin" | "clock"
-  | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film";
+  | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
+  | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   bold: <><path d="M6 4h8a4 4 0 0 1 0 8H6z" /><path d="M6 12h9a4 4 0 0 1 0 8H6z" /></>,
@@ -62,6 +63,15 @@ const PATHS: Record<IconName, React.ReactNode> = {
   phone: <><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" /></>,
   "alert-triangle": <><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
   film: <><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M7 3v18" /><path d="M17 3v18" /><path d="M3 8h4" /><path d="M17 8h4" /><path d="M3 16h4" /><path d="M17 16h4" /><path d="M3 12h18" /></>,
+  checklist: <><path d="M11 5h10" /><path d="M11 12h10" /><path d="M11 19h10" /><path d="m3 5 1.5 1.5L7 4" /><path d="m3 12 1.5 1.5L7 11" /><path d="m3 19 1.5 1.5L7 18" /></>,
+  "id-card": <><rect x="2" y="4" width="20" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M15 8h4" /><path d="M15 12h4" /><path d="M6 16h12" /></>,
+  image: <><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></>,
+  key: <><circle cx="7" cy="15" r="4" /><path d="M10.5 11.5 20 2" /><path d="M17 5l3 3" /><path d="M14 8l2 2" /></>,
+  message: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></>,
+  cube: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></>,
+  bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>,
+  layout: <><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></>,
+  briefcase: <><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
 };
 
 export default function Icon({

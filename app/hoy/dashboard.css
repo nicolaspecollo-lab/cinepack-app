@@ -717,34 +717,60 @@
 .cp-dash .hp-group-label .hex{ width:8px; height:7px; background:var(--acc); flex-shrink:0; }
 .cp-dash .hp-group-label-muted{ color:var(--muted); }
 
-/* Grid de tarjetas: 3 columnas en desktop, se adapta solo en pantallas chicas */
-.cp-dash .hp-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:10px; }
+/* Grid de tarjetas: cantidad de columnas libre (auto-fit), pero cada
+   tarjeta conserva su propia proporción — nunca se aplasta en cuadrada
+   aunque entren más por fila (1 en mobile, 2 en tablet, 3+ en desktop). */
+.cp-dash .hp-cards{ display:grid; grid-template-columns:repeat(auto-fit, minmax(272px,1fr)); gap:12px; }
 
 /* Exclusivas: por cargo con label destacado */
 .cp-dash .hp-index-cols{ flex-direction:column; gap:24px; }
 .cp-dash .hp-mine{ font-size:8.5px; letter-spacing:0.1em; color:#0D0D12; background:var(--acc); border-radius:0; padding:2px 8px; }
 
-/* ── hcard: tarjeta de herramienta ── */
+/* ── hcard: tarjeta de herramienta ──
+   Sello hexagonal (ícono del tipo) 100% embebido en la cabecera, panal de
+   fondo con el color de departamento (mask-image sobre el mismo hexbg de
+   marca, se tiñe solo con var(--acc)) que se disuelve hacia abajo con un
+   degradado, y contenido (descripción + footer) expandido hacia la derecha. */
 .cp-dash .hcard{
   position:relative; overflow:hidden;
   background:var(--bg-2); border:1px solid var(--line);
-  padding:16px 18px 14px 20px; cursor:pointer;
-  transition:border-color .15s, transform .1s;
-  text-align:left; width:100%; display:flex; flex-direction:column; gap:0;
+  cursor:pointer; transition:border-color .15s, transform .1s;
+  text-align:left; width:100%; display:flex; flex-direction:column;
 }
 .cp-dash .hcard:hover{ border-color:var(--acc); transform:translateY(-1px); }
-.cp-dash .hcard-accent{
-  position:absolute; top:0; left:0; width:3px; height:100%; background:var(--acc);
+.cp-dash .hcard-hexbg{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:var(--acc);
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  -webkit-mask-repeat:repeat; mask-repeat:repeat;
+  -webkit-mask-size:70px 61px; mask-size:70px 61px;
+  opacity:0.22;
+}
+.cp-dash .hcard-fade{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to bottom, transparent 0%, var(--bg-2) 62%);
+}
+.cp-dash .hcard-body{ position:relative; z-index:2; padding:16px; display:flex; flex-direction:column; flex:1; }
+.cp-dash .hcard-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.cp-dash .hcard-seal{
+  width:34px; height:29px; flex-shrink:0;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  background:var(--acc); color:#0D0D12;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 14px var(--acc);
 }
 .cp-dash .hcard-title{
-  font-family:'Poppins',sans-serif; font-size:14px; font-weight:700;
-  color:var(--text); margin-bottom:6px; line-height:1.3;
+  font-family:'Poppins',sans-serif; font-size:13.5px; font-weight:700;
+  color:var(--text); line-height:1.3;
 }
 .cp-dash .hcard-desc{
-  font-size:12px; color:var(--text); line-height:1.5; margin-bottom:12px; opacity:0.75;
+  font-size:11.5px; color:var(--text); line-height:1.5; margin-bottom:14px; opacity:0.75; text-align:right;
 }
-.cp-dash .hcard-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.cp-dash .hcard-footer{ margin-top:auto; display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+.cp-dash .hcard-footer.hcard-footer-split{ justify-content:space-between; }
 .cp-dash .hcard-perm-group{ display:flex; align-items:center; gap:4px; }
+.cp-dash .hcard-perm-group svg{ opacity:0.55; }
 .cp-dash .hcard-perm-label{
   font-family:'Poppins',sans-serif; font-size:8px; font-weight:600;
   color:var(--text); opacity:0.45; letter-spacing:0.04em;
@@ -756,21 +782,26 @@
 }
 .cp-dash .hcard-dept-hex:hover{ transform:scale(1.3); }
 .cp-dash .hcard-badge{
-  font-family:'Poppins',sans-serif; font-size:8px; font-weight:600;
-  padding:2px 7px; background:var(--hl3); color:var(--text); border:1px solid var(--line);
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.03em;
+  padding:2px 8px; background:var(--hl3); color:var(--text); border:1px solid var(--line);
+}
+.cp-dash .hcard-tipo-tag{
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+  color:var(--text); opacity:0.55;
 }
 .cp-dash .hcard-count{
-  font-family:'Poppins',sans-serif; font-size:8px; font-weight:700;
-  padding:2px 7px; background:var(--acc); color:#101010;
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:800;
+  padding:2px 8px; background:var(--acc); color:#0D0D12;
 }
 .cp-dash .hcard-locked{ cursor:default; opacity:0.55; filter:grayscale(0.4); }
 .cp-dash .hcard-locked:hover{ border-color:var(--line); transform:none; }
 .cp-dash .hcard-soon{
-  position:absolute; top:10px; right:10px;
+  position:absolute; top:10px; right:10px; z-index:3;
   font-family:'Poppins',sans-serif; font-size:8px; font-weight:700;
   letter-spacing:0.08em; text-transform:uppercase;
   color:#0D0D12; background:var(--acc); border-radius:0; padding:3px 8px;
 }
+.cp-dash .hcard-notif{ position:absolute; top:10px; right:10px; z-index:3; }
 
 /* Vista abierta de una herramienta (se mantiene igual) */
 

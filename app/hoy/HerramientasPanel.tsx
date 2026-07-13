@@ -11,6 +11,7 @@ import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
 import PlantillaCuadro from "./PlantillaCuadro";
+import Hcard from "./Hcard";
 
 // Plantillas de cuadro con vista propia (no la grilla genérica de HerramientaPanel).
 const VISTAS_CUADRO = new Set(["kanban", "timeline", "mosaico", "checklist-tabla", "storyboard"]);
@@ -39,6 +40,16 @@ const TIPO_TAG_KEY: Record<Herramienta["tipo"], string> = {
   ficha: "tipoFicha",
   galeria: "tipoGaleria",
   accesos: "tipoAccesos",
+};
+
+// Ícono del sello hexagonal según el tipo de herramienta — ver Hcard.tsx.
+const TIPO_ICON: Record<Herramienta["tipo"], React.ComponentProps<typeof Icon>["name"]> = {
+  tabla: "table",
+  nota: "file-text",
+  checklist: "checklist",
+  ficha: "id-card",
+  galeria: "image",
+  accesos: "key",
 };
 
 const openKey = (dept: string, seccion: string) => `cinepack-open-tool-${dept}-${seccion}`;
@@ -371,13 +382,14 @@ export default function HerramientasPanel({
           </span>
           <div className="hp-cards">
             {personalTools.map((pt) => (
-              <button key={pt.id} className="hcard hcard-personal" onClick={() => abrirPersonal(pt)}>
-                <div className="hcard-accent" />
-                <div className="hcard-title">{pt.titulo}</div>
-                <div className="hcard-meta">
-                  <span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>
-                </div>
-              </button>
+              <Hcard
+                key={pt.id}
+                icon={pt.tipo === "tabla" ? "table" : "file-text"}
+                title={pt.titulo}
+                personal
+                onClick={() => abrirPersonal(pt)}
+                footer={<span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>}
+              />
             ))}
           </div>
         </section>
@@ -449,28 +461,25 @@ function ToolCard({
   const nombreDe = useNombreHerramienta();
   const unidad = t(h.tipo === "checklist" ? "unitItems" : h.tipo === "galeria" ? "unitPhotos" : "unitRows");
   return (
-    <button
-      className={`hcard${bloqueada ? " hcard-locked" : ""}`}
-      onClick={bloqueada ? undefined : onClick}
-      aria-disabled={bloqueada}
-    >
-      <div className="hcard-accent" />
-      <div className="hcard-title">{nombreDe(h)}</div>
-      {h.hint && <div className="hcard-desc">{h.hint}</div>}
-      <div className="hcard-meta">
-        <span className="hcard-badge">{t(TIPO_TAG_KEY[h.tipo])}</span>
-        {conteo != null && conteo > 0 && (
-          <span className="hcard-count">{conteo} {unidad}</span>
-        )}
-        {(conteo == null || conteo === 0) && h.tipo === "tabla" && (
-          <span className="hcard-badge">{t("emptyBadge")}</span>
-        )}
-      </div>
-      {(bloqueada || proximamente) && (
-        <div className="hcard-soon">
-          <span>{t("comingSoon")}</span>
-        </div>
-      )}
-    </button>
+    <Hcard
+      icon={TIPO_ICON[h.tipo]}
+      title={nombreDe(h)}
+      desc={h.hint}
+      locked={bloqueada}
+      soonLabel={(bloqueada || proximamente) ? t("comingSoon") : undefined}
+      onClick={onClick}
+      footerSplit
+      footer={
+        <>
+          <span className="hcard-tipo-tag">{t(TIPO_TAG_KEY[h.tipo])}</span>
+          {conteo != null && conteo > 0 && (
+            <span className="hcard-count">{conteo} {unidad}</span>
+          )}
+          {(conteo == null || conteo === 0) && h.tipo === "tabla" && (
+            <span className="hcard-badge">{t("emptyBadge")}</span>
+          )}
+        </>
+      }
+    />
   );
 }
