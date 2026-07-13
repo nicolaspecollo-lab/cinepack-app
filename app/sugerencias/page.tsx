@@ -50,8 +50,16 @@ export default function SugerenciasPage() {
       return;
     }
 
+    const enviado = content.trim();
     setContent("");
     setMsg({ type: "ok", text: t("success") });
+
+    // Mail de agradecimiento — no bloquea el éxito del feedback si falla.
+    fetch("/api/feedback/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: enviado }),
+    }).catch(() => {});
   }
 
   return (
