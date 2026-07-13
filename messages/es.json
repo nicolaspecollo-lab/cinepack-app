@@ -1003,8 +1003,10 @@
   "equipo": {
     "loading": "Cargando equipo…",
     "noMembersTitle": "Sin integrantes todavía",
-    "noMembersDesc": "Cuando se añadan personas a este departamento en el proyecto, aparecerán aquí ordenadas por jerarquía.",
-    "noRole": "Sin cargo asignado"
+    "noMembersDesc": "Cuando se añadan personas al proyecto, aparecerán aquí agrupadas por departamento.",
+    "noRole": "Sin cargo asignado",
+    "memberCount": "{n, plural, one {# persona} other {# personas}}",
+    "yourDept": "Tu depto."
   },
   "accesos": {
     "loading": "Cargando solicitudes…",

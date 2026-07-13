@@ -1003,8 +1003,10 @@
   "equipo": {
     "loading": "Loading team…",
     "noMembersTitle": "No members yet",
-    "noMembersDesc": "When people are added to this department in the project, they will appear here sorted by hierarchy.",
-    "noRole": "No role assigned"
+    "noMembersDesc": "When people are added to the project, they'll show up here grouped by department.",
+    "noRole": "No role assigned",
+    "memberCount": "{n, plural, one {# person} other {# people}}",
+    "yourDept": "Your dept."
   },
   "accesos": {
     "loading": "Loading requests…",

@@ -178,6 +178,38 @@
 }
 .cp-dash .cp-notif-acceso-txt{ flex:1; font-family:'Poppins',sans-serif; font-weight:700; font-size:12.5px; }
 
+/* Equipo (Generales) — secciones por departamento, sello + panal + degradado,
+   mismo shell que Hcard.tsx pero para agrupar personas en vez de herramientas. */
+.cp-dash .cp-equipo-secciones{ display:flex; flex-direction:column; gap:10px; margin:0 30px 30px; }
+.cp-dash .cp-equipo-depto{ position:relative; overflow:hidden; border:1px solid var(--line); background:var(--bg-2); }
+.cp-dash .cp-equipo-depto-hexbg{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:var(--depto-color); opacity:0.16;
+  -webkit-mask-repeat:repeat; mask-repeat:repeat;
+  -webkit-mask-size:60px 52px; mask-size:60px 52px;
+}
+.cp-dash .cp-equipo-depto-fade{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to bottom, transparent 0%, var(--bg-2) 55%);
+}
+.cp-dash .cp-equipo-depto-body{ position:relative; z-index:2; padding:12px 16px 14px; }
+.cp-dash .cp-equipo-depto-head{ display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+.cp-dash .cp-equipo-depto-seal{
+  width:26px; height:22px; flex-shrink:0;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  background:var(--depto-color); color:#0D0D12;
+  display:flex; align-items:center; justify-content:center;
+}
+.cp-dash .cp-equipo-depto-nombre{ font-family:'Poppins',sans-serif; font-weight:800; font-size:12.5px; }
+.cp-dash .cp-equipo-depto-count{ font-size:9.5px; color:var(--muted); margin-left:auto; }
+.cp-dash .cp-equipo-depto-lista{ list-style:none; display:flex; flex-direction:column; gap:6px; margin:0; padding:0; }
+.cp-dash .cp-equipo-depto-lista li{ display:flex; justify-content:space-between; gap:10px; font-size:12px; }
+.cp-dash .cp-equipo-depto-rol{ color:var(--muted); text-align:right; white-space:nowrap; }
+
+@media (max-width:640px){
+  .cp-dash .cp-equipo-secciones{ margin:0 16px 20px; }
+}
+
 /* Listado de equipo en el Pulso */
 .cp-dash .cp-pulso-equipo{ list-style:none; display:flex; flex-direction:column; gap:8px; margin:4px 0 0; padding:0; }
 .cp-dash .cp-pulso-equipo li{ display:flex; flex-direction:column; gap:1px; }

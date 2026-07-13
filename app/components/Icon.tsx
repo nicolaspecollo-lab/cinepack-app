@@ -11,7 +11,8 @@ type IconName =
   | "filter" | "sliders" | "download" | "sort" | "maximize" | "minimize" | "plus" | "search" | "replace"
   | "folder" | "paperclip" | "grip-vertical" | "upload" | "map-pin" | "clock"
   | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
-  | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase";
+  | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase"
+  | "camera" | "palette" | "sound" | "leaf" | "megaphone";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   bold: <><path d="M6 4h8a4 4 0 0 1 0 8H6z" /><path d="M6 12h9a4 4 0 0 1 0 8H6z" /></>,
@@ -72,6 +73,11 @@ const PATHS: Record<IconName, React.ReactNode> = {
   bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>,
   layout: <><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></>,
   briefcase: <><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
+  camera: <><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></>,
+  palette: <><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8Z" /><circle cx="13.5" cy="6.5" r="1" /><circle cx="17.5" cy="10.5" r="1" /><circle cx="6.5" cy="12.5" r="1" /><circle cx="8.5" cy="7.5" r="1" /></>,
+  sound: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>,
+  leaf: <><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></>,
+  megaphone: <><path d="m3 11 18-5v12L3 13" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></>,
 };
 
 export default function Icon({

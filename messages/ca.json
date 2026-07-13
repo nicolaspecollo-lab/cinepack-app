@@ -1003,8 +1003,10 @@
   "equipo": {
     "loading": "Carregant equip…",
     "noMembersTitle": "Encara sense integrants",
-    "noMembersDesc": "Quan s'afegeixin persones a aquest departament al projecte, apareixeran aquí ordenades per jerarquia.",
-    "noRole": "Sense càrrec assignat"
+    "noMembersDesc": "Quan s'afegeixin persones al projecte, apareixeran aquí agrupades per departament.",
+    "noRole": "Sense càrrec assignat",
+    "memberCount": "{n, plural, one {# persona} other {# persones}}",
+    "yourDept": "El teu depto."
   },
   "accesos": {
     "loading": "Carregant sol·licituds…",
