@@ -10,7 +10,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import ThemeChooser from "../components/ThemeChooser";
 import "../cp-theme.css";
 
-type Proyecto = { id: string; nombre: string };
+type Proyecto = { id: string; nombre: string; archivado_at?: string | null; suspendido_at?: string | null };
 
 export default function ProyectosPage() {
   const router = useRouter();
@@ -38,14 +38,18 @@ export default function ProyectosPage() {
 
       setIsAdmin(!!profile?.is_admin);
 
+      const esAdmin = !!profile?.is_admin;
+
       const { data } = await supabase
         .from("project_members")
-        .select("proyectos(id, nombre)")
+        .select("proyectos(id, nombre, archivado_at, suspendido_at)")
         .eq("user_id", user.id);
 
       const lista = (data ?? [])
         .map((row) => row.proyectos as unknown as Proyecto)
-        .filter(Boolean);
+        .filter(Boolean)
+        // Los proyectos archivados no se muestran a los clientes (sí al admin).
+        .filter((p) => esAdmin || !p.archivado_at);
 
       setProyectos(lista);
       setLoading(false);
@@ -91,7 +95,7 @@ export default function ProyectosPage() {
         <div className="cp-projects">
           {proyectos.map((p) => (
             <button key={p.id} className="cp-project-card" onClick={() => elegir(p)}>
-              <span className="tag">{t("tag")}</span>
+              <span className="tag">{p.suspendido_at ? t("suspendedTag") : p.archivado_at ? t("archivedTag") : t("tag")}</span>
               <h3>{p.nombre}</h3>
               <p>{t("enterWorkspace", { nombre: p.nombre })}</p>
             </button>

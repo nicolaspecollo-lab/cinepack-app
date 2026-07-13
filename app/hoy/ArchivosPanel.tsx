@@ -61,7 +61,43 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   const [previewLoading, setPreviewLoading] = useState(false);
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
+  const [me, setMe] = useState<{ id: string; nombre: string | null } | null>(null);
+
   const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", auth.user.id).single();
+      setMe({ id: auth.user.id, nombre: profile?.full_name ?? null });
+    })();
+  }, []);
+
+  // Borrar = mover a la papelera del proyecto (no eliminar de verdad) + registrar
+  // la fila para que el soporte pueda recuperarlo/reasignarlo desde el panel.
+  async function moverAPapelera(fullPath: string, nombre: string, size: number) {
+    if (!projectId) return;
+    const supabase = createClient();
+    const relativo = fullPath.startsWith(`${projectId}/`) ? fullPath.slice(projectId.length + 1) : fullPath;
+    const papeleraPath = `${projectId}/_papelera/${relativo}__del-${Date.now()}`;
+    const { error } = await supabase.storage.from(BUCKET).move(fullPath, papeleraPath);
+    if (error) throw error;
+    // RPC security-definer (verifica membresía internamente) en vez de un
+    // insert directo: evita depender de una policy RLS compleja sobre esta
+    // tabla, mismo patrón que accept_invitation/admin_borrar_proyecto.
+    const { error: errReg } = await supabase.rpc("registrar_papelera", {
+      p_project_id: projectId,
+      p_bucket: BUCKET,
+      p_departamento: departamento,
+      p_nombre: nombre,
+      p_original_path: fullPath,
+      p_papelera_path: papeleraPath,
+      p_size: size,
+    });
+    if (errReg) throw errReg;
+  }
 
   function storagePath() {
     const segs = [projectId ?? "", safeKey(departamento), "archivos", ...pathStack.map(safeKey)];
@@ -194,11 +230,15 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
       .eq("departamento", departamento)
       .eq("parent_path", parentPath())
       .eq("nombre", nombre);
-    // Eliminar archivos del Storage
+    // Mover los archivos de la carpeta a la papelera (no borrado real)
     const basePath = `${storagePath()}/${safeKey(nombre)}`;
     const { data: files } = await supabase.storage.from(BUCKET).list(basePath, { limit: 500 });
     if (files && files.length > 0) {
-      await supabase.storage.from(BUCKET).remove(files.map((f) => `${basePath}/${f.name}`));
+      for (const f of files.filter((i) => i.id !== null)) {
+        try {
+          await moverAPapelera(`${basePath}/${f.name}`, f.name.replace(/^\d+[-_]/, ""), (f.metadata as { size?: number } | null)?.size ?? 0);
+        } catch { /* continúa con el resto */ }
+      }
     }
     load();
   }
@@ -236,11 +276,14 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     a.click();
   }
 
-  async function eliminar(path: string) {
+  async function eliminar(archivo: Archivo) {
     if (!confirm(t("confirmDeleteFile"))) return;
-    const supabase = createClient();
-    await supabase.storage.from(BUCKET).remove([path]);
-    setArchivos((prev) => prev.filter((f) => f.path !== path));
+    try {
+      await moverAPapelera(archivo.path, archivo.nombre, archivo.size);
+      setArchivos((prev) => prev.filter((f) => f.path !== archivo.path));
+    } catch (e) {
+      setUploadError((e as Error).message);
+    }
   }
 
   async function abrirPreview(archivo: Archivo) {
@@ -388,7 +431,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
                     <span className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at, t)}</span>
                     <div className="arc-file-actions">
                       <button className="arc-btn" onClick={() => descargar(f.path, f.nombre)}>⬇</button>
-                      <button className="arc-btn arc-btn-del" onClick={() => eliminar(f.path)}>✕</button>
+                      <button className="arc-btn arc-btn-del" onClick={() => eliminar(f)}>✕</button>
                     </div>
                   </div>
                 );

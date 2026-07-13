@@ -97,3 +97,84 @@
 .cp-dash .cp-chart-legend-row .dot{ width:9px; height:9px; flex-shrink:0; }
 .cp-dash .cp-chart-legend-row .lbl{ color:var(--text); flex:1; }
 .cp-dash .cp-chart-legend-row .pct{ color:var(--muted); font-weight:700; }
+
+/* ===== Carpeta Maestra (explorador admin) — esquinas SIEMPRE rectas ===== */
+.cp-dash .cp-cm-entry-btn{
+  display:inline-flex; align-items:center; gap:6px; background:none; border:1px solid var(--line);
+  color:var(--text); border-radius:0; padding:6px 12px; font-family:'Poppins',sans-serif; font-weight:700;
+  font-size:11px; text-transform:uppercase; letter-spacing:0.04em; cursor:pointer; text-decoration:none;
+}
+.cp-dash .cp-cm-entry-btn:hover{ border-color:var(--cyan); color:var(--cyan); }
+.cp-dash .cp-cm-entry-btn .hex{ width:11px; height:9px; background:var(--cyan); flex-shrink:0; }
+
+.cp-dash .cp-cm-head{ display:flex; align-items:center; gap:10px; margin-bottom:2px; }
+.cp-dash .cp-cm-head .hex{ width:14px; height:12px; background:var(--cyan); flex-shrink:0; }
+.cp-dash .cp-cm-sub{ font-size:11.5px; color:var(--muted); margin:0 0 16px; }
+
+.cp-dash .cp-cm-tabs{ display:inline-flex; background:var(--panel); border:1px solid var(--line); border-radius:0; margin-bottom:18px; }
+.cp-dash .cp-cm-tab{
+  border-radius:0; background:none; border:none; border-right:1px solid var(--line); color:var(--muted);
+  padding:9px 18px; font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase;
+  letter-spacing:0.04em; cursor:pointer; display:flex; align-items:center; gap:7px;
+}
+.cp-dash .cp-cm-tab:last-child{ border-right:none; }
+.cp-dash .cp-cm-tab:hover{ color:var(--text); }
+.cp-dash .cp-cm-tab.active{ background:var(--lime); color:#0D0D12; }
+.cp-dash .cp-cm-tab .cp-cm-count{
+  background:rgba(240,122,122,0.18); color:var(--rose); font-size:9.5px; font-weight:800; border-radius:0; padding:1px 6px;
+}
+.cp-dash .cp-cm-tab.active .cp-cm-count{ background:rgba(13,13,18,0.18); color:#0D0D12; }
+
+.cp-dash .cp-cm-breadcrumb{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-bottom:16px; flex-wrap:wrap; }
+.cp-dash .cp-cm-breadcrumb button{ background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; padding:0; }
+.cp-dash .cp-cm-breadcrumb button:hover{ color:var(--cyan); }
+.cp-dash .cp-cm-breadcrumb .current{ color:var(--text); font-weight:700; }
+.cp-dash .cp-cm-breadcrumb .sep{ color:var(--muted); }
+
+.cp-dash .cp-cm-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:8px; font-family:'Poppins',sans-serif; font-weight:700; }
+
+.cp-dash .cp-cm-folder-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; margin-bottom:22px; }
+.cp-dash .cp-cm-folder-card{
+  border:1px solid var(--line); border-radius:0; padding:14px 10px; text-align:center; background:var(--panel);
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.cp-dash .cp-cm-folder-card:hover{ border-color:var(--dept,var(--cyan)); }
+.cp-dash .cp-cm-folder-dot{ width:8px; height:8px; border-radius:50%; background:var(--dept,var(--cyan)); }
+.cp-dash .cp-cm-folder-card .hex{ width:18px; height:16px; background:var(--dept,var(--cyan)); }
+.cp-dash .cp-cm-folder-name{ font-size:11px; font-weight:600; color:var(--text); }
+
+.cp-dash .cp-cm-files{ border:1px solid var(--line); border-radius:0; overflow:hidden; }
+.cp-dash .cp-cm-file-row{ display:flex; align-items:center; gap:12px; padding:10px 14px; border-bottom:1px solid var(--hl3); }
+.cp-dash .cp-cm-file-row:last-child{ border-bottom:none; }
+.cp-dash .cp-cm-file-row .hex{ width:12px; height:10px; background:var(--muted); flex-shrink:0; }
+.cp-dash .cp-cm-file-name{ font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-dash .cp-cm-file-meta{ font-size:10.5px; color:var(--muted); }
+.cp-dash .cp-cm-file-actions{ display:flex; gap:4px; flex-shrink:0; margin-left:auto; }
+.cp-dash .cp-cm-icon-btn{
+  width:28px; height:28px; border-radius:0; background:none; border:1px solid var(--line); color:var(--muted);
+  cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px;
+}
+.cp-dash .cp-cm-icon-btn:hover{ border-color:var(--cyan); color:var(--cyan); }
+.cp-dash .cp-cm-icon-btn.danger{ border-color:rgba(240,122,122,0.35); color:var(--rose); }
+.cp-dash .cp-cm-icon-btn.danger:hover{ border-color:var(--rose); color:var(--rose); }
+
+.cp-dash .cp-cm-trash{ border:1px solid rgba(240,122,122,0.25); border-radius:0; overflow:hidden; }
+.cp-dash .cp-cm-trash-row{ display:flex; align-items:center; gap:12px; padding:10px 14px; border-left:3px solid var(--rose); border-bottom:1px solid rgba(240,122,122,0.12); }
+.cp-dash .cp-cm-trash-row:last-child{ border-bottom:none; }
+.cp-dash .cp-cm-restore-btn{
+  display:inline-flex; align-items:center; gap:6px; background:rgba(159,232,112,0.1); border:1px solid rgba(159,232,112,0.35);
+  color:var(--lime); border-radius:0; padding:6px 12px; font-family:'Poppins',sans-serif; font-weight:700; font-size:11px;
+  text-transform:uppercase; letter-spacing:0.03em; cursor:pointer; flex-shrink:0; margin-left:auto;
+}
+.cp-dash .cp-cm-restore-btn:hover{ background:rgba(159,232,112,0.18); }
+.cp-dash .cp-cm-delete-btn{
+  display:inline-flex; align-items:center; gap:6px; background:none; border:1px solid rgba(240,122,122,0.35);
+  color:var(--rose); border-radius:0; padding:6px 12px; font-family:'Poppins',sans-serif; font-weight:700; font-size:11px;
+  text-transform:uppercase; letter-spacing:0.03em; cursor:pointer; flex-shrink:0;
+}
+.cp-dash .cp-cm-delete-btn:hover{ background:rgba(240,122,122,0.1); }
+
+@media (max-width:640px){
+  .cp-dash .cp-cm-folder-grid{ grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); }
+  .cp-dash .cp-cm-tabs{ overflow-x:auto; max-width:100%; }
+}
