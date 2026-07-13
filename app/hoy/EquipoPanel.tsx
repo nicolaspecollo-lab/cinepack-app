@@ -70,8 +70,17 @@ export default function EquipoPanel({ departamento }: { departamento: string }) 
               <ul className="cp-equipo-depto-lista">
                 {g.miembros.map((m) => (
                   <li key={m.user_id}>
-                    <span>{m.full_name}</span>
                     <span className="cp-equipo-depto-rol">{m.cargo ?? t("noRole")}</span>
+                    <span className="cp-equipo-depto-persona">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt="" className="cp-equipo-depto-avatar" />
+                      ) : (
+                        <span className="cp-equipo-depto-avatar cp-equipo-depto-avatar-iniciales">
+                          {m.full_name.trim().slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
+                      {m.full_name}
+                    </span>
                   </li>
                 ))}
               </ul>
