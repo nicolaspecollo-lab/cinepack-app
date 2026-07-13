@@ -1207,7 +1207,10 @@
     "emailPlaceholder": "Email",
     "generating": "Generating…",
     "generateLink": "Generate link",
-    "errNoLink": "Could not generate the link."
+    "errNoLink": "Could not generate the link.",
+    "notificationsTitle": "Notifications",
+    "goComunicados": "Announcements",
+    "goConsultas": "Queries"
   },
   "cmdk": {
     "searchPlaceholder": "Search…",
@@ -1359,7 +1362,11 @@
     "scenesPlaceholder": "1, 2, 3, 7, 8, 9",
     "fieldDailies": "Dailies screening",
     "saving": "Saving…",
-    "save": "Save"
+    "save": "Save",
+    "pendingTasks": "Pending Tasks",
+    "pendingTasksHint": "Your personal task board for this department.",
+    "openBoard": "Open board",
+    "opening": "Opening…"
   },
   "etapas": {
     "desarrollo": "Development",

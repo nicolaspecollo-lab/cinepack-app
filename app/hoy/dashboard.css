@@ -145,6 +145,39 @@
 .cp-dash .tcard li.etapa-actual span:last-child{ color:var(--acc); font-family:'Poppins',sans-serif; font-weight:700; }
 .cp-dash .tcard p{ font-size:12px; color:var(--muted); line-height:1.6; }
 
+/* Tarjeta-acceso: toda la card es un botón que lleva a otra pantalla */
+.cp-dash .cp-acceso-card{
+  border-radius:0; cursor:pointer; text-align:left; width:100%; font:inherit;
+}
+.cp-dash .cp-acceso-card:hover{ border-color:var(--acc); background:var(--hl2); }
+.cp-dash .cp-acceso-card:disabled{ opacity:0.6; cursor:default; }
+.cp-dash .cp-acceso-head{ display:flex; align-items:center; gap:9px; }
+.cp-dash .cp-acceso-head h4{ font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text); margin:0; }
+.cp-dash .cp-acceso-icon{
+  width:28px; height:24px; flex-shrink:0; background:var(--acc); color:#0D0D12;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  display:flex; align-items:center; justify-content:center;
+}
+.cp-dash .cp-acceso-cta{
+  display:inline-flex; align-items:center; gap:6px; margin-top:auto;
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;
+  color:var(--acc);
+}
+
+/* Accesos directos (Notificaciones en Pulso) */
+.cp-dash .cp-notif-accesos{ display:flex; flex-direction:column; gap:8px; }
+.cp-dash .cp-notif-acceso{
+  display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:0;
+  background:var(--bg-2); color:var(--text); padding:10px 12px; cursor:pointer; text-align:left; width:100%;
+}
+.cp-dash .cp-notif-acceso:hover{ border-color:var(--acc); }
+.cp-dash .cp-notif-acceso-ic{
+  width:26px; height:23px; flex-shrink:0; background:var(--acc); color:#0D0D12;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%);
+  display:flex; align-items:center; justify-content:center;
+}
+.cp-dash .cp-notif-acceso-txt{ flex:1; font-family:'Poppins',sans-serif; font-weight:700; font-size:12.5px; }
+
 /* ===== Pipeline strip ===== */
 .cp-dash .pipe{ display:flex; align-items:center; gap:0; margin:22px 30px 0; flex-wrap:wrap; row-gap:10px; }
 .cp-dash .pipe-step{ display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted); }
@@ -1136,7 +1169,7 @@
 
 /* Modo día de rodaje */
 .cp-dash .rodaje-banner{
-  margin:24px 30px 0; padding:18px 22px; border:1px solid var(--acc); border-radius:10px;
+  margin:24px 30px; padding:18px 22px; border:1px solid var(--acc); border-radius:0;
   background:linear-gradient(135deg, var(--hl3) 0%, var(--panel) 100%);
   display:flex; flex-direction:column; gap:14px;
 }
@@ -1161,7 +1194,7 @@
 }
 
 @media (max-width: 720px){
-  .cp-dash .rodaje-banner{ margin:18px 16px 0; padding:14px 16px; }
+  .cp-dash .rodaje-banner{ margin:18px 16px; padding:14px 16px; }
   .cp-dash .rodaje-grid{ grid-template-columns:1fr 1fr; }
 }
 

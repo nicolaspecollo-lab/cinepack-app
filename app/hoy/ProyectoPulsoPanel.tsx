@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { CLIENTE_DEPT } from "../constants";
-import TareasKanbanPanel from "./TareasKanbanPanel";
+import Icon from "../components/Icon";
 
 type Conteo = { nombre: string; total: number };
 
@@ -68,11 +68,14 @@ function agrupar(rows: { para_departamento: string | null }[]): Conteo[] {
     .sort((a, b) => b.total - a.total);
 }
 
-export default function ProyectoPulsoPanel() {
+export default function ProyectoPulsoPanel({
+  onIrAGenerales,
+}: {
+  onIrAGenerales?: (sub: "comunicados" | "consultas") => void;
+}) {
   const t = useTranslations("pulso");
   const [pulso, setPulso] = useState<Pulso | null>(null);
   const [actividad, setActividad] = useState<Actividad[]>([]);
-  const [vista, setVista] = useState<"resumen" | "kanban">("resumen");
   const [loading, setLoading] = useState(true);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [esEjecutivo, setEsEjecutivo] = useState(false);
@@ -265,20 +268,6 @@ export default function ProyectoPulsoPanel() {
 
   return (
     <div className="pulso">
-      <div className="cp-pulso-tabs">
-        <button className={`cp-pulso-tab ${vista === "resumen" ? "active" : ""}`} onClick={() => setVista("resumen")}>
-          {t("tabSummary")}
-        </button>
-        <button className={`cp-pulso-tab ${vista === "kanban" ? "active" : ""}`} onClick={() => setVista("kanban")}>
-          {t("tabKanban")}
-        </button>
-      </div>
-
-      {vista === "kanban" && projectId && <TareasKanbanPanel projectId={projectId} />}
-
-      {vista === "resumen" && (
-      <>
-
       {creditos && (creditos.escrito_por.length > 0 || creditos.dirigido_por.length > 0 || creditos.producido_por.length > 0) && (
         <div className="tcard pulso-card cp-creditos-card">
           <h4><span className="hex"></span>{creditos.nombre}</h4>
@@ -380,20 +369,25 @@ export default function ProyectoPulsoPanel() {
           )}
         </div>
 
-        <div className="tcard pulso-card">
-          <h4>
-            <span className="hex"></span>{t("activeAlertsTitle")}
-          </h4>
-          <div className="pulso-big-num">{pulso.alertasTotal}</div>
-          {pulso.alertasPorDepto.length === 0 && <p>{t("noActiveAlerts")}</p>}
-          {pulso.alertasPorDepto.length > 0 && (
-            <ul>
-              {pulso.alertasPorDepto.slice(0, 6).map((c) => (
-                <li key={c.nombre}><span>{c.nombre}</span><span className="pulso-count">{c.total}</span></li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {onIrAGenerales && (
+          <div className="tcard pulso-card">
+            <h4>
+              <span className="hex"></span>{t("notificationsTitle")}
+            </h4>
+            <div className="cp-notif-accesos">
+              <button className="cp-notif-acceso" onClick={() => onIrAGenerales("comunicados")}>
+                <span className="cp-notif-acceso-ic"><Icon name="message" size={15} /></span>
+                <span className="cp-notif-acceso-txt">{t("goComunicados")}</span>
+                <Icon name="arrow-right" size={13} />
+              </button>
+              <button className="cp-notif-acceso" onClick={() => onIrAGenerales("consultas")}>
+                <span className="cp-notif-acceso-ic"><Icon name="message" size={15} /></span>
+                <span className="cp-notif-acceso-txt">{t("goConsultas")}</span>
+                <Icon name="arrow-right" size={13} />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="tcard pulso-card">
           <h4>
@@ -450,8 +444,6 @@ export default function ProyectoPulsoPanel() {
       )}
 
       {esEjecutivo && projectId && <CompartirClientePanel projectId={projectId} />}
-      </>
-      )}
     </div>
   );
 }

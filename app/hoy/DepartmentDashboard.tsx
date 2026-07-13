@@ -329,8 +329,11 @@ export default function DepartmentDashboard({
           <CicloTimeline />
           <ModoRodajePanel onVerOrden={irAOrdenRodaje} />
           <CalendarioProyecto departamento={nombre} cargo={cargo} isAdmin={isAdmin} fullName={fullName} />
-          <HoyPanel deDepartamento={nombre} fullName={fullName} />
-          <ProyectoPulsoPanel />
+          <HoyPanel deDepartamento={nombre} fullName={fullName} onAbrirTareas={() => setTab("exclusivas")} />
+          <ProyectoPulsoPanel onIrAGenerales={(sub) => {
+            setGeneralesJump((prev) => ({ sub, token: (prev?.token ?? 0) + 1 }));
+            setTab("generales");
+          }} />
           <div className="note">
             {tNav("pulsoNote", { pulso: "Pulso", generales: "Generales", departamento: "Departamento", exclusivas: "Exclusivas" })}
           </div>

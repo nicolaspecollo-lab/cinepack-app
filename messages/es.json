@@ -1207,7 +1207,10 @@
     "emailPlaceholder": "Email",
     "generating": "Generando…",
     "generateLink": "Generar enlace",
-    "errNoLink": "No se pudo generar el enlace."
+    "errNoLink": "No se pudo generar el enlace.",
+    "notificationsTitle": "Notificaciones",
+    "goComunicados": "Comunicados",
+    "goConsultas": "Consultas"
   },
   "cmdk": {
     "searchPlaceholder": "Buscar…",
@@ -1359,7 +1362,11 @@
     "scenesPlaceholder": "1, 2, 3, 7, 8, 9",
     "fieldDailies": "Visionado dailies",
     "saving": "Guardando…",
-    "save": "Guardar"
+    "save": "Guardar",
+    "pendingTasks": "Tareas Pendientes",
+    "pendingTasksHint": "Tu tablero personal de tareas de este departamento.",
+    "openBoard": "Abrir tablero",
+    "opening": "Abriendo…"
   },
   "etapas": {
     "desarrollo": "Desarrollo",

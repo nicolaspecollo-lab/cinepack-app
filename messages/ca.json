@@ -1207,7 +1207,10 @@
     "emailPlaceholder": "Email",
     "generating": "Generant…",
     "generateLink": "Genera l'enllaç",
-    "errNoLink": "No s'ha pogut generar l'enllaç."
+    "errNoLink": "No s'ha pogut generar l'enllaç.",
+    "notificationsTitle": "Notificacions",
+    "goComunicados": "Comunicats",
+    "goConsultas": "Consultes"
   },
   "cmdk": {
     "searchPlaceholder": "Cerca…",
@@ -1359,7 +1362,11 @@
     "scenesPlaceholder": "1, 2, 3, 7, 8, 9",
     "fieldDailies": "Visionat dailies",
     "saving": "Desant…",
-    "save": "Desa"
+    "save": "Desa",
+    "pendingTasks": "Tasques pendents",
+    "pendingTasksHint": "El teu tauler personal de tasques d'aquest departament.",
+    "openBoard": "Obre el tauler",
+    "opening": "Obrint…"
   },
   "etapas": {
     "desarrollo": "Desenvolupament",

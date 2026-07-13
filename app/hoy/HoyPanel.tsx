@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { DEPARTAMENTOS, ESTADO_COLOR } from "../constants";
+import { DEPARTAMENTOS } from "../constants";
+import Icon from "../components/Icon";
+import { prepararTareasPersonales } from "./tareasPersonales";
 
 type Pill = "warn" | "mut" | "bad" | "info" | "ok";
 
@@ -18,46 +20,20 @@ type Jornada = {
   visionado: string | null;
 };
 
-type Tarea = {
-  id: string;
-  para_departamento: string | null;
-  titulo: string;
-  etiqueta: string;
-  tipo: Pill;
-  completada: boolean;
-};
-
-type Alerta = {
-  id: string;
-  para_departamento: string | null;
-  texto: string;
-  tipo: Pill;
-  accion_label: string | null;
-  leida: boolean;
-};
-
-const PILL_LABEL_KEY: Record<Pill, string> = {
-  warn: "pillToday",
-  mut: "pillPending",
-  bad: "pillUnread",
-  info: "pillInfo",
-  ok: "pillOk",
-};
-
 type GestionTipo = "tarea" | "alerta" | "jornada";
 
 export default function HoyPanel({
   deDepartamento,
   fullName,
+  onAbrirTareas,
 }: {
   deDepartamento: string;
   fullName: string;
+  onAbrirTareas: () => void;
 }) {
   const t = useTranslations("hoyPanel");
   const [jornada, setJornada] = useState<Jornada | null>(null);
-  const [tareas, setTareas] = useState<Tarea[]>([]);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [abriendoTareas, setAbriendoTareas] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
   const [gestionTipo, setGestionTipo] = useState<GestionTipo>("tarea");
@@ -83,44 +59,29 @@ export default function HoyPanel({
 
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) {
-      setLoading(false);
-      return;
-    }
+    if (!projectId) return;
     const supabase = createClient();
-
-    const [{ data: jornadaData }, { data: tareasData }, { data: alertasData }] = await Promise.all([
-      supabase
-        .from("jornadas")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("activa", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("tareas")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("completada", false)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("alertas")
-        .select("*")
-        .eq("project_id", projectId)
-        .eq("leida", false)
-        .order("created_at", { ascending: false }),
-    ]);
-
+    const { data: jornadaData } = await supabase
+      .from("jornadas")
+      .select("*")
+      .eq("project_id", projectId)
+      .eq("activa", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     setJornada(jornadaData ?? null);
-    setTareas((tareasData ?? []).filter((t) => !t.para_departamento || t.para_departamento === deDepartamento));
-    setAlertas((alertasData ?? []).filter((a) => !a.para_departamento || a.para_departamento === deDepartamento));
-    setLoading(false);
-  }, [deDepartamento]);
+  }, []);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  async function abrirTareas() {
+    setAbriendoTareas(true);
+    await prepararTareasPersonales(deDepartamento);
+    setAbriendoTareas(false);
+    onAbrirTareas();
+  }
 
   useEffect(() => {
     if (jornada) {
@@ -133,18 +94,6 @@ export default function HoyPanel({
       setVisionado(jornada.visionado ?? "");
     }
   }, [jornada]);
-
-  async function completarTarea(id: string) {
-    const supabase = createClient();
-    await supabase.from("tareas").update({ completada: true }).eq("id", id);
-    await load();
-  }
-
-  async function descartarAlerta(id: string) {
-    const supabase = createClient();
-    await supabase.from("alertas").update({ leida: true }).eq("id", id);
-    await load();
-  }
 
   function resetForm() {
     setPara("");
@@ -239,39 +188,14 @@ export default function HoyPanel({
   return (
     <>
       <div className="today">
-        <div className="tcard">
-          <h4>
-            <span className="hex"></span>{t("pendingForMe")}
-          </h4>
-          {!loading && tareas.length === 0 && <p>{t("noPendingTasks")}</p>}
-          {tareas.length > 0 && (
-            <ul>
-              {tareas.map((tarea) => (
-                <li key={tarea.id} style={{ cursor: "pointer" }} onClick={() => completarTarea(tarea.id)} title={t("markDone")}>
-                  <span><span className="cp-estado-dot" style={{ background: ESTADO_COLOR.pendiente }}></span>{tarea.titulo}</span>
-                  <span className={`pill p-${tarea.tipo}`}>{tarea.etiqueta}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="tcard">
-          <h4>
-            <span className="hex"></span>{t("alertsTitle")}
-          </h4>
-          {!loading && alertas.length === 0 && <p>{t("noActiveAlerts")}</p>}
-          {alertas.length > 0 && (
-            <ul>
-              {alertas.map((a) => (
-                <li key={a.id} style={{ cursor: "pointer" }} onClick={() => descartarAlerta(a.id)} title={t("dismissAlert")}>
-                  <span>{a.texto}</span>
-                  <span className={`pill p-${a.tipo}`}>{a.accion_label || t(PILL_LABEL_KEY[a.tipo])}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <button className="tcard cp-acceso-card" onClick={abrirTareas} disabled={abriendoTareas}>
+          <div className="cp-acceso-head">
+            <span className="cp-acceso-icon"><Icon name="checklist" size={16} /></span>
+            <h4>{t("pendingTasks")}</h4>
+          </div>
+          <p>{abriendoTareas ? t("opening") : t("pendingTasksHint")}</p>
+          <span className="cp-acceso-cta">{t("openBoard")} <Icon name="arrow-right" size={13} /></span>
+        </button>
       </div>
 
       <div className="cons-new" style={{ paddingTop: 0 }}>
