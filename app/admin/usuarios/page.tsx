@@ -241,7 +241,8 @@ export default function AdminUsuarios() {
                 <th>{t("colEmail")}</th>
                 <th>{t("colDepartment")}</th>
                 <th>{t("colRole")}</th>
-                <th>{t("colBetaProject")}</th>
+                <th>{t("colProject")}</th>
+                <th>{t("colBeta")}</th>
                 <th>{t("colSignup")}</th>
                 <th>{t("colLastAccess")}</th>
                 <th>{t("colStatus")}</th>
@@ -268,26 +269,27 @@ export default function AdminUsuarios() {
                   </td>
                   <td>
                     {u.beta_project_nombre ? (
-                      <div className="cons-actions" style={{ marginTop: 0 }}>
-                        <span>{u.beta_project_nombre}</span>
-                        <button className="btn" disabled={busy === u.id} onClick={() => revocarBeta(u)}>{t("revoke")}</button>
-                      </div>
+                      <span>{u.beta_project_nombre}</span>
                     ) : (
-                      <div className="cons-actions" style={{ marginTop: 0 }}>
-                        <select
-                          value={seleccion[u.id] ?? ""}
-                          onChange={(e) => setSeleccion((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                          style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "6px 8px", fontSize: "12px" }}
-                        >
-                          <option value="">{t("chooseProject")}</option>
-                          {proyectos.map((p) => (
-                            <option key={p.id} value={p.id}>{p.nombre}</option>
-                          ))}
-                        </select>
-                        <button className="btn" disabled={busy === u.id || !seleccion[u.id]} onClick={() => habilitarBeta(u)}>
-                          {t("enableBeta")}
-                        </button>
-                      </div>
+                      <select
+                        value={seleccion[u.id] ?? ""}
+                        onChange={(e) => setSeleccion((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                        style={{ background: "var(--bg)", border: "1px solid var(--line)", color: "var(--text)", padding: "6px 8px", fontSize: "12px" }}
+                      >
+                        <option value="">{t("chooseProject")}</option>
+                        {proyectos.map((p) => (
+                          <option key={p.id} value={p.id}>{p.nombre}</option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                  <td>
+                    {u.beta_project_nombre ? (
+                      <button className="btn" disabled={busy === u.id} onClick={() => revocarBeta(u)}>{t("disableBeta")}</button>
+                    ) : (
+                      <button className="btn" disabled={busy === u.id || !seleccion[u.id]} onClick={() => habilitarBeta(u)}>
+                        {t("enableBeta")}
+                      </button>
                     )}
                   </td>
                   <td>{new Date(u.created_at).toLocaleDateString(locale)}</td>

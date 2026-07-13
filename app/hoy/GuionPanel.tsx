@@ -257,6 +257,80 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
     }
   }
 
+  const [exportando, setExportando] = useState(false);
+
+  async function exportarGuionPDF() {
+    setExportando(true);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const proyectoNombre = localStorage.getItem("cinepack-proyecto") ?? "";
+      const marginLeft = 25;
+      const marginRight = 190;
+      const dialogLeft = 55;
+      const dialogRight = 165;
+      const pageBottom = 280;
+      let y = 20;
+
+      doc.setFont("courier", "normal");
+
+      function nuevaPagina() {
+        doc.addPage();
+        y = 20;
+      }
+
+      function asegurarEspacio(lineas: number) {
+        if (y + lineas * 5 > pageBottom) nuevaPagina();
+      }
+
+      confirmadas.forEach((e) => {
+        asegurarEspacio(3);
+        doc.setFont("courier", "bold");
+        doc.setFontSize(11);
+        const slug = `${e.numero}. ${e.encabezado}`.toUpperCase();
+        doc.text(slug, marginLeft, y);
+        y += 7;
+
+        if (e.descripcion) {
+          doc.setFont("courier", "normal");
+          doc.setFontSize(10);
+          const lineas = doc.splitTextToSize(e.descripcion, marginRight - marginLeft);
+          asegurarEspacio(lineas.length);
+          doc.text(lineas, marginLeft, y);
+          y += lineas.length * 5 + 3;
+        }
+
+        e.dialogo.forEach((d) => {
+          asegurarEspacio(2);
+          doc.setFont("courier", "bold");
+          doc.setFontSize(10);
+          doc.text(d.personaje.toUpperCase(), dialogLeft, y);
+          y += 5;
+
+          if (d.parentetico) {
+            doc.setFont("courier", "italic");
+            asegurarEspacio(1);
+            doc.text(`(${d.parentetico.replace(/^\(|\)$/g, "")})`, dialogLeft + 5, y);
+            y += 5;
+          }
+
+          doc.setFont("courier", "normal");
+          const lineasDialogo = doc.splitTextToSize(d.texto, dialogRight - dialogLeft);
+          asegurarEspacio(lineasDialogo.length);
+          doc.text(lineasDialogo, dialogLeft, y);
+          y += lineasDialogo.length * 5 + 3;
+        });
+
+        y += 5;
+      });
+
+      const nombreArchivo = (proyectoNombre || "guion").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      doc.save(`${nombreArchivo}.pdf`);
+    } finally {
+      setExportando(false);
+    }
+  }
+
   const borradores = escenas.filter((e) => e.estado === "borrador");
   const confirmadas = escenas.filter((e) => e.estado === "confirmada").sort((a, b) => a.numero - b.numero);
   const procesando = guiones.some((g) => g.estado === "procesando");
@@ -454,6 +528,15 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                 >
                   <span className="hex"></span>
                   {generandoPlan ? t("generatingPlan") : t("generatePlan")}
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ width: "auto", display: "flex", alignItems: "center", gap: 8 }}
+                  onClick={exportarGuionPDF}
+                  disabled={exportando}
+                >
+                  {exportando ? t("exportingPdf") : t("exportPdf")}
                 </button>
                 <span style={{ fontSize: 11, color: "var(--muted)" }}>
                   {t("confirmedCount", { n: confirmadas.length })}

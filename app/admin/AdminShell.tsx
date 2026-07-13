@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "../useTheme";
 import ThemeToggle from "../components/ThemeToggle";
 import "../cp-theme.css";
+import "../hoy/dashboard.css";
 import "./admin.css";
 
 const BIBLIA_URL = "https://cinepack.es/biblia/";

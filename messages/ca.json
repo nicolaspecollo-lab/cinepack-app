@@ -840,7 +840,9 @@
     "planGenerated": "✓ Pla generat amb {n} jornades. Obre \"Pla de rodatge\" a la pestanya Generals per revisar-lo.",
     "unknownError": "Error desconegut",
     "noConfirmedScenes": "Encara no hi ha escenes confirmades. Confirma-les des de la pestanya Revisió perquè apareguin aquí en format de guió.",
-    "pdfPageShort": "Pàg. {n}"
+    "pdfPageShort": "Pàg. {n}",
+    "exportPdf": "Exporta PDF",
+    "exportingPdf": "Generant PDF…"
   },
   "guiontec": {
     "readonlyBanner": "Només visionat — només {d1} i {d2} poden editar el guió tècnic. Sol·licita canvis a través de Producció Executiva.",
@@ -2396,7 +2398,10 @@
     "resetPassword": "Restableix contrasenya",
     "reactivate": "Reactiva",
     "suspend": "Suspèn",
-    "delete": "Elimina"
+    "delete": "Elimina",
+    "colProject": "Projecte",
+    "colBeta": "Beta",
+    "disableBeta": "Deshabilita beta"
   },
   "adminGestion": {
     "kpiRevenueThisMonth": "Ingressos del mes actual",

@@ -197,11 +197,11 @@ export default function AdminDashboard() {
       <div className="cp-admin-section">
         <h3>{t("shortcutsTitle")}</h3>
         <div className="chip-group">
-          <a className="dept-chip" href="/admin/usuarios" style={{ "--chip-acc": "var(--lime)" } as React.CSSProperties}>{t("viewUsers")}</a>
-          <a className="dept-chip" href="/admin/proyectos" style={{ "--chip-acc": "var(--cyan)" } as React.CSSProperties}>{t("viewProjects")}</a>
-          <a className="dept-chip" href="/admin/feedback" style={{ "--chip-acc": "var(--rose)" } as React.CSSProperties}>{t("reviewFeedback")}</a>
-          <a className="dept-chip" href="/admin/flags" style={{ "--chip-acc": "var(--violet)" } as React.CSSProperties}>{t("configureFlags")}</a>
-          <a className="dept-chip" href="https://cinepack.es/biblia/" target="_blank" rel="noreferrer" style={{ "--chip-acc": "var(--blue)" } as React.CSSProperties}>{t("productBible")} ↗</a>
+          <a className="dept-chip" href="/admin/usuarios" style={{ "--chip-acc": "var(--lime)", textDecoration: "none" } as React.CSSProperties}>{t("viewUsers")}</a>
+          <a className="dept-chip" href="/admin/proyectos" style={{ "--chip-acc": "var(--cyan)", textDecoration: "none" } as React.CSSProperties}>{t("viewProjects")}</a>
+          <a className="dept-chip" href="/admin/feedback" style={{ "--chip-acc": "var(--rose)", textDecoration: "none" } as React.CSSProperties}>{t("reviewFeedback")}</a>
+          <a className="dept-chip" href="/admin/flags" style={{ "--chip-acc": "var(--violet)", textDecoration: "none" } as React.CSSProperties}>{t("configureFlags")}</a>
+          <a className="dept-chip" href="https://cinepack.es/biblia/" target="_blank" rel="noreferrer" style={{ "--chip-acc": "var(--blue)", textDecoration: "none" } as React.CSSProperties}>{t("productBible")} ↗</a>
         </div>
       </div>
     </AdminShell>

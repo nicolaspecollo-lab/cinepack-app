@@ -840,7 +840,9 @@
     "planGenerated": "✓ Plan generated with {n} shoot days. Open \"Shooting schedule\" in the General tab to review it.",
     "unknownError": "Unknown error",
     "noConfirmedScenes": "No confirmed scenes yet. Confirm them from the Review tab so they appear here in script format.",
-    "pdfPageShort": "Page {n}"
+    "pdfPageShort": "Page {n}",
+    "exportPdf": "Export PDF",
+    "exportingPdf": "Generating PDF…"
   },
   "guiontec": {
     "readonlyBanner": "View only — only {d1} and {d2} can edit the shooting script. Request changes through Executive Production.",
@@ -2396,7 +2398,10 @@
     "resetPassword": "Reset password",
     "reactivate": "Reactivate",
     "suspend": "Suspend",
-    "delete": "Delete"
+    "delete": "Delete",
+    "colProject": "Project",
+    "colBeta": "Beta",
+    "disableBeta": "Disable beta"
   },
   "adminGestion": {
     "kpiRevenueThisMonth": "Revenue this month",

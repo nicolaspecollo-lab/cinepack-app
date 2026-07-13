@@ -840,7 +840,9 @@
     "planGenerated": "✓ Plan generado con {n} jornadas. Abre \"Plan de rodaje\" en la pestaña Generales para revisarlo.",
     "unknownError": "Error desconocido",
     "noConfirmedScenes": "Todavía no hay escenas confirmadas. Confírmalas desde la pestaña Revisión para que aparezcan aquí en formato de guion.",
-    "pdfPageShort": "Pág. {n}"
+    "pdfPageShort": "Pág. {n}",
+    "exportPdf": "Exportar PDF",
+    "exportingPdf": "Generando PDF…"
   },
   "guiontec": {
     "readonlyBanner": "Solo visionado — solo {d1} y {d2} pueden editar el guion técnico. Solicita cambios a través de Producción Ejecutiva.",
@@ -2396,7 +2398,10 @@
     "resetPassword": "Resetear contraseña",
     "reactivate": "Reactivar",
     "suspend": "Suspender",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "colProject": "Proyecto",
+    "colBeta": "Beta",
+    "disableBeta": "Deshabilitar beta"
   },
   "adminGestion": {
     "kpiRevenueThisMonth": "Ingresos del mes actual",
