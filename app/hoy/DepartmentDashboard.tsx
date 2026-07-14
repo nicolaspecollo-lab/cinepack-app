@@ -12,7 +12,7 @@ import ArchivosPanel from "./ArchivosPanel";
 import AdminPanel from "./AdminPanel";
 import ControlDeptoPanel from "./ControlDeptoPanel";
 import ProyectoPulsoPanel from "./ProyectoPulsoPanel";
-import { prepararTareasPersonales } from "./tareasPersonales";
+import { abrirTareasPersonales } from "./tareasPersonales";
 import CommandPalette, { type PaletteItem } from "./CommandPalette";
 import InboxPanel, { type InboxItem } from "./InboxPanel";
 import { deptTools, cargoGroups } from "../herramientas";
@@ -335,7 +335,7 @@ export default function DepartmentDashboard({
               setTab("generales");
             }}
             onAbrirTareas={async () => {
-              await prepararTareasPersonales(nombre);
+              await abrirTareasPersonales(nombre);
               setTab("exclusivas");
             }}
           />

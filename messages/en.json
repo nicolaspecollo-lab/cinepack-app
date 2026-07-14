@@ -454,7 +454,9 @@
     "inDays": "in {n}d",
     "addFestival": "Festival",
     "reach": "reach",
-    "addPost": "Post"
+    "addPost": "Post",
+    "workspaceCardTitle": "Workspace",
+    "workspaceCardDesc": "Create your own personal tables or documents, with the template you choose."
   },
   "herr": {
     "accesos-equipo": "Team access",

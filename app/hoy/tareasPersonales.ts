@@ -9,11 +9,11 @@ export const openPersonalKey = (dept: string) => `cinepack-open-personal-${dept}
 export const TAREAS_TITULO = "Tareas";
 
 // Garantiza que el usuario tenga su tablero personal "Tareas" (kanban) en este
-// departamento, lo crea si no existe, y deja marcado en localStorage que hay
-// que abrirlo al entrar a Exclusivas. Devuelve el id del tablero, o null si no
+// departamento, lo crea si no existe. Devuelve el id del tablero, o null si no
 // se pudo (sin proyecto/sesión). No siembra filas: la vista kanban se renderiza
-// aunque arranque vacía (ver EspacioTrabajoPanel).
-export async function prepararTareasPersonales(departamento: string): Promise<string | null> {
+// aunque arranque vacía (ver EspacioTrabajoPanel). No fuerza abrirlo — eso lo
+// decide cada llamador (ver abrirTareasPersonales, para el acceso del Pulso).
+export async function asegurarTareasPersonales(departamento: string): Promise<string | null> {
   const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
   if (!projectId) return null;
   const supabase = createClient();
@@ -49,6 +49,12 @@ export async function prepararTareasPersonales(departamento: string): Promise<st
     id = nueva?.id ?? null;
   }
 
-  if (id) localStorage.setItem(openPersonalKey(departamento), id);
   return id;
+}
+
+// Para el acceso directo "Tareas Pendientes" del Pulso: asegura el tablero y
+// además lo marca para que se abra solo al entrar a Exclusivas.
+export async function abrirTareasPersonales(departamento: string): Promise<void> {
+  const id = await asegurarTareasPersonales(departamento);
+  if (id) localStorage.setItem(openPersonalKey(departamento), id);
 }

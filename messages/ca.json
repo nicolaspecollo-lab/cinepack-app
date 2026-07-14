@@ -454,7 +454,9 @@
     "inDays": "en {n} d",
     "addFestival": "Festival",
     "reach": "abast",
-    "addPost": "Publicació"
+    "addPost": "Publicació",
+    "workspaceCardTitle": "Espai de Treball",
+    "workspaceCardDesc": "Crea les teves pròpies taules o documents personals, amb la plantilla que triïs."
   },
   "herr": {
     "accesos-equipo": "Accessos de l'equip",

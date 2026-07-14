@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
 import PlantillaCuadro from "./PlantillaCuadro";
 import Hcard from "./Hcard";
+import { asegurarTareasPersonales } from "./tareasPersonales";
 
 // Plantillas de cuadro con vista propia (no la grilla genérica de HerramientaPanel).
 const VISTAS_CUADRO = new Set(["kanban", "timeline", "mosaico", "checklist-tabla", "storyboard"]);
@@ -96,10 +97,17 @@ export default function HerramientasPanel({
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) return;
     const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    // Solo LAS PROPIAS herramientas personales de ESTE departamento — antes
+    // no filtraba por owner_id ni departamento y mostraba las de cualquier
+    // usuario del proyecto (bug real de aislamiento, encontrado 14-jul-2026).
     const { data: pts } = await supabase
       .from("personal_tools")
       .select("id, titulo, tipo, plantilla_id, created_at")
       .eq("project_id", projectId)
+      .eq("owner_id", user.id)
+      .eq("departamento", departamento)
       .order("created_at", { ascending: false });
     setPersonalTools((pts ?? []) as PersonalTool[]);
   }
@@ -137,6 +145,13 @@ export default function HerramientasPanel({
         .eq("departamento", departamento)
         .eq("oculta", true);
       setOcultas(new Set((ocultasData ?? []).map((r) => r.herramienta)));
+
+      // En Exclusivas, "Tareas" (el tablero personal kanban) siempre debe
+      // existir como primera tarjeta — se crea sola si todavía no la tiene
+      // (mismo helper que usa el acceso directo del Pulso).
+      if (seccion === "cargo") {
+        await asegurarTareasPersonales(departamento);
+      }
 
       // Herramientas personales del usuario (visibles en Departamento y Exclusivas)
       await recargarPersonalTools();
@@ -349,9 +364,6 @@ export default function HerramientasPanel({
   if (compartidasEditables.length === 0 && misCargoTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
-        <button className="btn acc" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio(true)}>
-          {t("openWorkspace")}
-        </button>
         <div className="soon-box">
           <span className="hex"></span>
           <h4>{t("noExclusiveTools")}</h4>
@@ -363,9 +375,6 @@ export default function HerramientasPanel({
 
   return (
     <div className="hp-index hp-index-cols">
-      <button className="btn" style={{ alignSelf: "flex-start", marginBottom: "16px" }} onClick={() => setCreandoEspacio((v) => !v)}>
-        {creandoEspacio ? t("closeWorkspace") : t("openWorkspace")}
-      </button>
       {creandoEspacio && (
         <EspacioTrabajoCreator
           departamento={departamento}
@@ -373,15 +382,21 @@ export default function HerramientasPanel({
           onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
         />
       )}
-      {personalTools.length > 0 && (
-        <section className="hp-group hp-group-personal">
-          <span className="hp-group-label">
-            <span className="hex" style={{ width: "8px", height: "7px" }} />
-            {t("myTools")}
-            <span className="hp-mine">{t("personalBadge")}</span>
-          </span>
-          <div className="hp-cards">
-            {personalTools.map((pt) => (
+      <section className="hp-group hp-group-personal">
+        <span className="hp-group-label">
+          <span className="hex" style={{ width: "8px", height: "7px" }} />
+          {t("myTools")}
+          <span className="hp-mine">{t("personalBadge")}</span>
+        </span>
+        <div className="hp-cards">
+          <Hcard
+            icon="layout"
+            title={t("workspaceCardTitle")}
+            desc={t("workspaceCardDesc")}
+            onClick={() => setCreandoEspacio((v) => !v)}
+            footer={<span className="hcard-badge">{creandoEspacio ? t("closeWorkspace") : t("openWorkspace")}</span>}
+          />
+          {personalTools.map((pt) => (
               <Hcard
                 key={pt.id}
                 icon={pt.tipo === "tabla" ? "table" : "file-text"}
@@ -391,9 +406,8 @@ export default function HerramientasPanel({
                 footer={<span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>}
               />
             ))}
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
       {compartidasEditables.length > 0 && (
         <section className="hp-group">
           <span className="hp-group-label">
