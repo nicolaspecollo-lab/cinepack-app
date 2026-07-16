@@ -387,6 +387,90 @@
 .cp-dash .tag-perfil{ background:rgba(243,127,181,0.14); color:var(--pink); }
 .cp-dash .tag-comunicado{ background:rgba(199,146,234,0.14); color:var(--violet); }
 
+/* ===== COMUNICADOS — rediseño jul-2026 (tarjeta rectangular con hexagono en
+   la esquina teñido por el color del departamento emisor, ver Biblia §10.9).
+   Prefijo .comn- para no chocar con .com-list/.com-title/.com-text de arriba,
+   que sigue usando DocumentosPanel.tsx tal cual. ===== */
+.cp-dash .comn-grid{ display:grid; grid-template-columns:1fr; gap:16px; padding:20px 30px 30px; }
+@media(min-width:720px){ .cp-dash .comn-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(min-width:1100px){ .cp-dash .comn-grid{ grid-template-columns:repeat(3,1fr); } }
+
+.cp-dash .comn-card{
+  position:relative; background:var(--panel); border:1px solid var(--line); border-left:2px solid var(--com-acc);
+  padding:16px 16px 14px; overflow:hidden; aspect-ratio:16/11.5;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.cp-dash .comn-hexcorner{
+  position:absolute; top:0; right:0; width:52%; height:60%; background:var(--com-acc);
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  -webkit-mask-repeat:repeat; mask-repeat:repeat; -webkit-mask-size:70px 61px; mask-size:70px 61px; opacity:0.20;
+}
+.cp-dash .comn-hexfade{ position:absolute; top:0; right:0; width:52%; height:60%; background:linear-gradient(225deg, transparent 0%, var(--panel) 78%); }
+.cp-dash .comn-inner{ position:relative; z-index:2; }
+.cp-dash .comn-title{ font-family:'Poppins',sans-serif; font-weight:700; font-size:14.5px; color:var(--text); line-height:1.3; }
+.cp-dash .comn-title-lg{ font-size:18px; }
+.cp-dash .comn-meta{ font-size:10.5px; color:var(--muted); display:flex; align-items:center; gap:6px; margin-top:5px; flex-wrap:wrap; }
+.cp-dash .comn-meta b{ color:var(--text); font-weight:600; }
+.cp-dash .comn-text{ font-size:12px; color:var(--muted); line-height:1.55; margin-top:10px; }
+.cp-dash .comn-card .comn-text{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; }
+.cp-dash .comn-text-full{ white-space:pre-wrap; }
+.cp-dash .comn-adjunto{ font-size:10px; color:var(--sky); display:inline-flex; align-items:center; gap:5px; margin-top:8px; position:relative; z-index:2; }
+.cp-dash .comn-foot{ position:relative; z-index:2; display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+.cp-dash .comn-foot-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cp-dash .comn-foot-label{ font-size:8.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; width:62px; flex-shrink:0; }
+.cp-dash .comn-dept-hex{ width:13px; height:11px; flex-shrink:0; }
+.cp-dash .comn-dept-hex-latido{ animation:comn-latido 1.5s ease-in-out infinite; }
+.cp-dash .comn-empty{ font-size:10.5px; color:var(--muted); opacity:0.7; }
+@keyframes comn-latido{ 0%,100%{ opacity:0.4; transform:scale(0.92); } 50%{ opacity:1; transform:scale(1.08); } }
+
+.cp-dash .comn-detail{ padding:20px 30px 36px; display:flex; flex-direction:column; gap:16px; }
+.cp-dash .comn-detail-card{ aspect-ratio:auto; width:100%; }
+.cp-dash .comn-attach-block{ position:relative; z-index:2; display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; }
+.cp-dash .comn-attach-item{ display:flex; flex-direction:column; gap:6px; }
+.cp-dash .comn-attach-img{ width:130px; height:90px; background:var(--hl1); border:1px solid var(--line); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-size:9.5px; color:var(--muted); text-align:center; padding:6px; }
+.cp-dash .comn-attach-pdf{ display:flex; align-items:center; gap:10px; background:var(--hl1); border:1px solid var(--line); padding:10px 12px; }
+.cp-dash .comn-attach-name{ font-size:10.5px; color:var(--text); }
+.cp-dash .comn-attach-size{ font-size:9px; color:var(--muted); }
+.cp-dash .comn-attach-actions{ display:flex; gap:6px; }
+.cp-dash .comn-ack-row{ position:relative; z-index:2; margin-top:16px; }
+
+.cp-dash .comn-pub-card{ position:relative; width:100%; background:var(--panel); border:1px solid var(--line); border-left:2px solid var(--acc); padding:20px 30px 22px; overflow:hidden; }
+.cp-dash .comn-pub-card .comn-hexcorner, .cp-dash .comn-pub-card .comn-hexfade{ width:32%; height:34%; background:var(--acc); }
+.cp-dash .comn-pub-card .comn-hexfade{ background:linear-gradient(225deg, transparent 0%, var(--panel) 78%); }
+.cp-dash .comn-pub-title{
+  width:100%; background:transparent; border:none; border-bottom:1px solid var(--line);
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:16px; color:var(--text);
+  padding:0 0 10px; margin:14px 0; outline:none;
+}
+.cp-dash .comn-pub-title:focus{ border-color:var(--acc); }
+.cp-dash .comn-pub-msg{
+  width:100%; background:transparent; border:none; resize:vertical;
+  font-size:13px; color:var(--text); line-height:1.7; outline:none;
+  min-height:56vh; border-bottom:1px solid var(--line); padding-bottom:10px; font-family:inherit;
+}
+.cp-dash .comn-pub-msg:focus{ border-color:var(--acc); }
+.cp-dash .comn-dropzone{
+  position:relative; z-index:2; margin-top:18px; border:1.5px dashed var(--line);
+  padding:18px; display:flex; align-items:center; gap:12px; cursor:pointer;
+}
+.cp-dash .comn-dropzone:hover{ border-color:var(--acc); }
+.cp-dash .comn-dropzone-hex{ width:26px; height:22px; background:rgba(255,255,255,0.06); color:var(--acc); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Poppins',sans-serif; font-weight:800; font-size:14px; }
+.cp-dash .comn-dropzone-text b{ color:var(--text); font-size:12px; }
+.cp-dash .comn-dropzone-text span{ display:block; font-size:10.5px; color:var(--muted); margin-top:2px; }
+.cp-dash .comn-chip-row{ position:relative; z-index:2; display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.cp-dash .comn-file-chip{ display:flex; align-items:center; gap:8px; background:var(--hl1); border:1px solid var(--line); padding:8px 10px; max-width:240px; color:var(--acc); }
+.cp-dash .comn-file-name{ font-size:10.5px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-dash .comn-file-size{ font-size:9px; color:var(--muted); }
+.cp-dash .comn-file-close{ margin-left:auto; color:var(--muted); cursor:pointer; flex-shrink:0; display:flex; }
+.cp-dash .comn-pub-actions{ position:relative; z-index:2; display:flex; justify-content:flex-end; margin-top:16px; }
+
+@media(max-width:720px){
+  .cp-dash .comn-grid{ padding:16px 16px 24px; }
+  .cp-dash .comn-pub-card{ padding:18px 16px 20px; }
+  .cp-dash .comn-detail{ padding:16px 16px 28px; }
+}
+
 /* ===== NOTIFICACIONES (Ejecutivo) ===== */
 .cp-dash .noti-item{ cursor:pointer; }
 .cp-dash .noti-item .cons-text{ margin-top:4px; }
@@ -2709,6 +2793,9 @@
 .cp-dash .cp-btn:hover{ color:var(--text); border-color:var(--acc); }
 .cp-dash .cp-btn-acc{ color:var(--acc); border-color:var(--acc); }
 .cp-dash .cp-btn-acc:hover{ background:var(--acc); color:#0D0D12; }
+.cp-dash .cp-btn-acc-fill{ background:var(--acc); color:#0D0D12; border-color:var(--acc); }
+.cp-dash .cp-btn-acc-fill:hover{ opacity:0.85; }
+.cp-dash .cp-btn:disabled{ opacity:0.5; cursor:default; }
 
 /* Control segmentado universal — reemplaza todos los <select> nativos */
 .cp-dash .cp-seg{ display:inline-flex; flex-wrap:wrap; border:1px solid var(--line); max-width:100%; }

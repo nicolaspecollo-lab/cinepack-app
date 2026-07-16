@@ -143,10 +143,12 @@ function DeptHexes({ label, depts }: { label: React.ReactNode; depts: string[] |
 
 export default function GeneralesPanel({
   departamento,
+  cargo,
   fullName,
   jumpTo,
 }: {
   departamento: string;
+  cargo?: string | null;
   fullName: string;
   jumpTo?: { sub: Sub; token: number } | null;
 }) {
@@ -222,7 +224,7 @@ export default function GeneralesPanel({
       )}
 
       <div className="gen-body">
-        {sub === "comunicados" && <ComunicadosPanel deDepartamento={departamento} fullName={fullName} />}
+        {sub === "comunicados" && <ComunicadosPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
         {sub === "notificaciones" && <NotificacionesPanel />}
         {sub === "consultas" && <ConsultasPanel deDepartamento={departamento} fullName={fullName} />}
         {sub === "guion" && <GuionPanel fullName={fullName} canEdit={ce("guion")} />}

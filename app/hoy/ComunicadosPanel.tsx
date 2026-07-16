@@ -4,17 +4,31 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { ACCENTS } from "../constants";
+import { safeKey } from "../lib/storageKey";
+import Icon from "../components/Icon";
 
-type Tipo = "info" | "sugerencia" | "consulta";
+const BUCKET = "documentos";
+const ACEPTA_ADJUNTOS = ".pdf,.jpg,.jpeg,.png";
+const MIME_ACEPTADOS = ["application/pdf", "image/jpeg", "image/png"];
 
 type Comunicado = {
   id: string;
+  autor_id: string;
   autor_nombre: string;
+  autor_cargo: string | null;
   de_departamento: string;
-  tipo: Tipo;
   titulo: string;
   texto: string;
   created_at: string;
+};
+
+type Adjunto = {
+  id: string;
+  comunicado_id: string;
+  nombre: string;
+  path: string;
+  mime: string | null;
+  size: number | null;
 };
 
 type Acuse = {
@@ -27,51 +41,46 @@ type Acuse = {
 
 type MiembroDept = { user_id: string; departamento: string; full_name: string };
 
-const TIPO_LABEL_KEY: Record<Tipo, string> = {
-  info: "tipoInfo",
-  sugerencia: "tipoSugerencia",
-  consulta: "tipoConsulta",
-};
+function accentVar(dept: string) {
+  return `var(--${ACCENTS[dept] ?? "lime"})`;
+}
 
-const TIPO_CLASS: Record<Tipo, string> = {
-  info: "tag-info",
-  sugerencia: "tag-sug",
-  consulta: "tag-con",
-};
+function formatFechaHora(iso: string) {
+  const d = new Date(iso);
+  const fecha = d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+  const hora = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  return `${fecha} · ${hora}`;
+}
 
-function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return t("timeNow");
-  if (mins < 60) return t("timeMinsAgo", { n: mins });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return t("timeHoursAgo", { n: hours });
-  const days = Math.floor(hours / 24);
-  if (days === 1) return t("timeYesterday");
-  return t("timeDaysAgo", { n: days });
+function formatSize(bytes: number | null) {
+  if (!bytes) return "";
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function ComunicadosPanel({
   deDepartamento,
+  cargo,
   fullName,
 }: {
   deDepartamento: string;
+  cargo?: string | null;
   fullName: string;
 }) {
   const t = useTranslations("comunicados");
-  const tHp = useTranslations("hp");
   const [comunicados, setComunicados] = useState<Comunicado[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [texto, setTexto] = useState("");
-  const [tipo, setTipo] = useState<Tipo>("info");
+  const [archivos, setArchivos] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const [userId, setUserId] = useState<string | null>(null);
   const [miembros, setMiembros] = useState<MiembroDept[]>([]);
   const [acuses, setAcuses] = useState<Record<string, Acuse[]>>({});
+  const [adjuntos, setAdjuntos] = useState<Record<string, Adjunto[]>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadAcuses = useCallback(async (ids: string[]) => {
@@ -79,13 +88,25 @@ export default function ComunicadosPanel({
     const supabase = createClient();
     const { data } = await supabase.from("comunicado_acuse").select("*").in("comunicado_id", ids);
     const grouped: Record<string, Acuse[]> = {};
-    for (const id of ids) grouped[id] = []; // limpia solo los ids que se están refrescando
+    for (const id of ids) grouped[id] = [];
     for (const row of data ?? []) {
       grouped[row.comunicado_id] = grouped[row.comunicado_id] ?? [];
       grouped[row.comunicado_id].push(row as Acuse);
     }
-    // Fusiona con lo ya cargado: no pisa el estado de comunicados no incluidos en `ids`.
     setAcuses((prev) => ({ ...prev, ...grouped }));
+  }, []);
+
+  const loadAdjuntos = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+    const supabase = createClient();
+    const { data } = await supabase.from("comunicado_adjuntos").select("*").in("comunicado_id", ids);
+    const grouped: Record<string, Adjunto[]> = {};
+    for (const id of ids) grouped[id] = [];
+    for (const row of data ?? []) {
+      grouped[row.comunicado_id] = grouped[row.comunicado_id] ?? [];
+      grouped[row.comunicado_id].push(row as Adjunto);
+    }
+    setAdjuntos((prev) => ({ ...prev, ...grouped }));
   }, []);
 
   const load = useCallback(async () => {
@@ -100,12 +121,13 @@ export default function ComunicadosPanel({
 
     const { data } = await supabase
       .from("comunicados")
-      .select("*")
+      .select("id, autor_id, autor_nombre, autor_cargo, de_departamento, titulo, texto, created_at")
       .eq("project_id", projectId)
       .order("created_at", { ascending: false });
     setComunicados(data ?? []);
     setLoading(false);
-    await loadAcuses((data ?? []).map((c) => c.id));
+    const ids = (data ?? []).map((c) => c.id);
+    await Promise.all([loadAcuses(ids), loadAdjuntos(ids)]);
 
     const { data: members } = await supabase
       .from("project_members")
@@ -119,16 +141,12 @@ export default function ComunicadosPanel({
       })
       .filter((m): m is MiembroDept => m !== null);
     setMiembros(lista);
-  }, [loadAcuses]);
+  }, [loadAcuses, loadAdjuntos]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Un departamento se considera "acusado" cuando TODOS sus integrantes
-  // confirmaron el acuse EN ese departamento (deDepartamento). Esto permite
-  // que un mismo usuario con varios cargos (Punto 8) o en "Modo de prueba"
-  // acuse de forma independiente por cada departamento en el que actúa.
   function deptStatus(comunicadoId: string) {
     const porDepto: Record<string, string[]> = {};
     for (const m of miembros) {
@@ -141,14 +159,14 @@ export default function ComunicadosPanel({
         .map((a) => `${a.user_id}__${a.department_id}`)
     );
 
-    const visualizado: string[] = [];
+    const recibido: string[] = [];
     const pendiente: string[] = [];
     for (const [depto, userIds] of Object.entries(porDepto)) {
       const completo = userIds.length > 0 && userIds.every((uid) => ackedPairs.has(`${uid}__${depto}`));
-      (completo ? visualizado : pendiente).push(depto);
+      (completo ? recibido : pendiente).push(depto);
     }
 
-    return { visualizado, pendiente };
+    return { recibido, pendiente };
   }
 
   function miAcuse(c: Comunicado) {
@@ -156,11 +174,8 @@ export default function ComunicadosPanel({
   }
 
   async function handleExpand(c: Comunicado) {
-    const opening = expandedId !== c.id;
-    setExpandedId(opening ? c.id : null);
-    if (!opening || !userId) return;
-
-    if (miAcuse(c)) return;
+    setExpandedId(c.id);
+    if (!userId || miAcuse(c)) return;
 
     const supabase = createClient();
     await supabase.from("comunicado_acuse").insert({
@@ -196,6 +211,16 @@ export default function ComunicadosPanel({
     await loadAcuses([c.id]);
   }
 
+  function agregarArchivos(files: FileList | null) {
+    if (!files) return;
+    const validos = Array.from(files).filter((f) => MIME_ACEPTADOS.includes(f.type));
+    setArchivos((prev) => [...prev, ...validos]);
+  }
+
+  function quitarArchivo(idx: number) {
+    setArchivos((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -214,34 +239,147 @@ export default function ComunicadosPanel({
       return;
     }
 
-    const { error } = await supabase.from("comunicados").insert({
-      project_id: projectId,
-      autor_id: user.id,
-      autor_nombre: fullName,
-      de_departamento: deDepartamento,
-      tipo,
-      titulo,
-      texto,
-    });
+    const { data: nuevo, error } = await supabase
+      .from("comunicados")
+      .insert({
+        project_id: projectId,
+        autor_id: user.id,
+        autor_nombre: fullName,
+        autor_cargo: cargo ?? null,
+        de_departamento: deDepartamento,
+        titulo,
+        texto,
+      })
+      .select("id")
+      .single();
 
-    setSending(false);
-
-    if (error) {
-      setMsg({ type: "err", text: error.message });
+    if (error || !nuevo) {
+      setSending(false);
+      setMsg({ type: "err", text: error?.message ?? t("noProject") });
       return;
     }
 
+    for (const file of archivos) {
+      const path = `${projectId}/${safeKey(deDepartamento)}/_comunicados/${nuevo.id}/${Date.now()}-${safeKey(file.name)}`;
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file);
+      if (upErr) continue;
+      await supabase.from("comunicado_adjuntos").insert({
+        comunicado_id: nuevo.id,
+        nombre: file.name,
+        path,
+        mime: file.type,
+        size: file.size,
+      });
+    }
+
+    setSending(false);
     setTitulo("");
     setTexto("");
-    setTipo("info");
+    setArchivos([]);
     setShowForm(false);
     await load();
   }
 
+  async function descargarAdjunto(a: Adjunto) {
+    const supabase = createClient();
+    const { data } = await supabase.storage.from(BUCKET).createSignedUrl(a.path, 120, { download: a.nombre });
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  }
+
+  async function verAdjunto(a: Adjunto) {
+    const supabase = createClient();
+    const { data } = await supabase.storage.from(BUCKET).createSignedUrl(a.path, 120);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  }
+
+  const expandido = expandedId ? comunicados.find((c) => c.id === expandedId) : null;
+
+  if (expandido) {
+    const { recibido, pendiente } = deptStatus(expandido.id);
+    const yaAcuso = !!miAcuse(expandido)?.acked_at;
+    const misAdjuntos = adjuntos[expandido.id] ?? [];
+    return (
+      <div className="comn-detail">
+        <button type="button" className="cp-btn" onClick={() => setExpandedId(null)}>
+          <Icon name="arrow-left" size={13} /> {t("back")}
+        </button>
+
+        <div className="comn-card comn-detail-card" style={{ "--com-acc": accentVar(expandido.de_departamento) } as React.CSSProperties}>
+          <div className="comn-hexcorner"></div>
+          <div className="comn-hexfade"></div>
+          <div className="comn-inner">
+            <div className="comn-title comn-title-lg">{expandido.titulo}</div>
+            <div className="comn-meta">
+              <span className="hex" style={{ width: "10px", height: "8px", background: "var(--com-acc)", flexShrink: 0 }}></span>
+              <b>{expandido.de_departamento}</b>
+              {expandido.autor_cargo && <> · {expandido.autor_cargo}</>}
+              {" "}· {expandido.autor_nombre} · {formatFechaHora(expandido.created_at)}
+            </div>
+            <p className="comn-text comn-text-full">{expandido.texto}</p>
+          </div>
+
+          <div className="comn-foot">
+            <div className="comn-foot-row">
+              <span className="comn-foot-label">{t("recibido")}</span>
+              {recibido.length === 0 && <span className="comn-empty">{t("nadie")}</span>}
+              {recibido.map((d) => (
+                <span key={d} className="hex comn-dept-hex" title={d} style={{ background: accentVar(d) }}></span>
+              ))}
+            </div>
+            <div className="comn-foot-row">
+              <span className="comn-foot-label">{t("pendiente")}</span>
+              {pendiente.length === 0 && <span className="comn-empty">{t("nadie")}</span>}
+              {pendiente.map((d) => (
+                <span key={d} className="hex comn-dept-hex comn-dept-hex-latido" title={d} style={{ background: accentVar(d) }}></span>
+              ))}
+            </div>
+          </div>
+
+          {misAdjuntos.length > 0 && (
+            <div className="comn-attach-block">
+              {misAdjuntos.map((a) => {
+                const esImagen = (a.mime ?? "").startsWith("image/");
+                return (
+                  <div className="comn-attach-item" key={a.id}>
+                    {esImagen ? (
+                      <div className="comn-attach-img"><Icon name="image" size={20} /><span>{a.nombre}</span></div>
+                    ) : (
+                      <div className="comn-attach-pdf">
+                        <Icon name="file-text" size={18} />
+                        <div>
+                          <div className="comn-attach-name">{a.nombre}</div>
+                          <div className="comn-attach-size">{formatSize(a.size)}</div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="comn-attach-actions">
+                      <button type="button" className="cp-btn cp-btn-acc" onClick={() => verAdjunto(a)}>
+                        <Icon name="eye" size={12} /> {esImagen ? t("ver") : t("vistaPrevia")}
+                      </button>
+                      <button type="button" className="cp-btn cp-btn-acc" onClick={() => descargarAdjunto(a)}>
+                        <Icon name="download" size={12} /> {t("descargar")}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="comn-ack-row">
+            <button type="button" className="cp-btn cp-btn-acc" disabled={yaAcuso} onClick={() => handleAcuse(expandido)}>
+              {yaAcuso ? t("alreadyAcked") : t("ackButton")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="com-list">
-        {loading && <p className="com-text">{t("loading")}</p>}
+      <div className="comn-grid">
+        {loading && <p className="comn-text">{t("loading")}</p>}
         {!loading && comunicados.length === 0 && (
           <div className="soon-box">
             <span className="hex"></span>
@@ -250,126 +388,126 @@ export default function ComunicadosPanel({
           </div>
         )}
         {comunicados.map((c) => {
-          const expanded = expandedId === c.id;
-          const { visualizado, pendiente } = deptStatus(c.id);
-          const yaAcuso = !!miAcuse(c)?.acked_at;
+          const { recibido, pendiente } = deptStatus(c.id);
+          const misAdjuntos = adjuntos[c.id] ?? [];
           return (
             <div
-              className="com"
+              className="comn-card"
               key={c.id}
               onClick={() => handleExpand(c)}
-              style={{ cursor: "pointer", ...(expanded ? { boxShadow: "0 0 0 2px var(--lime) inset" } : {}) }}
+              style={{ "--com-acc": accentVar(c.de_departamento), cursor: "pointer" } as React.CSSProperties}
             >
-              <div className="com-top">
-                <div>
-                  <div className="com-title">{c.titulo}</div>
-                  <span className="com-meta">
-                    {c.de_departamento} · {c.autor_nombre} · {timeAgo(c.created_at, tHp)}
-                  </span>
+              <div className="comn-hexcorner"></div>
+              <div className="comn-hexfade"></div>
+              <div className="comn-inner">
+                <div className="comn-title">{c.titulo}</div>
+                <div className="comn-meta">
+                  <span className="hex" style={{ width: "10px", height: "8px", background: "var(--com-acc)", flexShrink: 0 }}></span>
+                  <b>{c.de_departamento}</b>
+                  {c.autor_cargo && <> · {c.autor_cargo}</>}
+                  {" "}· {c.autor_nombre} · {formatFechaHora(c.created_at)}
                 </div>
-                <span className={`pill ${TIPO_CLASS[c.tipo]}`}>{t(TIPO_LABEL_KEY[c.tipo])}</span>
-              </div>
-              <div
-                className="com-text"
-                style={
-                  !expanded
-                    ? {
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: 3,
-                        overflow: "hidden",
-                      }
-                    : { whiteSpace: "pre-wrap" }
-                }
-              >
-                {c.texto}
-              </div>
-              {!expanded && c.texto.length > 180 && (
-                <span style={{ fontSize: "11px", color: "var(--cyan)" }}>{t("seeMore")}</span>
-              )}
-
-              {expanded && (
-                <div onClick={(e) => e.stopPropagation()} style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div>
-                    <span className="afield" style={{ display: "block", marginBottom: "4px" }}>{t("viewedBy")}</span>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {visualizado.length === 0 && <span className="com-text">{t("noneViewedYet")}</span>}
-                      {visualizado.map((d) => (
-                        <span
-                          key={d}
-                          className="hex"
-                          title={d}
-                          style={{ background: `var(--${ACCENTS[d] ?? "lime"})`, width: "18px", height: "15px" }}
-                        ></span>
-                      ))}
-                    </div>
+                <div className="comn-text">{c.texto}</div>
+                {misAdjuntos.length > 0 && (
+                  <div className="comn-adjunto">
+                    <Icon name="paperclip" size={11} /> {t("adjuntosCount", { n: misAdjuntos.length })}
                   </div>
-                  <div>
-                    <span className="afield" style={{ display: "block", marginBottom: "4px" }}>{t("pendingView")}</span>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      {pendiente.length === 0 && <span className="com-text">{t("allAcked")}</span>}
-                      {pendiente.map((d) => (
-                        <span key={d} className="hex" title={d} style={{ background: `var(--${ACCENTS[d] ?? "lime"})`, opacity: 0.3, width: "18px", height: "15px" }}></span>
-                      ))}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn acc"
-                    disabled={yaAcuso}
-                    onClick={() => handleAcuse(c)}
-                  >
-                    {yaAcuso ? t("alreadyAcked") : t("ackButton")}
-                  </button>
+                )}
+              </div>
+              <div className="comn-foot">
+                <div className="comn-foot-row">
+                  <span className="comn-foot-label">{t("recibido")}</span>
+                  {recibido.length === 0 && <span className="comn-empty">{t("nadie")}</span>}
+                  {recibido.map((d) => (
+                    <span key={d} className="hex comn-dept-hex" title={d} style={{ background: accentVar(d) }}></span>
+                  ))}
                 </div>
-              )}
+                <div className="comn-foot-row">
+                  <span className="comn-foot-label">{t("pendiente")}</span>
+                  {pendiente.length === 0 && <span className="comn-empty">{t("nadie")}</span>}
+                  {pendiente.map((d) => (
+                    <span key={d} className="hex comn-dept-hex comn-dept-hex-latido" title={d} style={{ background: accentVar(d) }}></span>
+                  ))}
+                </div>
+              </div>
             </div>
           );
         })}
       </div>
 
       <div className="cons-new" style={{ paddingTop: 0 }}>
-        <button className="btn acc" style={{ "--acc": "var(--cyan)" } as React.CSSProperties} onClick={() => setShowForm((v) => !v)}>
+        <button type="button" className="cp-btn cp-btn-acc" onClick={() => setShowForm((v) => !v)}>
           {showForm ? t("cancel") : t("newComunicado")}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="cons-new" style={{ flexDirection: "column", maxWidth: "560px", paddingTop: 0 }}>
-          <label className="afield">
-            <span>{t("typeLabel")}</span>
-            <select value={tipo} onChange={(e) => setTipo(e.target.value as Tipo)}>
-              <option value="info">{t("tipoInfo")}</option>
-              <option value="sugerencia">{t("tipoSugerencia")}</option>
-              <option value="consulta">{t("tipoConsulta")}</option>
-            </select>
-          </label>
-          <label className="afield">
-            <span>{t("titleLabel")}</span>
+        <form onSubmit={handleCreate} className="comn-pub-card">
+          <div className="comn-hexcorner"></div>
+          <div className="comn-hexfade"></div>
+          <div className="comn-inner">
+            <div className="comn-meta">
+              <span className="hex" style={{ width: "10px", height: "8px", background: "var(--acc)", flexShrink: 0 }}></span>
+              <b>{deDepartamento}</b>
+              {cargo && <> · {cargo}</>}
+              {" "}· {fullName} · {formatFechaHora(new Date().toISOString())}
+            </div>
             <input
               type="text"
               required
+              className="comn-pub-title"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder={t("titlePlaceholder")}
             />
-          </label>
-          <label className="afield">
-            <span>{t("messageLabel")}</span>
             <textarea
               required
+              className="comn-pub-msg"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              rows={3}
               placeholder={t("messagePlaceholder")}
+            />
+          </div>
+
+          <label className="comn-dropzone">
+            <span className="hex comn-dropzone-hex">+</span>
+            <div className="comn-dropzone-text">
+              <b>{t("adjuntarLabel")}</b>
+              <span>{t("adjuntarHint")}</span>
+            </div>
+            <input
+              type="file"
+              accept={ACEPTA_ADJUNTOS}
+              multiple
+              style={{ display: "none" }}
+              onChange={(e) => agregarArchivos(e.target.files)}
             />
           </label>
 
+          {archivos.length > 0 && (
+            <div className="comn-chip-row">
+              {archivos.map((f, i) => (
+                <div className="comn-file-chip" key={`${f.name}-${i}`}>
+                  <Icon name={f.type.startsWith("image/") ? "image" : "file-text"} size={16} />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="comn-file-name">{f.name}</div>
+                    <div className="comn-file-size">{formatSize(f.size)}</div>
+                  </div>
+                  <span className="comn-file-close" onClick={() => quitarArchivo(i)}>
+                    <Icon name="x" size={13} />
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
-          <button type="submit" className="abtn" disabled={sending}>
-            {sending ? t("publishing") : t("publish")}
-          </button>
+          <div className="comn-pub-actions">
+            <button type="submit" className="cp-btn cp-btn-acc-fill" disabled={sending}>
+              {sending ? t("publishing") : t("publish")}
+            </button>
+          </div>
         </form>
       )}
     </>
