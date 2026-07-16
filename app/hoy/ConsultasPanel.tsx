@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { ACCENTS, DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
+import Icon from "../components/Icon";
 
 type ConsFilter = "todas" | "pend" | "res";
 
@@ -39,6 +40,17 @@ type MiembroProyecto = {
   departamento: string;
 };
 
+function accentVar(dept: string) {
+  return `var(--${ACCENTS[dept] ?? "lime"})`;
+}
+
+function formatFechaHora(iso: string) {
+  const d = new Date(iso);
+  const fecha = d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+  const hora = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  return `${fecha} · ${hora}`;
+}
+
 function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60000);
@@ -53,9 +65,11 @@ function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
 
 export default function ConsultasPanel({
   deDepartamento,
+  cargo,
   fullName,
 }: {
   deDepartamento: string;
+  cargo?: string | null;
   fullName: string;
 }) {
   const t = useTranslations("consultas");
@@ -67,17 +81,18 @@ export default function ConsultasPanel({
   const [titulo, setTitulo] = useState("");
   const [texto, setTexto] = useState("");
   const [paraDepartamentos, setParaDepartamentos] = useState<string[]>([]);
-  const [cargo, setCargo] = useState("");
+  const [destCargo, setDestCargo] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isPrivate, setIsPrivate] = useState(false);
   const [privateRecipientId, setPrivateRecipientId] = useState("");
   const [miembrosProyecto, setMiembrosProyecto] = useState<MiembroProyecto[]>([]);
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
-  const [respuestaDrafts, setRespuestaDrafts] = useState<Record<string, string>>({});
-  const [resolverDrafts, setResolverDrafts] = useState<Record<string, string>>({});
-  const [chatOpen, setChatOpen] = useState<Record<string, boolean>>({});
-  const [resolveOpen, setResolveOpen] = useState<Record<string, boolean>>({});
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const [resolveDraft, setResolveDraft] = useState("");
 
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -95,10 +110,6 @@ export default function ConsultasPanel({
       .select("*")
       .eq("project_id", projectId);
 
-    // Un departamento solo ve las consultas en las que participa (emisor o
-    // receptor). El rol Ejecutivo ve todas las consultas del proyecto.
-    // Las consultas privadas solo las ve el emisor y el destinatario (RLS
-    // refuerza esto server-side; este filtro es defensa adicional client-side).
     if (deDepartamento !== "Ejecutivo") {
       const visibilidad = [`de_departamento.eq.${deDepartamento}`, `para_departamentos.cs.{${deDepartamento}}`];
       if (uid) visibilidad.push(`autor_id.eq.${uid}`, `private_recipient_id.eq.${uid}`);
@@ -141,7 +152,7 @@ export default function ConsultasPanel({
       setMsg({ type: "err", text: t("noProject") });
       return;
     }
-    if (paraDepartamentos.length === 0) {
+    if (!isPrivate && paraDepartamentos.length === 0) {
       setMsg({ type: "err", text: t("selectDept") });
       return;
     }
@@ -168,7 +179,7 @@ export default function ConsultasPanel({
       autor_nombre: fullName,
       de_departamento: deDepartamento,
       para_departamentos: paraDepartamentos,
-      para_cargo: paraDepartamentos.length === 1 ? cargo.trim() || null : null,
+      para_cargo: paraDepartamentos.length === 1 ? destCargo.trim() || null : null,
       titulo,
       texto,
       is_private: isPrivate,
@@ -186,7 +197,7 @@ export default function ConsultasPanel({
     setTitulo("");
     setTexto("");
     setParaDepartamentos([]);
-    setCargo("");
+    setDestCargo("");
     setIsPrivate(false);
     setPrivateRecipientId("");
     setShowForm(false);
@@ -195,11 +206,11 @@ export default function ConsultasPanel({
 
   function toggleParaDepartamento(d: string) {
     setParaDepartamentos((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
-    setCargo("");
+    setDestCargo("");
   }
 
   async function handleResponder(c: Consulta) {
-    const texto = respuestaDrafts[c.id]?.trim();
+    const texto = replyDraft.trim();
     if (!texto) return;
 
     const supabase = createClient();
@@ -209,11 +220,7 @@ export default function ConsultasPanel({
     ];
     await supabase.from("consultas").update({ respuestas }).eq("id", c.id);
 
-    setRespuestaDrafts((prev) => {
-      const next = { ...prev };
-      delete next[c.id];
-      return next;
-    });
+    setReplyDraft("");
     await load();
   }
 
@@ -223,18 +230,22 @@ export default function ConsultasPanel({
       .from("consultas")
       .update({
         estado: "resuelta",
-        respuesta: resolverDrafts[id]?.trim() || null,
+        respuesta: resolveDraft.trim() || null,
         respuesta_autor: fullName,
         resolved_at: new Date().toISOString(),
       })
       .eq("id", id);
 
-    setResolverDrafts((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
+    setResolveOpen(false);
+    setResolveDraft("");
     await load();
+  }
+
+  function abrirDetalle(c: Consulta) {
+    setExpandedId(c.id);
+    setReplyDraft("");
+    setResolveOpen(false);
+    setResolveDraft("");
   }
 
   const filtered = consultas.filter((c) => {
@@ -243,112 +254,217 @@ export default function ConsultasPanel({
     return true;
   });
 
+  const expandida = expandedId ? consultas.find((c) => c.id === expandedId) : null;
+
+  if (expandida) {
+    const esAutor = expandida.de_departamento === deDepartamento;
+    const esDestinatarioPrivado = expandida.is_private && expandida.private_recipient_id === userId;
+    const puedeResponder = expandida.is_private
+      ? esDestinatarioPrivado || expandida.autor_id === userId
+      : expandida.para_departamentos.includes(deDepartamento);
+
+    return (
+      <div className="comn-detail">
+        <button type="button" className="cp-btn" onClick={() => setExpandedId(null)}>
+          <Icon name="arrow-left" size={13} /> {t("back")}
+        </button>
+
+        <div className="comn-card comn-detail-card" style={{ "--com-acc": accentVar(expandida.de_departamento) } as React.CSSProperties}>
+          <div className="comn-hexcorner"></div>
+          <div className="comn-hexfade"></div>
+          <div className="comn-inner">
+            <div className="comn-title comn-title-lg">{expandida.titulo}</div>
+            {expandida.is_private ? (
+              <div className="cq-lock">
+                <Icon name="key" size={12} /> {t("privatePill")} · {expandida.autor_nombre} → @{expandida.private_recipient_nombre}
+              </div>
+            ) : (
+              <div className="cq-flow">
+                <span className="hex" style={{ width: "10px", height: "8px", background: "var(--com-acc)", flexShrink: 0 }}></span>
+                <b>{expandida.de_departamento}</b> → {expandida.para_departamentos.join(", ")}
+                {expandida.para_cargo ? ` (${expandida.para_cargo})` : ""}
+              </div>
+            )}
+            <div className="comn-meta">{expandida.autor_nombre} · {formatFechaHora(expandida.created_at)}</div>
+            <p className="comn-text comn-text-full">{expandida.texto}</p>
+          </div>
+
+          {expandida.respuestas.length > 0 && (
+            <div className="cq-thread">
+              {expandida.respuestas.map((r, i) => (
+                <div className={`cq-bubble ${r.departamento === deDepartamento ? "cq-bubble-me" : ""}`} key={i}>
+                  <div className="cq-bubble-head"><b>{r.departamento}</b> · {r.autor_nombre} · {timeAgo(r.created_at, tHp)}</div>
+                  {r.texto}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {expandida.estado === "resuelta" && expandida.respuesta && (
+            <div className="cq-bubble cq-bubble-resuelta">
+              <div className="cq-bubble-head">{t("resolvedBy", { name: expandida.respuesta_autor ?? "" })}</div>
+              {expandida.respuesta}
+            </div>
+          )}
+
+          {expandida.estado === "pendiente" && puedeResponder && (
+            <div className="cq-reply-row">
+              <input
+                type="text"
+                className="cq-reply-input"
+                placeholder={t("msgPlaceholder")}
+                value={replyDraft}
+                onChange={(e) => setReplyDraft(e.target.value)}
+              />
+              <button type="button" className="cp-btn cp-btn-acc" onClick={() => handleResponder(expandida)}>
+                {t("sendBtn")}
+              </button>
+            </div>
+          )}
+
+          {expandida.estado === "pendiente" && esAutor && (
+            <div className="cq-resolve-block">
+              {!resolveOpen ? (
+                <button type="button" className="cp-btn cp-btn-acc-fill" onClick={() => setResolveOpen(true)}>
+                  {t("resolveBtn")}
+                </button>
+              ) : (
+                <div className="cq-reply-row">
+                  <input
+                    type="text"
+                    className="cq-reply-input"
+                    placeholder={t("closeNotePlaceholder")}
+                    value={resolveDraft}
+                    onChange={(e) => setResolveDraft(e.target.value)}
+                  />
+                  <button type="button" className="cp-btn cp-btn-acc-fill" onClick={() => handleResolve(expandida.id)}>
+                    {t("confirmResolve")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="cons-filters">
-        <button className={`cfilter ${consFilter === "todas" ? "active" : ""}`} onClick={() => setConsFilter("todas")}>
+      <div className="cp-seg">
+        <button type="button" className={`cp-seg-cell ${consFilter === "todas" ? "cp-seg-on" : ""}`} onClick={() => setConsFilter("todas")}>
           {t("all")}
         </button>
-        <button className={`cfilter ${consFilter === "pend" ? "active" : ""}`} onClick={() => setConsFilter("pend")}>
+        <button type="button" className={`cp-seg-cell ${consFilter === "pend" ? "cp-seg-on" : ""}`} onClick={() => setConsFilter("pend")}>
           {t("pending")}
         </button>
-        <button className={`cfilter ${consFilter === "res" ? "active" : ""}`} onClick={() => setConsFilter("res")}>
+        <button type="button" className={`cp-seg-cell ${consFilter === "res" ? "cp-seg-on" : ""}`} onClick={() => setConsFilter("res")}>
           {t("resolved")}
         </button>
-        <div style={{ flex: 1 }} />
-        <button className="btn acc" onClick={() => setShowForm((v) => !v)}>
+      </div>
+
+      <div className="cons-new" style={{ paddingTop: "16px" }}>
+        <button type="button" className="cp-btn cp-btn-acc" onClick={() => setShowForm((v) => !v)}>
           {showForm ? t("cancel") : t("newConsulta")}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="cons-new cons-form">
-          <label className="afield">
-            <span>{t("toLabel")}</span>
-            <div className="chip-group">
-              {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
-                <button
-                  type="button"
-                  key={d}
-                  className={`dept-chip ${paraDepartamentos.includes(d) ? "active" : ""}`}
-                  style={{ "--chip-acc": `var(--${ACCENTS[d] ?? "lime"})` } as React.CSSProperties}
-                  onClick={() => toggleParaDepartamento(d)}
-                >
-                  {d}
-                </button>
-              ))}
+        <form onSubmit={handleCreate} className="comn-pub-card">
+          <div className="comn-hexcorner"></div>
+          <div className="comn-hexfade"></div>
+          <div className="comn-inner">
+            <div className="comn-meta" style={{ marginBottom: "16px" }}>
+              <span className="hex" style={{ width: "10px", height: "8px", background: "var(--acc)", flexShrink: 0 }}></span>
+              <b>{deDepartamento}</b>
+              {cargo && <> · {cargo}</>}
+              {" "}· {fullName} · {formatFechaHora(new Date().toISOString())}
             </div>
-          </label>
-          {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
-            <label className="afield">
-              <span>{t("roleLabel")}</span>
-              <div className="chip-group">
-                {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
-                  <button
-                    type="button"
-                    key={c}
-                    className={`dept-chip ${cargo === c ? "active" : ""}`}
-                    style={{ "--chip-acc": `var(--${ACCENTS[paraDepartamentos[0]] ?? "lime"})` } as React.CSSProperties}
-                    onClick={() => setCargo((prev) => (prev === c ? "" : c))}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </label>
-          )}
-          <label className="afield" style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
-            <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} style={{ width: "auto" }} />
-            <span style={{ textTransform: "none", fontSize: "13px" }}>{t("privateCheck")}</span>
-          </label>
 
-          {isPrivate && (
-            <label className="afield">
-              <span>{t("recipientLabel")}</span>
-              <select value={privateRecipientId} onChange={(e) => setPrivateRecipientId(e.target.value)}>
-                <option value="">{t("selectRecipient")}</option>
-                {miembrosProyecto
-                  .filter((m) => paraDepartamentos.length === 0 || paraDepartamentos.includes(m.departamento))
-                  .map((m) => (
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "var(--text)", marginBottom: "16px" }}>
+              <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+              {t("privateCheck")}
+            </label>
+
+            {isPrivate ? (
+              <label className="afield" style={{ marginBottom: "16px" }}>
+                <span>{t("recipientLabel")}</span>
+                <select value={privateRecipientId} onChange={(e) => setPrivateRecipientId(e.target.value)}>
+                  <option value="">{t("selectRecipient")}</option>
+                  {miembrosProyecto.map((m) => (
                     <option key={m.user_id} value={m.user_id}>
                       @{m.full_name} ({m.departamento})
                     </option>
                   ))}
-              </select>
-            </label>
-          )}
+                </select>
+              </label>
+            ) : (
+              <>
+                <p className="cq-chip-label">{t("toLabel")}</p>
+                <div className="cq-chip-row">
+                  {DEPARTAMENTOS.filter((d) => d !== deDepartamento).map((d) => (
+                    <button
+                      type="button"
+                      key={d}
+                      className={`cq-chip ${paraDepartamentos.includes(d) ? "cq-chip-on" : ""}`}
+                      style={{ "--c-acc": accentVar(d) } as React.CSSProperties}
+                      onClick={() => toggleParaDepartamento(d)}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+                {paraDepartamentos.length === 1 && (JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]]?.length ?? 0) > 0 && (
+                  <>
+                    <p className="cq-chip-label">{t("roleLabel")}</p>
+                    <div className="cq-chip-row">
+                      {JERARQUIA_POR_DEPARTAMENTO[paraDepartamentos[0]].map((c) => (
+                        <button
+                          type="button"
+                          key={c}
+                          className={`cq-chip ${destCargo === c ? "cq-chip-on" : ""}`}
+                          style={{ "--c-acc": accentVar(paraDepartamentos[0]) } as React.CSSProperties}
+                          onClick={() => setDestCargo((prev) => (prev === c ? "" : c))}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
 
-          <label className="afield">
-            <span>{t("titleLabel")}</span>
             <input
               type="text"
               required
+              className="comn-pub-title"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder={t("titlePlaceholder")}
             />
-          </label>
-          <label className="afield">
-            <span>{t("messageLabel")}</span>
             <textarea
               required
+              className="comn-pub-msg"
+              style={{ minHeight: "30vh" }}
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              rows={3}
               placeholder={t("messagePlaceholder")}
             />
-          </label>
+          </div>
 
           {msg && <p className={`amsg ${msg.type === "err" ? "err" : "ok"}`}>{msg.text}</p>}
 
-          <button type="submit" className="abtn" disabled={sending}>
-            {sending ? t("sending") : t("send")}
-          </button>
+          <div className="comn-pub-actions">
+            <button type="submit" className="cp-btn cp-btn-acc-fill" disabled={sending}>
+              {sending ? t("sending") : t("send")}
+            </button>
+          </div>
         </form>
       )}
 
-      <div className="cons-list">
-        {loading && <p className="cons-text">{t("loading")}</p>}
+      <div className="comn-grid">
+        {loading && <p className="comn-text">{t("loading")}</p>}
         {!loading && filtered.length === 0 && (
           <div className="soon-box">
             <span className="hex"></span>
@@ -356,103 +472,43 @@ export default function ConsultasPanel({
             <p>{t("emptyDesc")}</p>
           </div>
         )}
-        {filtered.map((c) => {
-          const esAutor = c.de_departamento === deDepartamento;
-          const esDestinatarioPrivado = c.is_private && c.private_recipient_id === userId;
-          const puedeResponder = c.is_private
-            ? esDestinatarioPrivado || c.autor_id === userId
-            : c.para_departamentos.includes(deDepartamento);
-          return (
-            <div className="cons" key={c.id} style={c.estado === "resuelta" ? { borderLeftColor: "var(--line)" } : undefined}>
-              <div className="cons-top">
-                <div>
-                  <div className="cons-title">{c.titulo}</div>
-                  <span className="cons-meta">
-                    {c.is_private
-                      ? `${c.autor_nombre} → @${c.private_recipient_nombre}`
-                      : `${c.de_departamento} → ${c.para_departamentos.join(", ")}${c.para_cargo ? ` (${c.para_cargo})` : ""}`}
-                    {" "}· {c.autor_nombre} · {timeAgo(c.created_at, tHp)}
-                  </span>
+        {filtered.map((c) => (
+          <div
+            className="comn-card"
+            key={c.id}
+            onClick={() => abrirDetalle(c)}
+            style={{ "--com-acc": accentVar(c.de_departamento), cursor: "pointer" } as React.CSSProperties}
+          >
+            <div className="comn-hexcorner"></div>
+            <div className="comn-hexfade"></div>
+            <div className="comn-inner">
+              <div className="comn-title">{c.titulo}</div>
+              {c.is_private ? (
+                <div className="cq-lock">
+                  <Icon name="key" size={11} /> {t("privatePill")} · {c.autor_nombre} → @{c.private_recipient_nombre}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                  {c.is_private && <span className="pill" title={t("privateTitle")}>{t("privatePill")}</span>}
-                  {c.estado === "resuelta" ? (
-                    <span className="pill p-ok">{t("resolvedPill")}</span>
-                  ) : (
-                    <span className="pill p-warn">
-                      <span className="pulse"></span>{t("pendingPill")}
-                    </span>
-                  )}
-                  {c.respuestas.length > 0 && <span className="pill cons-chat-badge">{t("chatPill")}</span>}
-                </div>
-              </div>
-              <div className="cons-text">{c.texto}</div>
-
-              {c.respuestas.map((r, i) => (
-                <div className="cons-text" key={i}>
-                  <b>{r.departamento} ({r.autor_nombre}):</b> {r.texto}
-                </div>
-              ))}
-
-              {c.estado === "resuelta" && c.respuesta && (
-                <div className="cons-text">
-                  <b>{t("resolvedBy", { name: c.respuesta_autor ?? "" })}</b> {c.respuesta}
+              ) : (
+                <div className="cq-flow">
+                  <span className="hex" style={{ width: "9px", height: "7px", background: "var(--com-acc)", flexShrink: 0 }}></span>
+                  <b>{c.de_departamento}</b> → {c.para_departamentos.join(", ")}
+                  {c.para_cargo ? ` (${c.para_cargo})` : ""}
                 </div>
               )}
-
-              {c.estado === "pendiente" && (puedeResponder || esAutor) && (
-                <div className="cons-actions">
-                  <button
-                    type="button"
-                    className={`btn ${chatOpen[c.id] ? "acc" : ""}`}
-                    onClick={() => setChatOpen((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
-                  >
-                    {t("chatBtn")}
-                  </button>
-                  {esAutor && (
-                    <button
-                      type="button"
-                      className="btn acc"
-                      onClick={() => setResolveOpen((prev) => ({ ...prev, [c.id]: !prev[c.id] }))}
-                    >
-                      {t("resolveBtn")}
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {c.estado === "pendiente" && chatOpen[c.id] && (puedeResponder || esAutor) && (
-                <div className="cons-actions">
-                  <input
-                    type="text"
-                    placeholder={t("msgPlaceholder")}
-                    value={respuestaDrafts[c.id] ?? ""}
-                    onChange={(e) => setRespuestaDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                    className="cons-chat-input"
-                  />
-                  <button className="btn" onClick={() => handleResponder(c)}>
-                    {t("sendBtn")}
-                  </button>
-                </div>
-              )}
-
-              {c.estado === "pendiente" && esAutor && resolveOpen[c.id] && (
-                <div className="cons-actions">
-                  <input
-                    type="text"
-                    placeholder={t("closeNotePlaceholder")}
-                    value={resolverDrafts[c.id] ?? ""}
-                    onChange={(e) => setResolverDrafts((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                    className="cons-chat-input"
-                  />
-                  <button className="btn acc" onClick={() => handleResolve(c.id)}>
-                    {t("confirmResolve")}
-                  </button>
-                </div>
-              )}
+              <div className="comn-meta" style={{ marginTop: "3px" }}>{c.autor_nombre} · {timeAgo(c.created_at, tHp)}</div>
+              <div className="comn-text">{c.texto}</div>
             </div>
-          );
-        })}
+            <div className="cq-foot">
+              {c.estado === "resuelta" ? (
+                <span className="cq-pill cq-pill-res">{t("resolvedPill")}</span>
+              ) : (
+                <span className="cq-pill cq-pill-pend">{t("pendingPill")}</span>
+              )}
+              <span className="cq-replies">
+                {c.respuestas.length === 0 ? t("noReplies") : t("repliesCount", { n: c.respuestas.length })}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );

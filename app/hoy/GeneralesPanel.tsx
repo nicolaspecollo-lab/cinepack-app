@@ -226,7 +226,7 @@ export default function GeneralesPanel({
       <div className="gen-body">
         {sub === "comunicados" && <ComunicadosPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
         {sub === "notificaciones" && <NotificacionesPanel />}
-        {sub === "consultas" && <ConsultasPanel deDepartamento={departamento} fullName={fullName} />}
+        {sub === "consultas" && <ConsultasPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
         {sub === "guion" && <GuionPanel fullName={fullName} canEdit={ce("guion")} />}
         {sub === "guiontec" && <GuionTecnicoPanel fullName={fullName} canEdit={ce("guiontec")} />}
         {sub === "escena3d" && <EscenasPanel departamento={departamento} />}

@@ -471,6 +471,39 @@
   .cp-dash .comn-detail{ padding:16px 16px 28px; }
 }
 
+/* ===== CONSULTAS — rediseño jul-2026, reusa el shell .comn-* de Comunicados
+   (misma tarjeta rectangular con hexágono de esquina) + piezas propias del
+   modelo de conversación (flujo De→Para, hilo de respuestas, resolver). ===== */
+.cp-dash .cq-flow{ font-size:10.5px; color:var(--muted); margin-top:6px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; position:relative; z-index:2; }
+.cp-dash .cq-flow b{ color:var(--text); font-weight:600; }
+.cp-dash .cq-lock{ font-size:10px; color:var(--rose); display:inline-flex; align-items:center; gap:5px; margin-top:6px; position:relative; z-index:2; }
+.cp-dash .cq-foot{ position:relative; z-index:2; display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
+.cp-dash .cq-pill{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9px; text-transform:uppercase; letter-spacing:0.06em; padding:4px 9px; border-radius:0; }
+.cp-dash .cq-pill-pend{ background:rgba(242,221,110,0.14); color:var(--yellow); }
+.cp-dash .cq-pill-res{ background:rgba(159,232,112,0.14); color:var(--lime); }
+.cp-dash .cq-replies{ font-size:10px; color:var(--muted); }
+
+.cp-dash .cq-thread{ position:relative; z-index:2; display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+.cp-dash .cq-bubble{ background:var(--hl1); border:1px solid var(--line); padding:10px 12px; font-size:12px; color:var(--text); line-height:1.5; }
+.cp-dash .cq-bubble-me{ border-left:2px solid var(--acc); }
+.cp-dash .cq-bubble-resuelta{ position:relative; z-index:2; margin-top:14px; border-left:2px solid var(--lime); background:var(--hl1); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:10px 12px; font-size:12px; color:var(--text); }
+.cp-dash .cq-bubble-head{ font-size:9.5px; color:var(--muted); margin-bottom:4px; }
+.cp-dash .cq-bubble-head b{ color:var(--text); }
+
+.cp-dash .cq-reply-row{ position:relative; z-index:2; display:flex; gap:8px; margin-top:16px; }
+.cp-dash .cq-reply-input{ flex:1; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; font-size:12px; border-radius:0; }
+.cp-dash .cq-reply-input:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .cq-resolve-block{ position:relative; z-index:2; margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
+
+.cp-dash .cq-chip-label{ position:relative; z-index:2; font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin:0 0 8px; }
+.cp-dash .cq-chip-row{ position:relative; z-index:2; display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.cp-dash .cq-chip{
+  font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; padding:6px 12px;
+  border:1px solid var(--c-acc); color:var(--c-acc); background:none; cursor:pointer; border-radius:0;
+  appearance:none; -webkit-appearance:none;
+}
+.cp-dash .cq-chip-on{ background:var(--c-acc); color:#0D0D12; }
+
 /* ===== NOTIFICACIONES (Ejecutivo) ===== */
 .cp-dash .noti-item{ cursor:pointer; }
 .cp-dash .noti-item .cons-text{ margin-top:4px; }
