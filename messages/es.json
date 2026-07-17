@@ -764,6 +764,7 @@
     "noReplies": "Sin respuestas aún",
     "repliesCount": "{n, plural, one {# respuesta} other {# respuestas}}",
     "resolvedBy": "Resuelta por {name}:",
+    "chatBtn": "Chat",
     "resolveBtn": "Resolver",
     "msgPlaceholder": "Escribe un mensaje…",
     "sendBtn": "Enviar",

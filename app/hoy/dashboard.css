@@ -490,10 +490,9 @@
 .cp-dash .cq-bubble-head{ font-size:9.5px; color:var(--muted); margin-bottom:4px; }
 .cp-dash .cq-bubble-head b{ color:var(--text); }
 
-.cp-dash .cq-reply-row{ position:relative; z-index:2; display:flex; gap:8px; margin-top:16px; }
-.cp-dash .cq-reply-input{ flex:1; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; font-size:12px; border-radius:0; }
+.cp-dash .cq-reply-row{ position:relative; z-index:2; display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.cp-dash .cq-reply-input{ flex:1; min-width:180px; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 12px; font-size:12px; border-radius:0; }
 .cp-dash .cq-reply-input:focus{ outline:none; border-color:var(--acc); }
-.cp-dash .cq-resolve-block{ position:relative; z-index:2; margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
 
 .cp-dash .cq-chip-label{ position:relative; z-index:2; font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin:0 0 8px; }
 .cp-dash .cq-chip-row{ position:relative; z-index:2; display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }

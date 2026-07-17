@@ -764,6 +764,7 @@
     "noReplies": "Encara sense respostes",
     "repliesCount": "{n, plural, one {# resposta} other {# respostes}}",
     "resolvedBy": "Resolta per {name}:",
+    "chatBtn": "Xat",
     "resolveBtn": "Resol",
     "msgPlaceholder": "Escriu un missatge…",
     "sendBtn": "Envia",

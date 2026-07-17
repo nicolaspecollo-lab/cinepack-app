@@ -91,8 +91,6 @@ export default function ConsultasPanel({
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
-  const [resolveOpen, setResolveOpen] = useState(false);
-  const [resolveDraft, setResolveDraft] = useState("");
 
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -230,22 +228,19 @@ export default function ConsultasPanel({
       .from("consultas")
       .update({
         estado: "resuelta",
-        respuesta: resolveDraft.trim() || null,
+        respuesta: replyDraft.trim() || null,
         respuesta_autor: fullName,
         resolved_at: new Date().toISOString(),
       })
       .eq("id", id);
 
-    setResolveOpen(false);
-    setResolveDraft("");
+    setReplyDraft("");
     await load();
   }
 
   function abrirDetalle(c: Consulta) {
     setExpandedId(c.id);
     setReplyDraft("");
-    setResolveOpen(false);
-    setResolveDraft("");
   }
 
   const filtered = consultas.filter((c) => {
@@ -307,7 +302,7 @@ export default function ConsultasPanel({
             </div>
           )}
 
-          {expandida.estado === "pendiente" && puedeResponder && (
+          {expandida.estado === "pendiente" && (puedeResponder || esAutor) && (
             <div className="cq-reply-row">
               <input
                 type="text"
@@ -317,30 +312,12 @@ export default function ConsultasPanel({
                 onChange={(e) => setReplyDraft(e.target.value)}
               />
               <button type="button" className="cp-btn cp-btn-acc" onClick={() => handleResponder(expandida)}>
-                {t("sendBtn")}
+                {t("chatBtn")}
               </button>
-            </div>
-          )}
-
-          {expandida.estado === "pendiente" && esAutor && (
-            <div className="cq-resolve-block">
-              {!resolveOpen ? (
-                <button type="button" className="cp-btn cp-btn-acc-fill" onClick={() => setResolveOpen(true)}>
+              {esAutor && (
+                <button type="button" className="cp-btn cp-btn-acc-fill" onClick={() => handleResolve(expandida.id)}>
                   {t("resolveBtn")}
                 </button>
-              ) : (
-                <div className="cq-reply-row">
-                  <input
-                    type="text"
-                    className="cq-reply-input"
-                    placeholder={t("closeNotePlaceholder")}
-                    value={resolveDraft}
-                    onChange={(e) => setResolveDraft(e.target.value)}
-                  />
-                  <button type="button" className="cp-btn cp-btn-acc-fill" onClick={() => handleResolve(expandida.id)}>
-                    {t("confirmResolve")}
-                  </button>
-                </div>
               )}
             </div>
           )}
