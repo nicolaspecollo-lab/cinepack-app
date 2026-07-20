@@ -84,12 +84,13 @@ const planFinanciacion: Herramienta = {
   hint: "Ayudas, subvenciones, inversores y coproducción, con estado y plazos.",
   columnas: [
     { key: "fuente", label: "Fuente" },
-    { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Ayuda", "Subvención", "Inversor", "Coproducción", "Preventa"] },
+    { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Ayuda", "Subvención", "Premio", "Inversor", "Coproducción", "Preventa"] },
     { key: "importe", label: "Importe", tipo: "money" },
     { key: "estado", label: "Estado", tipo: "estado", opciones: ["Prospecto", "Solicitado", "Concedido", "Firmado", "Denegado"] },
+    { key: "presentacion", label: "Fecha presentación", tipo: "fecha" },
     { key: "resolucion", label: "Fecha resolución", tipo: "fecha" },
     { key: "condiciones", label: "Condiciones", tipo: "largo" },
-    { key: "bases_doc", label: "Bases / Convocatoria (PDF)", tipo: "archivo" as const },
+    { key: "bases_doc", label: "Bases / Convocatoria (PDF o enlace)", tipo: "archivo" as const },
   ],
 };
 const controlCostos: Herramienta = {

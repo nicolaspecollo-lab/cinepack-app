@@ -1021,7 +1021,9 @@
 .cp-dash .hp-open-tag{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); border:1px solid var(--line); border-radius:0; padding:3px 10px; }
 .cp-dash .hp{ display:flex; flex-direction:column; }
 .cp-dash .hp-hint{ font-size:12px; color:var(--muted); padding:14px 30px 0; margin:0; line-height:1.6; }
-.cp-dash .hp-actions{ padding:14px 30px 30px; display:flex; gap:10px; flex-wrap:wrap; }
+.cp-dash .hp-actions{ padding:14px 30px 30px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.cp-dash .hp-newcol{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.cp-dash .hp-newcol .hp-cell-input{ width:200px; }
 .cp-dash .hp-error{
   display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 30px 0;
   background:rgba(255,90,90,0.08); border:1px solid rgba(255,90,90,0.4); color:var(--rose);
@@ -1440,6 +1442,8 @@
 /* Archivo / Link cells */
 .cp-dash .hp-archivo{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .cp-dash .hp-archivo-preview-wrap{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-archivo-edit{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cp-dash .hp-archivo-link-input{ min-width:160px; }
 .cp-dash .hp-archivo-img-thumb{
   width:44px; height:44px; object-fit:cover; border:1px solid var(--line); border-radius:2px; flex-shrink:0;
   cursor:pointer;
@@ -2720,6 +2724,8 @@
 .cp-dash .hp-cf-fig-nota input:focus{ outline:none; border-bottom-color:var(--acc); }
 
 /* Pipeline de financiación — total € por columna (reusa hp-pend-*) */
+.cp-dash .hp-fin-sortbar{ display:flex; align-items:center; gap:10px; padding:var(--sp-3) var(--gutter) 0; flex-wrap:wrap; }
+.cp-dash .hp-fin-sortbar-label{ font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
 .cp-dash .hp-fin-col-total{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--text); padding:4px var(--sp-3); border-bottom:1px solid var(--line); }
 .cp-dash .hp-fin-card{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-2) var(--sp-3); display:flex; flex-direction:column; gap:6px; }
 .cp-dash .hp-fin-head{ display:flex; align-items:center; gap:6px; }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
-import type { Herramienta, Columna } from "../herramientas";
+import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
@@ -61,6 +61,31 @@ function stripHtml(s: string): string {
     return tmp.textContent || "";
   }
   return s.replace(/<[^>]*>/g, "");
+}
+
+// Compara dos celdas de tipo "fecha". Usa Date.parse (no localeCompare) porque
+// datos reales a veces llegan sin cero-relleno ("2026-7-1"), donde comparar
+// como texto da un orden cronológicamente incorrecto. Las filas sin fecha
+// SIEMPRE van al final, sea cual sea la dirección (asc o desc) — nunca se
+// deben mezclar entre las que sí tienen fecha.
+function compararFecha(va: string, vb: string, dir: "asc" | "desc"): number {
+  const ta = va ? Date.parse(va) : NaN;
+  const tb = vb ? Date.parse(vb) : NaN;
+  const aValida = !isNaN(ta), bValida = !isNaN(tb);
+  if (!aValida && !bValida) return 0;
+  if (!aValida) return 1;
+  if (!bValida) return -1;
+  return dir === "asc" ? ta - tb : tb - ta;
+}
+
+// Orden manual efectivo de una fila: si el usuario ya la arrastró alguna vez
+// hay un valor fraccional en datos._orden (mismo patrón que el Stripboard);
+// si no, se usa la columna real "orden" (orden de creación). Se guarda en
+// datos (jsonb) y no en la columna "orden" para no reescribir esa columna
+// entera en cada drag — solo la fila movida cambia.
+function efOrden(f: Fila): number {
+  const o = parseFloat(f.datos?._orden ?? "");
+  return isNaN(o) ? (f.orden ?? 0) : o;
 }
 
 // Fuentes ofrecidas en el selector de fuente de las celdas de texto largo.
@@ -457,9 +482,9 @@ function HerramientaData({
   }
 
   // Columnas/campos extra definidas por el usuario (libres, se guardan en datos._extra)
-  async function agregarColumnaExtra(label: string) {
+  async function agregarColumnaExtra(label: string, tipo: ColTipo = "texto") {
     const actuales: Columna[] = JSON.parse(meta?.datos?._extra ?? "[]");
-    const next = [...actuales, { key: slugCampo(label), label } as Columna];
+    const next = [...actuales, { key: slugCampo(label), label, tipo } as Columna];
     if (meta) await guardarFila(meta.id, { ...meta.datos, _extra: JSON.stringify(next) });
     else await crearFila({ _extra: JSON.stringify(next) }, -1);
   }
@@ -1239,7 +1264,9 @@ function ArchivoCell({
   const t = useTranslations("hp");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const fileName = path ? path.split("/").pop()?.replace(/^\d+-/, "") ?? path : "";
+  const esEnlace = /^https?:\/\//i.test(path);
+  const [modo, setModo] = useState<"archivo" | "enlace">(esEnlace ? "enlace" : "archivo");
+  const fileName = !esEnlace && path ? path.split("/").pop()?.replace(/^\d+-/, "") ?? path : "";
 
   async function subir(file: File) {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -1258,37 +1285,62 @@ function ArchivoCell({
   }
 
   async function ver() {
+    if (esEnlace) {
+      window.open(path, "_blank", "noopener,noreferrer");
+      return;
+    }
     const supabase = createClient();
     const { data } = await supabase.storage.from("documentos").createSignedUrl(path, 60);
     if (data) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
-  const isImage = /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(fileName);
+  const isImage = !esEnlace && /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(fileName);
 
   return (
     <div className="hp-archivo">
       {path ? (
         <div className="hp-archivo-preview-wrap">
           {isImage && <ImgPreview path={path} />}
-          <button className="hp-archivo-link" onClick={ver} title={fileName}>📎 {fileName}</button>
+          <button className="hp-archivo-link" onClick={ver} title={esEnlace ? path : fileName}>
+            {esEnlace ? <>🔗 {t("openLink")}</> : <>📎 {fileName}</>}
+          </button>
         </div>
       ) : (
         <span className="hp-archivo-empty">—</span>
       )}
       {editable && (
-        <label className="hp-archivo-up">
-          {busy ? "…" : path ? t("change") : t("upload")}
-          <input
-            type="file"
-            style={{ display: "none" }}
-            disabled={busy}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) subir(f);
-              e.target.value = "";
-            }}
-          />
-        </label>
+        <div className="hp-archivo-edit">
+          <div className="cp-seg cp-seg-chip">
+            <button type="button" className={`cp-seg-cell${modo === "archivo" ? " cp-seg-on" : ""}`} onClick={() => setModo("archivo")}>{t("uploadFile")}</button>
+            <button type="button" className={`cp-seg-cell${modo === "enlace" ? " cp-seg-on" : ""}`} onClick={() => setModo("enlace")}>{t("pasteLink")}</button>
+          </div>
+          {modo === "archivo" ? (
+            <label className="hp-archivo-up">
+              {busy ? "…" : !esEnlace && path ? t("change") : t("upload")}
+              <input
+                type="file"
+                style={{ display: "none" }}
+                disabled={busy}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) subir(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          ) : (
+            <input
+              className="hp-cell-input hp-archivo-link-input"
+              type="text"
+              placeholder="https://…"
+              defaultValue={esEnlace ? path : ""}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v) onSave(v);
+              }}
+            />
+          )}
+        </div>
       )}
       {err && <span className="hp-archivo-err">{err}</span>}
     </div>
@@ -3447,6 +3499,7 @@ function FinanciacionPipeline({
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
+  const [ordenFecha, setOrdenFecha] = useState<"none" | "asc" | "desc">("asc");
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
   }
@@ -3459,6 +3512,10 @@ function FinanciacionPipeline({
   const colImporte =
     moneyCols.find((c) => ["importe", "aportacion", "importe_concedido", "importe_solicitado"].includes(c.key)) ?? moneyCols[0];
   const colArchivo = columnas.find((c) => c.tipo === "archivo");
+  // Fecha de presentación: la que importa priorizar en el Tablero (plazos
+  // próximos primero). Se busca por key exacta o por nombre, para que
+  // funcione en cualquiera de las 3 herramientas de este pipeline.
+  const colPresentacion = columnas.find((c) => c.tipo === "fecha" && /presentac/i.test(c.key));
   const usados = new Set([colEstado?.key, colTitulo?.key, colImporte?.key, colArchivo?.key].filter(Boolean) as string[]);
   const colsNotas = columnas.filter((c) => c.tipo === "largo" && !usados.has(c.key));
   const colsChip = columnas.filter((c) => !usados.has(c.key) && !colsNotas.includes(c) && c.tipo !== "largo");
@@ -3466,7 +3523,10 @@ function FinanciacionPipeline({
   if (!colEstado) return null;
   const etapas = [...(colEstado.opciones ?? []), t("noStatus")];
   const porEtapa = etapas.map((op) => {
-    const fs = filas.filter((f) => (f.datos?.[colEstado.key] ?? "") === op || (!f.datos?.[colEstado.key] && op === t("noStatus")));
+    let fs = filas.filter((f) => (f.datos?.[colEstado.key] ?? "") === op || (!f.datos?.[colEstado.key] && op === t("noStatus")));
+    if (colPresentacion && ordenFecha !== "none") {
+      fs = [...fs].sort((a, b) => compararFecha(a.datos?.[colPresentacion.key] ?? "", b.datos?.[colPresentacion.key] ?? "", ordenFecha));
+    }
     const total = colImporte ? fs.reduce((s, f) => s + ejNum(f.datos?.[colImporte.key]), 0) : 0;
     return { nombre: op, fs, total };
   });
@@ -3551,6 +3611,16 @@ function FinanciacionPipeline({
 
   return (
     <>
+      {colPresentacion && filas.length > 0 && (
+        <div className="hp-fin-sortbar">
+          <span className="hp-fin-sortbar-label">{t("finSortLabel")}</span>
+          <div className="cp-seg cp-seg-chip">
+            <button type="button" className={`cp-seg-cell${ordenFecha === "none" ? " cp-seg-on" : ""}`} onClick={() => setOrdenFecha("none")}>{t("finSortNone")}</button>
+            <button type="button" className={`cp-seg-cell${ordenFecha === "asc" ? " cp-seg-on" : ""}`} onClick={() => setOrdenFecha("asc")}>{t("finSortPresAsc")}</button>
+            <button type="button" className={`cp-seg-cell${ordenFecha === "desc" ? " cp-seg-on" : ""}`} onClick={() => setOrdenFecha("desc")}>{t("finSortPresDesc")}</button>
+          </div>
+        </div>
+      )}
       {filas.length === 0 ? (
         <div className="hp-tabla-empty">
           <span className="hex"></span>
@@ -4676,7 +4746,7 @@ export function TablaTool({
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
   onVisionar: (id: string) => void;
-  onAgregarColumna: (label: string) => void;
+  onAgregarColumna: (label: string, tipo?: ColTipo) => void;
   onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
 }) {
   const t = useTranslations("hp");
@@ -4701,9 +4771,11 @@ export function TablaTool({
   const [findReemplazar, setFindReemplazar] = useState("");
   const [condRules, setCondRules] = useState<Array<{id: string; colKey: string; op: string; value: string; color: string}>>([]);
   const [condOpen, setCondOpen] = useState(false);
-  const [localOrder, setLocalOrder] = useState<string[] | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [nuevaColOpen, setNuevaColOpen] = useState(false);
+  const [nuevaColLabel, setNuevaColLabel] = useState("");
+  const [nuevaColTipo, setNuevaColTipo] = useState<ColTipo>("texto");
   const [batchCol, setBatchCol] = useState("");
   const [batchVal, setBatchVal] = useState("");
   const [showExtStats, setShowExtStats] = useState(false);
@@ -4735,13 +4807,10 @@ export function TablaTool({
   }, [filas, columnas]);
 
   const filasFiltradas = useMemo(() => {
-    let res = localOrder
-      ? [...filas].sort((a, b) => {
-          const ia = localOrder.indexOf(a.id);
-          const ib = localOrder.indexOf(b.id);
-          return (ia === -1 ? 9999 : ia) - (ib === -1 ? 9999 : ib);
-        })
-      : [...filas];
+    // Orden base = orden manual persistido (efOrden), no el de llegada del
+    // fetch. Si hay sortKey activo se re-ordena más abajo y este paso solo
+    // importa como fallback.
+    let res = [...filas].sort((a, b) => efOrden(a) - efOrden(b));
     if (busqueda.trim()) {
       const q = busqueda.trim().toLowerCase();
       res = res.filter(f => columnas.some(c => stripHtml(f.datos?.[c.key] ?? "").toLowerCase().includes(q)));
@@ -4755,31 +4824,40 @@ export function TablaTool({
     if (sortKey) {
       const col = columnas.find(c => c.key === sortKey);
       const col2 = sortKey2 ? columnas.find(c => c.key === sortKey2) : null;
+      // Fecha se compara aparte (Date.parse + "sin fecha" siempre al final,
+      // sea cual sea la dirección) — el resto de tipos ya trae la dirección
+      // aplicada al comparar, no se vuelve a invertir después.
       res = [...res].sort((a, b) => {
         const va = stripHtml(a.datos?.[sortKey] ?? "");
         const vb = stripHtml(b.datos?.[sortKey] ?? "");
-        let cmp = 0;
-        if (col?.tipo === "num" || col?.tipo === "money") {
-          cmp = (parseFloat(va || "0") || 0) - (parseFloat(vb || "0") || 0);
+        let cmp: number;
+        if (col?.tipo === "fecha") {
+          cmp = compararFecha(va, vb, sortDir);
+        } else if (col?.tipo === "num" || col?.tipo === "money") {
+          cmp = sortDir === "asc"
+            ? (parseFloat(va || "0") || 0) - (parseFloat(vb || "0") || 0)
+            : (parseFloat(vb || "0") || 0) - (parseFloat(va || "0") || 0);
         } else {
-          cmp = va.localeCompare(vb, "es");
+          cmp = sortDir === "asc" ? va.localeCompare(vb, "es") : vb.localeCompare(va, "es");
         }
         if (cmp === 0 && sortKey2 && col2) {
           const va2 = stripHtml(a.datos?.[sortKey2] ?? "");
           const vb2 = stripHtml(b.datos?.[sortKey2] ?? "");
-          let cmp2 = 0;
-          if (col2.tipo === "num" || col2.tipo === "money") {
-            cmp2 = (parseFloat(va2 || "0") || 0) - (parseFloat(vb2 || "0") || 0);
-          } else {
-            cmp2 = va2.localeCompare(vb2, "es");
+          if (col2.tipo === "fecha") {
+            return compararFecha(va2, vb2, sortDir2);
           }
-          return sortDir2 === "asc" ? cmp2 : -cmp2;
+          if (col2.tipo === "num" || col2.tipo === "money") {
+            return sortDir2 === "asc"
+              ? (parseFloat(va2 || "0") || 0) - (parseFloat(vb2 || "0") || 0)
+              : (parseFloat(vb2 || "0") || 0) - (parseFloat(va2 || "0") || 0);
+          }
+          return sortDir2 === "asc" ? va2.localeCompare(vb2, "es") : vb2.localeCompare(va2, "es");
         }
-        return sortDir === "asc" ? cmp : -cmp;
+        return cmp;
       });
     }
     return res;
-  }, [filas, busqueda, filtros, colHeaderFilter, sortKey, sortDir, sortKey2, sortDir2, columnas, localOrder]);
+  }, [filas, busqueda, filtros, colHeaderFilter, sortKey, sortDir, sortKey2, sortDir2, columnas]);
 
   const totalPaginas = Math.ceil(filasFiltradas.length / ITEMS_POR_PAG);
   const filasPagina = filasFiltradas.length > ITEMS_POR_PAG
@@ -4800,9 +4878,13 @@ export function TablaTool({
       setDraft((d) => { const n = { ...d }; delete n[f.id]; return n; });
     }
   }
-  function pedirColumna() {
-    const label = window.prompt(t("newColumnPrompt"));
-    if (label && label.trim()) onAgregarColumna(label.trim());
+  function confirmarNuevaColumna() {
+    if (!nuevaColLabel.trim()) return;
+    onAgregarColumna(nuevaColLabel.trim(), nuevaColTipo);
+    setNuevaColLabel(""); setNuevaColTipo("texto"); setNuevaColOpen(false);
+  }
+  function cancelarNuevaColumna() {
+    setNuevaColLabel(""); setNuevaColTipo("texto"); setNuevaColOpen(false);
   }
   function toggleSort(key: string) {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -4989,6 +5071,16 @@ export function TablaTool({
     }
   }
 
+  const tieneOrdenManual = filas.some(f => f.datos?._orden !== undefined);
+  function restablecerOrden() {
+    for (const f of filas) {
+      if (f.datos?._orden === undefined) continue;
+      const datos = { ...f.datos };
+      delete datos._orden;
+      onGuardar(f.id, datos, f);
+    }
+  }
+
   // Drag & drop para reordenar filas
   function onDragStart(e: React.DragEvent, id: string) {
     setDraggingId(id); e.dataTransfer.effectAllowed = "move";
@@ -4999,10 +5091,20 @@ export function TablaTool({
   function onDrop(e: React.DragEvent, targetId: string) {
     e.preventDefault();
     if (!draggingId || draggingId === targetId) { setDraggingId(null); setDragOverId(null); return; }
-    const order = localOrder ?? filasFiltradas.map(f => f.id);
-    const from = order.indexOf(draggingId), to = order.indexOf(targetId);
-    const next = [...order]; next.splice(from, 1); next.splice(to, 0, draggingId);
-    setLocalOrder(next); setDraggingId(null); setDragOverId(null);
+    const dragged = filas.find(f => f.id === draggingId);
+    const visibles = filasFiltradas.filter(f => f.id !== draggingId);
+    const to = visibles.findIndex(f => f.id === targetId);
+    if (!dragged || to === -1) { setDraggingId(null); setDragOverId(null); return; }
+    // Nueva posición = promedio del orden efectivo de los vecinos en el punto
+    // de destino (mismo truco que el Stripboard con _orden fraccional). Se
+    // persiste en datos._orden vía onGuardar: sobrevive a recargar/cerrar la
+    // pestaña, a diferencia del estado local anterior que se perdía.
+    const anterior = visibles[to - 1];
+    const siguiente = visibles[to];
+    const ordenAntes = anterior ? efOrden(anterior) : efOrden(siguiente) - 2;
+    const ordenDespues = siguiente ? efOrden(siguiente) : (anterior ? efOrden(anterior) + 2 : 2);
+    onGuardar(draggingId, { ...dragged.datos, _orden: String((ordenAntes + ordenDespues) / 2) }, dragged);
+    setDraggingId(null); setDragOverId(null);
   }
 
   // Navegación de teclado entre celdas
@@ -5138,7 +5240,7 @@ export function TablaTool({
         {/* Herramientas de datos */}
         <ToolMenu label={t("tools")} icon="replace" width={220}>
           {editable && (
-            <button className="tm-item" onClick={pedirColumna}><Icon name="plus" size={13} /><span>{t("addColumnItem")}</span></button>
+            <button className="tm-item" onClick={() => setNuevaColOpen(true)}><Icon name="plus" size={13} /><span>{t("addColumnItem")}</span></button>
           )}
           <button className={`tm-item${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)}>
             <Icon name="replace" size={13} /><span>{t("replace")}</span>
@@ -5501,8 +5603,35 @@ export function TablaTool({
 
       <div className="hp-actions">
         {editable && <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>}
-        {editable && <button className="btn" onClick={pedirColumna}>{t("addColumn")}</button>}
-        {localOrder && <button className="btn" onClick={() => setLocalOrder(null)}>{t("resetOrder")}</button>}
+        {editable && !nuevaColOpen && <button className="btn" onClick={() => setNuevaColOpen(true)}>{t("addColumn")}</button>}
+        {editable && nuevaColOpen && (
+          <div className="hp-newcol">
+            <input
+              className="hp-cell-input"
+              type="text"
+              placeholder={t("newColumnPrompt")}
+              value={nuevaColLabel}
+              onChange={(e) => setNuevaColLabel(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") confirmarNuevaColumna(); if (e.key === "Escape") cancelarNuevaColumna(); }}
+              autoFocus
+            />
+            <div className="cp-seg cp-seg-chip">
+              {(["texto", "fecha", "num"] as const).map((tp) => (
+                <button
+                  key={tp}
+                  type="button"
+                  className={`cp-seg-cell${nuevaColTipo === tp ? " cp-seg-on" : ""}`}
+                  onClick={() => setNuevaColTipo(tp)}
+                >
+                  {t(`colType${tp === "texto" ? "Texto" : tp === "fecha" ? "Fecha" : "Num"}`)}
+                </button>
+              ))}
+            </div>
+            <button className="cp-btn cp-btn-acc" onClick={confirmarNuevaColumna}>{t("addColumnConfirm")}</button>
+            <button className="cp-btn" onClick={cancelarNuevaColumna}>{t("cancel")}</button>
+          </div>
+        )}
+        {editable && tieneOrdenManual && <button className="btn" onClick={restablecerOrden}>{t("resetOrder")}</button>}
       </div>
     </>
   );
