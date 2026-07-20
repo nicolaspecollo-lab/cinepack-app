@@ -1825,6 +1825,9 @@
 .cp-dash .hp-th-inner{
   display:flex; align-items:center; gap:2px;
 }
+.cp-dash .hp-th-label{ display:inline-flex; align-items:center; gap:3px; }
+.cp-dash .hp-th-sort-icon{ flex-shrink:0; }
+.cp-dash .hp-th-sort-icon-2{ opacity:0.55; }
 .cp-dash .hp-col-resizer{
   width:4px; min-height:18px; cursor:col-resize; background:transparent;
   border-right:2px solid transparent; flex-shrink:0; margin-left:auto;

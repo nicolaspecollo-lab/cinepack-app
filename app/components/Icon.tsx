@@ -7,7 +7,7 @@ type IconName =
   | "list" | "list-ordered" | "align-left" | "align-center" | "align-right"
   | "trash" | "x" | "eye" | "pencil" | "check" | "arrow-right" | "arrow-left"
   | "table" | "file-text" | "columns" | "rows"
-  | "chevron-down" | "highlighter" | "type" | "text-color"
+  | "chevron-down" | "chevron-up" | "highlighter" | "type" | "text-color"
   | "filter" | "sliders" | "download" | "sort" | "maximize" | "minimize" | "plus" | "search" | "replace"
   | "folder" | "paperclip" | "grip-vertical" | "upload" | "map-pin" | "clock"
   | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
@@ -38,6 +38,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   columns: <><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M12 3v18" /></>,
   rows: <><rect x="3" y="3" width="18" height="18" rx="1" /><path d="M3 12h18" /></>,
   "chevron-down": <><path d="m6 9 6 6 6-6" /></>,
+  "chevron-up": <><path d="m6 15 6-6 6 6" /></>,
   highlighter: <><path d="m9 11-6 6v3h9l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" /></>,
   type: <><polyline points="4 7 4 4 20 4 20 7" /><line x1="9" y1="20" x2="15" y2="20" /><line x1="12" y1="4" x2="12" y2="20" /></>,
   "text-color": <><path d="m6 16 4-12 4 12" /><path d="M7.5 12h5" /></>,

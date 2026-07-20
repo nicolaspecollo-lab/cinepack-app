@@ -5434,10 +5434,14 @@ export function TablaTool({
                     style={colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined}
                   >
                     <div className="hp-th-inner">
-                      <span onClick={() => toggleSort(c.key)} style={{cursor:"pointer",flex:1}}>
+                      <span className="hp-th-label" onClick={() => toggleSort(c.key)} style={{cursor:"pointer",flex:1}}>
                         {c.label}
-                        {sortKey === c.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                        {sortKey2 === c.key ? (sortDir2 === "asc" ? " ↑²" : " ↓²") : ""}
+                        {sortKey === c.key && (
+                          <Icon name={sortDir === "asc" ? "chevron-up" : "chevron-down"} size={12} className="hp-th-sort-icon" />
+                        )}
+                        {sortKey2 === c.key && (
+                          <Icon name={sortDir2 === "asc" ? "chevron-up" : "chevron-down"} size={10} className="hp-th-sort-icon hp-th-sort-icon-2" />
+                        )}
                       </span>
                       <span className="hp-col-resizer" onMouseDown={e => startResize(e, c.key)} />
                     </div>
