@@ -4079,6 +4079,7 @@
 .cp-dash .cal-field span{ font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
 .cp-dash .cal-field input, .cp-dash .cal-field textarea{ background:var(--bg-2); border:1px solid var(--line); color:var(--text); padding:8px 10px; font-size:13px; border-radius:0; font-family:inherit; }
 .cp-dash .cal-field input:focus, .cp-dash .cal-field textarea:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .cal-field-hint{ font-size:10.5px; color:var(--muted); font-weight:400; text-transform:none; letter-spacing:normal; line-height:1.4; }
 .cp-dash .cal-form-files{ margin-top:14px; }
 .cp-dash .cal-form-actions{ display:flex; gap:9px; flex-wrap:wrap; margin-top:16px; }
 .cp-dash .cal-del{ margin-left:auto; }

@@ -134,10 +134,22 @@ export default function CalendarioProyecto({
     const supabase = createClient();
     const { data: auth } = await supabase.auth.getUser();
     const titulo = ev.datos[CAMPO_TITULAR[ev.tipo]] ?? "";
+    let eventoId = ev.id;
     if (ev.id) {
       await supabase.from("eventos_proyecto").update({ fecha: ev.fecha, tipo: ev.tipo, titulo, datos: ev.datos, aviso_dias: ev.aviso_dias, updated_at: new Date().toISOString() }).eq("id", ev.id);
     } else {
-      await supabase.from("eventos_proyecto").insert({ project_id: projectId, fecha: ev.fecha, tipo: ev.tipo, titulo, datos: ev.datos, aviso_dias: ev.aviso_dias, creado_por: fullName, creado_por_id: auth.user?.id ?? null });
+      const { data } = await supabase
+        .from("eventos_proyecto")
+        .insert({ project_id: projectId, fecha: ev.fecha, tipo: ev.tipo, titulo, datos: ev.datos, aviso_dias: ev.aviso_dias, creado_por: fullName, creado_por_id: auth.user?.id ?? null })
+        .select("id")
+        .single();
+      eventoId = data?.id;
+    }
+    // Un evento tipo "financiación" es la misma entidad que una convocatoria
+    // del Plan de financiación (Ejecutivo → Exclusivas) — se crea/actualiza
+    // la fila ligada para no tener que cargar el dato dos veces.
+    if (ev.tipo === "financiacion" && eventoId) {
+      await sincronizarConPlanFinanciacion(eventoId);
     }
     setEdit(null);
     await load();
@@ -146,11 +158,29 @@ export default function CalendarioProyecto({
 
   async function borrar(id: string) {
     if (!window.confirm(t("confirmDelete"))) return;
+    const evento = eventos.find((e) => e.id === id);
+    // Antes de borrar: si está ligado a una convocatoria, se le limpia la
+    // fecha/vínculo (la fila no se destruye, puede tener más datos cargados).
+    if (evento?.tipo === "financiacion") {
+      await sincronizarConPlanFinanciacion(id, true);
+    }
     const supabase = createClient();
     await supabase.from("eventos_proyecto").delete().eq("id", id);
     setEdit(null);
     await load();
     window.dispatchEvent(new CustomEvent("cp-cal-changed"));
+  }
+
+  async function sincronizarConPlanFinanciacion(eventoId: string, eliminar = false) {
+    try {
+      await fetch("/api/plan-financiacion/sincronizar-desde-evento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ evento_id: eventoId, eliminar }),
+      });
+    } catch {
+      // best-effort: no bloquea el guardado/borrado principal del evento
+    }
   }
 
   const chipsDelDia = selDia ? porDia.get(selDia) ?? [] : [];
@@ -301,6 +331,7 @@ function EventoForm({
         <label className="cal-field">
           <span>{t("fDate")}</span>
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          {tipo === "financiacion" && <small className="cal-field-hint">{t("fDateFinanciacionHint")}</small>}
         </label>
         {campos.map((c) => c.tipo === "opciones" ? (
           <div key={c.key} className="cal-field wide">

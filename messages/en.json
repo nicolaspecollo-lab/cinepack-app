@@ -2587,6 +2587,8 @@
     "newEventOn": "New event · {fecha}",
     "eventType": "event type",
     "fDate": "Date",
+    "fDateFinanciacionHint": "This is the submission deadline for the opportunity.",
+    "deadlinePrefix": "Deadline: {fecha}",
     "fAlert": "Alert (days before)",
     "save": "Save",
     "cancel": "Cancel",

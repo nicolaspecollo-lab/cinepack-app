@@ -90,7 +90,7 @@ function efOrden(f: Fila): number {
 
 // Campos de una convocatoria de Plan de financiación que, al cambiar, deben
 // re-sincronizar sus hitos en Pulso (vía /api/plan-financiacion/sincronizar-hito).
-const CAMPOS_SYNC_PULSO = new Set(["presentacion", "resolucion", "fuente", "tipo", "importe", "estado", "condiciones"]);
+const CAMPOS_SYNC_PULSO = new Set(["presentacion", "resolucion", "fuente", "tipo", "organismo", "premio", "importe", "estado", "condiciones"]);
 
 // Fuentes ofrecidas en el selector de fuente de las celdas de texto largo.
 const CELL_FONTS: { label: string; value: string }[] = [

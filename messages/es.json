@@ -2587,6 +2587,8 @@
     "newEventOn": "Nuevo evento · {fecha}",
     "eventType": "tipo de evento",
     "fDate": "Fecha",
+    "fDateFinanciacionHint": "Es la fecha límite (deadline) de presentación de la convocatoria.",
+    "deadlinePrefix": "Cierre de Convocatoria: {fecha}",
     "fAlert": "Aviso (días antes)",
     "save": "Guardar",
     "cancel": "Cancelar",

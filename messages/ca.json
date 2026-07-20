@@ -2587,6 +2587,8 @@
     "newEventOn": "Nou esdeveniment · {fecha}",
     "eventType": "tipus d'esdeveniment",
     "fDate": "Data",
+    "fDateFinanciacionHint": "És la data límit (deadline) de presentació de la convocatòria.",
+    "deadlinePrefix": "Tancament de convocatòria: {fecha}",
     "fAlert": "Avís (dies abans)",
     "save": "Desar",
     "cancel": "Cancel·lar",

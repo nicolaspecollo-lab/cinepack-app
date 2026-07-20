@@ -9,6 +9,8 @@
 // aparece en varios cargos: así editan todos sobre los mismos datos.
 // ===========================================================================
 
+import { CATEGORIAS_FINANCIACION } from "./hoy/eventosCalendario";
+
 export type ToolKind = "tabla" | "nota" | "checklist" | "ficha" | "galeria" | "accesos";
 
 export type ColTipo = "texto" | "largo" | "num" | "money" | "fecha" | "estado" | "archivo" | "link";
@@ -84,10 +86,12 @@ const planFinanciacion: Herramienta = {
   hint: "Ayudas, subvenciones, inversores y coproducción, con estado y plazos.",
   columnas: [
     { key: "fuente", label: "Fuente" },
-    { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Ayuda", "Subvención", "Premio", "Inversor", "Coproducción", "Preventa"] },
+    { key: "tipo", label: "Tipo", tipo: "estado", opciones: CATEGORIAS_FINANCIACION },
+    { key: "organismo", label: "Organismo" },
     { key: "importe", label: "Importe", tipo: "money" },
+    { key: "premio", label: "Premio (cash o especie)" },
     { key: "estado", label: "Estado", tipo: "estado", opciones: ["Prospecto", "Solicitado", "Concedido", "Firmado", "Denegado"] },
-    { key: "presentacion", label: "Fecha presentación", tipo: "fecha" },
+    { key: "presentacion", label: "Fecha presentación (deadline)", tipo: "fecha" },
     { key: "resolucion", label: "Fecha resolución", tipo: "fecha" },
     { key: "condiciones", label: "Condiciones", tipo: "largo" },
     { key: "bases_doc", label: "Bases / Convocatoria (PDF o enlace)", tipo: "archivo" as const },

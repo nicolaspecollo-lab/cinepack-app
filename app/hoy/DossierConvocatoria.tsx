@@ -46,6 +46,19 @@ export default function DossierConvocatoria({
     await supabase.from("eventos_proyecto")
       .update({ tipo: nuevo.tipo, fecha: nuevo.fecha, titulo: nuevoTitulo, datos: nuevo.datos, aviso_dias: nuevo.aviso_dias, updated_at: new Date().toISOString() })
       .eq("id", ev.id);
+    // Mismo criterio que CalendarioProyecto.tsx: un evento "financiación" es
+    // la misma entidad que una convocatoria del Plan de financiación.
+    if (nuevo.tipo === "financiacion") {
+      try {
+        await fetch("/api/plan-financiacion/sincronizar-desde-evento", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ evento_id: ev.id }),
+        });
+      } catch {
+        // best-effort
+      }
+    }
     setEv({ ...ev, ...nuevo, titulo: nuevoTitulo });
     setEditing(false);
     window.dispatchEvent(new CustomEvent("cp-cal-changed"));
@@ -66,7 +79,7 @@ export default function DossierConvocatoria({
             <div className="dsr-head-main">
               <div className="dsr-tipo" style={{ color }}>{ev.datos?.categoria || tEt(ev.tipo)}</div>
               <div className="dsr-titulo">{titulo}</div>
-              <div className="dsr-fecha">{fmt(ev.fecha)}</div>
+              <div className="dsr-fecha">{ev.tipo === "financiacion" ? t("deadlinePrefix", { fecha: fmt(ev.fecha) }) : fmt(ev.fecha)}</div>
               {enlace && (
                 <a className="dsr-enlace" href={hrefDe(enlace)} target="_blank" rel="noopener noreferrer">
                   {t("openLink")} ↗
@@ -148,7 +161,11 @@ function InfoForm({
         ))}
       </div>
       <div className="cal-form-grid">
-        <label className="cal-field"><span>{t("fDate")}</span><input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} /></label>
+        <label className="cal-field">
+          <span>{t("fDate")}</span>
+          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+          {tipo === "financiacion" && <small className="cal-field-hint">{t("fDateFinanciacionHint")}</small>}
+        </label>
         {campos.map((c) => c.tipo === "opciones" ? (
           <div key={c.key} className="cal-field wide">
             <span>{c.label}</span>

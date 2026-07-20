@@ -18,9 +18,10 @@ import {
   type EventoProyecto,
 } from "./eventosCalendario";
 
-type Punto =
+type PuntoBase =
   | { kind: "hito"; etapa: EtapaKey; fecha: string; x: number }
   | { kind: "evento"; ev: EventoProyecto; fecha: string; x: number };
+type Punto = PuntoBase & { carril: 0 | 1; nivel: number };
 
 const DIA = 86400000;
 const ms = (iso: string) => new Date(`${iso}T00:00:00`).getTime();
@@ -29,6 +30,27 @@ const ZOOM_MAX = 8;
 const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
 const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
   Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+
+// Asigna cada punto a un carril (0=arriba, 1=abajo) y, si aun así quedaría
+// demasiado cerca del último punto puesto en ese carril, a un "nivel" extra
+// (más lejos de la línea) — para que dos convocatorias cercanas en el tiempo
+// nunca se pisen el texto. Antes se alternaba solo por índice par/impar, que
+// no evita el solape cuando hay varios eventos muy juntos en fecha.
+const GAP_MIN_PX = 96;
+const LANE_STEP = 58; // px que se aleja cada nivel extra de apilado
+function asignarCarriles(puntos: PuntoBase[]): Punto[] {
+  const ordenados = [...puntos].sort((a, b) => a.x - b.x);
+  const ultimoX: [number, number] = [-Infinity, -Infinity];
+  const ultimoNivel: [number, number] = [0, 0];
+  return ordenados.map((p) => {
+    const carril: 0 | 1 = ultimoX[0] <= ultimoX[1] ? 0 : 1;
+    const solapa = p.x - ultimoX[carril] < GAP_MIN_PX;
+    const nivel = solapa ? Math.min(2, ultimoNivel[carril] + 1) : 0;
+    ultimoX[carril] = p.x;
+    ultimoNivel[carril] = nivel;
+    return { ...p, carril, nivel };
+  });
+}
 
 export default function CicloTimeline() {
   const t = useTranslations("ciclo");
@@ -97,10 +119,10 @@ export default function CicloTimeline() {
     const width = Math.max(700, dias * pxDia + pad * 2);
     const xDe = (m: number) => pad + ((m - min) / DIA) * pxDia;
 
-    const puntos: Punto[] = [
+    const puntos: Punto[] = asignarCarriles([
       ...etapasDef.map((e) => ({ kind: "hito" as const, etapa: e.key, fecha: e.inicio, x: xDe(ms(e.inicio)) })),
       ...eventos.map((e) => ({ kind: "evento" as const, ev: e, fecha: e.fecha, x: xDe(ms(e.fecha)) })),
-    ].sort((a, b) => a.x - b.x);
+    ]);
 
     const segmentos = etapasDef.map((e, i) => {
       const x1 = xDe(ms(e.inicio));
@@ -233,23 +255,30 @@ export default function CicloTimeline() {
           <div className="ct-hoy-line" style={{ left: hoyX }} />
           <div className="ct-hoy-badge" style={{ left: hoyX }}>{t("today")}</div>
 
-          {puntos.map((p, i) => {
-            const above = i % 2 === 0;
+          {puntos.map((p) => {
+            const above = p.carril === 0;
             const id = p.kind === "hito" ? `h-${p.etapa}` : `e-${p.ev.id}`;
             const color = p.kind === "hito" ? COLOR_ETAPA[p.etapa] : COLOR_ETAPA[p.ev.tipo];
             const size = p.kind === "hito" ? 24 : 20;
             const titulo = p.kind === "hito" ? tEt(p.etapa) : (p.ev.titulo || p.ev.datos?.[CAMPO_TITULAR[p.ev.tipo]] || tEt(p.ev.tipo));
             const sub = p.kind === "hito" ? t("stageMilestone") : (p.ev.datos?.categoria || tEt(p.ev.tipo));
+            const esFinanciacion = p.kind === "evento" && p.ev.tipo === "financiacion";
+            const fechaTxt = esFinanciacion ? t("deadlinePrefix", { fecha: fmt(p.fecha) }) : fmt(p.fecha);
             const isSel = id === sel;
+            // nivel > 0: dos puntos quedaron demasiado cerca en el tiempo —
+            // se aleja más de la línea para que el texto nunca se pise.
+            const labTop = above ? 14 - p.nivel * LANE_STEP : 130 + p.nivel * LANE_STEP;
+            const stemTop = above ? 70 - p.nivel * LANE_STEP : 102;
+            const stemHeight = above ? 28 + p.nivel * LANE_STEP : 26 + p.nivel * LANE_STEP;
             return (
               <div key={id} className="ct-ev" style={{ left: p.x }}
                 onClick={() => { const m = (railRef.current as (HTMLElement & { _moved?: () => boolean }) | null)?._moved?.(); if (!m) setSel(isSel ? null : id); }}>
-                <div className={`ct-lab ${above ? "up" : "down"}`}>
+                <div className={`ct-lab ${above ? "up" : "down"}`} style={{ top: labTop }}>
                   <div className="ct-lab-t">{titulo}</div>
                   <div className="ct-lab-s">{sub}</div>
-                  <div className="ct-lab-d">{fmt(p.fecha)}</div>
+                  <div className="ct-lab-d">{fechaTxt}</div>
                 </div>
-                <div className={`ct-stem ${above ? "up" : "down"}`} />
+                <div className={`ct-stem ${above ? "up" : "down"}`} style={{ top: stemTop, height: stemHeight }} />
                 <span className="ct-mark-plate" style={{ width: size, height: size, top: 100 - size / 2 }} />
                 <span className="cp-iso ct-mark" style={{ width: size, height: size, top: 100 - size / 2, background: isSel ? "var(--text)" : color }} />
               </div>
@@ -264,7 +293,7 @@ export default function CicloTimeline() {
             <div>
               <div className="ct-det-tipo" style={{ color: COLOR_ETAPA[selPunto.ev.tipo] }}>{selPunto.ev.datos?.categoria || tEt(selPunto.ev.tipo)}</div>
               <div className="ct-det-title">{selPunto.ev.titulo || selPunto.ev.datos?.[CAMPO_TITULAR[selPunto.ev.tipo]] || tEt(selPunto.ev.tipo)}</div>
-              <div className="ct-det-date">{fmt(selPunto.ev.fecha)}</div>
+              <div className="ct-det-date">{selPunto.ev.tipo === "financiacion" ? t("deadlinePrefix", { fecha: fmt(selPunto.ev.fecha) }) : fmt(selPunto.ev.fecha)}</div>
             </div>
             <div className="ct-det-actions">
               <button className="cp-btn cp-btn-acc" onClick={() => abrirDossier(selPunto.ev.id)}>{t("openDossier")}</button>

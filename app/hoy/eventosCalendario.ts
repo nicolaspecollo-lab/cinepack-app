@@ -12,12 +12,16 @@ export type CampoEvento = {
   opciones?: string[];
 };
 
-// Categorías de un evento de financiación (mercado, ayuda, lab…). Se muestran
-// como la etiqueta chica del evento en la línea de tiempo, el calendario y el
-// dossier, para distinguir un mercado de una ayuda de un vistazo.
+// Categorías de una convocatoria/evento de financiación (mercado, ayuda,
+// lab…). Catálogo ÚNICO compartido con el campo "Tipo" del Plan de
+// financiación (herramientas.ts) — evento y convocatoria son la misma
+// entidad vista desde Pulso o desde Ejecutivo/Exclusivas, así que usan
+// exactamente las mismas opciones para no desincronizarse.
 export const CATEGORIAS_FINANCIACION = [
   "Ayuda pública",
   "Subvención",
+  "Premio",
+  "Inversor",
   "Lab de desarrollo",
   "Mercado / Foro",
   "Pitching",
@@ -60,6 +64,11 @@ export const CAMPOS_POR_TIPO: Record<EventoTipo, CampoEvento[]> = {
     { key: "premio", label: "Premio (cash o especie)" },
     { key: "importe", label: "Importe", tipo: "money" },
     { key: "estado", label: "Estado" },
+    // La fecha propia del evento (única, columna `fecha`) ES la fecha de
+    // presentación/deadline — así se aclara en el formulario. La resolución
+    // es solo informativa acá (no genera una segunda marca en la línea de
+    // tiempo): se sincroniza como dato de la fila del Plan de financiación.
+    { key: "resolucion", label: "Fecha resolución (informativa)", tipo: "fecha" },
     { key: "condiciones", label: "Nota de las bases", tipo: "largo" },
   ],
   preproduccion: [
