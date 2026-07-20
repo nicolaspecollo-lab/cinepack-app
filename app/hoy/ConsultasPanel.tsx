@@ -171,24 +171,28 @@ export default function ConsultasPanel({
 
     const destinatario = miembrosProyecto.find((m) => m.user_id === privateRecipientId);
 
-    const { error } = await supabase.from("consultas").insert({
-      project_id: projectId,
-      autor_id: user.id,
-      autor_nombre: fullName,
-      de_departamento: deDepartamento,
-      para_departamentos: paraDepartamentos,
-      para_cargo: paraDepartamentos.length === 1 ? destCargo.trim() || null : null,
-      titulo,
-      texto,
-      is_private: isPrivate,
-      private_recipient_id: isPrivate ? privateRecipientId : null,
-      private_recipient_nombre: isPrivate ? destinatario?.full_name ?? null : null,
-    });
+    const { data: nueva, error } = await supabase
+      .from("consultas")
+      .insert({
+        project_id: projectId,
+        autor_id: user.id,
+        autor_nombre: fullName,
+        de_departamento: deDepartamento,
+        para_departamentos: paraDepartamentos,
+        para_cargo: paraDepartamentos.length === 1 ? destCargo.trim() || null : null,
+        titulo,
+        texto,
+        is_private: isPrivate,
+        private_recipient_id: isPrivate ? privateRecipientId : null,
+        private_recipient_nombre: isPrivate ? destinatario?.full_name ?? null : null,
+      })
+      .select("id")
+      .single();
 
     setSending(false);
 
-    if (error) {
-      setMsg({ type: "err", text: error.message });
+    if (error || !nueva) {
+      setMsg({ type: "err", text: error?.message ?? t("noProject") });
       return;
     }
 
@@ -200,6 +204,13 @@ export default function ConsultasPanel({
     setPrivateRecipientId("");
     setShowForm(false);
     await load();
+
+    // Aviso por mail a quien corresponda — no bloquea el flujo si falla.
+    fetch("/api/consultas/notificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consulta_id: nueva.id }),
+    }).catch(() => {});
   }
 
   function toggleParaDepartamento(d: string) {

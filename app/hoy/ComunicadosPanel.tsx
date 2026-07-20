@@ -278,6 +278,14 @@ export default function ComunicadosPanel({
     setArchivos([]);
     setShowForm(false);
     await load();
+
+    // Aviso por mail al resto del proyecto — no bloquea la UI ni el flujo si
+    // falla (el comunicado ya quedó publicado; el mail es solo un aviso).
+    fetch("/api/comunicados/notificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ comunicado_id: nuevo.id }),
+    }).catch(() => {});
   }
 
   async function descargarAdjunto(a: Adjunto) {
