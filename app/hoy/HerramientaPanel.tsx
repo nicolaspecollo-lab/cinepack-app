@@ -88,6 +88,10 @@ function efOrden(f: Fila): number {
   return isNaN(o) ? (f.orden ?? 0) : o;
 }
 
+// Campos de una convocatoria de Plan de financiación que, al cambiar, deben
+// re-sincronizar sus hitos en Pulso (vía /api/plan-financiacion/sincronizar-hito).
+const CAMPOS_SYNC_PULSO = new Set(["presentacion", "resolucion", "fuente", "tipo", "importe", "estado", "condiciones"]);
+
 // Fuentes ofrecidas en el selector de fuente de las celdas de texto largo.
 const CELL_FONTS: { label: string; value: string }[] = [
   { label: "Sans", value: "Arial, Helvetica, sans-serif" },
@@ -343,6 +347,11 @@ function HerramientaData({
     } else {
       setFilas((prev) => [...prev, data as Fila]);
       pushHistorial({ id: crypto.randomUUID(), tipo: "crea", filaId: data.id, esMeta: false });
+      // Fila duplicada con fechas ya cargadas (Vista Tabla → "Duplicar fila"):
+      // genera su propio hito en Pulso en vez de esperar a la próxima edición.
+      if (herramienta.id === "ej-plan-financiacion" && (datosIniciales.presentacion || datosIniciales.resolucion)) {
+        sincronizarPulsoFinanciacion(data.id);
+      }
     }
     return data as Fila;
   }
@@ -384,10 +393,38 @@ function HerramientaData({
     }
     setSaveState("saved");
     saveTimer.current = setTimeout(() => setSaveState("idle"), 1800);
+    if (herramienta.id === "ej-plan-financiacion" && Object.keys(cambios).some((k) => CAMPOS_SYNC_PULSO.has(k))) {
+      sincronizarPulsoFinanciacion(id);
+    }
+  }
+
+  // Crea/actualiza/borra los hitos en Pulso (eventos_proyecto) ligados a una
+  // convocatoria de Plan de financiación. Ver /api/plan-financiacion/sincronizar-hito
+  // para el porqué de pasar por un endpoint (RLS de eventos_proyecto es más
+  // estricta que la de herramienta_filas). Best-effort: si Pulso falla, no
+  // bloquea el guardado principal de la convocatoria, ya hecho antes de esto.
+  async function sincronizarPulsoFinanciacion(filaId: string, eliminar = false) {
+    try {
+      const res = await fetch("/api/plan-financiacion/sincronizar-hito", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fila_id: filaId, eliminar }),
+      });
+      const json = await res.json().catch(() => null);
+      if (json?.datos) {
+        filasRef.current = filasRef.current.map((f) => (f.id === filaId ? { ...f, datos: { ...f.datos, ...json.datos } } : f));
+        setFilas(filasRef.current);
+      }
+    } catch {
+      // silencioso: ver comentario arriba
+    }
   }
 
   async function borrarFila(id: string) {
     const fila = filasRef.current.find((f) => f.id === id);
+    if (herramienta.id === "ej-plan-financiacion") {
+      await sincronizarPulsoFinanciacion(id, true);
+    }
     setFilas((prev) => prev.filter((f) => f.id !== id));
     const supabase = createClient();
     const { error: err } = await supabase.from("herramienta_filas").delete().eq("id", id);
@@ -1115,7 +1152,14 @@ function HerramientaData({
           herramientaId={herramienta.id}
           herramientaNombre={herramienta.nombre}
           onCrear={() => crearFila({})}
-          onDuplicar={(f) => crearFila({ ...f.datos })}
+          onDuplicar={(f) => {
+            // Nunca heredar el vínculo con un hito de Pulso: si no se limpia,
+            // la fila duplicada y la original pelean por el mismo evento.
+            const datos = { ...f.datos };
+            delete datos._pulso_evt_presentacion;
+            delete datos._pulso_evt_resolucion;
+            crearFila(datos);
+          }}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
           onVisionar={visionar}
