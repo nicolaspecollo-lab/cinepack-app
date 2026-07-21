@@ -5531,6 +5531,15 @@ export function TablaTool({
                         const dataBarPct = isNum && maxVals[c.key]
                           ? Math.min(100, (parseFloat(cellVal || "0") || 0) / maxVals[c.key] * 100)
                           : 0;
+                        const esFrozen = colIdx === 0;
+                        // La celda congelada tiene que quedar SIEMPRE opaca (si no, se
+                        // transparenta y deja ver las columnas que scrollean por detrás
+                        // — ver dashboard.css). Los tintes (color de fila, formato
+                        // condicional) se pintan con box-shadow inset sobre ese fondo
+                        // opaco en vez de reemplazar el background.
+                        const tintesFrozen = esFrozen
+                          ? [rowColor && `inset 0 0 0 999px ${rowColor}18`, condColor && `inset 0 0 0 999px ${condColor}44`].filter(Boolean) as string[]
+                          : [];
                         return (
                           <td
                             key={c.key}
@@ -5538,11 +5547,13 @@ export function TablaTool({
                               "hp-td-cell",
                               c.tipo === "largo" ? "hp-td-largo" : "",
                               (c.tipo === "num" || c.tipo === "money") ? "hp-td-num" : "",
-                              colIdx === 0 ? "hp-td-frozen" : "",
+                              esFrozen ? "hp-td-frozen" : "",
                             ].filter(Boolean).join(" ")}
                             style={{
                               ...(colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined),
-                              ...(condColor ? {background: condColor + "44"} : undefined),
+                              ...(esFrozen
+                                ? (tintesFrozen.length ? {boxShadow: [...tintesFrozen, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")} : undefined)
+                                : (condColor ? {background: condColor + "44"} : undefined)),
                             }}
                             onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
                           >

@@ -1835,6 +1835,25 @@
   box-shadow:2px 0 4px rgba(0,0,0,0.15);
 }
 .cp-dash .hp-table thead .hp-th-frozen{ z-index:3; }
+/* Los estados de fila (hover/seleccionada/drag-over) pintan un color de
+   overlay TRANSLÚCIDO (--hl1, rgba(255,255,255,0.02) etc.) pensado para
+   layer sobre un fondo opaco — pero como reemplazan el background entero,
+   en la columna congelada eso dejaba ver el contenido de las columnas
+   scrolleadas por detrás. Fix: la celda congelada mantiene su fondo opaco
+   var(--bg-2) siempre, y el tinte del estado se pinta ENCIMA con un
+   box-shadow inset (que sí compone sobre un fondo opaco sin transparentar). */
+.cp-dash .hp-table tbody tr:hover td.hp-td-frozen{
+  background:var(--bg-2);
+  box-shadow:inset 0 0 0 999px var(--hl1), 2px 0 4px rgba(0,0,0,0.15);
+}
+.cp-dash .hp-row-selected td.hp-td-frozen{
+  background:var(--bg-2) !important;
+  box-shadow:inset 0 0 0 999px rgba(159,232,112,0.06), 2px 0 4px rgba(0,0,0,0.15);
+}
+.cp-dash .hp-row-drag-over td.hp-td-frozen{
+  background:var(--bg-2) !important;
+  box-shadow:inset 0 0 0 999px rgba(159,232,112,0.14), 2px 0 4px rgba(0,0,0,0.15);
+}
 
 /* Resize handle en headers */
 .cp-dash .hp-th-inner{
@@ -3966,8 +3985,12 @@
 .cp-dash .cdp-sel-btn:hover{ border-color:var(--acc); }
 .cp-dash .cdp-sel-ph{ color:var(--muted); }
 .cp-dash .cdp-sel-caret{ color:var(--acc); font-size:10px; }
-.cp-dash .cdp-sel-menu{ position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:30; max-height:240px; overflow:auto;
-  background:var(--bg-2); border:1px solid var(--acc); display:flex; flex-direction:column; }
+/* Portal a document.body (o .cp-dash): las coordenadas top/left vienen de
+   getBoundingClientRect del botón, por eso position:fixed (viewport) y no
+   absolute — así nunca queda recortado por el overflow:auto del popover de
+   un ToolMenu que lo contiene. z-index por encima de .tm-menu (40). */
+.cp-dash .cdp-sel-menu{ position:fixed; z-index:50; max-height:280px; overflow:auto;
+  background:var(--bg-2); border:1px solid var(--acc); box-shadow:0 10px 28px var(--shadow); display:flex; flex-direction:column; }
 .cp-dash .cdp-sel-opt{ text-align:left; padding:9px 11px; background:none; border:none; border-bottom:1px solid var(--line);
   color:var(--text); font-size:12.5px; font-family:inherit; cursor:pointer; }
 .cp-dash .cdp-sel-opt:last-child{ border-bottom:none; }

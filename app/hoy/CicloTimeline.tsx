@@ -36,16 +36,27 @@ const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
 // (más lejos de la línea) — para que dos convocatorias cercanas en el tiempo
 // nunca se pisen el texto. Antes se alternaba solo por índice par/impar, que
 // no evita el solape cuando hay varios eventos muy juntos en fecha.
-const GAP_MIN_PX = 96;
+//
+// GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho centrada
+// en el punto (left:-74px) — con menos de ~148px entre dos centros del MISMO
+// carril, los textos se pisan sí o sí aunque estén en carriles alternados de
+// índice. Con zoom bajo y muchos eventos en pocos días esto no alcanza solo
+// con 2 carriles: por eso además apila hasta 5 niveles (cada uno se aleja
+// LANE_STEP px más de la línea) antes de aceptar que dos puntos compartan
+// carril y nivel.
+const GAP_MIN_PX = 160;
+const NIVEL_MAX = 4;
 const LANE_STEP = 58; // px que se aleja cada nivel extra de apilado
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
   const ordenados = [...puntos].sort((a, b) => a.x - b.x);
   const ultimoX: [number, number] = [-Infinity, -Infinity];
   const ultimoNivel: [number, number] = [0, 0];
   return ordenados.map((p) => {
+    // Carril = el que tenga el último punto más lejos (maximiza el hueco
+    // disponible); si igual de lejos, alterna arriba primero.
     const carril: 0 | 1 = ultimoX[0] <= ultimoX[1] ? 0 : 1;
     const solapa = p.x - ultimoX[carril] < GAP_MIN_PX;
-    const nivel = solapa ? Math.min(2, ultimoNivel[carril] + 1) : 0;
+    const nivel = solapa ? Math.min(NIVEL_MAX, ultimoNivel[carril] + 1) : 0;
     ultimoX[carril] = p.x;
     ultimoNivel[carril] = nivel;
     return { ...p, carril, nivel };
@@ -96,7 +107,7 @@ export default function CicloTimeline() {
   }, [ciclo]);
 
   // Dominio temporal y escala.
-  const { puntos, width, hoyX, segmentos } = useMemo(() => {
+  const { puntos, width, hoyX, segmentos, maxNivel } = useMemo(() => {
     const etapasDef = ETAPAS
       .map((e) => ({ key: e.key, inicio: fechas?.[e.key] ?? null }))
       .filter((e): e is { key: EtapaKey; inicio: string } => !!e.inicio)
@@ -109,7 +120,7 @@ export default function CicloTimeline() {
     ].filter((n) => !isNaN(n));
 
     if (fechasTodas.length === 0) {
-      return { puntos: [] as Punto[], width: 700, hoyX: 60, segmentos: [] as { x1: number; x2: number; color: string }[] };
+      return { puntos: [] as Punto[], width: 700, hoyX: 60, segmentos: [] as { x1: number; x2: number; color: string }[], maxNivel: 0 };
     }
     const min = Math.min(...fechasTodas) - 10 * DIA;
     const max = Math.max(...fechasTodas) + 20 * DIA;
@@ -130,7 +141,8 @@ export default function CicloTimeline() {
       return { x1, x2, color: COLOR_ETAPA[e.key] };
     });
 
-    return { puntos, width, hoyX: xDe(Date.now()), segmentos };
+    const maxNivel = puntos.reduce((m, p) => Math.max(m, p.nivel), 0);
+    return { puntos, width, hoyX: xDe(Date.now()), segmentos, maxNivel };
   }, [fechas, eventos, zoom]);
 
   // Arrastre horizontal + zoom (rueda con Ctrl = pellizco de trackpad, y
@@ -246,7 +258,7 @@ export default function CicloTimeline() {
         <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z * 1.4))} disabled={zoom >= ZOOM_MAX} aria-label={t("zoomIn")}>+</button>
       </div>
 
-      <div className="ct-rail" ref={railRef}>
+      <div className="ct-rail" ref={railRef} style={maxNivel > 0 ? { paddingTop: maxNivel * LANE_STEP, paddingBottom: maxNivel * LANE_STEP } : undefined}>
         <div className="ct-track" style={{ width }}>
           <div className="ct-line" style={{ left: 60, width: width - 90 }} />
           {segmentos.map((s, i) => (
