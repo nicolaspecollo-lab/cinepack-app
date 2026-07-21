@@ -55,9 +55,9 @@ const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
 // fecha cruda en vez de coincidir con el rombo que ahora se movió, el color
 // de una etapa terminaba debajo del rombo de otra.
 //
-// GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho
-// centrada en el punto (left:-74px).
-const GAP_MIN_PX = 160;
+// GAP_MIN_PX = 182 porque la etiqueta (.ct-lab) mide 170px de ancho
+// centrada en el punto (left:-85px), + margen.
+const GAP_MIN_PX = 182;
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
   const ordenados = [...puntos].sort((a, b) => a.x - b.x);
   let ultimoX = -Infinity;
@@ -246,8 +246,19 @@ export default function CicloTimeline() {
   return (
     <div className="ct-wrap">
       <div className="ct-head">
-        <div className="ct-head-etapa">
+        {/* Fila 1: eyebrow ↔ zoom, misma línea de base. Fila 2: nombre de
+            etapa + rango de fechas ↔ barra de avance, misma línea de base.
+            Antes el zoom vivía en un bloque aparte debajo de todo, sin
+            alinearse con nada — quedaba descuadrado a simple vista. */}
+        <div className="ct-head-row">
           <div className="ct-eyebrow"><span className="hex" /> {t("stageLabel")}</div>
+          <div className="ct-zoom">
+            <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z / 1.4))} disabled={zoom <= ZOOM_MIN} aria-label={t("zoomOut")}>−</button>
+            <span className="ct-zoom-pct">{Math.round(zoom * 100)}%</span>
+            <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z * 1.4))} disabled={zoom >= ZOOM_MAX} aria-label={t("zoomIn")}>+</button>
+          </div>
+        </div>
+        <div className="ct-head-row ct-head-row-bottom">
           {etapaActual ? (
             <div className="ct-etapa-row">
               <span className="ct-etapa-name">{tEt(etapaActual.key)}</span>
@@ -260,19 +271,13 @@ export default function CicloTimeline() {
           ) : (
             <div className="ct-etapa-row"><span className="ct-etapa-name">{nombre}</span></div>
           )}
+          {etapaActual && etapaActual.enCurso && (
+            <div className="ct-progress">
+              <div className="ct-progress-bar"><span style={{ width: `${pct(etapaActual)}%`, background: COLOR_ETAPA[etapaActual.key] }} /></div>
+              <span className="ct-progress-txt">{t("dayOf", { n: etapaActual.dias ?? 0 })}</span>
+            </div>
+          )}
         </div>
-        {etapaActual && etapaActual.enCurso && (
-          <div className="ct-progress">
-            <div className="ct-progress-bar"><span style={{ width: `${pct(etapaActual)}%`, background: COLOR_ETAPA[etapaActual.key] }} /></div>
-            <span className="ct-progress-txt">{t("dayOf", { n: etapaActual.dias ?? 0 })}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="ct-zoom">
-        <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z / 1.4))} disabled={zoom <= ZOOM_MIN} aria-label={t("zoomOut")}>−</button>
-        <span className="ct-zoom-pct">{Math.round(zoom * 100)}%</span>
-        <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z * 1.4))} disabled={zoom >= ZOOM_MAX} aria-label={t("zoomIn")}>+</button>
       </div>
 
       <div className="ct-rail" ref={railRef}>
@@ -303,8 +308,8 @@ export default function CicloTimeline() {
                   <div className="ct-lab-d">{fechaTxt}</div>
                 </div>
                 <div className={`ct-stem ${above ? "up" : "down"}`} />
-                <span className="ct-mark-plate" style={{ width: size, height: size, top: 100 - size / 2 }} />
-                <span className="cp-iso ct-mark" style={{ width: size, height: size, top: 100 - size / 2, background: isSel ? "var(--text)" : color }} />
+                <span className="ct-mark-plate" style={{ width: size, height: size, top: 124 - size / 2 }} />
+                <span className="cp-iso ct-mark" style={{ width: size, height: size, top: 124 - size / 2, background: isSel ? "var(--text)" : color }} />
               </div>
             );
           })}
