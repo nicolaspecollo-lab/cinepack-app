@@ -35,27 +35,29 @@ const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
   Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
 // Solo 2 carriles (arriba/abajo) — pedido explícito: nada de apilar más
-// niveles ("no quiero más que dos niveles... evitemos esta escalabilidad
-// temporal"). En cambio, cuando dos convocatorias quedan cerca en el
-// tiempo, se separa su posición VISUAL en el eje horizontal lo necesario
-// para que el texto entre, sin importar si en el calendario están a un día
-// o a 15 — dos eventos justo al lado del otro, con la distancia fija que
-// hace falta para leerlos, en vez de respetar la escala cronológica exacta.
-// Greedy: cada punto va al carril cuyo último punto puesto quedó más atrás
-// (maximiza el hueco), y si aun así no alcanza el margen mínimo, se empuja
-// su x visual hasta último + GAP_MIN_PX (nunca hacia atrás).
+// niveles. Cuando dos convocatorias quedan cerca en el tiempo, se separa su
+// posición VISUAL en el eje horizontal lo necesario para que el texto
+// entre, sin importar si en el calendario están a un día o a 15.
+//
+// El margen mínimo es GLOBAL (no por carril): el símbolo (el rombo sobre la
+// línea) queda siempre a la misma altura sin importar si su etiqueta va
+// arriba o abajo, así que dos puntos en carriles distintos pero con fechas
+// muy cercanas terminaban con los DOS símbolos en el mismo lugar — "un solo
+// símbolo alojando dos hitos". Al exigir el margen contra el último punto
+// puesto en CUALQUIER carril (no solo el propio), cada símbolo queda su
+// propio lugar en la línea, siempre. El carril (arriba/abajo) se sigue
+// alternando aparte, solo para repartir las etiquetas.
 //
 // GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho
-// centrada en el punto (left:-74px) — con menos de ~148px entre dos
-// centros del mismo carril, los textos se pisan sí o sí.
+// centrada en el punto (left:-74px).
 const GAP_MIN_PX = 160;
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
   const ordenados = [...puntos].sort((a, b) => a.x - b.x);
-  const ultimoXPorCarril: [number, number] = [-Infinity, -Infinity];
-  return ordenados.map((p) => {
-    const carril: 0 | 1 = ultimoXPorCarril[0] <= ultimoXPorCarril[1] ? 0 : 1;
-    const xVisual = Math.max(p.x, ultimoXPorCarril[carril] + GAP_MIN_PX);
-    ultimoXPorCarril[carril] = xVisual;
+  let ultimoX = -Infinity;
+  return ordenados.map((p, i) => {
+    const xVisual = Math.max(p.x, ultimoX + GAP_MIN_PX);
+    ultimoX = xVisual;
+    const carril: 0 | 1 = i % 2 === 0 ? 0 : 1;
     return { ...p, x: xVisual, xReal: p.x, carril };
   });
 }
