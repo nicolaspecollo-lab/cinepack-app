@@ -4031,8 +4031,11 @@
 /* Dos filas, cada una con su propio par izquierda↔derecha alineado a la
    misma línea de base — antes el zoom vivía suelto debajo de todo, sin
    relación visual con nada del header. */
-.cp-dash .ct-head-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
-.cp-dash .ct-head-row-bottom{ align-items:flex-end; }
+/* Las dos filas usan la MISMA estrategia de alineación (flex-end): cada
+   lado queda pegado a su borde (izquierda/derecha) sobre la misma línea de
+   base, nunca centrado — antes la fila de arriba usaba align-items:center,
+   que la hacía ver "flotando" distinto a la fila de abajo. */
+.cp-dash .ct-head-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; }
 .cp-dash .ct-eyebrow{ display:flex; align-items:center; gap:7px; font-family:'Poppins',sans-serif; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
 .cp-dash .ct-eyebrow .hex{ width:12px; height:11px; background:var(--acc); }
 .cp-dash .ct-etapa-row{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
