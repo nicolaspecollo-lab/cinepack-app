@@ -1053,7 +1053,16 @@
 }
 .cp-dash table.hp-table th.hp-th-reg{ text-align:center; }
 .cp-dash table.hp-table td{ border-bottom:1px solid var(--line); padding:0; vertical-align:top; }
-.cp-dash table.hp-table td.hp-td-largo{ min-width:180px; }
+/* Ancho mínimo por celda de dato: sin esto, con muchas columnas (ej. Plan de
+   financiación con organismo/premio agregados) el navegador aplasta cada
+   columna dentro del 100% de la tabla en vez de desbordar y scrollear
+   horizontal — el texto de RichCell (fuente, condiciones) se envuelve en
+   varias líneas ilegibles. min-width fuerza a la tabla a crecer más allá del
+   contenedor cuando hace falta; .hp-table-wrap ya tiene overflow-x:auto. */
+.cp-dash table.hp-table td.hp-td-cell{ min-width:132px; }
+.cp-dash table.hp-table td.hp-td-cell.hp-td-num{ min-width:96px; }
+.cp-dash table.hp-table td.hp-td-cell.hp-td-largo{ min-width:220px; }
+.cp-dash table.hp-table td.hp-td-cell.hp-td-frozen{ min-width:160px; }
 .cp-dash table.hp-table tbody tr:hover td{ background:var(--hl1); }
 .cp-dash .hp-cell-input, .cp-dash .hp-cell-area, .cp-dash .hp-cell-select{
   width:100%; background:none; border:none; color:var(--text); font-family:inherit; font-size:12px; padding:9px 8px;

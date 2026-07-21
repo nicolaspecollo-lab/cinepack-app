@@ -5510,10 +5510,15 @@ export function TablaTool({
                           <td
                             key={c.key}
                             className={[
+                              "hp-td-cell",
                               c.tipo === "largo" ? "hp-td-largo" : "",
+                              (c.tipo === "num" || c.tipo === "money") ? "hp-td-num" : "",
                               colIdx === 0 ? "hp-td-frozen" : "",
                             ].filter(Boolean).join(" ")}
-                            style={condColor ? {background: condColor + "44"} : undefined}
+                            style={{
+                              ...(colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined),
+                              ...(condColor ? {background: condColor + "44"} : undefined),
+                            }}
                             onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
                           >
                             {isNum && dataBarPct > 0 && (
