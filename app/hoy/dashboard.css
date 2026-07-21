@@ -4027,15 +4027,13 @@
 
 /* --- Línea de tiempo --- */
 .cp-dash .ct-wrap{ border:1px solid var(--line); background:var(--panel); padding:16px 18px; margin-bottom:14px; }
-.cp-dash .ct-head{ display:flex; flex-direction:column; gap:8px; }
-/* Dos filas, cada una con su propio par izquierda↔derecha alineado a la
-   misma línea de base — antes el zoom vivía suelto debajo de todo, sin
-   relación visual con nada del header. */
-/* Las dos filas usan la MISMA estrategia de alineación (flex-end): cada
-   lado queda pegado a su borde (izquierda/derecha) sobre la misma línea de
-   base, nunca centrado — antes la fila de arriba usaba align-items:center,
-   que la hacía ver "flotando" distinto a la fila de abajo. */
-.cp-dash .ct-head-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+/* Prefijo "ctln-" (no "ct-") en este bloque a propósito: "ct-head" colisionaba
+   con el mismo nombre de clase del tablero de Catering más arriba en este
+   archivo — align-items:center se filtraba de ahí porque esta regla nunca lo
+   reescribía explícitamente, dejando las dos filas encogidas y centradas en
+   vez de estirarse a todo el ancho. Nombre distinto = cero ambigüedad. */
+.cp-dash .ctln-head{ display:flex; flex-direction:column; align-items:stretch; gap:8px; width:100%; }
+.cp-dash .ctln-head-row{ display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap; width:100%; }
 .cp-dash .ct-eyebrow{ display:flex; align-items:center; gap:7px; font-family:'Poppins',sans-serif; font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
 .cp-dash .ct-eyebrow .hex{ width:12px; height:11px; background:var(--acc); }
 .cp-dash .ct-etapa-row{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }

@@ -245,12 +245,14 @@ export default function CicloTimeline() {
 
   return (
     <div className="ct-wrap">
-      <div className="ct-head">
+      <div className="ctln-head">
         {/* Fila 1: eyebrow ↔ zoom, misma línea de base. Fila 2: nombre de
             etapa + rango de fechas ↔ barra de avance, misma línea de base.
-            Antes el zoom vivía en un bloque aparte debajo de todo, sin
-            alinearse con nada — quedaba descuadrado a simple vista. */}
-        <div className="ct-head-row">
+            Prefijo "ctln-" (no "ct-") a propósito: "ct-head" colisionaba con
+            el mismo nombre de clase del tablero de Catering (ver
+            dashboard.css ~línea 3158) — una propiedad no reescrita
+            explícitamente en un rule se filtraba del otro componente. */}
+        <div className="ctln-head-row">
           <div className="ct-eyebrow"><span className="hex" /> {t("stageLabel")}</div>
           <div className="ct-zoom">
             <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z / 1.4))} disabled={zoom <= ZOOM_MIN} aria-label={t("zoomOut")}>−</button>
@@ -258,7 +260,7 @@ export default function CicloTimeline() {
             <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z * 1.4))} disabled={zoom >= ZOOM_MAX} aria-label={t("zoomIn")}>+</button>
           </div>
         </div>
-        <div className="ct-head-row ct-head-row-bottom">
+        <div className="ctln-head-row">
           {etapaActual ? (
             <div className="ct-etapa-row">
               <span className="ct-etapa-name">{tEt(etapaActual.key)}</span>
