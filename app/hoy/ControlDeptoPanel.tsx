@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
 import { useNombreHerramienta } from "./HerramientasPanel";
 import GestionAccesosPanel from "./GestionAccesosPanel";
+import CpSelect from "../components/CpSelect";
 
 type Miembro = {
   user_id: string;
@@ -16,37 +17,6 @@ type Miembro = {
   cargosCompartidos: string[];
 };
 type HerramientaDept = { h: Herramienta; cargo: string | null };
-
-// Desplegable propio (estándar CINEPACK: nada de <select> nativo). Radius 0,
-// Poppins, acento del departamento activo (var(--acc)).
-function CpSelect({ value, options, onChange, placeholder }: {
-  value: string; options: string[]; onChange: (v: string) => void; placeholder: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [open]);
-  return (
-    <div className="cdp-sel" ref={ref}>
-      <button type="button" className="cdp-sel-btn" onClick={() => setOpen((o) => !o)}>
-        <span className={value ? "" : "cdp-sel-ph"}>{value || placeholder}</span>
-        <span className="cdp-sel-caret">▾</span>
-      </button>
-      {open && (
-        <div className="cdp-sel-menu">
-          <button type="button" className="cdp-sel-opt" onClick={() => { onChange(""); setOpen(false); }}>{placeholder}</button>
-          {options.map((o) => (
-            <button type="button" key={o} className={`cdp-sel-opt ${o === value ? "on" : ""}`} onClick={() => { onChange(o); setOpen(false); }}>{o}</button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Panel de control de departamento reutilizable: lo usan la página
 // /control-depto (con su topbar/auth) y la pestaña "Control" del dashboard

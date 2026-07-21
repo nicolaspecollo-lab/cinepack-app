@@ -1045,7 +1045,13 @@
 
 /* Tabla editable */
 .cp-dash .hp-table-wrap{ overflow-x:auto; padding:14px 30px 0; }
-.cp-dash table.hp-table{ width:100%; border-collapse:collapse; font-size:12px; min-width:560px; }
+/* border-collapse:separate (no collapse) a propósito: position:sticky sobre
+   celdas de una tabla con border-collapse:collapse se renderiza mal en varios
+   navegadores (el fondo queda semi-transparente y el contenido de las
+   columnas que scrollean por debajo se ve mezclado con la columna congelada
+   "Fuente"). Con separate + border-spacing:0 el sticky funciona correcto y
+   el borde inferior de cada celda (ya puesto individualmente) se ve igual. */
+.cp-dash table.hp-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:12px; min-width:560px; }
 .cp-dash table.hp-table th{
   text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted);
   padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--hl1);
@@ -1844,16 +1850,6 @@
 }
 .cp-dash .hp-th-sortable:hover .hp-col-resizer{ border-right-color:var(--acc); }
 
-/* Filtro por columna (en header) */
-.cp-dash .hp-col-filter-input{
-  display:block; width:100%; margin-top:4px; padding:2px 6px;
-  font-size:10px; font-family:'Courier New',monospace;
-  background:var(--bg); border:1px solid var(--line); color:var(--text);
-  outline:none; box-sizing:border-box;
-}
-.cp-dash .hp-col-filter-input:focus{ border-color:var(--acc); }
-.cp-dash .hp-col-filter-input::placeholder{ color:var(--muted); }
-
 /* Compact rows */
 .cp-dash .hp-tabla-compacta td,
 .cp-dash .hp-tabla-compacta th{ padding:2px 8px !important; font-size:11px !important; }
@@ -2163,6 +2159,9 @@
   padding:6px 8px; font-size:12px; font-family:'Poppins',sans-serif; cursor:pointer; outline:none;
 }
 .cp-dash .tm-field select:focus{ border-color:var(--acc); }
+.cp-dash .tm-field .cdp-sel{ min-width:0; }
+.cp-dash .hp-sort-dirseg{ margin:2px 8px 6px; }
+.cp-dash .hp-sort-dirseg .cp-seg-cell{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:4px; }
 .cp-dash .tm-check{ display:flex; align-items:center; gap:9px; padding:6px 9px; cursor:pointer; font-size:12px; font-family:'Poppins',sans-serif; }
 .cp-dash .tm-check:hover{ background:var(--hl2); }
 .cp-dash .tm-check input{ accent-color:var(--acc); width:15px; height:15px; flex-shrink:0; }

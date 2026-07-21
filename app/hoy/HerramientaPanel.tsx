@@ -8,6 +8,7 @@ import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
+import CpSelect from "../components/CpSelect";
 
 type Intervencion = { accion: string; usuario: string; fecha: string };
 type Visionado = { usuario: string; fecha: string };
@@ -4823,7 +4824,6 @@ export function TablaTool({
   const [batchCol, setBatchCol] = useState("");
   const [batchVal, setBatchVal] = useState("");
   const [showExtStats, setShowExtStats] = useState(false);
-  const [colHeaderFilter, setColHeaderFilter] = useState<Record<string, string>>({});
   const [importando, setImportando] = useState(false);
   const [showLastEdit, setShowLastEdit] = useState(false);
 
@@ -4862,9 +4862,6 @@ export function TablaTool({
     for (const [k, v] of Object.entries(filtros)) {
       if (v) res = res.filter(f => (f.datos?.[k] ?? "") === v);
     }
-    for (const [k, v] of Object.entries(colHeaderFilter)) {
-      if (v) res = res.filter(f => stripHtml(f.datos?.[k] ?? "").toLowerCase().includes(v.toLowerCase()));
-    }
     if (sortKey) {
       const col = columnas.find(c => c.key === sortKey);
       const col2 = sortKey2 ? columnas.find(c => c.key === sortKey2) : null;
@@ -4901,7 +4898,7 @@ export function TablaTool({
       });
     }
     return res;
-  }, [filas, busqueda, filtros, colHeaderFilter, sortKey, sortDir, sortKey2, sortDir2, columnas]);
+  }, [filas, busqueda, filtros, sortKey, sortDir, sortKey2, sortDir2, columnas]);
 
   const totalPaginas = Math.ceil(filasFiltradas.length / ITEMS_POR_PAG);
   const filasPagina = filasFiltradas.length > ITEMS_POR_PAG
@@ -5166,7 +5163,7 @@ export function TablaTool({
   const fmtMon = (n: number) => new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
   const fmtNum = (n: number) => new Intl.NumberFormat("es-ES", { maximumFractionDigits: 2 }).format(n);
 
-  const hayFiltroActivo = busqueda.trim() || Object.values(filtros).some(Boolean) || Object.values(colHeaderFilter).some(Boolean);
+  const hayFiltroActivo = busqueda.trim() || Object.values(filtros).some(Boolean);
   const colsEstado = columnas.filter(c => c.tipo === "estado").slice(0, 4);
   const colEstado = columnas.find((c) => c.tipo === "estado");
   const tieneTotales = columnas.some(c => c.tipo === "money" || c.tipo === "num");
@@ -5192,7 +5189,7 @@ export function TablaTool({
           <span key={v} className={`hp-stats-pill tono-${estadoTono(v)}`}>{v} <b>{n}</b></span>
         ))}
         {hayFiltroActivo && (
-          <button className="hp-stats-clear" onClick={() => { setBusqueda(""); setFiltros({}); setColHeaderFilter({}); }}>{t("clear")}</button>
+          <button className="hp-stats-clear" onClick={() => { setBusqueda(""); setFiltros({}); }}>{t("clear")}</button>
         )}
       </div>
     );
@@ -5227,33 +5224,69 @@ export function TablaTool({
               {colsEstado.map(c => (
                 <label key={c.key} className="tm-field">
                   <span>{c.label}</span>
-                  <select value={filtros[c.key] ?? ""}
-                    onChange={e => { setFiltros(f => ({ ...f, [c.key]: e.target.value })); setPagina(0); }}>
-                    <option value="">{t("all")}</option>
-                    {(c.opciones ?? []).map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
+                  <CpSelect
+                    value={filtros[c.key] ?? ""}
+                    options={c.opciones ?? []}
+                    placeholder={t("all")}
+                    onChange={v => { setFiltros(f => ({ ...f, [c.key]: v })); setPagina(0); }}
+                  />
                 </label>
               ))}
             </div>
           </ToolMenu>
         )}
 
-        {/* Ordenar (orden secundario) */}
-        <ToolMenu label={t("sort")} icon="sort" width={230}>
+        {/* Ordenar (primario, sincronizado con el clic en el encabezado + secundario de desempate) */}
+        <ToolMenu label={t("sort")} icon="sort" width={260} badge={sortKey ? 1 : undefined}>
           <div className="tm-section">
             <label className="tm-field">
-              <span>{t("secondarySort")}</span>
-              <select value={sortKey2 ?? ""} onChange={e => setSortKey2(e.target.value || null)}>
-                <option value="">{t("none")}</option>
-                {columnas.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-              </select>
+              <span>{t("sortBy")}</span>
+              <CpSelect
+                value={sortKey ?? ""}
+                options={columnas.map(c => ({ value: c.key, label: c.label }))}
+                placeholder={t("none")}
+                onChange={v => { setSortKey(v || null); if (v) setSortDir("asc"); }}
+              />
             </label>
-            {sortKey2 && (
-              <button className="tm-item" onClick={() => setSortDir2(d => d === "asc" ? "desc" : "asc")}>
-                {sortDir2 === "asc" ? t("sortDirAsc") : t("sortDirDesc")}
-              </button>
+            {sortKey && (
+              <div className="cp-seg cp-seg-chip hp-sort-dirseg">
+                <button type="button" className={`cp-seg-cell${sortDir === "asc" ? " cp-seg-on" : ""}`} onClick={() => setSortDir("asc")}>
+                  <Icon name="chevron-up" size={11} /> {t("ascShort")}
+                </button>
+                <button type="button" className={`cp-seg-cell${sortDir === "desc" ? " cp-seg-on" : ""}`} onClick={() => setSortDir("desc")}>
+                  <Icon name="chevron-down" size={11} /> {t("descShort")}
+                </button>
+              </div>
             )}
           </div>
+          <div className="tm-section tm-section-bordered">
+            <label className="tm-field">
+              <span>{t("secondarySort")}</span>
+              <CpSelect
+                value={sortKey2 ?? ""}
+                options={columnas.map(c => ({ value: c.key, label: c.label }))}
+                placeholder={t("none")}
+                onChange={v => setSortKey2(v || null)}
+              />
+            </label>
+            {sortKey2 && (
+              <div className="cp-seg cp-seg-chip hp-sort-dirseg">
+                <button type="button" className={`cp-seg-cell${sortDir2 === "asc" ? " cp-seg-on" : ""}`} onClick={() => setSortDir2("asc")}>
+                  <Icon name="chevron-up" size={11} /> {t("ascShort")}
+                </button>
+                <button type="button" className={`cp-seg-cell${sortDir2 === "desc" ? " cp-seg-on" : ""}`} onClick={() => setSortDir2("desc")}>
+                  <Icon name="chevron-down" size={11} /> {t("descShort")}
+                </button>
+              </div>
+            )}
+          </div>
+          {sortKey && (
+            <div className="tm-section tm-section-bordered">
+              <button className="tm-item" onClick={() => { setSortKey(null); setSortKey2(null); }}>
+                <Icon name="x" size={13} /><span>{t("clearSort")}</span>
+              </button>
+            </div>
+          )}
         </ToolMenu>
 
         {/* Vista (toggles + columnas visibles) */}
@@ -5445,14 +5478,6 @@ export function TablaTool({
                       </span>
                       <span className="hp-col-resizer" onMouseDown={e => startResize(e, c.key)} />
                     </div>
-                    {/* Filtro por columna */}
-                    <input
-                      className="hp-col-filter-input"
-                      placeholder={t("filterPlaceholder")}
-                      value={colHeaderFilter[c.key] ?? ""}
-                      onChange={e => { setColHeaderFilter(f => ({ ...f, [c.key]: e.target.value })); setPagina(0); }}
-                      onClick={e => e.stopPropagation()}
-                    />
                   </th>
                 ))}
                 <th className="hp-th-reg">{t("regCol")}</th>
