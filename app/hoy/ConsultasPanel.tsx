@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { ACCENTS, DEPARTAMENTOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import Icon from "../components/Icon";
+import CpSelect from "../components/CpSelect";
 
 type ConsFilter = "todas" | "pend" | "res";
 
@@ -142,6 +143,16 @@ export default function ConsultasPanel({
       setMiembrosProyecto(lista);
     })();
   }, []);
+
+  function cancelarForm() {
+    setTitulo("");
+    setTexto("");
+    setParaDepartamentos([]);
+    setDestCargo("");
+    setIsPrivate(false);
+    setPrivateRecipientId("");
+    setShowForm(false);
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -351,11 +362,13 @@ export default function ConsultasPanel({
         </button>
       </div>
 
-      <div className="cons-new" style={{ paddingTop: "16px" }}>
-        <button type="button" className="cp-btn cp-btn-acc" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? t("cancel") : t("newConsulta")}
-        </button>
-      </div>
+      {!showForm && (
+        <div className="cons-new" style={{ paddingTop: "16px" }}>
+          <button type="button" className="cp-btn cp-btn-acc" onClick={() => setShowForm(true)}>
+            {t("newConsulta")}
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <form onSubmit={handleCreate} className="comn-pub-card">
@@ -377,14 +390,12 @@ export default function ConsultasPanel({
             {isPrivate ? (
               <label className="afield" style={{ marginBottom: "16px" }}>
                 <span>{t("recipientLabel")}</span>
-                <select value={privateRecipientId} onChange={(e) => setPrivateRecipientId(e.target.value)}>
-                  <option value="">{t("selectRecipient")}</option>
-                  {miembrosProyecto.map((m) => (
-                    <option key={m.user_id} value={m.user_id}>
-                      @{m.full_name} ({m.departamento})
-                    </option>
-                  ))}
-                </select>
+                <CpSelect
+                  value={privateRecipientId}
+                  placeholder={t("selectRecipient")}
+                  options={miembrosProyecto.map((m) => ({ value: m.user_id, label: `@${m.full_name} (${m.departamento})` }))}
+                  onChange={setPrivateRecipientId}
+                />
               </label>
             ) : (
               <>
@@ -446,6 +457,9 @@ export default function ConsultasPanel({
           <div className="comn-pub-actions">
             <button type="submit" className="cp-btn cp-btn-acc-fill" disabled={sending}>
               {sending ? t("sending") : t("send")}
+            </button>
+            <button type="button" className="cp-btn" onClick={cancelarForm} disabled={sending}>
+              {t("cancel")}
             </button>
           </div>
         </form>
