@@ -21,7 +21,10 @@ import {
 type PuntoBase =
   | { kind: "hito"; etapa: EtapaKey; fecha: string; x: number }
   | { kind: "evento"; ev: EventoProyecto; fecha: string; x: number };
-type Punto = PuntoBase & { carril: 0 | 1; nivel: number };
+// `x` queda pisado por la posición visual ajustada (ver asignarCarriles);
+// `xReal` conserva la posición cronológica original, sin usar por ahora pero
+// disponible si hiciera falta compararla.
+type Punto = PuntoBase & { carril: 0 | 1; xReal: number };
 
 const DIA = 86400000;
 const ms = (iso: string) => new Date(`${iso}T00:00:00`).getTime();
@@ -31,42 +34,29 @@ const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
 const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
   Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
-// Asigna cada punto a un "slot" (carril 0=arriba/1=abajo + nivel de apilado,
-// cada nivel se aleja LANE_STEP px más de la línea). SIN tope de niveles a
-// propósito: la versión anterior capaba en 2, después en 4, y en los dos
-// casos un cluster con más convocatorias que huecos disponibles volvía a
-// pisarse — que es justo lo que se reportó. Este algoritmo busca, para cada
-// punto (de izquierda a derecha), el primer slot (probando carril 0 y 1 en
-// cada nivel, subiendo de nivel recién si ninguno de los dos alcanza) donde
-// el último punto puesto ahí quede a más de GAP_MIN_PX — así NINGÚN par de
-// puntos en el mismo slot puede quedar más cerca que ese margen, sin
-// importar cuántos eventos haya agolpados en pocos días. El costo es que un
-// cluster muy denso apila más alto (o más abajo), nunca que se superponga.
+// Solo 2 carriles (arriba/abajo) — pedido explícito: nada de apilar más
+// niveles ("no quiero más que dos niveles... evitemos esta escalabilidad
+// temporal"). En cambio, cuando dos convocatorias quedan cerca en el
+// tiempo, se separa su posición VISUAL en el eje horizontal lo necesario
+// para que el texto entre, sin importar si en el calendario están a un día
+// o a 15 — dos eventos justo al lado del otro, con la distancia fija que
+// hace falta para leerlos, en vez de respetar la escala cronológica exacta.
+// Greedy: cada punto va al carril cuyo último punto puesto quedó más atrás
+// (maximiza el hueco), y si aun así no alcanza el margen mínimo, se empuja
+// su x visual hasta último + GAP_MIN_PX (nunca hacia atrás).
 //
-// GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho centrada
-// en el punto (left:-74px) — con menos de ~148px entre dos centros del mismo
-// slot, los textos se pisan sí o sí.
+// GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho
+// centrada en el punto (left:-74px) — con menos de ~148px entre dos
+// centros del mismo carril, los textos se pisan sí o sí.
 const GAP_MIN_PX = 160;
-const LANE_STEP = 58; // px que se aleja cada nivel extra de apilado
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
   const ordenados = [...puntos].sort((a, b) => a.x - b.x);
-  const ultimoXPorSlot = new Map<string, number>();
-  // Tope de seguridad: con `puntos.length` slots por carril ya es imposible
-  // no encontrar hueco (cada punto solo ocupa uno), así que nunca se llega
-  // a este límite salvo con un x inválido (NaN) — evita un loop infinito.
-  const NIVEL_TOPE = ordenados.length + 2;
+  const ultimoXPorCarril: [number, number] = [-Infinity, -Infinity];
   return ordenados.map((p) => {
-    for (let nivel = 0; nivel <= NIVEL_TOPE; nivel++) {
-      for (const carril of [0, 1] as const) {
-        const key = `${carril}-${nivel}`;
-        const ultimoX = ultimoXPorSlot.get(key) ?? -Infinity;
-        if (p.x - ultimoX >= GAP_MIN_PX) {
-          ultimoXPorSlot.set(key, p.x);
-          return { ...p, carril, nivel };
-        }
-      }
-    }
-    return { ...p, carril: 0 as const, nivel: NIVEL_TOPE };
+    const carril: 0 | 1 = ultimoXPorCarril[0] <= ultimoXPorCarril[1] ? 0 : 1;
+    const xVisual = Math.max(p.x, ultimoXPorCarril[carril] + GAP_MIN_PX);
+    ultimoXPorCarril[carril] = xVisual;
+    return { ...p, x: xVisual, xReal: p.x, carril };
   });
 }
 
@@ -114,7 +104,7 @@ export default function CicloTimeline() {
   }, [ciclo]);
 
   // Dominio temporal y escala.
-  const { puntos, width, hoyX, segmentos, maxNivel } = useMemo(() => {
+  const { puntos, width, hoyX, segmentos } = useMemo(() => {
     const etapasDef = ETAPAS
       .map((e) => ({ key: e.key, inicio: fechas?.[e.key] ?? null }))
       .filter((e): e is { key: EtapaKey; inicio: string } => !!e.inicio)
@@ -127,14 +117,14 @@ export default function CicloTimeline() {
     ].filter((n) => !isNaN(n));
 
     if (fechasTodas.length === 0) {
-      return { puntos: [] as Punto[], width: 700, hoyX: 60, segmentos: [] as { x1: number; x2: number; color: string }[], maxNivel: 0 };
+      return { puntos: [] as Punto[], width: 700, hoyX: 60, segmentos: [] as { x1: number; x2: number; color: string }[] };
     }
     const min = Math.min(...fechasTodas) - 10 * DIA;
     const max = Math.max(...fechasTodas) + 20 * DIA;
     const dias = Math.max(1, (max - min) / DIA);
     const pad = 60;
     const pxDia = Math.min(3.4, Math.max(1.4, 1300 / dias)) * zoom;
-    const width = Math.max(700, dias * pxDia + pad * 2);
+    const anchoBase = Math.max(700, dias * pxDia + pad * 2);
     const xDe = (m: number) => pad + ((m - min) / DIA) * pxDia;
 
     const puntos: Punto[] = asignarCarriles([
@@ -142,14 +132,19 @@ export default function CicloTimeline() {
       ...eventos.map((e) => ({ kind: "evento" as const, ev: e, fecha: e.fecha, x: xDe(ms(e.fecha)) })),
     ]);
 
+    // Si separar convocatorias muy juntas empujó algún punto más allá del
+    // ancho cronológico, la pista crece para que no queden pisados contra
+    // el borde derecho.
+    const maxX = puntos.reduce((m, p) => Math.max(m, p.x), 0);
+    const width = Math.max(anchoBase, maxX + pad);
+
     const segmentos = etapasDef.map((e, i) => {
       const x1 = xDe(ms(e.inicio));
       const x2 = i + 1 < etapasDef.length ? xDe(ms(etapasDef[i + 1].inicio)) : width - pad / 2;
       return { x1, x2, color: COLOR_ETAPA[e.key] };
     });
 
-    const maxNivel = puntos.reduce((m, p) => Math.max(m, p.nivel), 0);
-    return { puntos, width, hoyX: xDe(Date.now()), segmentos, maxNivel };
+    return { puntos, width, hoyX: xDe(Date.now()), segmentos };
   }, [fechas, eventos, zoom]);
 
   // Arrastre horizontal + zoom (rueda con Ctrl = pellizco de trackpad, y
@@ -265,7 +260,7 @@ export default function CicloTimeline() {
         <button type="button" className="ct-zoom-btn" onClick={() => setZoom((z) => clampZoom(z * 1.4))} disabled={zoom >= ZOOM_MAX} aria-label={t("zoomIn")}>+</button>
       </div>
 
-      <div className="ct-rail" ref={railRef} style={maxNivel > 0 ? { paddingTop: maxNivel * LANE_STEP, paddingBottom: maxNivel * LANE_STEP } : undefined}>
+      <div className="ct-rail" ref={railRef}>
         <div className="ct-track" style={{ width }}>
           <div className="ct-line" style={{ left: 60, width: width - 90 }} />
           {segmentos.map((s, i) => (
@@ -284,20 +279,15 @@ export default function CicloTimeline() {
             const esFinanciacion = p.kind === "evento" && p.ev.tipo === "financiacion";
             const fechaTxt = esFinanciacion ? t("deadlinePrefix", { fecha: fmt(p.fecha) }) : fmt(p.fecha);
             const isSel = id === sel;
-            // nivel > 0: dos puntos quedaron demasiado cerca en el tiempo —
-            // se aleja más de la línea para que el texto nunca se pise.
-            const labTop = above ? 14 - p.nivel * LANE_STEP : 130 + p.nivel * LANE_STEP;
-            const stemTop = above ? 70 - p.nivel * LANE_STEP : 102;
-            const stemHeight = above ? 28 + p.nivel * LANE_STEP : 26 + p.nivel * LANE_STEP;
             return (
               <div key={id} className="ct-ev" style={{ left: p.x }}
                 onClick={() => { const m = (railRef.current as (HTMLElement & { _moved?: () => boolean }) | null)?._moved?.(); if (!m) setSel(isSel ? null : id); }}>
-                <div className={`ct-lab ${above ? "up" : "down"}`} style={{ top: labTop }}>
+                <div className={`ct-lab ${above ? "up" : "down"}`}>
                   <div className="ct-lab-t">{titulo}</div>
                   <div className="ct-lab-s">{sub}</div>
                   <div className="ct-lab-d">{fechaTxt}</div>
                 </div>
-                <div className={`ct-stem ${above ? "up" : "down"}`} style={{ top: stemTop, height: stemHeight }} />
+                <div className={`ct-stem ${above ? "up" : "down"}`} />
                 <span className="ct-mark-plate" style={{ width: size, height: size, top: 100 - size / 2 }} />
                 <span className="cp-iso ct-mark" style={{ width: size, height: size, top: 100 - size / 2, background: isSel ? "var(--text)" : color }} />
               </div>
