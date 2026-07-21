@@ -1211,6 +1211,10 @@
     "alertsCount": "{n} alertes",
     "pendingTasks": "Tasques pendents",
     "noPendingTasks": "No hi ha tasques pendents al projecte.",
+    "openBoard": "Revisa",
+    "tasksPending": "Pendents",
+    "tasksDoing": "En curs",
+    "tasksDone": "Fetes",
     "activeAlertsTitle": "Alertes actives",
     "noActiveAlerts": "Sense alertes actives al projecte.",
     "checklists": "Checklists del projecte",
@@ -1400,10 +1404,7 @@
     "save": "Desa",
     "pendingTasks": "Tasques pendents",
     "pendingTasksHint": "El teu tauler personal de tasques d'aquest departament.",
-    "openBoard": "Revisa",
-    "tasksPending": "Pendents",
-    "tasksDoing": "En curs",
-    "tasksDone": "Fetes",
+    "openBoard": "Obre el tauler",
     "opening": "Obrint…"
   },
   "etapas": {

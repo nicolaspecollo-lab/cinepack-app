@@ -1211,6 +1211,10 @@
     "alertsCount": "{n} alerts",
     "pendingTasks": "Pending tasks",
     "noPendingTasks": "There are no pending tasks in the project.",
+    "openBoard": "Review",
+    "tasksPending": "Pending",
+    "tasksDoing": "In progress",
+    "tasksDone": "Done",
     "activeAlertsTitle": "Active alerts",
     "noActiveAlerts": "No active alerts in the project.",
     "checklists": "Project checklists",
@@ -1400,10 +1404,7 @@
     "save": "Save",
     "pendingTasks": "Pending Tasks",
     "pendingTasksHint": "Your personal task board for this department.",
-    "openBoard": "Review",
-    "tasksPending": "Pending",
-    "tasksDoing": "In progress",
-    "tasksDone": "Done",
+    "openBoard": "Open board",
     "opening": "Opening…"
   },
   "etapas": {

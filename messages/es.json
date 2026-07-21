@@ -1211,6 +1211,10 @@
     "alertsCount": "{n} alertas",
     "pendingTasks": "Tareas pendientes",
     "noPendingTasks": "No hay tareas pendientes en el proyecto.",
+    "openBoard": "Revisar",
+    "tasksPending": "Pendientes",
+    "tasksDoing": "En curso",
+    "tasksDone": "Hechas",
     "activeAlertsTitle": "Alertas activas",
     "noActiveAlerts": "Sin alertas activas en el proyecto.",
     "checklists": "Checklists del proyecto",
@@ -1400,10 +1404,7 @@
     "save": "Guardar",
     "pendingTasks": "Tareas Pendientes",
     "pendingTasksHint": "Tu tablero personal de tareas de este departamento.",
-    "openBoard": "Revisar",
-    "tasksPending": "Pendientes",
-    "tasksDoing": "En curso",
-    "tasksDone": "Hechas",
+    "openBoard": "Abrir tablero",
     "opening": "Abriendo…"
   },
   "etapas": {
