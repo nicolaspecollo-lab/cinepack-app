@@ -39,27 +39,42 @@ const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
 // posición VISUAL en el eje horizontal lo necesario para que el texto
 // entre, sin importar si en el calendario están a un día o a 15.
 //
-// El margen mínimo es GLOBAL (no por carril): el símbolo (el rombo sobre la
-// línea) queda siempre a la misma altura sin importar si su etiqueta va
-// arriba o abajo, así que dos puntos en carriles distintos pero con fechas
-// muy cercanas terminaban con los DOS símbolos en el mismo lugar — "un solo
-// símbolo alojando dos hitos". Al exigir el margen contra el último punto
-// puesto en CUALQUIER carril (no solo el propio), cada símbolo queda su
-// propio lugar en la línea, siempre. El carril (arriba/abajo) se sigue
-// alternando aparte, solo para repartir las etiquetas.
+// El margen mínimo es GLOBAL entre eventos (no por carril): el símbolo (el
+// rombo sobre la línea) queda siempre a la misma altura sin importar si su
+// etiqueta va arriba o abajo, así que dos puntos en carriles distintos pero
+// con fechas muy cercanas terminaban con los DOS símbolos en el mismo
+// lugar — "un solo símbolo alojando dos hitos". Al exigir el margen contra
+// el último punto puesto en CUALQUIER carril, cada símbolo queda su propio
+// lugar en la línea, siempre.
+//
+// Los HITOS DE ETAPA (Desarrollo/Financiación/...) quedan aparte y NUNCA se
+// mueven de su fecha real: marcan el borde exacto de los segmentos de color
+// de fondo (`segmentos`, calculados por separado con la misma fecha) — si
+// se los movía junto con las convocatorias, el rombo de una etapa terminaba
+// sobre el segmento de OTRA etapa (colores mezclados) o directamente se
+// perdía el marcador de inicio de una etapa. Son pocos y ya están separados
+// en el tiempo por naturaleza (una fecha por etapa), así que solo alternan
+// carril para la etiqueta, sin el ajuste de posición.
 //
 // GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho
 // centrada en el punto (left:-74px).
 const GAP_MIN_PX = 160;
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
-  const ordenados = [...puntos].sort((a, b) => a.x - b.x);
+  const eventos = puntos.filter((p) => p.kind === "evento").sort((a, b) => a.x - b.x);
+  const hitos = puntos.filter((p) => p.kind === "hito").sort((a, b) => a.x - b.x);
+
   let ultimoX = -Infinity;
-  return ordenados.map((p, i) => {
+  const eventosConCarril: Punto[] = eventos.map((p, i) => {
     const xVisual = Math.max(p.x, ultimoX + GAP_MIN_PX);
     ultimoX = xVisual;
-    const carril: 0 | 1 = i % 2 === 0 ? 0 : 1;
-    return { ...p, x: xVisual, xReal: p.x, carril };
+    return { ...p, x: xVisual, xReal: p.x, carril: (i % 2 === 0 ? 0 : 1) as 0 | 1 };
   });
+
+  const hitosConCarril: Punto[] = hitos.map((p, i) => ({
+    ...p, xReal: p.x, carril: (i % 2 === 0 ? 0 : 1) as 0 | 1,
+  }));
+
+  return [...hitosConCarril, ...eventosConCarril].sort((a, b) => a.x - b.x);
 }
 
 export default function CicloTimeline() {
