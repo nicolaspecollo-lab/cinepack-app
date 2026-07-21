@@ -290,10 +290,17 @@
 .cp-project-card .tag{ font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--lime); font-weight:700; font-family:'Poppins',sans-serif; }
 .cp-project-card p{ font-size:12px; color:var(--muted); line-height:1.6; }
 
-/* ===== "próximamente" placeholder dentro de paneles vacíos ===== */
+/* ===== "próximamente" / estado vacío dentro de paneles ===== */
 .cp-dash .soon-box{
   margin:24px 30px; border:1px dashed var(--line); padding:40px 24px; text-align:center;
   display:flex; flex-direction:column; align-items:center; gap:10px; color:var(--muted);
+  width:auto;
+  /* Cuando el estado vacío es el único hijo de una grilla de tarjetas
+     (comn-grid, etc.), sin esto ocupa solo una columna de la grilla — se ve
+     como un cartelito perdido en una esquina en vez de ocupar el ancho
+     completo (regla de la Biblia §10.1). grid-column no hace nada si el
+     padre no es grid, así que es seguro dejarlo siempre puesto. */
+  grid-column:1 / -1;
 }
 .cp-dash .soon-box .hex{ width:20px; height:18px; background:var(--acc); }
 .cp-dash .soon-box h4{ font-size:14px; color:var(--text); }
