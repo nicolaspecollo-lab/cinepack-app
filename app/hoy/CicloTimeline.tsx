@@ -35,46 +35,37 @@ const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
   Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
 // Solo 2 carriles (arriba/abajo) — pedido explícito: nada de apilar más
-// niveles. Cuando dos convocatorias quedan cerca en el tiempo, se separa su
-// posición VISUAL en el eje horizontal lo necesario para que el texto
-// entre, sin importar si en el calendario están a un día o a 15.
+// niveles. Se ajusta la posición VISUAL de CUALQUIER punto (hito de etapa o
+// convocatoria) por igual: cuando dos quedan más cerca que GAP_MIN_PX se
+// empuja el segundo hacia la derecha lo justo para que quepa la lectura,
+// nunca menos. Esto conserva la proporción real cuando hay lugar (si el
+// hueco cronológico ya es mayor a GAP_MIN_PX, el punto no se mueve) y solo
+// comprime al mínimo legible cuando dos fechas están pegadas — el pedido
+// explícito de Nicolás: "guardar las distancias correspondientes, pero
+// evitando que los eventos se solapen, con la distancia mínima para su
+// correcta lectura", aplicado por igual a hitos y a eventos.
 //
-// El margen mínimo es GLOBAL entre eventos (no por carril): el símbolo (el
-// rombo sobre la línea) queda siempre a la misma altura sin importar si su
-// etiqueta va arriba o abajo, así que dos puntos en carriles distintos pero
-// con fechas muy cercanas terminaban con los DOS símbolos en el mismo
-// lugar — "un solo símbolo alojando dos hitos". Al exigir el margen contra
-// el último punto puesto en CUALQUIER carril, cada símbolo queda su propio
-// lugar en la línea, siempre.
+// El margen es GLOBAL (no por carril): el símbolo queda siempre a la misma
+// altura sin importar si la etiqueta va arriba o abajo, así que si se
+// exigiera el margen solo dentro de cada carril, dos símbolos en carriles
+// distintos con fechas cercanas terminaban en el mismo lugar.
 //
-// Los HITOS DE ETAPA (Desarrollo/Financiación/...) quedan aparte y NUNCA se
-// mueven de su fecha real: marcan el borde exacto de los segmentos de color
-// de fondo (`segmentos`, calculados por separado con la misma fecha) — si
-// se los movía junto con las convocatorias, el rombo de una etapa terminaba
-// sobre el segmento de OTRA etapa (colores mezclados) o directamente se
-// perdía el marcador de inicio de una etapa. Son pocos y ya están separados
-// en el tiempo por naturaleza (una fecha por etapa), así que solo alternan
-// carril para la etiqueta, sin el ajuste de posición.
+// Los segmentos de color de fondo se recalculan DESPUÉS con la posición
+// visual ya ajustada de cada hito de etapa (ver más abajo) — si usaran la
+// fecha cruda en vez de coincidir con el rombo que ahora se movió, el color
+// de una etapa terminaba debajo del rombo de otra.
 //
 // GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho
 // centrada en el punto (left:-74px).
 const GAP_MIN_PX = 160;
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
-  const eventos = puntos.filter((p) => p.kind === "evento").sort((a, b) => a.x - b.x);
-  const hitos = puntos.filter((p) => p.kind === "hito").sort((a, b) => a.x - b.x);
-
+  const ordenados = [...puntos].sort((a, b) => a.x - b.x);
   let ultimoX = -Infinity;
-  const eventosConCarril: Punto[] = eventos.map((p, i) => {
+  return ordenados.map((p, i) => {
     const xVisual = Math.max(p.x, ultimoX + GAP_MIN_PX);
     ultimoX = xVisual;
     return { ...p, x: xVisual, xReal: p.x, carril: (i % 2 === 0 ? 0 : 1) as 0 | 1 };
   });
-
-  const hitosConCarril: Punto[] = hitos.map((p, i) => ({
-    ...p, xReal: p.x, carril: (i % 2 === 0 ? 0 : 1) as 0 | 1,
-  }));
-
-  return [...hitosConCarril, ...eventosConCarril].sort((a, b) => a.x - b.x);
 }
 
 export default function CicloTimeline() {
@@ -155,9 +146,16 @@ export default function CicloTimeline() {
     const maxX = puntos.reduce((m, p) => Math.max(m, p.x), 0);
     const width = Math.max(anchoBase, maxX + pad);
 
+    // Usa la x visual (ya ajustada por asignarCarriles) del hito de cada
+    // etapa, no la fecha cruda — así el color de fondo siempre arranca
+    // justo debajo de su propio rombo, se haya movido o no.
+    const xHitoPorEtapa = new Map(
+      puntos.filter((p): p is Punto & { kind: "hito" } => p.kind === "hito").map((p) => [p.etapa, p.x])
+    );
     const segmentos = etapasDef.map((e, i) => {
-      const x1 = xDe(ms(e.inicio));
-      const x2 = i + 1 < etapasDef.length ? xDe(ms(etapasDef[i + 1].inicio)) : width - pad / 2;
+      const x1 = xHitoPorEtapa.get(e.key) ?? xDe(ms(e.inicio));
+      const siguiente = etapasDef[i + 1];
+      const x2 = siguiente ? (xHitoPorEtapa.get(siguiente.key) ?? xDe(ms(siguiente.inicio))) : width - pad / 2;
       return { x1, x2, color: COLOR_ETAPA[e.key] };
     });
 
