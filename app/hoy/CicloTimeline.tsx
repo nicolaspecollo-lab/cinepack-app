@@ -31,35 +31,42 @@ const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
 const distTouch = (a: React.Touch | Touch, b: React.Touch | Touch) =>
   Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
-// Asigna cada punto a un carril (0=arriba, 1=abajo) y, si aun así quedaría
-// demasiado cerca del último punto puesto en ese carril, a un "nivel" extra
-// (más lejos de la línea) — para que dos convocatorias cercanas en el tiempo
-// nunca se pisen el texto. Antes se alternaba solo por índice par/impar, que
-// no evita el solape cuando hay varios eventos muy juntos en fecha.
+// Asigna cada punto a un "slot" (carril 0=arriba/1=abajo + nivel de apilado,
+// cada nivel se aleja LANE_STEP px más de la línea). SIN tope de niveles a
+// propósito: la versión anterior capaba en 2, después en 4, y en los dos
+// casos un cluster con más convocatorias que huecos disponibles volvía a
+// pisarse — que es justo lo que se reportó. Este algoritmo busca, para cada
+// punto (de izquierda a derecha), el primer slot (probando carril 0 y 1 en
+// cada nivel, subiendo de nivel recién si ninguno de los dos alcanza) donde
+// el último punto puesto ahí quede a más de GAP_MIN_PX — así NINGÚN par de
+// puntos en el mismo slot puede quedar más cerca que ese margen, sin
+// importar cuántos eventos haya agolpados en pocos días. El costo es que un
+// cluster muy denso apila más alto (o más abajo), nunca que se superponga.
 //
 // GAP_MIN_PX = 160 porque la etiqueta (.ct-lab) mide 148px de ancho centrada
-// en el punto (left:-74px) — con menos de ~148px entre dos centros del MISMO
-// carril, los textos se pisan sí o sí aunque estén en carriles alternados de
-// índice. Con zoom bajo y muchos eventos en pocos días esto no alcanza solo
-// con 2 carriles: por eso además apila hasta 5 niveles (cada uno se aleja
-// LANE_STEP px más de la línea) antes de aceptar que dos puntos compartan
-// carril y nivel.
+// en el punto (left:-74px) — con menos de ~148px entre dos centros del mismo
+// slot, los textos se pisan sí o sí.
 const GAP_MIN_PX = 160;
-const NIVEL_MAX = 4;
 const LANE_STEP = 58; // px que se aleja cada nivel extra de apilado
 function asignarCarriles(puntos: PuntoBase[]): Punto[] {
   const ordenados = [...puntos].sort((a, b) => a.x - b.x);
-  const ultimoX: [number, number] = [-Infinity, -Infinity];
-  const ultimoNivel: [number, number] = [0, 0];
+  const ultimoXPorSlot = new Map<string, number>();
+  // Tope de seguridad: con `puntos.length` slots por carril ya es imposible
+  // no encontrar hueco (cada punto solo ocupa uno), así que nunca se llega
+  // a este límite salvo con un x inválido (NaN) — evita un loop infinito.
+  const NIVEL_TOPE = ordenados.length + 2;
   return ordenados.map((p) => {
-    // Carril = el que tenga el último punto más lejos (maximiza el hueco
-    // disponible); si igual de lejos, alterna arriba primero.
-    const carril: 0 | 1 = ultimoX[0] <= ultimoX[1] ? 0 : 1;
-    const solapa = p.x - ultimoX[carril] < GAP_MIN_PX;
-    const nivel = solapa ? Math.min(NIVEL_MAX, ultimoNivel[carril] + 1) : 0;
-    ultimoX[carril] = p.x;
-    ultimoNivel[carril] = nivel;
-    return { ...p, carril, nivel };
+    for (let nivel = 0; nivel <= NIVEL_TOPE; nivel++) {
+      for (const carril of [0, 1] as const) {
+        const key = `${carril}-${nivel}`;
+        const ultimoX = ultimoXPorSlot.get(key) ?? -Infinity;
+        if (p.x - ultimoX >= GAP_MIN_PX) {
+          ultimoXPorSlot.set(key, p.x);
+          return { ...p, carril, nivel };
+        }
+      }
+    }
+    return { ...p, carril: 0 as const, nivel: NIVEL_TOPE };
   });
 }
 
