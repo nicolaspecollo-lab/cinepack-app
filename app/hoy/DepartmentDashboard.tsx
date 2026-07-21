@@ -330,6 +330,7 @@ export default function DepartmentDashboard({
           <ModoRodajePanel onVerOrden={irAOrdenRodaje} />
           <CalendarioProyecto departamento={nombre} cargo={cargo} isAdmin={isAdmin} fullName={fullName} />
           <ProyectoPulsoPanel
+            departamento={nombre}
             onIrAGenerales={(sub) => {
               setGeneralesJump((prev) => ({ sub, token: (prev?.token ?? 0) + 1 }));
               setTab("generales");

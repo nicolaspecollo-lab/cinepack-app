@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { CLIENTE_DEPT } from "../constants";
 import Icon from "../components/Icon";
-import { CICLO_SELECT, fechasCicloDesdeFila, avanceProyectoPct } from "./cicloVida";
+import { CICLO_SELECT, fechasCicloDesdeFila, avanceProyectoPct, etapaEnCursoPct, type EtapaResumen } from "./cicloVida";
+import { asegurarTareasPersonales } from "./tareasPersonales";
 
 type Conteo = { nombre: string; total: number };
 
@@ -21,6 +22,8 @@ type Pulso = {
 };
 
 type ContratoVence = { empresa: string; tipo: string; fecha_fin: string; diasRestantes: number };
+type TareasPersonalesResumen = { pendiente: number; curso: number; hecho: number };
+type EtapaAvance = { etapa: EtapaResumen; pct: number; financiacion: { presentadas: number; total: number } | null };
 
 function semaforo(tareas: number, alertas: number): "ok" | "warn" | "bad" {
   const total = tareas + alertas;
@@ -63,13 +66,20 @@ function agrupar(rows: { para_departamento: string | null }[]): Conteo[] {
 }
 
 export default function ProyectoPulsoPanel({
+  departamento,
   onIrAGenerales,
   onAbrirTareas,
 }: {
-  onIrAGenerales?: (sub: "comunicados" | "consultas") => void;
+  // Departamento del usuario actual — hace falta para ubicar su tablero
+  // personal "Tareas" (misma clave que usa abrirTareasPersonales) y mostrar
+  // su previsualización numérica. Sin esto, la tarjeta funciona igual pero
+  // sin el desglose.
+  departamento?: string;
+  onIrAGenerales?: (sub: "comunicados" | "consultas" | "equipo") => void;
   onAbrirTareas?: () => void;
 }) {
   const t = useTranslations("pulso");
+  const tEtapa = useTranslations("etapas");
   const [pulso, setPulso] = useState<Pulso | null>(null);
   const [actividad, setActividad] = useState<Actividad[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +87,8 @@ export default function ProyectoPulsoPanel({
   const [esEjecutivo, setEsEjecutivo] = useState(false);
   const [contratosVencen, setContratosVencen] = useState<ContratoVence[]>([]);
   const [creditos, setCreditos] = useState<{ nombre: string; escrito_por: string[]; dirigido_por: string[]; producido_por: string[] } | null>(null);
+  const [tareasResumen, setTareasResumen] = useState<TareasPersonalesResumen | null>(null);
+  const [etapaAvance, setEtapaAvance] = useState<EtapaAvance | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -101,7 +113,52 @@ export default function ProyectoPulsoPanel({
           producido_por: (proyectoCreditos.producido_por as string[]) ?? [],
         });
       }
-      const avancePct = avanceProyectoPct(fechasCicloDesdeFila(proyectoCreditos as Record<string, string | null> | null));
+      const fechasCiclo = fechasCicloDesdeFila(proyectoCreditos as Record<string, string | null> | null);
+      const avancePct = avanceProyectoPct(fechasCiclo);
+      const enCurso = etapaEnCursoPct(fechasCiclo);
+
+      // Tablero personal "Tareas" del usuario en su departamento: mismo
+      // tablero que abre onAbrirTareas, solo lo leemos para el resumen.
+      if (departamento) {
+        const tareasId = await asegurarTareasPersonales(departamento);
+        if (tareasId) {
+          const { data: filasTareas } = await supabase
+            .from("herramienta_filas")
+            .select("datos")
+            .eq("project_id", projectId)
+            .eq("departamento", departamento)
+            .eq("herramienta_id", tareasId);
+          const resumen = { pendiente: 0, curso: 0, hecho: 0 };
+          for (const f of filasTareas ?? []) {
+            const col = (f.datos as Record<string, string> | null)?.col ?? "0";
+            if (col === "1") resumen.curso++;
+            else if (col === "2") resumen.hecho++;
+            else resumen.pendiente++;
+          }
+          setTareasResumen(resumen);
+        }
+      }
+
+      // Avance de la etapa en curso — con desglose propio del Plan de
+      // financiación cuando la etapa en curso es justamente esa.
+      if (enCurso) {
+        let financiacion: EtapaAvance["financiacion"] = null;
+        if (enCurso.etapa.key === "financiacion") {
+          const { data: filasFinan } = await supabase
+            .from("herramienta_filas")
+            .select("datos")
+            .eq("project_id", projectId)
+            .eq("herramienta_id", "ej-plan-financiacion")
+            .neq("orden", -1);
+          const total = filasFinan?.length ?? 0;
+          const presentadas = (filasFinan ?? []).filter((f) => {
+            const estado = (f.datos as Record<string, string> | null)?.estado ?? "";
+            return estado && estado !== "Prospecto";
+          }).length;
+          if (total > 0) financiacion = { presentadas, total };
+        }
+        setEtapaAvance({ etapa: enCurso.etapa, pct: enCurso.pct, financiacion });
+      }
 
       const [{ data: tareasData }, { data: alertasData }, { data: miembrosEquipo }] =
         await Promise.all([
@@ -223,7 +280,7 @@ export default function ProyectoPulsoPanel({
       });
       setLoading(false);
     })();
-  }, []);
+  }, [departamento]);
 
   if (loading) {
     return <p className="pulso-loading">{t("loading")}</p>;
@@ -244,17 +301,26 @@ export default function ProyectoPulsoPanel({
       {creditos && (creditos.escrito_por.length > 0 || creditos.dirigido_por.length > 0 || creditos.producido_por.length > 0) && (
         <div className="tcard pulso-card cp-creditos-card">
           <h4><span className="hex"></span>{creditos.nombre}</h4>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "4px" }}>
+          <dl className="cp-creditos-list">
             {creditos.dirigido_por.length > 0 && (
-              <li><span style={{ color: "var(--muted)" }}>{t("directedBy")}</span> {creditos.dirigido_por.join(", ")}</li>
+              <>
+                <dt>{t("directedBy")}</dt>
+                <dd>{creditos.dirigido_por.join(", ")}</dd>
+              </>
             )}
             {creditos.escrito_por.length > 0 && (
-              <li><span style={{ color: "var(--muted)" }}>{t("writtenBy")}</span> {creditos.escrito_por.join(", ")}</li>
+              <>
+                <dt>{t("writtenBy")}</dt>
+                <dd>{creditos.escrito_por.join(", ")}</dd>
+              </>
             )}
             {creditos.producido_por.length > 0 && (
-              <li><span style={{ color: "var(--muted)" }}>{t("producedBy")}</span> {creditos.producido_por.join(", ")}</li>
+              <>
+                <dt>{t("producedBy")}</dt>
+                <dd>{creditos.producido_por.join(", ")}</dd>
+              </>
             )}
-          </ul>
+          </dl>
         </div>
       )}
 
@@ -313,6 +379,22 @@ export default function ProyectoPulsoPanel({
                 <Icon name="arrow-right" size={13} />
               </button>
             </div>
+            {tareasResumen && (
+              <div className="cp-pulso-mini-stats">
+                <div className="cp-pulso-mini-stat">
+                  <b>{tareasResumen.pendiente}</b>
+                  <span>{t("tasksPending")}</span>
+                </div>
+                <div className="cp-pulso-mini-stat">
+                  <b>{tareasResumen.curso}</b>
+                  <span>{t("tasksDoing")}</span>
+                </div>
+                <div className="cp-pulso-mini-stat">
+                  <b>{tareasResumen.hecho}</b>
+                  <span>{t("tasksDone")}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -348,6 +430,21 @@ export default function ProyectoPulsoPanel({
               <div className="pulso-bar-label">{t("progressPct", { pct: pulso.avancePct })}</div>
             </>
           )}
+          {etapaAvance && (
+            <div className="cp-pulso-etapa-sub">
+              <div className="cp-pulso-etapa-sub-label">{t("stageProgress", { etapa: tEtapa(etapaAvance.etapa.key) })}</div>
+              <div className="hp-check-bar pulso-bar pulso-bar-sm"><span style={{ width: `${etapaAvance.pct}%` }}></span></div>
+              <div className="pulso-bar-label">{t("progressPct", { pct: etapaAvance.pct })}</div>
+              {etapaAvance.financiacion && (
+                <div className="cp-pulso-mini-stats">
+                  <div className="cp-pulso-mini-stat">
+                    <b>{etapaAvance.financiacion.presentadas}</b>
+                    <span>{t("financiacionPresentadas", { total: etapaAvance.financiacion.total })}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="tcard pulso-card">
@@ -365,6 +462,13 @@ export default function ProyectoPulsoPanel({
                 </li>
               ))}
             </ul>
+          )}
+          {onIrAGenerales && (
+            <button className="cp-notif-acceso cp-pulso-equipo-link" onClick={() => onIrAGenerales("equipo")}>
+              <span className="cp-notif-acceso-ic"><Icon name="users" size={15} /></span>
+              <span className="cp-notif-acceso-txt">{t("goEquipo")}</span>
+              <Icon name="arrow-right" size={13} />
+            </button>
           )}
         </div>
       </div>

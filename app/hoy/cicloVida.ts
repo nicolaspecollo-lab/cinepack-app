@@ -143,6 +143,34 @@ export function avanceProyectoPct(fechas: FechasCiclo): number | null {
   return Math.min(100, Math.max(0, Math.round((acumulado / total) * 100)));
 }
 
+/**
+ * Etapa actualmente en curso y su propio avance interno (0-100) — para
+ * mostrar "Avance de la etapa: X" además del avance global del proyecto.
+ * Reusa el mismo cálculo de fracción que avanceProyectoPct usa internamente
+ * para la etapa en curso, pero devuelto solo (sin repartir entre las 6).
+ * null si ninguna etapa está en curso.
+ */
+export function etapaEnCursoPct(fechas: FechasCiclo): { etapa: EtapaResumen; pct: number } | null {
+  const ciclo = resumenCiclo(fechas);
+  const actual = ciclo.find((e) => e.enCurso);
+  if (!actual || !actual.inicio) return null;
+
+  const hoy = new Date();
+  const conFecha = ETAPAS.map((e) => ({ key: e.key, inicio: fechas[e.key] }))
+    .filter((e): e is { key: EtapaKey; inicio: string } => !!e.inicio)
+    .map((e) => ({ ...e, inicioDate: new Date(`${e.inicio}T00:00:00`) }));
+  const idx = conFecha.findIndex((e) => e.key === actual.key);
+  const inicioDate = conFecha[idx]?.inicioDate;
+  const finDate = conFecha[idx + 1]?.inicioDate ?? null;
+
+  let pct = 50; // última etapa con fecha, sin fin de referencia
+  if (inicioDate && finDate && finDate > inicioDate) {
+    const frac = (hoy.getTime() - inicioDate.getTime()) / (finDate.getTime() - inicioDate.getTime());
+    pct = Math.round(Math.min(1, Math.max(0, frac)) * 100);
+  }
+  return { etapa: actual, pct };
+}
+
 /** Días transcurridos de rodaje (1 = primer día) o 0 si todavía no empezó / no tiene fecha definida. */
 export function diaDeRodaje(fechaInicioRodaje: string | null): number {
   if (!fechaInicioRodaje) return 0;

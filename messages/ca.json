@@ -1238,9 +1238,12 @@
     "notificationsTitle": "Notificacions",
     "goComunicados": "Comunicats",
     "goConsultas": "Consultes",
+    "goEquipo": "Veure equip complet",
     "projectProgress": "Avanç del projecte",
     "noProgressData": "El productor executiu encara no ha definit les dates de les etapes.",
     "progressPct": "{pct}% completat",
+    "stageProgress": "Avanç de l'etapa: {etapa}",
+    "financiacionPresentadas": "presentacions de {total} prospeccions",
     "teamTitle": "Equip",
     "noTeam": "Encara no hi ha membres al projecte."
   },
@@ -1397,7 +1400,10 @@
     "save": "Desa",
     "pendingTasks": "Tasques pendents",
     "pendingTasksHint": "El teu tauler personal de tasques d'aquest departament.",
-    "openBoard": "Obre el tauler",
+    "openBoard": "Revisa",
+    "tasksPending": "Pendents",
+    "tasksDoing": "En curs",
+    "tasksDone": "Fetes",
     "opening": "Obrint…"
   },
   "etapas": {

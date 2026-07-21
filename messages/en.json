@@ -1238,9 +1238,12 @@
     "notificationsTitle": "Notifications",
     "goComunicados": "Announcements",
     "goConsultas": "Queries",
+    "goEquipo": "See full team",
     "projectProgress": "Project progress",
     "noProgressData": "The executive producer hasn't set the stage dates yet.",
     "progressPct": "{pct}% complete",
+    "stageProgress": "Stage progress: {etapa}",
+    "financiacionPresentadas": "submitted out of {total} prospects",
     "teamTitle": "Team",
     "noTeam": "No members in the project yet."
   },
@@ -1397,7 +1400,10 @@
     "save": "Save",
     "pendingTasks": "Pending Tasks",
     "pendingTasksHint": "Your personal task board for this department.",
-    "openBoard": "Open board",
+    "openBoard": "Review",
+    "tasksPending": "Pending",
+    "tasksDoing": "In progress",
+    "tasksDone": "Done",
     "opening": "Opening…"
   },
   "etapas": {

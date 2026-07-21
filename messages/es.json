@@ -1238,9 +1238,12 @@
     "notificationsTitle": "Notificaciones",
     "goComunicados": "Comunicados",
     "goConsultas": "Consultas",
+    "goEquipo": "Ver equipo completo",
     "projectProgress": "Avance del proyecto",
     "noProgressData": "El productor ejecutivo aún no ha definido las fechas de las etapas.",
     "progressPct": "{pct}% completado",
+    "stageProgress": "Avance de la etapa: {etapa}",
+    "financiacionPresentadas": "presentaciones de {total} prospecciones",
     "teamTitle": "Equipo",
     "noTeam": "Aún no hay miembros en el proyecto."
   },
@@ -1397,7 +1400,10 @@
     "save": "Guardar",
     "pendingTasks": "Tareas Pendientes",
     "pendingTasksHint": "Tu tablero personal de tareas de este departamento.",
-    "openBoard": "Abrir tablero",
+    "openBoard": "Revisar",
+    "tasksPending": "Pendientes",
+    "tasksDoing": "En curso",
+    "tasksDone": "Hechas",
     "opening": "Abriendo…"
   },
   "etapas": {

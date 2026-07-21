@@ -225,6 +225,16 @@
 .cp-dash .cp-pulso-equipo li{ display:flex; flex-direction:column; gap:1px; }
 .cp-dash .cp-pulso-equipo-nombre{ font-size:12.5px; font-weight:600; color:var(--text); }
 .cp-dash .cp-pulso-equipo-rol{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .cp-pulso-equipo-link{ margin-top:10px; }
+
+/* Créditos del proyecto (Dirigido por / Escrito por / Producido por): grid
+   de 2 columnas con la etiqueta pegada a su valor — antes usaba .tcard li
+   (justify-content:space-between), pensado para listas angostas, así que en
+   esta tarjeta ancha el nombre quedaba pegado al borde derecho, lejos de su
+   etiqueta y descuadrado. */
+.cp-dash .cp-creditos-list{ display:grid; grid-template-columns:max-content 1fr; column-gap:14px; row-gap:6px; margin:6px 0 0; }
+.cp-dash .cp-creditos-list dt{ color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600; }
+.cp-dash .cp-creditos-list dd{ margin:0; color:var(--text); font-size:12.5px; }
 
 /* ===== Pipeline strip ===== */
 .cp-dash .pipe{ display:flex; align-items:center; gap:0; margin:22px 30px 0; flex-wrap:wrap; row-gap:10px; }
@@ -1302,8 +1312,18 @@
 .cp-dash .pulso-big-num{ font-family:'Poppins',sans-serif; font-weight:800; font-size:2.2rem; line-height:1; }
 .cp-dash .pulso-count{ color:var(--acc); font-weight:700; }
 .cp-dash .hp-check-bar.pulso-bar{ flex:none; height:5px; width:100%; margin-top:4px; }
+.cp-dash .hp-check-bar.pulso-bar.pulso-bar-sm{ height:4px; }
 .cp-dash .pulso-bar-label{ font-size:11px; color:var(--muted); }
 .cp-dash .pulso-loading{ padding:30px; font-size:12px; color:var(--muted); }
+
+/* Sub-bloque "Avance de la etapa: X" dentro de la tarjeta de avance del
+   proyecto, y previsualización numérica compartida (tareas / financiación). */
+.cp-dash .cp-pulso-etapa-sub{ margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+.cp-dash .cp-pulso-etapa-sub-label{ font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:600; margin-bottom:2px; }
+.cp-dash .cp-pulso-mini-stats{ display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
+.cp-dash .cp-pulso-mini-stat{ display:flex; flex-direction:column; gap:1px; }
+.cp-dash .cp-pulso-mini-stat b{ font-family:'Poppins',sans-serif; font-weight:800; font-size:1.3rem; line-height:1; color:var(--acc); }
+.cp-dash .cp-pulso-mini-stat span{ font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
 
 /* Punto de color de estado, consistente en toda la app */
 .cp-dash .cp-estado-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; vertical-align:middle; }
