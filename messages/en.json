@@ -2628,7 +2628,14 @@
     "viewWeek": "Week",
     "viewYear": "Year",
     "close": "Close",
-    "backToCalendar": "Back to calendar"
+    "backToCalendar": "Back to calendar",
+    "viewDays": "Days",
+    "viewHours": "Hourly",
+    "allDay": "All day",
+    "scenePrefix": "Sc.",
+    "generalCallShort": "General call time",
+    "fHour": "Time",
+    "fHourHint": "Optional. If set, places the event in the Week hourly view."
   },
   "carpetaMaestra": {
     "title": "Master folder — {nombre}",

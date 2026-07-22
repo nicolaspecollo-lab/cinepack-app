@@ -2628,7 +2628,14 @@
     "viewWeek": "Setmana",
     "viewYear": "Any",
     "close": "Tancar",
-    "backToCalendar": "Tornar al calendari"
+    "backToCalendar": "Tornar al calendari",
+    "viewDays": "Dies",
+    "viewHours": "Horari",
+    "allDay": "Tot el dia",
+    "scenePrefix": "Esc.",
+    "generalCallShort": "Citació general",
+    "fHour": "Hora",
+    "fHourHint": "Opcional. Si es carrega, ubica l'esdeveniment a la vista d'horari de la Setmana."
   },
   "carpetaMaestra": {
     "title": "Carpeta mestra — {nombre}",

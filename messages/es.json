@@ -2628,7 +2628,14 @@
     "viewWeek": "Semana",
     "viewYear": "Año",
     "close": "Cerrar",
-    "backToCalendar": "Volver al calendario"
+    "backToCalendar": "Volver al calendario",
+    "viewDays": "Días",
+    "viewHours": "Horario",
+    "allDay": "Todo el día",
+    "scenePrefix": "Esc.",
+    "generalCallShort": "Citación general",
+    "fHour": "Hora",
+    "fHourHint": "Opcional. Si se carga, ubica el evento en la vista de horario de la Semana."
   },
   "carpetaMaestra": {
     "title": "Carpeta maestra — {nombre}",

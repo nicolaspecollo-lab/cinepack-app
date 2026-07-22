@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import { CarpetaArchivos } from "./HerramientaPanel";
 import DossierConvocatoria from "./DossierConvocatoria";
+import { GENERAL_ORDEN_RODAJE } from "../herramientas";
 import {
   CAMPOS_POR_TIPO,
   CAMPO_TITULAR,
@@ -21,6 +22,31 @@ type Jornada = { fecha: string; dia_numero: number; dia_total: number; ubicacion
 type ChipEvento =
   | { kind: "evento"; ev: EventoProyecto }
   | { kind: "jornada"; j: Jornada };
+
+// Fila de la herramienta "Orden de rodaje" (callsheet) — se lee para poder
+// distribuir las escenas y la citación general de la jornada por hora en la
+// vista de horario de la Semana. Mismo dato que ya carga OrdenRodajePanel.tsx.
+type FilaOrden = { id: string; datos: Record<string, string> };
+type EscenaOrden = { hora: string; esc: string; set: string };
+type ParOrden = { label: string; valor: string };
+type ChipHora = { key: string; label: string; color: string };
+
+function parseJSON<T>(s: string | undefined, fallback: T): T {
+  if (!s) return fallback;
+  try { return JSON.parse(s) as T; } catch { return fallback; }
+}
+
+// Extrae hh:mm de un texto libre → hora decimal (ej. "07:30" → 7.5). null si no hay hora reconocible.
+function horaDeTexto(s: string | null | undefined): number | null {
+  const m = s?.match(/(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const mm = Number(m[2]);
+  if (h < 0 || h > 23) return null;
+  return h + mm / 60;
+}
+
+const HORAS_HORARIO = Array.from({ length: 18 }, (_, i) => i + 6); // 06:00–23:00
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -44,10 +70,12 @@ export default function CalendarioProyecto({
   const hoy = new Date();
   const [cursor, setCursor] = useState({ y: hoy.getFullYear(), m: hoy.getMonth() });
   const [vista, setVista] = useState<"mes" | "semana" | "año">("mes");
+  const [semanaModo, setSemanaModo] = useState<"dias" | "horario">("dias");
   const [semanaBase, setSemanaBase] = useState(iso(hoy));
   const [fsOpen, setFsOpen] = useState(false);
   const [eventos, setEventos] = useState<EventoProyecto[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
+  const [filasOrden, setFilasOrden] = useState<FilaOrden[]>([]);
   const [selDia, setSelDia] = useState<string | null>(iso(hoy));
   const [edit, setEdit] = useState<EventoProyecto | "nuevo" | null>(null);
   const [dossier, setDossier] = useState<EventoProyecto | null>(null);
@@ -64,15 +92,19 @@ export default function CalendarioProyecto({
     const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
     if (!projectId) return;
     const supabase = createClient();
-    const [{ data: evs }, { data: jor }, { data: eds }] = await Promise.all([
+    const [{ data: evs }, { data: jor }, { data: eds }, ordenRes] = await Promise.all([
       supabase.from("eventos_proyecto").select("*").eq("project_id", projectId).order("fecha", { ascending: true }),
       supabase.from("jornadas").select("fecha, dia_numero, dia_total, ubicacion, escenas_dia, citacion").eq("project_id", projectId).not("fecha", "is", null),
       supabase.from("calendario_editores").select("departamento, habilitado").eq("project_id", projectId),
+      esFull
+        ? supabase.from("herramienta_filas").select("id, datos").eq("project_id", projectId).eq("herramienta_id", GENERAL_ORDEN_RODAJE.id)
+        : Promise.resolve({ data: [] as FilaOrden[] }),
     ]);
     setEventos((evs ?? []) as EventoProyecto[]);
     setJornadas((jor ?? []) as Jornada[]);
     setEditablesDeptos(((eds ?? []) as { departamento: string; habilitado: boolean }[]).filter((e) => e.habilitado).map((e) => e.departamento));
-  }, []);
+    setFilasOrden((ordenRes.data ?? []) as FilaOrden[]);
+  }, [esFull]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -117,6 +149,14 @@ export default function CalendarioProyecto({
     return map;
   }, [eventos, jornadas]);
 
+  const ordenPorFecha = useMemo(() => {
+    const map = new Map<string, FilaOrden>();
+    for (const f of filasOrden) {
+      if (f.datos?.fecha) map.set(f.datos.fecha, f);
+    }
+    return map;
+  }, [filasOrden]);
+
   const semanas = useMemo(() => buildMonth(cursor.y, cursor.m), [cursor]);
   const mesLabel = useMemo(
     () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(cursor.y, cursor.m, 1)),
@@ -137,6 +177,49 @@ export default function CalendarioProyecto({
       return iso(x);
     });
   }, [semanaBase]);
+
+  // Distribuye los eventos del día (con campo "hora") y, si ese día es una
+  // jornada de rodaje con Orden de rodaje cargado, sus escenas y la citación
+  // general, en franjas horarias — para la vista "Horario" de la Semana.
+  // Se calcula una sola vez por semana visible (no por celda) para no
+  // reparsear el JSON de cada fila de Orden de rodaje en cada una de las 18
+  // filas de hora × 7 días.
+  const bloquesPorDiaSemana = useMemo(() => {
+    const map = new Map<string, { sinHora: ChipHora[]; porHora: Map<number, ChipHora[]> }>();
+    if (!(esFull && vista === "semana" && semanaModo === "horario")) return map;
+    for (const dia of semanaDias) {
+      const sinHora: ChipHora[] = [];
+      const porHora = new Map<number, ChipHora[]>();
+      const add = (hora: number | null, chip: ChipHora) => {
+        if (hora === null) { sinHora.push(chip); return; }
+        const h = Math.max(HORAS_HORARIO[0], Math.min(HORAS_HORARIO[HORAS_HORARIO.length - 1], Math.floor(hora)));
+        const arr = porHora.get(h) ?? [];
+        arr.push(chip);
+        porHora.set(h, arr);
+      };
+      for (const c of porDia.get(dia) ?? []) {
+        if (c.kind === "evento") {
+          add(horaDeTexto(c.ev.datos?.hora), { key: c.ev.id, label: c.ev.titulo || tEt(c.ev.tipo), color: COLOR_ETAPA[c.ev.tipo] });
+        }
+      }
+      const fila = ordenPorFecha.get(dia);
+      if (fila) {
+        const escenas = parseJSON<EscenaOrden[]>(fila.datos.escenas, []);
+        for (const e of escenas) {
+          const h = horaDeTexto(e.hora);
+          if (h === null) continue;
+          add(h, { key: `esc-${fila.id}-${e.esc}`, label: `${t("scenePrefix")} ${e.esc}${e.set ? " · " + e.set : ""}`, color: COLOR_ETAPA.rodaje });
+        }
+        const citaciones = parseJSON<ParOrden[]>(fila.datos.citaciones, []);
+        const llamadas = parseJSON<ParOrden[]>(fila.datos.llamadas, []);
+        const citaGeneral = [...citaciones, ...llamadas].map((p) => p.valor).find((v) => /\d{1,2}:\d{2}/.test(v));
+        const hc = horaDeTexto(citaGeneral);
+        if (hc !== null) add(hc, { key: `cita-${fila.id}`, label: t("generalCallShort"), color: COLOR_ETAPA.rodaje });
+      }
+      map.set(dia, { sinHora, porHora });
+    }
+    return map;
+  }, [esFull, vista, semanaModo, semanaDias, porDia, ordenPorFecha, t, tEt]);
 
   const tituloNav = useMemo(() => {
     if (vista === "semana") {
@@ -249,6 +332,7 @@ export default function CalendarioProyecto({
               <div key={k} className="cal-prev-item" style={{ borderLeftColor: COLOR_ETAPA[c.ev.tipo] }}>
                 <div className="cal-prev-item-head">
                   <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA[c.ev.tipo] }}>{c.ev.datos?.categoria || tEt(c.ev.tipo)}</span>
+                  {c.ev.datos?.hora && <span className="cal-prev-item-hora">{c.ev.datos.hora}</span>}
                   <span className="cal-prev-item-title">{c.ev.titulo || tEt(c.ev.tipo)}</span>
                   <span className="cal-prev-item-actions">
                     <button className="cp-btn cp-btn-acc" onClick={() => setDossier(c.ev)}>{t("openDossier")}</button>
@@ -329,6 +413,12 @@ export default function CalendarioProyecto({
         <button className="cal-navbtn" onClick={() => mover(-1)} aria-label={t("prevMonth")}>‹</button>
         <span className="cal-month">{tituloNav}</span>
         <button className="cal-navbtn" onClick={() => mover(1)} aria-label={t("nextMonth")}>›</button>
+        {vista === "semana" && esFull && (
+          <div className="cp-seg cp-seg-chip cal-semana-modo-seg">
+            <button type="button" className={`cp-seg-cell${semanaModo === "dias" ? " cp-seg-on" : ""}`} onClick={() => setSemanaModo("dias")}>{t("viewDays")}</button>
+            <button type="button" className={`cp-seg-cell${semanaModo === "horario" ? " cp-seg-on" : ""}`} onClick={() => setSemanaModo("horario")}>{t("viewHours")}</button>
+          </div>
+        )}
         <span className="cal-spacer" />
         {puedeEditar && <button className="cp-btn cp-btn-acc" onClick={() => { setEdit("nuevo"); if (esFull) setFsOpen(true); }}>{t("newEvent")}</button>}
       </div>
@@ -340,10 +430,47 @@ export default function CalendarioProyecto({
         </div>
       )}
 
-      {vista === "semana" && esFull && (
+      {vista === "semana" && esFull && semanaModo === "dias" && (
         <div className="cal-grid cal-grid-semana">
           {diasSemana.map((d, i) => <div key={i} className="cal-dow">{d}</div>)}
           {semanaDias.map((cell, i) => renderCelda(cell, i))}
+        </div>
+      )}
+
+      {vista === "semana" && esFull && semanaModo === "horario" && (
+        <div className="cal-horario-wrap">
+          <div className="cal-horario-row cal-horario-head">
+            <div className="cal-horario-hourcol" />
+            {semanaDias.map((d, i) => {
+              const dnum = Number(d.slice(8, 10));
+              const esHoy = d === iso(hoy);
+              return <div key={i} className={`cal-horario-daycol-h${esHoy ? " hoy" : ""}`}>{diasSemana[i]} {dnum}</div>;
+            })}
+          </div>
+          <div className="cal-horario-row cal-horario-allday">
+            <div className="cal-horario-hourcol">{t("allDay")}</div>
+            {semanaDias.map((d, i) => {
+              const sinHora = bloquesPorDiaSemana.get(d)?.sinHora ?? [];
+              return (
+                <div key={i} className="cal-horario-cell" onClick={() => abrirDia(d)}>
+                  {sinHora.map((c) => <span key={c.key} className="cal-horario-chip" style={{ background: c.color }}>{c.label}</span>)}
+                </div>
+              );
+            })}
+          </div>
+          {HORAS_HORARIO.map((h) => (
+            <div key={h} className="cal-horario-row">
+              <div className="cal-horario-hourcol">{String(h).padStart(2, "0")}:00</div>
+              {semanaDias.map((d, i) => {
+                const chips = bloquesPorDiaSemana.get(d)?.porHora.get(h) ?? [];
+                return (
+                  <div key={i} className="cal-horario-cell" onClick={() => abrirDia(d)}>
+                    {chips.map((c) => <span key={c.key} className="cal-horario-chip" style={{ background: c.color }}>{c.label}</span>)}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
       )}
 
@@ -450,6 +577,11 @@ function EventoForm({
           <span>{t("fDate")}</span>
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
           {tipo === "financiacion" && <small className="cal-field-hint">{t("fDateFinanciacionHint")}</small>}
+        </label>
+        <label className="cal-field">
+          <span>{t("fHour")}</span>
+          <input type="time" value={datos.hora ?? ""} onChange={(e) => setDatos((d) => ({ ...d, hora: e.target.value }))} />
+          <small className="cal-field-hint">{t("fHourHint")}</small>
         </label>
         {campos.map((c) => c.tipo === "opciones" ? (
           <div key={c.key} className="cal-field wide">

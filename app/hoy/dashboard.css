@@ -4191,7 +4191,22 @@
 
 /* Variante "full" (Generales → Calendario): toggle de vista + semana/año + panel fullscreen */
 .cp-dash .cal-vista-seg{ margin-left:auto; }
+.cp-dash .cal-semana-modo-seg{ margin-left:14px; }
+.cp-dash .cal-prev-item-hora{ font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; color:var(--acc); }
 .cp-dash .cal-grid-semana .cal-cell{ min-height:120px; }
+.cp-dash .cal-horario-wrap{ border:1px solid var(--line); overflow-x:auto; }
+.cp-dash .cal-horario-row{ display:grid; grid-template-columns:56px repeat(7,1fr); border-bottom:1px solid var(--line); }
+.cp-dash .cal-horario-row:last-child{ border-bottom:none; }
+.cp-dash .cal-horario-hourcol{ font-size:9.5px; font-weight:700; color:var(--muted); padding:5px 6px; border-right:1px solid var(--line); display:flex; align-items:flex-start; }
+.cp-dash .cal-horario-head{ background:var(--bg-2); }
+.cp-dash .cal-horario-daycol-h{ font-family:'Poppins',sans-serif; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:var(--muted); padding:6px; border-right:1px solid var(--line); }
+.cp-dash .cal-horario-daycol-h:last-child{ border-right:none; }
+.cp-dash .cal-horario-daycol-h.hoy{ color:var(--acc); }
+.cp-dash .cal-horario-allday{ background:var(--bg-2); }
+.cp-dash .cal-horario-cell{ min-height:28px; padding:2px 4px; border-right:1px solid var(--line); cursor:pointer; display:flex; flex-direction:column; gap:2px; }
+.cp-dash .cal-horario-cell:last-child{ border-right:none; }
+.cp-dash .cal-horario-cell:hover{ background:var(--hl2); }
+.cp-dash .cal-horario-chip{ font-size:9px; font-weight:700; padding:1px 5px; color:#0D0D12; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cp-dash .cal-year-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:4px; }
 .cp-dash .cal-mini-month{ border:1px solid var(--line); padding:8px 9px; }
 .cp-dash .cal-mini-month-titulo{ font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; color:var(--text); text-transform:capitalize; margin-bottom:6px; }
