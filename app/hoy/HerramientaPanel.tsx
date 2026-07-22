@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
@@ -564,21 +565,32 @@ function HerramientaData({
       )}
       {herramienta.hint && <p className="hp-hint">{herramienta.hint}</p>}
 
-      {esTabla && (
-        <div className="dsubtabs hp-view-tabs">
-          {tieneTablero && (
-            <button className={`dsubtab ${vista === "tablero" ? "active" : ""}`} onClick={() => setVista("tablero")}>
-              <Icon name="film" size={12} /> {t("viewBoard")}
+      {esTabla && (() => {
+        const tabs = (
+          <div className="dsubtabs hp-view-tabs">
+            {tieneTablero && (
+              <button className={`dsubtab ${vista === "tablero" ? "active" : ""}`} onClick={() => setVista("tablero")}>
+                <Icon name="film" size={12} /> {t("viewBoard")}
+              </button>
+            )}
+            <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
+              <Icon name="table" size={12} /> {t("viewTable")}
             </button>
-          )}
-          <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
-            <Icon name="table" size={12} /> {t("viewTable")}
-          </button>
-          <button className={`dsubtab ${vista === "archivos" ? "active" : ""}`} onClick={() => setVista("archivos")}>
-            <Icon name="folder" size={12} /> {t("viewFiles")}
-          </button>
-        </div>
-      )}
+            <button className={`dsubtab ${vista === "archivos" ? "active" : ""}`} onClick={() => setVista("archivos")}>
+              <Icon name="folder" size={12} /> {t("viewFiles")}
+            </button>
+          </div>
+        );
+        // Se porta a la cabecera "← Volver / Título" (HerramientasPanel.tsx),
+        // que vive fuera de este árbol — antes quedaba en su propia fila
+        // debajo, dejando todo el lado derecho de la cabecera vacío. Se
+        // resuelve el nodo en cada render (sin estado/efecto extra): la
+        // primera vez que no exista todavía cae al fallback inline, y con
+        // cualquier re-render posterior (esta herramienta ya tiene varios
+        // por la carga de datos) queda portado correctamente.
+        const slot = typeof document !== "undefined" ? document.getElementById("hp-open-head-tabs") : null;
+        return slot ? createPortal(tabs, slot) : tabs;
+      })()}
 
       {esTabla && vista === "tablero" && (
         <>
@@ -5314,18 +5326,48 @@ export function TablaTool({
           </div>
         </ToolMenu>
 
-        {/* Herramientas de datos */}
-        <ToolMenu label={t("tools")} icon="replace" width={220}>
-          {editable && (
-            <button className="tm-item" onClick={() => setNuevaColOpen(true)}><Icon name="plus" size={13} /><span>{t("addColumnItem")}</span></button>
-          )}
-          <button className={`tm-item${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)}>
-            <Icon name="replace" size={13} /><span>{t("replace")}</span>
-          </button>
-          <button className={`tm-item${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)}>
-            <Icon name="filter" size={13} /><span>{t("conditionalFormat")}</span>
-          </button>
-        </ToolMenu>
+        {/* Agregar fila / columna — antes vivían sueltos debajo de la tabla,
+            sin relación visual con el resto de los controles. El menú
+            "Herramientas" que agrupaba esto + buscar/reemplazar + formato
+            condicional se sacó (agregaba un clic sin aportar nada); esas dos
+            últimas quedan como íconos sueltos, sin perder la función. */}
+        {editable && <button className="btn acc" onClick={onCrear}><Icon name="plus" size={13} /> {t("addRow")}</button>}
+        {editable && !nuevaColOpen && (
+          <button className="btn" onClick={() => setNuevaColOpen(true)}><Icon name="columns" size={13} /> {t("addColumn")}</button>
+        )}
+        {editable && nuevaColOpen && (
+          <div className="hp-newcol">
+            <input
+              className="hp-cell-input"
+              type="text"
+              placeholder={t("newColumnPrompt")}
+              value={nuevaColLabel}
+              onChange={(e) => setNuevaColLabel(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") confirmarNuevaColumna(); if (e.key === "Escape") cancelarNuevaColumna(); }}
+              autoFocus
+            />
+            <div className="cp-seg cp-seg-chip">
+              {(["texto", "fecha", "num"] as const).map((tp) => (
+                <button
+                  key={tp}
+                  type="button"
+                  className={`cp-seg-cell${nuevaColTipo === tp ? " cp-seg-on" : ""}`}
+                  onClick={() => setNuevaColTipo(tp)}
+                >
+                  {t(`colType${tp === "texto" ? "Texto" : tp === "fecha" ? "Fecha" : "Num"}`)}
+                </button>
+              ))}
+            </div>
+            <button className="cp-btn cp-btn-acc" onClick={confirmarNuevaColumna}>{t("addColumnConfirm")}</button>
+            <button className="cp-btn" onClick={cancelarNuevaColumna}>{t("cancel")}</button>
+          </div>
+        )}
+        <button className={`hp-expand-btn${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)} title={t("replace")}>
+          <Icon name="replace" size={14} />
+        </button>
+        <button className={`hp-expand-btn${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)} title={t("conditionalFormat")}>
+          <Icon name="filter" size={14} />
+        </button>
 
         {/* Exportar / importar */}
         <ToolMenu label={t("export")} icon="download" align="right" width={210}>
@@ -5690,38 +5732,11 @@ export function TablaTool({
         </div>
       )}
 
-      <div className="hp-actions">
-        {editable && <button className="btn acc" onClick={onCrear}>{t("addRow")}</button>}
-        {editable && !nuevaColOpen && <button className="btn" onClick={() => setNuevaColOpen(true)}>{t("addColumn")}</button>}
-        {editable && nuevaColOpen && (
-          <div className="hp-newcol">
-            <input
-              className="hp-cell-input"
-              type="text"
-              placeholder={t("newColumnPrompt")}
-              value={nuevaColLabel}
-              onChange={(e) => setNuevaColLabel(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") confirmarNuevaColumna(); if (e.key === "Escape") cancelarNuevaColumna(); }}
-              autoFocus
-            />
-            <div className="cp-seg cp-seg-chip">
-              {(["texto", "fecha", "num"] as const).map((tp) => (
-                <button
-                  key={tp}
-                  type="button"
-                  className={`cp-seg-cell${nuevaColTipo === tp ? " cp-seg-on" : ""}`}
-                  onClick={() => setNuevaColTipo(tp)}
-                >
-                  {t(`colType${tp === "texto" ? "Texto" : tp === "fecha" ? "Fecha" : "Num"}`)}
-                </button>
-              ))}
-            </div>
-            <button className="cp-btn cp-btn-acc" onClick={confirmarNuevaColumna}>{t("addColumnConfirm")}</button>
-            <button className="cp-btn" onClick={cancelarNuevaColumna}>{t("cancel")}</button>
-          </div>
-        )}
-        {editable && tieneOrdenManual && <button className="btn" onClick={restablecerOrden}>{t("resetOrder")}</button>}
-      </div>
+      {editable && tieneOrdenManual && (
+        <div className="hp-actions">
+          <button className="btn" onClick={restablecerOrden}>{t("resetOrder")}</button>
+        </div>
+      )}
     </>
   );
 

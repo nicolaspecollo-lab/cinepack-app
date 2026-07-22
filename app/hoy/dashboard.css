@@ -1030,6 +1030,8 @@
   .cp-dash .hp-open-title-input{ max-width:100%; }
 }
 .cp-dash .hp-open-tag{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); border:1px solid var(--line); border-radius:0; padding:3px 10px; }
+.cp-dash .hp-open-head-tabs{ margin-left:auto; }
+.cp-dash .hp-open-head-tabs:empty{ display:none; }
 .cp-dash .hp{ display:flex; flex-direction:column; }
 .cp-dash .hp-hint{ font-size:12px; color:var(--muted); padding:14px 30px 0; margin:0; line-height:1.6; }
 .cp-dash .hp-actions{ padding:14px 30px 30px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -1748,10 +1750,18 @@
    ======================================================== */
 
 /* --- Toolbar --- */
+/* Sticky: sigue visible mientras se scrollea la tabla hacia abajo para
+   buscar/escribir en una fila lejana. Fondo OPACO (no --hl1, que es un tinte
+   translúcido pensado para ir sobre un fondo ya opaco) — si no, las filas de
+   la tabla se transparentarían debajo del toolbar al scrollear. En pantalla
+   completa ya queda fijo por flex-shrink:0 en su propio overlay, sticky ahí
+   no hace falta (ver override más abajo). */
 .cp-dash .hp-tabla-toolbar{
   display:flex; align-items:center; gap:6px; padding:8px 10px;
-  background:var(--hl1); border-bottom:1px solid var(--line); flex-wrap:wrap; flex-shrink:0;
+  background:var(--bg-2); border-bottom:1px solid var(--line); flex-wrap:wrap; flex-shrink:0;
+  position:sticky; top:0; z-index:10;
 }
+.hp-tabla-fullscreen .hp-tabla-toolbar{ position:static; }
 .cp-dash .hp-tabla-search-wrap{ flex:1; min-width:130px; max-width:240px; }
 .cp-dash .hp-tabla-search{
   width:100%; background:var(--bg-2); border:1px solid var(--line); color:var(--text);
@@ -1778,6 +1788,7 @@
   flex-shrink:0;
 }
 .cp-dash .hp-expand-btn:hover{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .hp-expand-btn.active{ border-color:var(--acc); color:var(--acc); background:var(--hl2); }
 
 /* --- Cabeceras sortables --- */
 .cp-dash .hp-th-sortable{ cursor:pointer; user-select:none; white-space:nowrap; transition:background .1s; }
@@ -1833,6 +1844,7 @@
 }
 .hp-fullscreen-close{ flex-shrink:0; }
 .hp-tabla-fullscreen .hp-tabla-toolbar{ flex-shrink:0; }
+.hp-tabla-fullscreen .hp-table thead tr th{ top:0; }
 .hp-tabla-fullscreen .hp-stats-bar{ flex-shrink:0; }
 .hp-tabla-fullscreen .hp-print-area{ flex:1; overflow:auto; min-height:0; display:flex; flex-direction:column; }
 .hp-tabla-fullscreen .hp-table-wrap{ flex:1; overflow:auto; min-height:0; }
@@ -1843,19 +1855,33 @@
    FUNCIONES EXCEL — 30 features
    ======================================================== */
 
-/* Sticky header */
+/* Sticky header — top corrido para dejarle lugar al toolbar (también
+   sticky, ver .hp-tabla-toolbar) que queda arriba de todo; en pantalla
+   completa el toolbar no es sticky (ya está fijo por flex-shrink:0 en su
+   propio overlay), así que ahí el header vuelve a pegarse a top:0. */
 .cp-dash .hp-table thead tr th{
-  position:sticky; top:0; z-index:2; background:var(--bg-2);
+  position:sticky; top:48px; z-index:2; background:var(--bg-2);
   box-shadow:0 1px 0 var(--line);
 }
 
 /* Freeze primera columna */
 .cp-dash .hp-table .hp-th-frozen,
 .cp-dash .hp-table .hp-td-frozen{
-  position:sticky; left:0; z-index:1; background:var(--bg-2);
+  position:sticky; left:0; z-index:2; background:var(--bg-2);
   box-shadow:2px 0 4px rgba(0,0,0,0.15);
+  /* Todo <td> del área hp-table es position:relative (para .hp-databar) —
+     eso pone a Importe/otras celdas en el mismo nivel de apilado que la
+     congelada en algunos motores (Safari en particular renderiza mal el
+     orden de pintado de sticky + hermanos posicionados dentro de una
+     tabla, un bug conocido de WebKit). isolation:isolate fuerza un
+     contexto de apilado propio y translateZ(0) fuerza su propia capa de
+     composición — entre los dos, la celda congelada gana siempre, sin
+     ambigüedad, sea cual sea el motor. */
+  isolation:isolate;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
 }
-.cp-dash .hp-table thead .hp-th-frozen{ z-index:3; }
+.cp-dash .hp-table thead .hp-th-frozen{ z-index:4; }
 /* Los estados de fila (hover/seleccionada/drag-over) pintan un color de
    overlay TRANSLÚCIDO (--hl1, rgba(255,255,255,0.02) etc.) pensado para
    layer sobre un fondo opaco — pero como reemplazan el background entero,
