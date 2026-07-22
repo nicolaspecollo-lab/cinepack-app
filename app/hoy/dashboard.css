@@ -1057,14 +1057,19 @@
 }
 
 /* Tabla editable */
-/* overflow-y:visible EXPLÍCITO — dejar overflow-y sin especificar mientras
-   overflow-x:auto está seteado hace que el navegador compute overflow-y como
-   "auto" también (regla CSS: si un eje no es "visible" el otro deja de
-   serlo), convirtiendo a este wrapper en su propio contenedor de scroll
-   vertical "fantasma" (sin scrollbar, porque no tiene alto fijo, pero SÍ
-   cambia la referencia de posicionamiento de cualquier position:sticky
-   adentro — como el thead — rompiendo el pegado respecto a la página). */
-.cp-dash .hp-table-wrap{ overflow-x:auto; overflow-y:visible; padding:14px 30px 0; }
+/* .hp-table-wrap es su propio contenedor de scroll (ambos ejes), con una
+   altura acotada al viewport — igual que ya hacía el modo pantalla completa
+   (ver override más abajo). Esto resuelve de una vez 3 síntomas que venían
+   del modelo anterior (wrap creciendo con el contenido + la PÁGINA scrolleando):
+   la barra de scroll horizontal solo aparecía al llegar al final de la tabla
+   (quedaba pegada al borde inferior del contenido, no del viewport), no había
+   forma de tener una barra vertical visible sin scrollear toda la página, y
+   el thead sticky necesitaba un hack (ResizeObserver midiendo la altura real
+   del toolbar) para no superponerse con la primera fila. Con overflow:auto +
+   max-height acá, el thead (position:sticky; top:0) queda relativo a ESTE
+   wrapper — no a la página — así que ambas scrollbars nativas quedan siempre
+   ancladas al borde del wrapper, visibles sin depender de cuánto scrolleaste. */
+.cp-dash .hp-table-wrap{ overflow:auto; max-height:calc(100vh - 230px); padding:0; }
 /* border-collapse:separate (no collapse) a propósito: position:sticky sobre
    celdas de una tabla con border-collapse:collapse se renderiza mal en varios
    navegadores (el fondo queda semi-transparente y el contenido de las
@@ -1077,7 +1082,7 @@
   padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--hl1);
   position:sticky; top:0; z-index:1;
 }
-.cp-dash table.hp-table th.hp-th-reg{ text-align:center; }
+.cp-dash table.hp-table th.hp-th-acciones{ text-align:center; }
 .cp-dash table.hp-table td{ border-bottom:1px solid var(--line); padding:0; vertical-align:top; }
 /* Ancho mínimo por celda de dato: sin esto, con muchas columnas (ej. Plan de
    financiación con organismo/premio agregados) el navegador aplasta cada
@@ -1096,6 +1101,17 @@
 .cp-dash .hp-cell-area{ resize:none; line-height:1.5; min-height:36px; overflow:hidden; }
 .cp-dash .hp-cell-input:focus, .cp-dash .hp-cell-area:focus, .cp-dash .hp-cell-select:focus{ outline:1px solid var(--acc); outline-offset:-1px; background:var(--hl1); }
 .cp-dash .hp-cell-select{ cursor:pointer; }
+/* Celda tipo "estado" (Tipo, Estado, etc.): CpSelect propio en vez del
+   <select> nativo del navegador — mismo desplegable estilizado que ya se usa
+   en toolbars/formularios (Biblia §10.10). El botón disparador ocupa toda la
+   celda, sin borde propio, para que el tinte tono-* (heredado del <select>
+   nativo anterior) siga viéndose igual que antes. */
+.cp-dash .hp-cell-cpselect{ height:100%; }
+.cp-dash .hp-cell-cpselect .cdp-sel{ min-width:0; height:100%; }
+.cp-dash .hp-cell-cpselect .cdp-sel-btn{
+  border:none; background:none; padding:9px 8px; font-size:12px; height:100%;
+}
+.cp-dash .hp-cell-select-ro{ display:block; padding:9px 8px; font-size:12px; color:var(--muted); }
 /* Celda de texto (corto/largo) con rich text (contentEditable) */
 .cp-dash .hp-cell-rich{ white-space:pre-wrap; word-break:break-word; cursor:text; }
 .cp-dash .hp-cell-rich.readonly{ cursor:default; }
@@ -1131,6 +1147,10 @@
 .cp-dash .hp-cell-select.tono-warn{ background:rgba(245,166,35,0.14); }
 .cp-dash .hp-cell-select.tono-bad{ background:rgba(255,107,107,0.14); }
 .cp-dash .hp-cell-select.tono-info{ background:rgba(17,194,220,0.12); }
+.cp-dash .hp-cell-cpselect.tono-ok, .cp-dash .hp-cell-select-ro.tono-ok{ background:rgba(159,232,112,0.14); }
+.cp-dash .hp-cell-cpselect.tono-warn, .cp-dash .hp-cell-select-ro.tono-warn{ background:rgba(245,166,35,0.14); }
+.cp-dash .hp-cell-cpselect.tono-bad, .cp-dash .hp-cell-select-ro.tono-bad{ background:rgba(255,107,107,0.14); }
+.cp-dash .hp-cell-cpselect.tono-info, .cp-dash .hp-cell-select-ro.tono-info{ background:rgba(17,194,220,0.12); }
 .cp-dash .hp-ficha-field select.tono-ok{ background-color:rgba(159,232,112,0.14); }
 .cp-dash .hp-ficha-field select.tono-warn{ background-color:rgba(245,166,35,0.14); }
 .cp-dash .hp-ficha-field select.tono-bad{ background-color:rgba(255,107,107,0.14); }
@@ -1157,33 +1177,21 @@
 .cp-dash .hp-savebadge.saved{ color:var(--lime); border-color:rgba(159,232,112,0.4); background:rgba(159,232,112,0.08); }
 @keyframes hp-fadein{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
 @keyframes fadein{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:translateY(0); } }
-.cp-dash .hp-td-reg{ text-align:center; white-space:nowrap; padding:0 6px; }
-.cp-dash .hp-reg-btn{
-  display:inline-flex; align-items:center; gap:6px; font-family:'Poppins',sans-serif; font-weight:700; font-size:9.5px;
-  text-transform:uppercase; letter-spacing:0.06em; border:1px solid var(--line); background:none; color:var(--muted);
-  padding:5px 9px; cursor:pointer; border-radius:0;
-}
-.cp-dash .hp-reg-btn .hex{ width:9px; height:8px; background:var(--line); }
-.cp-dash .hp-reg-btn:hover{ border-color:var(--acc); color:var(--acc); }
-.cp-dash .hp-reg-btn.visto{ color:var(--lime); border-color:rgba(159,232,112,0.4); }
-.cp-dash .hp-reg-btn.visto .hex{ background:var(--lime); }
 .cp-dash .hp-del{ font-size:11px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; padding:7px 9px; }
 .cp-dash .hp-del:hover{ color:var(--rose); border-color:var(--rose); }
-.cp-dash .hp-td-acciones{ display:flex; gap:6px; white-space:nowrap; }
-.cp-dash .hp-dup{ font-size:11px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; padding:7px 9px; }
-.cp-dash .hp-dup:hover{ color:var(--cyan); border-color:var(--cyan); }
 
-/* Fila de detalle: registro de intervenciones + visionado */
-.cp-dash .hp-detail-row td{ background:var(--hl1); padding:0; }
-.cp-dash .hp-detail{ display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:16px 18px; }
-.cp-dash .hp-detail-col h6{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); display:flex; align-items:center; gap:7px; margin-bottom:8px; }
-.cp-dash .hp-detail-col h6 .hex{ width:9px; height:8px; background:var(--acc); }
-.cp-dash .hp-timeline{ list-style:none; display:flex; flex-direction:column; gap:5px; font-size:11.5px; color:var(--muted); border-left:1px solid var(--line); padding-left:12px; }
-.cp-dash .hp-timeline b{ color:var(--text); font-family:'Poppins',sans-serif; font-weight:600; }
-.cp-dash .hp-empty{ font-size:11.5px; color:var(--muted); }
-.cp-dash .hp-vis-chips{ display:flex; flex-wrap:wrap; gap:6px; }
-.cp-dash .hp-vis-chip{ font-size:10.5px; border:1px solid rgba(159,232,112,0.4); color:var(--lime); border-radius:0; padding:3px 10px; }
-@media (max-width:640px){ .cp-dash .hp-detail{ grid-template-columns:1fr; gap:16px; } }
+/* Columna única de acciones de fila (color + copiar + duplicar + eliminar),
+   antes repartidas en 3 columnas separadas (Ver/registro, color, acciones). */
+.cp-dash .hp-td-acciones{ text-align:center; }
+.cp-dash .hp-row-actions{ display:inline-flex; align-items:center; gap:3px; }
+.cp-dash .hp-row-actions-sep{ width:1px; height:16px; background:var(--line); margin:0 3px; flex-shrink:0; }
+.cp-dash .hp-row-action-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:24px; height:24px; font-size:12px; border:1px solid var(--line); background:none; color:var(--muted);
+  cursor:pointer; padding:0; border-radius:0; flex-shrink:0;
+}
+.cp-dash .hp-row-action-btn:hover{ color:var(--cyan); border-color:var(--cyan); }
+.cp-dash .hp-row-action-danger:hover{ color:var(--rose); border-color:var(--rose); }
 
 .cp-dash .hp-thread-section{ display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line); margin-top:8px; padding:0 30px; }
 .cp-dash .hp-thread-section .hp-single-foot{ padding:14px 0; }
@@ -1803,7 +1811,6 @@
 .cp-dash .hp-th-sorted{ color:var(--acc); }
 .cp-dash .hp-sort-icon{ font-size:10px; opacity:0.6; }
 .cp-dash .hp-th-check, .cp-dash .hp-td-check{ width:32px; text-align:center; padding:0 4px; }
-.cp-dash .hp-th-color, .cp-dash .hp-td-color{ width:36px; text-align:center; padding:0 4px; }
 
 /* --- Color por fila --- */
 .cp-dash .hp-color-wrap{ display:flex; align-items:center; gap:2px; }
@@ -1862,14 +1869,11 @@
    FUNCIONES EXCEL — 30 features
    ======================================================== */
 
-/* Sticky header — top corrido exactamente la altura real del toolbar
-   (--hp-toolbar-h, medida en vivo con ResizeObserver en HerramientaPanel.tsx
-   porque el toolbar es flex-wrap y puede pasar a 2 líneas en pantallas
-   angostas — un valor fijo se desincroniza apenas cambia). En pantalla
-   completa el toolbar no es sticky (ya está fijo por flex-shrink:0 en su
-   propio overlay), así que ahí el header vuelve a pegarse a top:0. */
+/* Sticky header — top:0 relativo a .hp-table-wrap (su propio contenedor de
+   scroll, ver arriba), no a la página. El toolbar vive FUERA de este wrapper
+   (hermano anterior), así que no hay superposición que calcular. */
 .cp-dash .hp-table thead tr th{
-  position:sticky; top:var(--hp-toolbar-h, 48px); z-index:2; background:var(--bg-2);
+  position:sticky; top:0; z-index:2; background:var(--bg-2);
   box-shadow:0 1px 0 var(--line);
 }
 

@@ -104,6 +104,21 @@ const CELL_FONTS: { label: string; value: string }[] = [
 ];
 const CELL_TEXT_COLORS = ["#111111", "#F4F4F6", "#9EEE6A", "#19CBE6", "#E8A330", "#F07A7A", "#C084FC"];
 
+// Moneda de las columnas tipo "money" de una tabla — configurable por
+// herramienta (se guarda en la fila meta, orden:-1, misma convención que las
+// columnas extra en datos._extra). "eur" es el default histórico (antes el
+// símbolo € estaba hardcodeado).
+const MONEDAS: { value: string; label: string; symbol: string }[] = [
+  { value: "eur", label: "Euros", symbol: "€" },
+  { value: "gbp", label: "Libras", symbol: "£" },
+  { value: "usd", label: "Dólares", symbol: "US$" },
+  { value: "ars", label: "Pesos", symbol: "$" },
+  { value: "none", label: "Ninguno", symbol: "" },
+];
+function simboloMoneda(valor: string | undefined): string {
+  return MONEDAS.find((m) => m.value === (valor ?? "eur"))?.symbol ?? "€";
+}
+
 // Encabezado de marca, sólo visible al exportar/imprimir en PDF.
 export function PrintHeader({ herramientaNombre, departamento }: { herramientaNombre: string; departamento: string }) {
   const proyecto = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto") : null;
@@ -526,6 +541,13 @@ function HerramientaData({
     const next = [...actuales, { key: slugCampo(label), label, tipo } as Columna];
     if (meta) await guardarFila(meta.id, { ...meta.datos, _extra: JSON.stringify(next) });
     else await crearFila({ _extra: JSON.stringify(next) }, -1);
+  }
+
+  // Moneda de las columnas "money" de esta tabla — compartida por todo el
+  // equipo (vive en la fila meta, misma convención que _extra).
+  async function cambiarMoneda(v: string) {
+    if (meta) await guardarFila(meta.id, { ...meta.datos, _moneda: v });
+    else await crearFila({ _moneda: v }, -1);
   }
 
   async function agregarCampoExtra(label: string) {
@@ -1175,11 +1197,12 @@ function HerramientaData({
           }}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
-          onVisionar={visionar}
           onAgregarColumna={agregarColumnaExtra}
           onImportarCSV={async (rows) => {
             for (const datos of rows) await crearFila(datos);
           }}
+          moneda={meta?.datos?._moneda}
+          onCambiarMoneda={cambiarMoneda}
         />
       )}
 
@@ -1448,6 +1471,7 @@ function Celda({
   departamento,
   herramientaId,
   filaId,
+  moneda,
 }: {
   col: Columna;
   valor: string;
@@ -1458,6 +1482,7 @@ function Celda({
   departamento?: string;
   herramientaId?: string;
   filaId?: string;
+  moneda?: string;
 }) {
   if (col.tipo === "archivo") {
     return (
@@ -1476,19 +1501,18 @@ function Celda({
     return <LinkCell valor={valor} editable={editable} onSave={onSave ?? (() => {})} />;
   }
   if (col.tipo === "estado") {
+    if (!editable) {
+      return <span className={`hp-cell-select-ro tono-${estadoTono(valor)}`}>{valor || "—"}</span>;
+    }
     return (
-      <select
-        className={`hp-cell-select tono-${estadoTono(valor)}`}
-        value={valor}
-        disabled={!editable}
-        onChange={(e) => { onChange(e.target.value); }}
-        onBlur={onCommit}
-      >
-        <option value="">—</option>
-        {(col.opciones ?? []).map((o) => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
+      <div className={`hp-cell-cpselect tono-${estadoTono(valor)}`}>
+        <CpSelect
+          value={valor}
+          options={col.opciones ?? []}
+          placeholder="—"
+          onChange={(v) => { onChange(v); onCommit(); }}
+        />
+      </div>
     );
   }
   if (!col.tipo || col.tipo === "largo" || col.tipo === "texto") {
@@ -1499,13 +1523,17 @@ function Celda({
       <div className="hp-money-wrap">
         <input
           className="hp-cell-input hp-cell-money"
-          type="number"
+          type="text"
+          inputMode="decimal"
           value={valor}
           readOnly={!editable}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const limpio = e.target.value.replace(/[^0-9.,]/g, "");
+            onChange(limpio);
+          }}
           onBlur={onCommit}
         />
-        <span className="hp-money-suffix">€</span>
+        {simboloMoneda(moneda) && <span className="hp-money-suffix">{simboloMoneda(moneda)}</span>}
       </div>
     );
   }
@@ -1626,18 +1654,18 @@ function RichToolbar({ className = "", inline = false }: { className?: string; i
 
 // Celda con soporte de autocomplete via datalist
 function CeldaConAutocomp({
-  col, valor, editable, onChange, onCommit, onSave, departamento, herramientaId, filaId,
+  col, valor, editable, onChange, onCommit, onSave, departamento, herramientaId, filaId, moneda,
 }: {
   col: Columna; valor: string; editable: boolean; onChange: (v: string) => void;
   onCommit: () => void; onSave?: (v: string) => void; departamento?: string;
-  herramientaId?: string; filaId?: string; listId?: string;
+  herramientaId?: string; filaId?: string; listId?: string; moneda?: string;
 }) {
   // texto y largo son rich text (RichCell); ya no hay autocomplete por datalist
   // (incompatible con contentEditable). El formato prima sobre la sugerencia.
   return (
     <Celda col={col} valor={valor} editable={editable} onChange={onChange}
       onCommit={onCommit} onSave={onSave} departamento={departamento}
-      herramientaId={herramientaId} filaId={filaId} />
+      herramientaId={herramientaId} filaId={filaId} moneda={moneda} />
   );
 }
 
@@ -4787,9 +4815,10 @@ export function TablaTool({
   onDuplicar,
   onGuardar,
   onBorrar,
-  onVisionar,
   onAgregarColumna,
   onImportarCSV,
+  moneda,
+  onCambiarMoneda,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -4802,14 +4831,14 @@ export function TablaTool({
   onDuplicar?: (fila: Fila) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
-  onVisionar: (id: string) => void;
   onAgregarColumna: (label: string, tipo?: ColTipo) => void;
   onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
+  moneda?: string;
+  onCambiarMoneda?: (v: string) => void;
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
   const [draft, setDraft] = useState<Record<string, Record<string, string>>>({});
-  const [abierta, setAbierta] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -4843,21 +4872,6 @@ export function TablaTool({
   const importInputRef = useRef<HTMLInputElement>(null);
   const resizingRef = useRef<{key: string; startX: number; startW: number} | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const [toolbarH, setToolbarH] = useState(48);
-  // El toolbar es sticky y puede pasar a 2 líneas en pantallas angostas (es
-  // flex-wrap): el header sticky de la tabla necesita correrse exactamente
-  // esa altura para no superponerse. Un valor fijo en CSS se rompía apenas
-  // el toolbar medía distinto — se mide en vivo con ResizeObserver.
-  useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el) return;
-    const obs = new ResizeObserver((entries) => {
-      const h = entries[0]?.contentRect.height;
-      if (h) setToolbarH(Math.ceil(h));
-    });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
 
   // Columnas visibles (sin ocultas)
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
@@ -5195,6 +5209,7 @@ export function TablaTool({
   const colsEstado = columnas.filter(c => c.tipo === "estado").slice(0, 4);
   const colEstado = columnas.find((c) => c.tipo === "estado");
   const tieneTotales = columnas.some(c => c.tipo === "money" || c.tipo === "num");
+  const tieneColMoney = columnas.some(c => c.tipo === "money");
 
   const statsBar = (() => {
     const entries = colEstado
@@ -5224,7 +5239,7 @@ export function TablaTool({
   })();
 
   const colSpanVacio =
-    (editable ? 1 : 0) + visibleCols.length + 1 + (editable ? 2 : 0) + (showLastEdit ? 1 : 0);
+    (editable ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
 
   const contenido = (
     <>
@@ -5341,6 +5356,22 @@ export function TablaTool({
             ))}
           </div>
         </ToolMenu>
+
+        {/* Moneda de las columnas tipo "money" (Importe, Cuota, etc.) — solo
+            si la tabla tiene alguna. Se guarda en la fila meta (orden:-1),
+            compartida por todo el equipo, no por navegador. */}
+        {tieneColMoney && onCambiarMoneda && (
+          <ToolMenu label={t("currency")} width={170}>
+            <div className="tm-section">
+              {MONEDAS.map((m) => (
+                <button key={m.value} className={`tm-item${(moneda ?? "eur") === m.value ? " active" : ""}`} onClick={() => onCambiarMoneda(m.value)}>
+                  {(moneda ?? "eur") === m.value && <Icon name="check" size={13} />}
+                  <span>{m.label}{m.symbol ? ` (${m.symbol})` : ""}</span>
+                </button>
+              ))}
+            </div>
+          </ToolMenu>
+        )}
 
         {/* Agregar fila / columna — antes vivían sueltos debajo de la tabla,
             sin relación visual con el resto de los controles. El menú
@@ -5499,16 +5530,14 @@ export function TablaTool({
 
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
-        <div className="hp-table-wrap" style={{ "--hp-toolbar-h": `${toolbarH}px` } as React.CSSProperties}>
+        <div className="hp-table-wrap">
           <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef}>
             <colgroup>
               {editable && <col style={{width:36}} />}
               {visibleCols.map(c => (
                 <col key={c.key} style={colWidths[c.key] ? {width: colWidths[c.key]} : undefined} />
               ))}
-              <col style={{width:54}} />
-              {editable && <col style={{width:40}} />}
-              {editable && <col style={{width:70}} />}
+              {editable && <col style={{width:118}} />}
               {showLastEdit && <col style={{width:90}} />}
             </colgroup>
             <thead>
@@ -5538,9 +5567,7 @@ export function TablaTool({
                     </div>
                   </th>
                 ))}
-                <th className="hp-th-reg">{t("regCol")}</th>
-                {editable && <th className="hp-th-color" title={t("rowColor")}></th>}
-                {editable && <th></th>}
+                {editable && <th className="hp-th-acciones">{t("rowActions")}</th>}
                 {showLastEdit && <th className="hp-th-edit">{t("editedCol")}</th>}
               </tr>
             </thead>
@@ -5559,12 +5586,10 @@ export function TablaTool({
               {filasPagina.map((f, rowIdx) => {
                 const rowColor = f.datos?._rowColor || "";
                 const isSelected = seleccionadas.has(f.id);
-                const visto = (f.visionado_por ?? []).length > 0;
-                const yoVi = (f.visionado_por ?? []).some((v) => v.usuario === fullName);
                 const isDragOver = dragOverId === f.id;
                 return (
-                  <RowGroup key={f.id} abierta={abierta === f.id}>
                     <tr
+                      key={f.id}
                       draggable={editable}
                       onDragStart={e => onDragStart(e, f.id)}
                       onDragOver={e => onDragOver(e, f.id)}
@@ -5629,43 +5654,33 @@ export function TablaTool({
                               herramientaId={herramientaId}
                               filaId={f.id}
                               listId={autocomplete[c.key] ? `dl-${herramientaId}-${c.key}` : undefined}
+                              moneda={moneda}
                             />
                           </td>
                         );
                       })}
-                      <td className="hp-td-reg">
-                        <button
-                          className={`hp-reg-btn ${visto ? "visto" : ""}`}
-                          onClick={() => setAbierta(abierta === f.id ? null : f.id)}
-                          title={t("viewHistory")}
-                        >
-                          <span className="hex"></span>
-                          {visto ? `${(f.visionado_por ?? []).length}✓` : t("viewShort")}
-                        </button>
-                      </td>
-                      {editable && (
-                        <td className="hp-td-color">
-                          <div className="hp-color-wrap">
-                            <input
-                              type="color"
-                              className="hp-row-color-picker"
-                              value={rowColor || "#9eee6a"}
-                              onChange={(e) => cambiarColorFila(f, e.target.value)}
-                              title={t("rowColor")}
-                            />
-                            {rowColor && (
-                              <button className="hp-color-clear" onClick={() => limpiarColorFila(f)} title={t("removeColor")}>✕</button>
-                            )}
-                          </div>
-                        </td>
-                      )}
                       {editable && (
                         <td className="hp-td-acciones">
-                          <button className="hp-dup" onClick={() => copiarFila(f)} title={t("copyClipboard")}>⎘</button>
-                          {onDuplicar && (
-                            <button className="hp-dup" onClick={() => onDuplicar(f)} title={t("duplicateRow")}>⧉</button>
-                          )}
-                          <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("deleteRow")}>✕</button>
+                          <div className="hp-row-actions">
+                            <div className="hp-color-wrap">
+                              <input
+                                type="color"
+                                className="hp-row-color-picker"
+                                value={rowColor || "#9eee6a"}
+                                onChange={(e) => cambiarColorFila(f, e.target.value)}
+                                title={t("rowColor")}
+                              />
+                              {rowColor && (
+                                <button className="hp-color-clear" onClick={() => limpiarColorFila(f)} title={t("removeColor")}>✕</button>
+                              )}
+                            </div>
+                            <span className="hp-row-actions-sep" />
+                            <button className="hp-row-action-btn" onClick={() => copiarFila(f)} title={t("copyClipboard")}>⎘</button>
+                            {onDuplicar && (
+                              <button className="hp-row-action-btn" onClick={() => onDuplicar(f)} title={t("duplicateRow")}>⧉</button>
+                            )}
+                            <button className="hp-row-action-btn hp-row-action-danger" onClick={() => onBorrar(f.id)} title={t("deleteRow")}><Icon name="trash" size={13} /></button>
+                          </div>
                         </td>
                       )}
                       {showLastEdit && (
@@ -5674,22 +5689,6 @@ export function TablaTool({
                         </td>
                       )}
                     </tr>
-                    {abierta === f.id && (
-                      <tr className="hp-detail-row">
-                        <td colSpan={visibleCols.length + (editable ? 4 : 2) + (showLastEdit ? 1 : 0)}>
-                          <RegistroDetalle
-                            fila={f}
-                            yoVi={yoVi}
-                            onVisionar={() => onVisionar(f.id)}
-                            departamento={departamento}
-                            herramientaNombre={herramientaNombre}
-                            fullName={fullName}
-                            onGuardar={onGuardar}
-                          />
-                        </td>
-                      </tr>
-                    )}
-                  </RowGroup>
                 );
               })}
             </tbody>
@@ -5767,60 +5766,6 @@ export function TablaTool({
     </div>
   ) : contenido;
 }
-
-function RowGroup({ children }: { children: React.ReactNode; abierta: boolean }) {
-  return <>{children}</>;
-}
-
-function RegistroDetalle({
-  fila,
-  yoVi,
-  onVisionar,
-  departamento,
-  herramientaNombre,
-  fullName,
-  onGuardar,
-}: {
-  fila: Fila;
-  yoVi: boolean;
-  onVisionar: () => void;
-  departamento: string;
-  herramientaNombre: string;
-  fullName: string;
-  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
-}) {
-  const t = useTranslations("hp");
-  const reg = [...(fila.registro ?? [])].reverse().slice(0, 8);
-  const vis = fila.visionado_por ?? [];
-  return (
-    <div className="hp-detail">
-      <div className="hp-detail-col">
-        <h6><span className="hex"></span> {t("interventionsLog")}</h6>
-        {reg.length === 0 && <p className="hp-empty">{t("noInterventions")}</p>}
-        <ul className="hp-timeline">
-          {reg.map((r, i) => (
-            <li key={i}>
-              <b>{r.accion === "crea" ? t("actionCreated") : t("actionEdited")}</b> {r.usuario} · {timeAgo(r.fecha, t)}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="hp-detail-col">
-        <h6><span className="hex"></span> {t("viewedBy")}</h6>
-        {vis.length === 0 && <p className="hp-empty">{t("noOneYet")}</p>}
-        <div className="hp-vis-chips">
-          {vis.map((v, i) => (
-            <span className="hp-vis-chip" key={i}>{v.usuario}</span>
-          ))}
-        </div>
-        <button className={`btn ${yoVi ? "" : "acc"}`} style={{ marginTop: 8 }} onClick={onVisionar}>
-          {yoVi ? t("unmarkVisited") : t("markVisited")}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 
 // ---- Imagen de galería (subida real al bucket "documentos") ----
 function GaleriaImg({
