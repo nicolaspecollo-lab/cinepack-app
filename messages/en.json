@@ -2623,7 +2623,12 @@
     "linkLabel": "Event link",
     "openLink": "View event",
     "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out"
+    "zoomOut": "Zoom out",
+    "viewMonth": "Month",
+    "viewWeek": "Week",
+    "viewYear": "Year",
+    "close": "Close",
+    "backToCalendar": "Back to calendar"
   },
   "carpetaMaestra": {
     "title": "Master folder — {nombre}",

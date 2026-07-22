@@ -15,7 +15,8 @@ import AccesosPanel from "./AccesosPanel";
 import PipelinePanel from "./PipelinePanel";
 import HerramientaPanel from "./HerramientaPanel";
 import OrdenRodajePanel from "./OrdenRodajePanel";
-import { GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
+import CalendarioProyecto from "./CalendarioProyecto";
+import { GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
 import { ACCENTS } from "../constants";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
@@ -146,11 +147,13 @@ export default function GeneralesPanel({
   cargo,
   fullName,
   jumpTo,
+  isAdmin,
 }: {
   departamento: string;
   cargo?: string | null;
   fullName: string;
   jumpTo?: { sub: Sub; token: number } | null;
+  isAdmin?: boolean;
 }) {
   const tG = useTranslations("generales");
   const subs = SUBS.filter((s) => !s.cond || s.cond(departamento));
@@ -237,7 +240,7 @@ export default function GeneralesPanel({
         {sub === "pipeline" && <PipelinePanel fullName={fullName} />}
 
         {sub === "calendario" && (
-          <HerramientaPanel departamento="General" herramienta={GENERAL_CALENDARIO} fullName={fullName} editable={ce("calendario")} />
+          <CalendarioProyecto departamento={departamento} cargo={cargo} isAdmin={isAdmin} fullName={fullName} variant="full" />
         )}
         {sub === "plan" && (
           <HerramientaPanel departamento="General" herramienta={GENERAL_PLAN_RODAJE} fullName={fullName} editable={ce("plan")} />

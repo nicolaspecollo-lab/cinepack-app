@@ -4189,6 +4189,22 @@
 .cp-dash .cal-del{ margin-left:auto; }
 .cp-dash .cal-del:hover{ border-color:var(--rose); color:var(--rose); }
 
+/* Variante "full" (Generales → Calendario): toggle de vista + semana/año + panel fullscreen */
+.cp-dash .cal-vista-seg{ margin-left:auto; }
+.cp-dash .cal-grid-semana .cal-cell{ min-height:120px; }
+.cp-dash .cal-year-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; margin-top:4px; }
+.cp-dash .cal-mini-month{ border:1px solid var(--line); padding:8px 9px; }
+.cp-dash .cal-mini-month-titulo{ font-family:'Poppins',sans-serif; font-weight:700; font-size:12px; color:var(--text); text-transform:capitalize; margin-bottom:6px; }
+.cp-dash .cal-mini-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cp-dash .cal-cell-mini{ min-height:auto; padding:2px; text-align:center; border:none; }
+.cp-dash .cal-cell-mini .cal-daynum{ font-size:9.5px; }
+.cp-dash .cal-mini-dots{ display:flex; justify-content:center; gap:2px; margin-top:1px; }
+.cp-dash .cal-mini-dot{ width:4px; height:4px; border-radius:50%; }
+.cp-dash .cal-fs-panel{ width:min(920px,96vw); max-height:88vh; }
+.cp-dash .cal-fs-body{ padding:16px 18px; overflow-y:auto; }
+.cp-dash .cal-fs-body .cal-prev-head{ display:none; }
+.cp-dash .cal-fs-body .cal-form{ margin-top:0; border:none; padding:0; }
+
 @media (max-width:520px){
   .cp-dash .ct-etapa-name{ font-size:26px; }
   .cp-dash .cal-cell{ min-height:46px; padding:3px 4px; }

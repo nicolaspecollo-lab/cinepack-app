@@ -348,7 +348,7 @@ export default function DepartmentDashboard({
 
       {tab === "generales" && (
         <div className="tpanel active">
-          <GeneralesPanel departamento={nombre} cargo={cargo} fullName={fullName} jumpTo={generalesJump} />
+          <GeneralesPanel departamento={nombre} cargo={cargo} fullName={fullName} jumpTo={generalesJump} isAdmin={isAdmin} />
         </div>
       )}
 

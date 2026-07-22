@@ -2623,7 +2623,12 @@
     "linkLabel": "Enlace del evento",
     "openLink": "Ver evento",
     "zoomIn": "Acercar",
-    "zoomOut": "Alejar"
+    "zoomOut": "Alejar",
+    "viewMonth": "Mes",
+    "viewWeek": "Semana",
+    "viewYear": "Año",
+    "close": "Cerrar",
+    "backToCalendar": "Volver al calendario"
   },
   "carpetaMaestra": {
     "title": "Carpeta maestra — {nombre}",

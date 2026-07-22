@@ -2623,7 +2623,12 @@
     "linkLabel": "Enllaç de l'esdeveniment",
     "openLink": "Veure esdeveniment",
     "zoomIn": "Apropa",
-    "zoomOut": "Allunya"
+    "zoomOut": "Allunya",
+    "viewMonth": "Mes",
+    "viewWeek": "Setmana",
+    "viewYear": "Any",
+    "close": "Tancar",
+    "backToCalendar": "Tornar al calendari"
   },
   "carpetaMaestra": {
     "title": "Carpeta mestra — {nombre}",

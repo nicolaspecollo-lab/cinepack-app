@@ -29,17 +29,23 @@ export default function CalendarioProyecto({
   cargo,
   isAdmin,
   fullName,
+  variant = "preview",
 }: {
   departamento: string;
   cargo?: string | null;
   isAdmin?: boolean;
   fullName: string;
+  variant?: "preview" | "full";
 }) {
   const t = useTranslations("ciclo");
   const tEt = useTranslations("etapas");
   const locale = useLocale();
+  const esFull = variant === "full";
   const hoy = new Date();
   const [cursor, setCursor] = useState({ y: hoy.getFullYear(), m: hoy.getMonth() });
+  const [vista, setVista] = useState<"mes" | "semana" | "año">("mes");
+  const [semanaBase, setSemanaBase] = useState(iso(hoy));
+  const [fsOpen, setFsOpen] = useState(false);
   const [eventos, setEventos] = useState<EventoProyecto[]>([]);
   const [jornadas, setJornadas] = useState<Jornada[]>([]);
   const [selDia, setSelDia] = useState<string | null>(iso(hoy));
@@ -121,11 +127,54 @@ export default function CalendarioProyecto({
     return Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(base.getFullYear(), base.getMonth(), base.getDate() + i)));
   }, [locale]);
 
-  function mover(delta: number) {
-    setCursor((c) => {
-      const d = new Date(c.y, c.m + delta, 1);
-      return { y: d.getFullYear(), m: d.getMonth() };
+  const semanaDias = useMemo(() => {
+    const d = new Date(`${semanaBase}T00:00:00`);
+    const offset = (d.getDay() + 6) % 7; // lunes = 0
+    d.setDate(d.getDate() - offset);
+    return Array.from({ length: 7 }, (_, i) => {
+      const x = new Date(d);
+      x.setDate(d.getDate() + i);
+      return iso(x);
     });
+  }, [semanaBase]);
+
+  const tituloNav = useMemo(() => {
+    if (vista === "semana") {
+      const ini = new Date(`${semanaDias[0]}T00:00:00`);
+      const fin = new Date(`${semanaDias[6]}T00:00:00`);
+      const fmt = (d: Date, conAño: boolean) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", ...(conAño ? { year: "numeric" } : {}) }).format(d);
+      return `${fmt(ini, false)} – ${fmt(fin, true)}`;
+    }
+    if (vista === "año") return String(cursor.y);
+    return mesLabel;
+  }, [vista, semanaDias, cursor.y, mesLabel, locale]);
+
+  function mover(delta: number) {
+    if (vista === "semana") {
+      setSemanaBase((prev) => {
+        const d = new Date(`${prev}T00:00:00`);
+        d.setDate(d.getDate() + delta * 7);
+        return iso(d);
+      });
+    } else if (vista === "año") {
+      setCursor((c) => ({ ...c, y: c.y + delta }));
+    } else {
+      setCursor((c) => {
+        const d = new Date(c.y, c.m + delta, 1);
+        return { y: d.getFullYear(), m: d.getMonth() };
+      });
+    }
+  }
+
+  function abrirDia(cell: string) {
+    setSelDia(cell);
+    setEdit(null);
+    if (esFull) setFsOpen(true);
+  }
+
+  function cerrarFS() {
+    setFsOpen(false);
+    setEdit(null);
   }
 
   async function guardar(ev: { id?: string; fecha: string; tipo: EventoTipo; datos: Record<string, string>; aviso_dias: number }) {
@@ -185,46 +234,133 @@ export default function CalendarioProyecto({
 
   const chipsDelDia = selDia ? porDia.get(selDia) ?? [] : [];
 
+  function renderDiaContenido() {
+    if (!selDia) return null;
+    return (
+      <>
+        <div className="cal-prev-head">
+          <span className="cal-prev-fecha">{new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${selDia}T00:00:00`))}</span>
+        </div>
+        {chipsDelDia.length === 0 ? (
+          <p className="cal-prev-empty">{t("noEvents")}</p>
+        ) : (
+          <div className="cal-prev-list">
+            {chipsDelDia.map((c, k) => c.kind === "evento" ? (
+              <div key={k} className="cal-prev-item" style={{ borderLeftColor: COLOR_ETAPA[c.ev.tipo] }}>
+                <div className="cal-prev-item-head">
+                  <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA[c.ev.tipo] }}>{c.ev.datos?.categoria || tEt(c.ev.tipo)}</span>
+                  <span className="cal-prev-item-title">{c.ev.titulo || tEt(c.ev.tipo)}</span>
+                  <span className="cal-prev-item-actions">
+                    <button className="cp-btn cp-btn-acc" onClick={() => setDossier(c.ev)}>{t("openDossier")}</button>
+                    {puedeEditar && <button className="cp-btn" onClick={() => setEdit(c.ev)}>{t("edit")}</button>}
+                    {puedeEditar && <button className="cp-btn" onClick={() => borrar(c.ev.id)}>{t("delete")}</button>}
+                  </span>
+                </div>
+                <div className="cal-prev-fields">
+                  {CAMPOS_POR_TIPO[c.ev.tipo].filter((f) => c.ev.datos?.[f.key]).map((f) => (
+                    <div key={f.key} className="cal-prev-field"><span>{f.label}</span><b>{c.ev.datos[f.key]}</b></div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div key={k} className="cal-prev-item" style={{ borderLeftColor: COLOR_ETAPA.rodaje }}>
+                <div className="cal-prev-item-head">
+                  <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA.rodaje }}>{tEt("rodaje")}</span>
+                  <span className="cal-prev-item-title">{t("shootDay", { n: c.j.dia_numero, total: c.j.dia_total })}</span>
+                  <span className="cal-prev-item-badge">{t("fromShootPlan")}</span>
+                </div>
+                <div className="cal-prev-fields">
+                  {c.j.escenas_dia && <div className="cal-prev-field"><span>{t("fScenes")}</span><b>{c.j.escenas_dia}</b></div>}
+                  {c.j.ubicacion && <div className="cal-prev-field"><span>{t("fLocation")}</span><b>{c.j.ubicacion}</b></div>}
+                  {c.j.citacion && <div className="cal-prev-field"><span>{t("fCall")}</span><b>{c.j.citacion}</b></div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  function renderCelda(cell: string | null, key: number, compacta = false) {
+    if (!cell) return <div key={key} className="cal-cell cal-cell-empty" />;
+    const chips = porDia.get(cell) ?? [];
+    const esHoy = cell === iso(hoy);
+    const esSel = cell === selDia;
+    const dnum = Number(cell.slice(8, 10));
+    return (
+      <div key={key} className={`cal-cell ${esSel ? "sel" : ""} ${esHoy ? "hoy" : ""} ${compacta ? "cal-cell-mini" : ""}`} onClick={() => abrirDia(cell)}>
+        <div className="cal-daynum">{dnum}</div>
+        {!compacta ? (
+          <div className="cal-chips">
+            {chips.slice(0, 3).map((c, k) => {
+              const color = c.kind === "evento" ? COLOR_ETAPA[c.ev.tipo] : COLOR_ETAPA.rodaje;
+              const label = c.kind === "evento" ? (c.ev.titulo || tEt(c.ev.tipo)) : `D${c.j.dia_numero}`;
+              return <span key={k} className="cal-chip" style={{ background: color }}>{label}</span>;
+            })}
+            {chips.length > 3 && <span className="cal-more">+{chips.length - 3}</span>}
+          </div>
+        ) : chips.length > 0 ? (
+          <div className="cal-mini-dots">
+            {chips.slice(0, 4).map((c, k) => (
+              <span key={k} className="cal-mini-dot" style={{ background: c.kind === "evento" ? COLOR_ETAPA[c.ev.tipo] : COLOR_ETAPA.rodaje }} />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="cal-wrap" id="cp-calendario">
       <div className="cal-head">
         <span className="cal-title"><span className="hex" /> {t("calendarTitle")}</span>
         <span className="cal-sub">{t("calendarSub")}</span>
+        {esFull && (
+          <div className="cp-seg cal-vista-seg">
+            <button type="button" className={`cp-seg-cell${vista === "mes" ? " cp-seg-on" : ""}`} onClick={() => setVista("mes")}>{t("viewMonth")}</button>
+            <button type="button" className={`cp-seg-cell${vista === "semana" ? " cp-seg-on" : ""}`} onClick={() => setVista("semana")}>{t("viewWeek")}</button>
+            <button type="button" className={`cp-seg-cell${vista === "año" ? " cp-seg-on" : ""}`} onClick={() => setVista("año")}>{t("viewYear")}</button>
+          </div>
+        )}
       </div>
 
       <div className="cal-nav">
         <button className="cal-navbtn" onClick={() => mover(-1)} aria-label={t("prevMonth")}>‹</button>
-        <span className="cal-month">{mesLabel}</span>
+        <span className="cal-month">{tituloNav}</span>
         <button className="cal-navbtn" onClick={() => mover(1)} aria-label={t("nextMonth")}>›</button>
         <span className="cal-spacer" />
-        {puedeEditar && <button className="cp-btn cp-btn-acc" onClick={() => { setEdit("nuevo"); }}>{t("newEvent")}</button>}
+        {puedeEditar && <button className="cp-btn cp-btn-acc" onClick={() => { setEdit("nuevo"); if (esFull) setFsOpen(true); }}>{t("newEvent")}</button>}
       </div>
 
-      <div className="cal-grid">
-        {diasSemana.map((d, i) => <div key={i} className="cal-dow">{d}</div>)}
-        {semanas.map((cell, i) => {
-          if (!cell) return <div key={i} className="cal-cell cal-cell-empty" />;
-          const chips = porDia.get(cell) ?? [];
-          const esHoy = cell === iso(hoy);
-          const esSel = cell === selDia;
-          const dnum = Number(cell.slice(8, 10));
-          return (
-            <div key={i} className={`cal-cell ${esSel ? "sel" : ""} ${esHoy ? "hoy" : ""}`} onClick={() => { setSelDia(cell); setEdit(null); }}>
-              <div className="cal-daynum">{dnum}</div>
-              <div className="cal-chips">
-                {chips.slice(0, 3).map((c, k) => {
-                  const color = c.kind === "evento" ? COLOR_ETAPA[c.ev.tipo] : COLOR_ETAPA.rodaje;
-                  const label = c.kind === "evento" ? (c.ev.titulo || tEt(c.ev.tipo)) : `D${c.j.dia_numero}`;
-                  return <span key={k} className="cal-chip" style={{ background: color }}>{label}</span>;
-                })}
-                {chips.length > 3 && <span className="cal-more">+{chips.length - 3}</span>}
+      {vista === "mes" && (
+        <div className="cal-grid">
+          {diasSemana.map((d, i) => <div key={i} className="cal-dow">{d}</div>)}
+          {semanas.map((cell, i) => renderCelda(cell, i))}
+        </div>
+      )}
+
+      {vista === "semana" && esFull && (
+        <div className="cal-grid cal-grid-semana">
+          {diasSemana.map((d, i) => <div key={i} className="cal-dow">{d}</div>)}
+          {semanaDias.map((cell, i) => renderCelda(cell, i))}
+        </div>
+      )}
+
+      {vista === "año" && esFull && (
+        <div className="cal-year-grid">
+          {Array.from({ length: 12 }, (_, m) => (
+            <div key={m} className="cal-mini-month">
+              <div className="cal-mini-month-titulo">{new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(cursor.y, m, 1))}</div>
+              <div className="cal-mini-grid">
+                {buildMonth(cursor.y, m).map((cell, i) => renderCelda(cell, i, true))}
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {edit ? (
+      {!esFull && (edit ? (
         <EventoForm
           inicial={edit === "nuevo" ? null : edit}
           fechaDefecto={selDia ?? iso(hoy)}
@@ -234,49 +370,31 @@ export default function CalendarioProyecto({
           onCancelar={() => setEdit(null)}
         />
       ) : selDia ? (
-        <div className="cal-prev">
-          <div className="cal-prev-head">
-            <span className="cal-prev-fecha">{new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${selDia}T00:00:00`))}</span>
-          </div>
-          {chipsDelDia.length === 0 ? (
-            <p className="cal-prev-empty">{t("noEvents")}</p>
-          ) : (
-            <div className="cal-prev-list">
-              {chipsDelDia.map((c, k) => c.kind === "evento" ? (
-                <div key={k} className="cal-prev-item" style={{ borderLeftColor: COLOR_ETAPA[c.ev.tipo] }}>
-                  <div className="cal-prev-item-head">
-                    <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA[c.ev.tipo] }}>{c.ev.datos?.categoria || tEt(c.ev.tipo)}</span>
-                    <span className="cal-prev-item-title">{c.ev.titulo || tEt(c.ev.tipo)}</span>
-                    <span className="cal-prev-item-actions">
-                      <button className="cp-btn cp-btn-acc" onClick={() => setDossier(c.ev)}>{t("openDossier")}</button>
-                      {puedeEditar && <button className="cp-btn" onClick={() => setEdit(c.ev)}>{t("edit")}</button>}
-                      {puedeEditar && <button className="cp-btn" onClick={() => borrar(c.ev.id)}>{t("delete")}</button>}
-                    </span>
-                  </div>
-                  <div className="cal-prev-fields">
-                    {CAMPOS_POR_TIPO[c.ev.tipo].filter((f) => c.ev.datos?.[f.key]).map((f) => (
-                      <div key={f.key} className="cal-prev-field"><span>{f.label}</span><b>{c.ev.datos[f.key]}</b></div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div key={k} className="cal-prev-item" style={{ borderLeftColor: COLOR_ETAPA.rodaje }}>
-                  <div className="cal-prev-item-head">
-                    <span className="cal-prev-item-tipo" style={{ color: COLOR_ETAPA.rodaje }}>{tEt("rodaje")}</span>
-                    <span className="cal-prev-item-title">{t("shootDay", { n: c.j.dia_numero, total: c.j.dia_total })}</span>
-                    <span className="cal-prev-item-badge">{t("fromShootPlan")}</span>
-                  </div>
-                  <div className="cal-prev-fields">
-                    {c.j.escenas_dia && <div className="cal-prev-field"><span>{t("fScenes")}</span><b>{c.j.escenas_dia}</b></div>}
-                    {c.j.ubicacion && <div className="cal-prev-field"><span>{t("fLocation")}</span><b>{c.j.ubicacion}</b></div>}
-                    {c.j.citacion && <div className="cal-prev-field"><span>{t("fCall")}</span><b>{c.j.citacion}</b></div>}
-                  </div>
-                </div>
-              ))}
+        <div className="cal-prev">{renderDiaContenido()}</div>
+      ) : null)}
+
+      {esFull && fsOpen && (
+        <div className="dsr-overlay" onClick={cerrarFS}>
+          <div className="dsr-panel cal-fs-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="dsr-top">
+              <span>{edit ? (edit === "nuevo" ? t("newEvent") : t("editEvent")) : selDia ? new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(`${selDia}T00:00:00`)) : ""}</span>
+              <button className="dsr-close" onClick={cerrarFS} title={t("backToCalendar")}>✕</button>
             </div>
-          )}
+            <div className="cal-fs-body">
+              {edit ? (
+                <EventoForm
+                  inicial={edit === "nuevo" ? null : edit}
+                  fechaDefecto={selDia ?? iso(hoy)}
+                  departamento={departamento}
+                  onGuardar={guardar}
+                  onBorrar={borrar}
+                  onCancelar={() => setEdit(null)}
+                />
+              ) : renderDiaContenido()}
+            </div>
+          </div>
         </div>
-      ) : null}
+      )}
 
       {dossier && <DossierConvocatoria evento={dossier} editable={puedeEditar} onClose={() => setDossier(null)} />}
     </div>
