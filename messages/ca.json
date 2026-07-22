@@ -172,7 +172,25 @@
     "shotDesc": "Descripció del pla…",
     "shotDur": "Durada (p. ex. 6s)",
     "addShot": "+ Afegeix pla",
-    "addShotLabel": "Afegeix pla"
+    "addShotLabel": "Afegeix pla",
+    "addCardShort": "Afegeix targeta",
+    "cancel": "Cancel·la",
+    "lbl_prioridad": "Prioritat alta",
+    "lbl_urgente": "Urgent",
+    "inColumn": "a",
+    "labels": "Etiquetes",
+    "description": "Descripció",
+    "descPlaceholder": "Afegeix més detall…",
+    "checklist": "Checklist",
+    "addChkItem": "Afegeix ítem i Enter…",
+    "moveTo": "Mou a",
+    "dueDate": "Data d'entrega",
+    "dueDone": "Entrega marcada com a feta",
+    "markDoneDue": "Marca com a feta",
+    "members": "Membres",
+    "noTeam": "Sense equip carregat.",
+    "cover": "Caràtula",
+    "deleteCard": "Elimina la targeta"
   },
   "plantillas": {
     "doc": {

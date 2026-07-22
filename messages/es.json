@@ -172,7 +172,25 @@
     "shotDesc": "Descripción del plano…",
     "shotDur": "Duración (ej. 6s)",
     "addShot": "+ Agregar plano",
-    "addShotLabel": "Agregar plano"
+    "addShotLabel": "Agregar plano",
+    "addCardShort": "Agregar tarjeta",
+    "cancel": "Cancelar",
+    "lbl_prioridad": "Prioridad alta",
+    "lbl_urgente": "Urgente",
+    "inColumn": "en",
+    "labels": "Etiquetas",
+    "description": "Descripción",
+    "descPlaceholder": "Añadí más detalle…",
+    "checklist": "Checklist",
+    "addChkItem": "Añadir ítem y Enter…",
+    "moveTo": "Mover a",
+    "dueDate": "Fecha de entrega",
+    "dueDone": "Entrega marcada como hecha",
+    "markDoneDue": "Marcar como hecha",
+    "members": "Miembros",
+    "noTeam": "Sin equipo cargado.",
+    "cover": "Carátula",
+    "deleteCard": "Eliminar tarjeta"
   },
   "plantillas": {
     "doc": {

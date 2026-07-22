@@ -172,7 +172,25 @@
     "shotDesc": "Shot description…",
     "shotDur": "Duration (e.g. 6s)",
     "addShot": "+ Add shot",
-    "addShotLabel": "Add shot"
+    "addShotLabel": "Add shot",
+    "addCardShort": "Add card",
+    "cancel": "Cancel",
+    "lbl_prioridad": "High priority",
+    "lbl_urgente": "Urgent",
+    "inColumn": "in",
+    "labels": "Labels",
+    "description": "Description",
+    "descPlaceholder": "Add more detail…",
+    "checklist": "Checklist",
+    "addChkItem": "Add item and Enter…",
+    "moveTo": "Move to",
+    "dueDate": "Due date",
+    "dueDone": "Due marked as done",
+    "markDoneDue": "Mark as done",
+    "members": "Members",
+    "noTeam": "No team loaded.",
+    "cover": "Cover",
+    "deleteCard": "Delete card"
   },
   "plantillas": {
     "doc": {
