@@ -366,7 +366,7 @@ export default function DepartmentDashboard({
 
       {tab === "archivos" && (
         <div className="tpanel active">
-          <ArchivosPanel departamento={nombre} />
+          <ArchivosPanel departamento={nombre} isAdmin={isAdmin} />
         </div>
       )}
 

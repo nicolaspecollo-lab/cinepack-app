@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
+import { HERRAMIENTAS } from "../herramientas";
+import { DEPARTAMENTOS } from "../constants";
+import { TIPOS_EVENTO, type EventoTipo } from "./eventosCalendario";
 import * as pdfjsLib from "pdfjs-dist";
 
 type Archivo = {
@@ -12,6 +15,63 @@ type Archivo = {
   size: number;
   created_at: string | null;
 };
+
+type SupabaseCliente = ReturnType<typeof createClient>;
+
+// Herramienta ↔ carpeta automática: junta, sin duplicar dato, todos los ids
+// de herramienta de un departamento (están repartidos por cargo en el
+// catálogo — un mismo id puede aparecer en varios cargos, se dedupe por id).
+function todasLasHerramientasDe(departamento: string): { id: string; nombre: string }[] {
+  const porCargo = HERRAMIENTAS[departamento] ?? {};
+  const vistos = new Map<string, string>();
+  for (const grupo of Object.values(porCargo)) {
+    for (const h of [...grupo.departamento, ...grupo.cargo]) {
+      if (!vistos.has(h.id)) vistos.set(h.id, h.nombre);
+    }
+  }
+  return Array.from(vistos, ([id, nombre]) => ({ id, nombre }));
+}
+
+// Nombres de subcarpetas inmediatas de un prefijo (una sola llamada a list,
+// sin bajar más — sirve para detectar qué herramientas/convocatorias tienen
+// AL MENOS un archivo subido, sin recorrer todo el árbol de antemano).
+async function listarSubcarpetas(supabase: SupabaseCliente, prefix: string): Promise<string[]> {
+  const { data } = await supabase.storage.from(BUCKET).list(prefix, { limit: 1000 });
+  return (data ?? []).filter((i) => i.id === null).map((i) => i.name);
+}
+
+// Junta TODOS los archivos reales bajo un prefijo, bajando recursivamente
+// (Supabase Storage .list() solo devuelve un nivel por llamada). Usado para
+// las carpetas automáticas de solo lectura (por herramienta / por
+// convocatoria) — ahí no importa la subcarpeta exacta donde vive cada
+// archivo (ej. "_carpeta" vs "{filaId}/{colKey}"), solo verlos todos juntos.
+async function listarArchivosRecursivo(supabase: SupabaseCliente, prefix: string, profundidad = 0): Promise<Archivo[]> {
+  if (profundidad > 6) return [];
+  const { data } = await supabase.storage.from(BUCKET).list(prefix, { limit: 1000 });
+  if (!data) return [];
+  const out: Archivo[] = [];
+  for (const item of data) {
+    if (item.name === ".emptyFolderPlaceholder" || item.name === ".keep") continue;
+    if (item.id === null) {
+      out.push(...(await listarArchivosRecursivo(supabase, `${prefix}/${item.name}`, profundidad + 1)));
+    } else {
+      out.push({
+        path: `${prefix}/${item.name}`,
+        nombre: item.name.replace(/^\d+-/, ""),
+        size: (item.metadata as { size?: number } | null)?.size ?? 0,
+        created_at: item.created_at ?? null,
+      });
+    }
+  }
+  return out;
+}
+
+// Vista de solo lectura (carpetas automáticas): por herramienta del
+// departamento, o por etapa del proyecto → convocatoria/evento (Ejecutivo).
+type VistaVirtual =
+  | { modo: "herramienta"; id: string; nombre: string }
+  | { modo: "etapa"; etapa: EventoTipo }
+  | { modo: "evento"; etapa: EventoTipo; id: string; titulo: string };
 
 function timeAgo(iso: string | null, t: ReturnType<typeof useTranslations>) {
   if (!iso) return "—";
@@ -42,8 +102,15 @@ function fileIcon(nombre: string) {
 
 const BUCKET = "documentos";
 
-export default function ArchivosPanel({ departamento }: { departamento: string }) {
+export default function ArchivosPanel({ departamento, isAdmin }: { departamento: string; isAdmin?: boolean }) {
   const t = useTranslations("archivos");
+  const tEt = useTranslations("etapas");
+  const puedeVerTodosDeptos = !!isAdmin || departamento === "Ejecutivo";
+  // Departamento cuyos archivos se están viendo. Por defecto el propio; el
+  // Ejecutivo (o un admin) puede cambiarlo para ver el de otro depto — de
+  // solo lectura ahí (no es su cabinet, no debería crear/subir/borrar).
+  const [deptoActivo, setDeptoActivo] = useState(departamento);
+  const esPropio = deptoActivo === departamento;
   const [pathStack, setPathStack] = useState<string[]>([]);
   const [carpetas, setCarpetas] = useState<string[]>([]);
   const [archivos, setArchivos] = useState<Archivo[]>([]);
@@ -62,6 +129,16 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
 
   const [me, setMe] = useState<{ id: string; nombre: string | null } | null>(null);
 
+  // Carpetas automáticas (solo lectura): una por herramienta del depto activo
+  // que ya tenga algún archivo subido, y — si se está mirando "Ejecutivo" —
+  // una por etapa del proyecto con convocatorias/eventos que tengan archivos.
+  const [autoHerramientas, setAutoHerramientas] = useState<{ id: string; nombre: string }[]>([]);
+  const [autoEtapas, setAutoEtapas] = useState<EventoTipo[]>([]);
+  const [virtual, setVirtual] = useState<VistaVirtual | null>(null);
+  const [virtualEventos, setVirtualEventos] = useState<{ id: string; titulo: string }[]>([]);
+  const [virtualArchivos, setVirtualArchivos] = useState<Archivo[]>([]);
+  const [virtualLoading, setVirtualLoading] = useState(false);
+
   const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
 
   useEffect(() => {
@@ -73,6 +150,56 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
       setMe({ id: auth.user.id, nombre: profile?.full_name ?? null });
     })();
   }, []);
+
+  // Detecta qué carpetas automáticas mostrar en la raíz del depto activo.
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      const supabase = createClient();
+      const nombresHerr = await listarSubcarpetas(supabase, `${projectId}/${safeKey(deptoActivo)}/herramientas`);
+      const catalogo = todasLasHerramientasDe(deptoActivo);
+      setAutoHerramientas(catalogo.filter((h) => nombresHerr.includes(safeKey(h.id))));
+
+      if (deptoActivo === "Ejecutivo") {
+        const idsConvocatorias = await listarSubcarpetas(supabase, `${projectId}/_convocatorias`);
+        if (idsConvocatorias.length === 0) { setAutoEtapas([]); return; }
+        const { data: eventos } = await supabase
+          .from("eventos_proyecto")
+          .select("id, tipo")
+          .eq("project_id", projectId)
+          .in("id", idsConvocatorias);
+        const tiposConArchivos = new Set((eventos ?? []).map((e) => e.tipo as EventoTipo));
+        setAutoEtapas(TIPOS_EVENTO.filter((tp) => tiposConArchivos.has(tp)));
+      } else {
+        setAutoEtapas([]);
+      }
+    })();
+  }, [projectId, deptoActivo]);
+
+  // Carga el contenido de la vista virtual activa (herramienta / etapa / evento).
+  useEffect(() => {
+    if (!virtual || !projectId) return;
+    (async () => {
+      setVirtualLoading(true);
+      const supabase = createClient();
+      if (virtual.modo === "herramienta") {
+        const prefix = `${projectId}/${safeKey(deptoActivo)}/herramientas/${safeKey(virtual.id)}`;
+        setVirtualArchivos(await listarArchivosRecursivo(supabase, prefix));
+      } else if (virtual.modo === "etapa") {
+        const idsConvocatorias = await listarSubcarpetas(supabase, `${projectId}/_convocatorias`);
+        const { data: eventos } = await supabase
+          .from("eventos_proyecto")
+          .select("id, titulo, tipo")
+          .eq("project_id", projectId)
+          .eq("tipo", virtual.etapa)
+          .in("id", idsConvocatorias.length ? idsConvocatorias : ["00000000-0000-0000-0000-000000000000"]);
+        setVirtualEventos((eventos ?? []).map((e) => ({ id: e.id as string, titulo: (e.titulo as string) || tEt(virtual.etapa) })));
+      } else if (virtual.modo === "evento") {
+        setVirtualArchivos(await listarArchivosRecursivo(supabase, `${projectId}/_convocatorias/${virtual.id}`));
+      }
+      setVirtualLoading(false);
+    })();
+  }, [virtual, projectId, deptoActivo, tEt]);
 
   // Borrar = mover a la papelera del proyecto (no eliminar de verdad) + registrar
   // la fila para que el soporte pueda recuperarlo/reasignarlo desde el panel.
@@ -89,7 +216,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     const { error: errReg } = await supabase.rpc("registrar_papelera", {
       p_project_id: projectId,
       p_bucket: BUCKET,
-      p_departamento: departamento,
+      p_departamento: deptoActivo,
       p_nombre: nombre,
       p_original_path: fullPath,
       p_papelera_path: papeleraPath,
@@ -99,7 +226,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
   }
 
   function storagePath() {
-    const segs = [projectId ?? "", safeKey(departamento), "archivos", ...pathStack.map(safeKey)];
+    const segs = [projectId ?? "", safeKey(deptoActivo), "archivos", ...pathStack.map(safeKey)];
     return segs.join("/");
   }
 
@@ -114,7 +241,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
       .from("archivos_carpetas")
       .select("nombre")
       .eq("project_id", projectId)
-      .eq("departamento", departamento)
+      .eq("departamento", deptoActivo)
       .eq("parent_path", parentPath())
       .order("nombre");
     return (data ?? []).map((r) => r.nombre as string);
@@ -144,7 +271,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [departamento, pathStack.join("/")]); // eslint-disable-line
+  useEffect(() => { load(); }, [deptoActivo, pathStack.join("/")]); // eslint-disable-line
 
   // Las imágenes usan directamente la signed URL como miniatura (el navegador
   // la escala). Los PDF se renderizan a una imagen pequeña con pdfjs porque
@@ -175,7 +302,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     const supabase = createClient();
     const { error } = await supabase.from("archivos_carpetas").insert({
       project_id: projectId,
-      departamento,
+      departamento: deptoActivo,
       parent_path: parentPath(),
       nombre,
     });
@@ -197,7 +324,7 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     await supabase.from("archivos_carpetas")
       .delete()
       .eq("project_id", projectId)
-      .eq("departamento", departamento)
+      .eq("departamento", deptoActivo)
       .eq("parent_path", parentPath())
       .eq("nombre", nombre);
     // Mover los archivos de la carpeta a la papelera (no borrado real)
@@ -284,7 +411,8 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
 
   const breadcrumb = [t("rootLabel"), ...pathStack];
   const isRoot = pathStack.length === 0;
-  const isEmpty = carpetas.length === 0 && archivos.length === 0;
+  const isEmpty = carpetas.length === 0 && archivos.length === 0
+    && !(isRoot && (autoHerramientas.length > 0 || autoEtapas.length > 0));
 
   const formCarpeta = creandoCarpeta ? (
     <span className="arc-nueva-row">
@@ -310,57 +438,67 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
     </button>
   );
 
+  // Miniatura de la vista virtual (herramienta/etapa/evento) que se está
+  // navegando — reemplaza el breadcrumb normal, ya que no vive en pathStack.
+  const virtualBreadcrumb: string[] = !virtual ? [] :
+    virtual.modo === "herramienta" ? [t("byTool"), virtual.nombre] :
+    virtual.modo === "etapa" ? [t("byStage"), tEt(virtual.etapa)] :
+    [t("byStage"), tEt(virtual.etapa), virtual.titulo];
+
   return (
     <div className="arc-wrap">
-      <div className="arc-head">
-        <div className="arc-breadcrumb">
-          {breadcrumb.map((seg, i) => (
-            <span key={i} className="arc-bc-seg">
-              {i > 0 && <span className="arc-bc-sep">›</span>}
-              {i < breadcrumb.length - 1 ? (
-                <button className="arc-bc-btn" onClick={() => setPathStack(pathStack.slice(0, i))}>
-                  {seg}
-                </button>
-              ) : (
-                <span className="arc-bc-current">{seg}</span>
-              )}
-            </span>
-          ))}
+      {puedeVerTodosDeptos && (
+        <div className="arc-depto-switch">
+          <span className="arc-depto-label">{t("viewingDept")}</span>
+          <select
+            className="arc-depto-select"
+            value={deptoActivo}
+            onChange={(e) => { setDeptoActivo(e.target.value); setPathStack([]); setVirtual(null); }}
+          >
+            {DEPARTAMENTOS.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+          {!esPropio && <span className="arc-depto-readonly">{t("readOnlyOtherDept")}</span>}
         </div>
+      )}
 
-        <div className="arc-head-actions">
-          {formCarpeta}
-          {!isRoot && (
-            <label className={`arc-btn-acc${uploading ? " disabled" : ""}`} style={{ cursor: uploading ? "wait" : "pointer" }}>
-              {uploading ? t("uploading") : t("uploadFile")}
-              <input ref={fileRef} type="file" multiple style={{ display: "none" }}
-                onChange={(e) => subirArchivos(e.target.files)} />
-            </label>
-          )}
-        </div>
-      </div>
-
-      {carpetaError && <div className="arc-error">⚠ {carpetaError}</div>}
-      {uploadError && <div className="arc-error">⚠ {t("uploadErrorPrefix")}{uploadError}</div>}
-
-      {loading ? (
-        <div className="soon-box"><span className="hex"></span><h4>{t("loading")}</h4></div>
-      ) : (
+      {virtual ? (
         <>
-          {carpetas.length > 0 && (
-            <div className="arc-folder-grid">
-              {carpetas.map((c) => (
-                <button key={c} className="arc-folder-card" onClick={() => setPathStack([...pathStack, c])}>
-                  <span className="arc-folder-icon">📁</span>
-                  <span className="arc-folder-name">{c}</span>
-                </button>
+          <div className="arc-head">
+            <div className="arc-breadcrumb">
+              <button className="arc-bc-btn" onClick={() => setVirtual(null)}>{t("rootLabel")}</button>
+              {virtualBreadcrumb.map((seg, i) => (
+                <span key={i} className="arc-bc-seg">
+                  <span className="arc-bc-sep">›</span>
+                  {i < virtualBreadcrumb.length - 1 && virtual.modo === "evento" && i === 0 ? (
+                    <button className="arc-bc-btn" onClick={() => setVirtual({ modo: "etapa", etapa: virtual.etapa })}>{seg}</button>
+                  ) : (
+                    <span className={i === virtualBreadcrumb.length - 1 ? "arc-bc-current" : ""}>{seg}</span>
+                  )}
+                </span>
               ))}
             </div>
-          )}
+          </div>
 
-          {archivos.length > 0 && (
+          {virtualLoading ? (
+            <div className="soon-box"><span className="hex"></span><h4>{t("loading")}</h4></div>
+          ) : virtual.modo === "etapa" ? (
+            virtualEventos.length === 0 ? (
+              <div className="arc-dropzone" style={{ cursor: "default" }}><span className="hex" style={{ width: 28, height: 24 }} /><p>{t("noFilesHere")}</p></div>
+            ) : (
+              <div className="arc-folder-grid">
+                {virtualEventos.map((ev) => (
+                  <button key={ev.id} className="arc-folder-card arc-folder-auto" onClick={() => setVirtual({ modo: "evento", etapa: virtual.etapa, id: ev.id, titulo: ev.titulo })}>
+                    <span className="arc-folder-icon">📁</span>
+                    <span className="arc-folder-name">{ev.titulo}</span>
+                  </button>
+                ))}
+              </div>
+            )
+          ) : virtualArchivos.length === 0 ? (
+            <div className="arc-dropzone" style={{ cursor: "default" }}><span className="hex" style={{ width: 28, height: 24 }} /><p>{t("noFilesHere")}</p></div>
+          ) : (
             <div className="arc-files-list">
-              {archivos.map((f, i) => {
+              {virtualArchivos.map((f, i) => {
                 const isImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.nombre);
                 const isPdf = /\.(pdf)$/i.test(f.nombre);
                 const conPreview = isImagen || isPdf;
@@ -376,29 +514,137 @@ export default function ArchivosPanel({ departamento }: { departamento: string }
                         <button className="arc-icon-btn" onClick={() => abrirPreview(f)} title={t("view")}>👁</button>
                       )}
                       <button className="arc-icon-btn" onClick={() => descargar(f.path, f.nombre)} title={t("download")}>⬇</button>
-                      <button className="arc-icon-btn danger" onClick={() => eliminar(f)} title={t("delete")}>✕</button>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-
-          {!isRoot && isEmpty && (
-            <div className="arc-dropzone"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => { e.preventDefault(); subirArchivos(e.dataTransfer.files); }}
-              onClick={() => fileRef.current?.click()}>
-              <span className="hex" style={{ width: 28, height: 24 }} />
-              <p>{t("dropHere")}</p>
+        </>
+      ) : (
+        <>
+          <div className="arc-head">
+            <div className="arc-breadcrumb">
+              {breadcrumb.map((seg, i) => (
+                <span key={i} className="arc-bc-seg">
+                  {i > 0 && <span className="arc-bc-sep">›</span>}
+                  {i < breadcrumb.length - 1 ? (
+                    <button className="arc-bc-btn" onClick={() => setPathStack(pathStack.slice(0, i))}>
+                      {seg}
+                    </button>
+                  ) : (
+                    <span className="arc-bc-current">{seg}</span>
+                  )}
+                </span>
+              ))}
             </div>
-          )}
 
-          {isRoot && isEmpty && (
-            <div className="arc-dropzone" style={{ cursor: "default" }}>
-              <span className="hex" style={{ width: 28, height: 24 }} />
-              <p>{t("createFolderToStart")}</p>
-            </div>
+            {esPropio && (
+              <div className="arc-head-actions">
+                {formCarpeta}
+                {!isRoot && (
+                  <label className={`arc-btn-acc${uploading ? " disabled" : ""}`} style={{ cursor: uploading ? "wait" : "pointer" }}>
+                    {uploading ? t("uploading") : t("uploadFile")}
+                    <input ref={fileRef} type="file" multiple style={{ display: "none" }}
+                      onChange={(e) => subirArchivos(e.target.files)} />
+                  </label>
+                )}
+              </div>
+            )}
+          </div>
+
+          {carpetaError && <div className="arc-error">⚠ {carpetaError}</div>}
+          {uploadError && <div className="arc-error">⚠ {t("uploadErrorPrefix")}{uploadError}</div>}
+
+          {loading ? (
+            <div className="soon-box"><span className="hex"></span><h4>{t("loading")}</h4></div>
+          ) : (
+            <>
+              {isRoot && (autoHerramientas.length > 0 || autoEtapas.length > 0) && (
+                <div className="arc-auto-section">
+                  {autoHerramientas.length > 0 && (
+                    <>
+                      <div className="arc-auto-title">{t("byTool")}</div>
+                      <div className="arc-folder-grid">
+                        {autoHerramientas.map((h) => (
+                          <button key={h.id} className="arc-folder-card arc-folder-auto" onClick={() => setVirtual({ modo: "herramienta", id: h.id, nombre: h.nombre })}>
+                            <span className="arc-folder-icon">📁</span>
+                            <span className="arc-folder-name">{h.nombre}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {autoEtapas.length > 0 && (
+                    <>
+                      <div className="arc-auto-title">{t("byStage")}</div>
+                      <div className="arc-folder-grid">
+                        {autoEtapas.map((tp) => (
+                          <button key={tp} className="arc-folder-card arc-folder-auto" onClick={() => setVirtual({ modo: "etapa", etapa: tp })}>
+                            <span className="arc-folder-icon">📁</span>
+                            <span className="arc-folder-name">{tEt(tp)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {carpetas.length > 0 && (
+                <div className="arc-folder-grid">
+                  {carpetas.map((c) => (
+                    <button key={c} className="arc-folder-card" onClick={() => setPathStack([...pathStack, c])}>
+                      <span className="arc-folder-icon">📁</span>
+                      <span className="arc-folder-name">{c}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {archivos.length > 0 && (
+                <div className="arc-files-list">
+                  {archivos.map((f, i) => {
+                    const isImagen = /\.(jpg|jpeg|png|gif|webp)$/i.test(f.nombre);
+                    const isPdf = /\.(pdf)$/i.test(f.nombre);
+                    const conPreview = isImagen || isPdf;
+                    return (
+                      <div key={i} className="arc-file-row">
+                        <span className="arc-file-row-icon">{fileIcon(f.nombre)}</span>
+                        <div className="arc-file-row-info">
+                          <div className="arc-file-name">{f.nombre}</div>
+                          <div className="arc-file-meta">{fmtBytes(f.size)} · {timeAgo(f.created_at, t)}</div>
+                        </div>
+                        <div className="arc-file-actions">
+                          {conPreview && (
+                            <button className="arc-icon-btn" onClick={() => abrirPreview(f)} title={t("view")}>👁</button>
+                          )}
+                          <button className="arc-icon-btn" onClick={() => descargar(f.path, f.nombre)} title={t("download")}>⬇</button>
+                          {esPropio && <button className="arc-icon-btn danger" onClick={() => eliminar(f)} title={t("delete")}>✕</button>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {!isRoot && isEmpty && esPropio && (
+                <div className="arc-dropzone"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => { e.preventDefault(); subirArchivos(e.dataTransfer.files); }}
+                  onClick={() => fileRef.current?.click()}>
+                  <span className="hex" style={{ width: 28, height: 24 }} />
+                  <p>{t("dropHere")}</p>
+                </div>
+              )}
+
+              {isRoot && isEmpty && (
+                <div className="arc-dropzone" style={{ cursor: "default" }}>
+                  <span className="hex" style={{ width: 28, height: 24 }} />
+                  <p>{t("createFolderToStart")}</p>
+                </div>
+              )}
+            </>
           )}
         </>
       )}

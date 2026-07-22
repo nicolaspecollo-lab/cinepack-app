@@ -4852,11 +4852,6 @@ export function TablaTool({
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
   const [compacto, setCompacto] = useState(false);
   const [pagina, setPagina] = useState(0);
-  const [findOpen, setFindOpen] = useState(false);
-  const [findBuscar, setFindBuscar] = useState("");
-  const [findReemplazar, setFindReemplazar] = useState("");
-  const [condRules, setCondRules] = useState<Array<{id: string; colKey: string; op: string; value: string; color: string}>>([]);
-  const [condOpen, setCondOpen] = useState(false);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [nuevaColOpen, setNuevaColOpen] = useState(false);
@@ -4872,6 +4867,34 @@ export function TablaTool({
   const importInputRef = useRef<HTMLInputElement>(null);
   const resizingRef = useRef<{key: string; startX: number; startW: number} | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wrapMaxH, setWrapMaxH] = useState(480);
+
+  // .hp-table-wrap es su propio contenedor de scroll (ver dashboard.css) con
+  // una altura acotada al espacio real que queda hasta el fondo del
+  // viewport — no un valor fijo adivinado, porque cuánto "chrome" hay arriba
+  // (tabs de departamento, header del panel, etc.) varía según dónde esté
+  // montada la herramienta. Se mide en vivo con getBoundingClientRect y se
+  // recalcula al scrollear/resize — el mismo patrón que usa un toolbar
+  // sticky para "llenar el resto de la pantalla".
+  useEffect(() => {
+    if (expandida) return; // en pantalla completa el CSS ya lo resuelve con flex
+    function recalc() {
+      const el = wrapRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      setWrapMaxH(Math.max(240, Math.floor(window.innerHeight - top - 16)));
+    }
+    recalc();
+    const raf = requestAnimationFrame(recalc);
+    window.addEventListener("scroll", recalc, { passive: true });
+    window.addEventListener("resize", recalc);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", recalc);
+      window.removeEventListener("resize", recalc);
+    };
+  }, [expandida]);
 
   // Columnas visibles (sin ocultas)
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
@@ -5057,19 +5080,6 @@ export function TablaTool({
     document.addEventListener("mouseup", onUp);
   }
 
-  // Formato condicional: devuelve color si la celda cumple alguna regla
-  function getCondColor(colKey: string, value: string): string | null {
-    for (const rule of condRules) {
-      if (rule.colKey !== colKey) continue;
-      const nv = parseFloat(value), nr = parseFloat(rule.value);
-      if (rule.op === ">" && !isNaN(nv) && !isNaN(nr) && nv > nr) return rule.color;
-      if (rule.op === "<" && !isNaN(nv) && !isNaN(nr) && nv < nr) return rule.color;
-      if (rule.op === "=" && value === rule.value) return rule.color;
-      if (rule.op === "contiene" && value.toLowerCase().includes(rule.value.toLowerCase())) return rule.color;
-    }
-    return null;
-  }
-
   // Import CSV
   function handleImportCSV(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -5116,20 +5126,6 @@ export function TablaTool({
   function copiarFila(f: Fila) {
     const text = columnas.map(c => `${c.label}: ${stripHtml(f.datos?.[c.key] ?? "")}`).join("\n");
     navigator.clipboard.writeText(text).catch(() => {});
-  }
-
-  // Buscar y reemplazar en toda la tabla
-  function reemplazarTodo() {
-    if (!findBuscar) return;
-    for (const f of filasFiltradas) {
-      const nuevosDatos: Record<string, string> = { ...f.datos };
-      let changed = false;
-      for (const col of columnas) {
-        const v = f.datos?.[col.key] ?? "";
-        if (v.includes(findBuscar)) { nuevosDatos[col.key] = v.replaceAll(findBuscar, findReemplazar); changed = true; }
-      }
-      if (changed) onGuardar(f.id, nuevosDatos, f);
-    }
   }
 
   // Edición en batch sobre filas seleccionadas
@@ -5409,12 +5405,6 @@ export function TablaTool({
             <button className="cp-btn" onClick={cancelarNuevaColumna}>{t("cancel")}</button>
           </div>
         )}
-        <button className={`hp-expand-btn${findOpen ? " active" : ""}`} onClick={() => setFindOpen(v => !v)} title={t("replace")}>
-          <Icon name="replace" size={14} />
-        </button>
-        <button className={`hp-expand-btn${condOpen ? " active" : ""}`} onClick={() => setCondOpen(v => !v)} title={t("conditionalFormat")}>
-          <Icon name="filter" size={14} />
-        </button>
 
         {/* Exportar / importar */}
         <ToolMenu label={t("export")} icon="download" align="right" width={210}>
@@ -5479,58 +5469,9 @@ export function TablaTool({
         </div>
       )}
 
-      {/* ── Find & Replace ───────────────────────────────────────────── */}
-      {findOpen && (
-        <div className="hp-find-bar">
-          <input className="hp-tabla-search" placeholder={t("search")} value={findBuscar} onChange={e => setFindBuscar(e.target.value)} />
-          <span>→</span>
-          <input className="hp-tabla-search" placeholder={t("replacePlaceholder")} value={findReemplazar} onChange={e => setFindReemplazar(e.target.value)} />
-          <button className="btn acc" onClick={reemplazarTodo} disabled={!findBuscar}>{t("replaceAll")}</button>
-          <button className="btn" onClick={() => setFindOpen(false)}>✕</button>
-        </div>
-      )}
-
-      {/* ── Formato condicional ──────────────────────────────────────── */}
-      {condOpen && (
-        <div className="hp-cond-panel">
-          <div className="hp-cond-add">
-            <span>{t("newRule")}</span>
-            <select className="hp-tabla-filter" id="cp-cond-col">
-              <option value="">{t("column")}</option>
-              {columnas.filter(c => c.tipo !== "archivo" && c.tipo !== "link").map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-            </select>
-            <select className="hp-tabla-filter" id="cp-cond-op">
-              <option value=">">{t("opGreater")}</option>
-              <option value="<">{t("opLess")}</option>
-              <option value="=">{t("opEquals")}</option>
-              <option value="contiene">{t("opContains")}</option>
-            </select>
-            <input className="hp-tabla-search" placeholder={t("value")} id="cp-cond-val" style={{width:80}} />
-            <input type="color" id="cp-cond-color" defaultValue="#ffd600" style={{width:36,height:30,border:"none",cursor:"pointer"}} />
-            <button className="btn acc" onClick={() => {
-              const col = (document.getElementById("cp-cond-col") as HTMLSelectElement)?.value;
-              const op = (document.getElementById("cp-cond-op") as HTMLSelectElement)?.value;
-              const val2 = (document.getElementById("cp-cond-val") as HTMLInputElement)?.value;
-              const color = (document.getElementById("cp-cond-color") as HTMLInputElement)?.value;
-              if (col && op && val2) setCondRules(r => [...r, {id: crypto.randomUUID(), colKey: col, op, value: val2, color}]);
-            }}>{t("addRule")}</button>
-          </div>
-          {condRules.map(r => {
-            const colName = columnas.find(c => c.key === r.colKey)?.label ?? r.colKey;
-            return (
-              <div key={r.id} className="hp-cond-rule">
-                <span style={{width:14,height:14,borderRadius:2,background:r.color,display:"inline-block",marginRight:6}} />
-                <span>{colName} {r.op} "{r.value}"</span>
-                <button className="btn" onClick={() => setCondRules(rules => rules.filter(x => x.id !== r.id))}>✕</button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
-        <div className="hp-table-wrap">
+        <div className="hp-table-wrap" ref={wrapRef} style={expandida ? undefined : { maxHeight: wrapMaxH }}>
           <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef}>
             <colgroup>
               {editable && <col style={{width:36}} />}
@@ -5609,7 +5550,6 @@ export function TablaTool({
                       )}
                       {visibleCols.map((c, colIdx) => {
                         const cellVal = val(f, c.key);
-                        const condColor = getCondColor(c.key, cellVal);
                         const isNum = c.tipo === "num" || c.tipo === "money";
                         const dataBarPct = isNum && maxVals[c.key]
                           ? Math.min(100, (parseFloat(cellVal || "0") || 0) / maxVals[c.key] * 100)
@@ -5617,12 +5557,9 @@ export function TablaTool({
                         const esFrozen = colIdx === 0;
                         // La celda congelada tiene que quedar SIEMPRE opaca (si no, se
                         // transparenta y deja ver las columnas que scrollean por detrás
-                        // — ver dashboard.css). Los tintes (color de fila, formato
-                        // condicional) se pintan con box-shadow inset sobre ese fondo
-                        // opaco en vez de reemplazar el background.
-                        const tintesFrozen = esFrozen
-                          ? [rowColor && `inset 0 0 0 999px ${rowColor}18`, condColor && `inset 0 0 0 999px ${condColor}44`].filter(Boolean) as string[]
-                          : [];
+                        // — ver dashboard.css). El tinte de color de fila se pinta con
+                        // box-shadow inset sobre ese fondo opaco en vez de reemplazar el
+                        // background.
                         return (
                           <td
                             key={c.key}
@@ -5634,9 +5571,9 @@ export function TablaTool({
                             ].filter(Boolean).join(" ")}
                             style={{
                               ...(colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined),
-                              ...(esFrozen
-                                ? (tintesFrozen.length ? {boxShadow: [...tintesFrozen, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")} : undefined)
-                                : (condColor ? {background: condColor + "44"} : undefined)),
+                              ...(esFrozen && rowColor
+                                ? {boxShadow: [`inset 0 0 0 999px ${rowColor}18`, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")}
+                                : undefined),
                             }}
                             onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
                           >
