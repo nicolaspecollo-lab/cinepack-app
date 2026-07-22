@@ -5060,19 +5060,34 @@ export function TablaTool({
 
   // ── Funciones nuevas ────────────────────────────────────────────────────
 
-  // Resize de columnas
+  // Resize de columnas. El re-render que dispara cada setColWidths recorre
+  // TODA la tabla (todas las filas/celdas) — sin acotar la frecuencia, un
+  // mouse/trackpad de alto polling dispara un mousemove cada pocos
+  // milisegundos y satura el hilo principal en tablas con muchas filas,
+  // dejando la pestaña sin responder (llegó a "This page couldn't load"
+  // en el navegador). Se acota a 1 actualización por frame con
+  // requestAnimationFrame en vez de aplicar cada evento tal cual llega.
   function startResize(e: React.MouseEvent, key: string) {
     e.preventDefault();
     const th = (e.target as HTMLElement).closest("th");
     const startW = th?.getBoundingClientRect().width ?? 120;
     resizingRef.current = { key, startX: e.clientX, startW };
+    let rafId: number | null = null;
+    let lastClientX = e.clientX;
+    function aplicar() {
+      rafId = null;
+      if (!resizingRef.current) return;
+      const newW = Math.max(60, resizingRef.current.startW + lastClientX - resizingRef.current.startX);
+      setColWidths(w => ({ ...w, [resizingRef.current!.key]: newW }));
+    }
     function onMove(ev: MouseEvent) {
       if (!resizingRef.current) return;
-      const newW = Math.max(60, resizingRef.current.startW + ev.clientX - resizingRef.current.startX);
-      setColWidths(w => ({ ...w, [resizingRef.current!.key]: newW }));
+      lastClientX = ev.clientX;
+      if (rafId === null) rafId = requestAnimationFrame(aplicar);
     }
     function onUp() {
       resizingRef.current = null;
+      if (rafId !== null) cancelAnimationFrame(rafId);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
     }
