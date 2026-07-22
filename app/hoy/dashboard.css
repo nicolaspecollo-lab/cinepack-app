@@ -1057,7 +1057,14 @@
 }
 
 /* Tabla editable */
-.cp-dash .hp-table-wrap{ overflow-x:auto; padding:14px 30px 0; }
+/* overflow-y:visible EXPLÍCITO — dejar overflow-y sin especificar mientras
+   overflow-x:auto está seteado hace que el navegador compute overflow-y como
+   "auto" también (regla CSS: si un eje no es "visible" el otro deja de
+   serlo), convirtiendo a este wrapper en su propio contenedor de scroll
+   vertical "fantasma" (sin scrollbar, porque no tiene alto fijo, pero SÍ
+   cambia la referencia de posicionamiento de cualquier position:sticky
+   adentro — como el thead — rompiendo el pegado respecto a la página). */
+.cp-dash .hp-table-wrap{ overflow-x:auto; overflow-y:visible; padding:14px 30px 0; }
 /* border-collapse:separate (no collapse) a propósito: position:sticky sobre
    celdas de una tabla con border-collapse:collapse se renderiza mal en varios
    navegadores (el fondo queda semi-transparente y el contenido de las
@@ -1855,12 +1862,14 @@
    FUNCIONES EXCEL — 30 features
    ======================================================== */
 
-/* Sticky header — top corrido para dejarle lugar al toolbar (también
-   sticky, ver .hp-tabla-toolbar) que queda arriba de todo; en pantalla
+/* Sticky header — top corrido exactamente la altura real del toolbar
+   (--hp-toolbar-h, medida en vivo con ResizeObserver en HerramientaPanel.tsx
+   porque el toolbar es flex-wrap y puede pasar a 2 líneas en pantallas
+   angostas — un valor fijo se desincroniza apenas cambia). En pantalla
    completa el toolbar no es sticky (ya está fijo por flex-shrink:0 en su
    propio overlay), así que ahí el header vuelve a pegarse a top:0. */
 .cp-dash .hp-table thead tr th{
-  position:sticky; top:48px; z-index:2; background:var(--bg-2);
+  position:sticky; top:var(--hp-toolbar-h, 48px); z-index:2; background:var(--bg-2);
   box-shadow:0 1px 0 var(--line);
 }
 

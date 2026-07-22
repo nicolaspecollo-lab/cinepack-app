@@ -235,7 +235,6 @@ export default function HerramientasPanel({
               onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
             />
           </h3>
-          <span className="hp-open-tag">{t(TIPO_TAG_KEY[h.tipo])}</span>
           <button
             className="btn hp-btn-danger"
             style={{ marginLeft: "auto" }}
@@ -272,7 +271,6 @@ export default function HerramientasPanel({
         <div className="hp-open-head">
           <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
           <h3><span className="hex"></span> {nombreDe(abierta)}</h3>
-          <span className="hp-open-tag">{t(TIPO_TAG_KEY[abierta.tipo])}</span>
           {/* HerramientaPanel porta acá el toggle Tablero/Tabla/Archivos —
               antes vivía debajo del hint, en su propia fila, dejando todo el
               lado derecho de esta cabecera vacío. */}

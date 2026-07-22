@@ -4842,6 +4842,22 @@ export function TablaTool({
   const tableRef = useRef<HTMLTableElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const resizingRef = useRef<{key: string; startX: number; startW: number} | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarH, setToolbarH] = useState(48);
+  // El toolbar es sticky y puede pasar a 2 líneas en pantallas angostas (es
+  // flex-wrap): el header sticky de la tabla necesita correrse exactamente
+  // esa altura para no superponerse. Un valor fijo en CSS se rompía apenas
+  // el toolbar medía distinto — se mide en vivo con ResizeObserver.
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver((entries) => {
+      const h = entries[0]?.contentRect.height;
+      if (h) setToolbarH(Math.ceil(h));
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // Columnas visibles (sin ocultas)
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
@@ -5220,7 +5236,7 @@ export function TablaTool({
       ))}
 
       {/* ── Toolbar principal ────────────────────────────────────────── */}
-      <div className="hp-tabla-toolbar">
+      <div className="hp-tabla-toolbar" ref={toolbarRef}>
         <input
           className="hp-tabla-search"
           type="search"
@@ -5483,7 +5499,7 @@ export function TablaTool({
 
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
-        <div className="hp-table-wrap">
+        <div className="hp-table-wrap" style={{ "--hp-toolbar-h": `${toolbarH}px` } as React.CSSProperties}>
           <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef}>
             <colgroup>
               {editable && <col style={{width:36}} />}
