@@ -4803,6 +4803,21 @@ function PlanSemanaBoard({
 // ---- Tabla con registro de intervenciones ----
 const ITEMS_POR_PAG = 50;
 
+// Ancho por defecto de cada columna según su tipo (px). El <col> del colgroup
+// lo usa como ancho base; el usuario lo pisa arrastrando (colWidths). Con
+// esto el <col> gobierna el ancho y las celdas NO llevan width inline —
+// permite mover la columna en vivo tocando un solo elemento por frame.
+function anchoDefectoCol(c: Columna): number {
+  switch (c.tipo) {
+    case "largo": return 220;
+    case "num": case "money": return 110;
+    case "fecha": return 130;
+    case "estado": return 140;
+    case "archivo": case "link": return 150;
+    default: return 150;
+  }
+}
+
 export function TablaTool({
   columnas,
   filas,
@@ -4900,6 +4915,18 @@ export function TablaTool({
 
   // Columnas visibles (sin ocultas)
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
+
+  // Ancho total de la tabla = suma de anchos de columna (los del usuario o el
+  // default por tipo) + columnas fijas (check, acciones, editado). La tabla es
+  // table-layout:fixed y se setea a este ancho: si supera el contenedor,
+  // scrollea horizontal; si es menor, minWidth:100% la estira. Con layout
+  // fixed una columna SÍ puede achicarse por debajo del ancho de su contenido
+  // (ej. el input date, que en auto-layout tenía un mínimo intransigente).
+  const totalAncho = useMemo(() => {
+    let w = (editable ? 36 : 0) + (editable ? 118 : 0) + (showLastEdit ? 90 : 0);
+    for (const c of visibleCols) w += colWidths[c.key] ?? anchoDefectoCol(c);
+    return w;
+  }, [visibleCols, colWidths, editable, showLastEdit]);
 
   // Valores únicos por columna (autocomplete)
   // texto y largo ahora son rich text (HTML) → sin autocomplete por datalist.
@@ -5062,70 +5089,65 @@ export function TablaTool({
 
   // ── Funciones nuevas ────────────────────────────────────────────────────
 
-  // Resize de columnas. El re-render que dispara cada setColWidths recorre
-  // TODA la tabla (todas las filas/celdas) — sin acotar la frecuencia, un
-  // mouse/trackpad de alto polling dispara un mousemove cada pocos
-  // milisegundos y satura el hilo principal en tablas con muchas filas,
-  // dejando la pestaña sin responder (llegó a "This page couldn't load"
-  // en el navegador). Se acota a 1 actualización por frame con
-  // requestAnimationFrame en vez de aplicar cada evento tal cual llega.
+  // Resize de columnas. CLAVE: durante el arrastre se escribe el ancho
+  // DIRECTO al DOM (el elemento <col> de esa columna), sin tocar el estado
+  // de React. Antes cada mousemove hacía setColWidths → re-render de TODA la
+  // tabla (todas las celdas rich-text/contentEditable) en cada frame; en una
+  // tabla real con muchas filas eso saturaba el hilo y el navegador mataba la
+  // pestaña ("This page couldn't load", reportado varias veces). Se commitea
+  // al estado UNA sola vez, en mouseup. El ancho se aplica sobre el <col>
+  // (colgroup), no sobre cada <td>, así que un único write por frame mueve
+  // toda la columna. Sin tope alto: el usuario puede resignar el ancho del
+  // label si necesita el espacio (el label se trunca con ellipsis por CSS).
   function startResize(e: React.MouseEvent, key: string) {
     e.preventDefault();
     const th = (e.target as HTMLElement).closest("th");
     const startW = th?.getBoundingClientRect().width ?? 120;
+    const colEl = tableRef.current?.querySelector<HTMLElement>(`colgroup col[data-ck="${CSS.escape(key)}"]`) ?? null;
+    const tableEl = tableRef.current;
+    const startTableW = tableEl?.offsetWidth ?? 0;
     resizingRef.current = { key, startX: e.clientX, startW };
-    let rafId: number | null = null;
-    let lastClientX = e.clientX;
-    function aplicar() {
-      rafId = null;
-      if (!resizingRef.current) return;
-      // Sin tope alto: si el usuario quiere resignar el concepto (label) por
-      // más espacio de pantalla para otras columnas, puede — el mínimo es
-      // solo para que la columna no colapse a un ancho inutilizable.
-      const newW = Math.max(28, resizingRef.current.startW + lastClientX - resizingRef.current.startX);
-      setColWidths(w => ({ ...w, [resizingRef.current!.key]: newW }));
-    }
+    let lastW = startW;
     function onMove(ev: MouseEvent) {
-      if (!resizingRef.current) return;
-      lastClientX = ev.clientX;
-      if (rafId === null) rafId = requestAnimationFrame(aplicar);
+      if (!resizingRef.current || !colEl) return;
+      lastW = Math.max(28, startW + ev.clientX - resizingRef.current.startX);
+      colEl.style.width = `${lastW}px`;
+      // La tabla también crece/encoge con la columna (mismo delta): así las
+      // demás columnas quedan quietas y la tabla scrollea/estira. table-layout
+      // es fixed, con lo que el <col> manda el ancho exacto (ver CSS).
+      if (tableEl) tableEl.style.width = `${startTableW + (lastW - startW)}px`;
     }
     function onUp() {
       resizingRef.current = null;
-      if (rafId !== null) cancelAnimationFrame(rafId);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      setColWidths(w => ({ ...w, [key]: lastW }));
     }
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
   }
 
-  // Resize de filas — mismo patrón que startResize (throttle a 1 update por
-  // frame con requestAnimationFrame, aprendido del cuelgue de la pestaña que
-  // causaba hacerlo en cada mousemove crudo).
+  // Resize de filas — mismo patrón directo-al-DOM que startResize. El alto se
+  // aplica sobre el wrapper .hp-cell-body de cada celda de la fila (los <td>
+  // ignoran max-height, pero un div interno con maxHeight+overflow sí recorta
+  // el contenido). Commit al estado solo en mouseup.
   function startResizeRow(e: React.MouseEvent, id: string) {
     e.preventDefault();
     const tr = (e.target as HTMLElement).closest("tr");
     const startH = tr?.getBoundingClientRect().height ?? 36;
+    const bodies = tr ? Array.from(tr.querySelectorAll<HTMLElement>(".hp-cell-body")) : [];
     resizingRowRef.current = { id, startY: e.clientY, startH };
-    let rafId: number | null = null;
-    let lastClientY = e.clientY;
-    function aplicar() {
-      rafId = null;
-      if (!resizingRowRef.current) return;
-      const newH = Math.max(28, resizingRowRef.current.startH + lastClientY - resizingRowRef.current.startY);
-      setRowHeights(h => ({ ...h, [resizingRowRef.current!.id]: newH }));
-    }
+    let lastH = startH;
     function onMove(ev: MouseEvent) {
       if (!resizingRowRef.current) return;
-      lastClientY = ev.clientY;
-      if (rafId === null) rafId = requestAnimationFrame(aplicar);
+      lastH = Math.max(24, startH + ev.clientY - resizingRowRef.current.startY);
+      for (const b of bodies) { b.style.height = `${lastH - 2}px`; b.style.maxHeight = `${lastH - 2}px`; }
     }
     function onUp() {
       resizingRowRef.current = null;
-      if (rafId !== null) cancelAnimationFrame(rafId);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
+      setRowHeights(h => ({ ...h, [id]: lastH }));
     }
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
@@ -5528,11 +5550,11 @@ export function TablaTool({
       <div className="hp-print-area">
         <PrintHeader herramientaNombre={herramientaNombre} departamento={departamento} />
         <div className="hp-table-wrap" ref={wrapRef} style={expandida ? undefined : { maxHeight: wrapMaxH }}>
-          <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef}>
+          <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef} style={{ width: totalAncho, minWidth: "100%" }}>
             <colgroup>
               {editable && <col style={{width:36}} />}
               {visibleCols.map(c => (
-                <col key={c.key} style={colWidths[c.key] ? {width: colWidths[c.key]} : undefined} />
+                <col key={c.key} data-ck={c.key} style={{width: colWidths[c.key] ?? anchoDefectoCol(c)}} />
               ))}
               {editable && <col style={{width:118}} />}
               {showLastEdit && <col style={{width:90}} />}
@@ -5548,7 +5570,6 @@ export function TablaTool({
                   <th
                     key={c.key}
                     className={`hp-th-sortable${sortKey === c.key ? " hp-th-sorted" : ""}${ci === 0 ? " hp-th-frozen" : ""}`}
-                    style={colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined}
                   >
                     <div className="hp-th-inner">
                       <span className="hp-th-label" onClick={() => toggleSort(c.key)} style={{cursor:"pointer",flex:1}}>
@@ -5601,7 +5622,7 @@ export function TablaTool({
                       ].filter(Boolean).join(" ")}
                     >
                       {editable && (
-                        <td className="hp-td-check" style={rowH ? {height: rowH, maxHeight: rowH} : undefined}>
+                        <td className="hp-td-check">
                           <input type="checkbox" checked={isSelected} onChange={() => toggleFila(f.id)} />
                         </td>
                       )}
@@ -5626,13 +5647,9 @@ export function TablaTool({
                               (c.tipo === "num" || c.tipo === "money") ? "hp-td-num" : "",
                               esFrozen ? "hp-td-frozen" : "",
                             ].filter(Boolean).join(" ")}
-                            style={{
-                              ...(colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined),
-                              ...(rowH ? {height: rowH, maxHeight: rowH, overflowY: "auto" as const} : undefined),
-                              ...(esFrozen && rowColor
-                                ? {boxShadow: [`inset 0 0 0 999px ${rowColor}18`, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")}
-                                : undefined),
-                            }}
+                            style={esFrozen && rowColor
+                              ? {boxShadow: [`inset 0 0 0 999px ${rowColor}18`, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")}
+                              : undefined}
                             onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
                           >
                             {esFrozen && (
@@ -5641,19 +5658,21 @@ export function TablaTool({
                             {isNum && dataBarPct > 0 && (
                               <div className="hp-databar" style={{width: `${dataBarPct}%`}} />
                             )}
-                            <CeldaConAutocomp
-                              col={c}
-                              valor={cellVal}
-                              editable={editable}
-                              onChange={(v) => setVal(f, c.key, v)}
-                              onCommit={() => commit(f)}
-                              onSave={(v) => onGuardar(f.id, { ...f.datos, ...draft[f.id], [c.key]: v })}
-                              departamento={departamento}
-                              herramientaId={herramientaId}
-                              filaId={f.id}
-                              listId={autocomplete[c.key] ? `dl-${herramientaId}-${c.key}` : undefined}
-                              moneda={moneda}
-                            />
+                            <div className="hp-cell-body" style={rowH ? {height: rowH - 2, maxHeight: rowH - 2} : undefined}>
+                              <CeldaConAutocomp
+                                col={c}
+                                valor={cellVal}
+                                editable={editable}
+                                onChange={(v) => setVal(f, c.key, v)}
+                                onCommit={() => commit(f)}
+                                onSave={(v) => onGuardar(f.id, { ...f.datos, ...draft[f.id], [c.key]: v })}
+                                departamento={departamento}
+                                herramientaId={herramientaId}
+                                filaId={f.id}
+                                listId={autocomplete[c.key] ? `dl-${herramientaId}-${c.key}` : undefined}
+                                moneda={moneda}
+                              />
+                            </div>
                           </td>
                         );
                       })}

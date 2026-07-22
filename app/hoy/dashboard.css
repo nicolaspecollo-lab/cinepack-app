@@ -1081,7 +1081,14 @@
    columnas que scrollean por debajo se ve mezclado con la columna congelada
    "Fuente"). Con separate + border-spacing:0 el sticky funciona correcto y
    el borde inferior de cada celda (ya puesto individualmente) se ve igual. */
-.cp-dash table.hp-table{ width:100%; border-collapse:separate; border-spacing:0; font-size:12px; min-width:560px; }
+/* table-layout:fixed — el ancho de cada columna lo mandan los <col> del
+   colgroup, NO el contenido. Sin esto, una columna con un <input type=date>
+   (u otro control de ancho intrínseco grande) NO se podía achicar por debajo
+   de ese ancho aunque el usuario arrastrara — el "mínimo real" de la columna
+   terminaba siendo su encabezado/su input. Con fixed el contenido que no
+   entra se recorta (overflow) y la columna respeta el ancho exacto del <col>.
+   El ancho total de la tabla se setea inline (totalAncho) en el TSX. */
+.cp-dash table.hp-table{ table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:12px; }
 .cp-dash table.hp-table th{
   text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted);
   padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--hl1);
@@ -1089,20 +1096,22 @@
 }
 .cp-dash table.hp-table th.hp-th-acciones{ text-align:center; }
 .cp-dash table.hp-table td{ border-bottom:1px solid var(--line); padding:0; vertical-align:top; }
-/* Ancho mínimo por celda de dato: sin esto, con muchas columnas (ej. Plan de
-   financiación con organismo/premio agregados) el navegador aplasta cada
-   columna dentro del 100% de la tabla en vez de desbordar y scrollear
-   horizontal — el texto de RichCell (fuente, condiciones) se envuelve en
-   varias líneas ilegibles. min-width fuerza a la tabla a crecer más allá del
-   contenedor cuando hace falta; .hp-table-wrap ya tiene overflow-x:auto. */
-.cp-dash table.hp-table td.hp-td-cell{ min-width:132px; }
-.cp-dash table.hp-table td.hp-td-cell.hp-td-num{ min-width:96px; }
-.cp-dash table.hp-table td.hp-td-cell.hp-td-largo{ min-width:220px; }
-.cp-dash table.hp-table td.hp-td-cell.hp-td-frozen{ min-width:160px; }
+/* El ancho base de cada columna lo da el <col> del colgroup (anchoDefectoCol
+   en HerramientaPanel.tsx), NO un min-width en la celda. El min acá es solo
+   28px para que el usuario pueda arrastrar una columna hasta casi colapsarla
+   si quiere resignar su label por espacio de pantalla — antes había un piso
+   de 132/96/220/160px que hacía que el "mínimo" real de una columna fuera el
+   ancho de su encabezado, impidiendo reducirla. El contenido se recorta
+   (overflow) en vez de forzar la columna más ancha. */
+.cp-dash table.hp-table td.hp-td-cell{ min-width:28px; overflow:hidden; }
 .cp-dash table.hp-table tbody tr:hover td{ background:var(--hl1); }
 .cp-dash .hp-cell-input, .cp-dash .hp-cell-area, .cp-dash .hp-cell-select{
-  width:100%; background:none; border:none; color:var(--text); font-family:inherit; font-size:12px; padding:9px 8px;
+  width:100%; min-width:0; background:none; border:none; color:var(--text); font-family:inherit; font-size:12px; padding:9px 8px;
 }
+/* Wrapper del contenido de cada celda: cuando el usuario fija el alto de la
+   fila (arrastrando), este div recibe height+maxHeight inline y recorta el
+   contenido con scroll — los <td> ignoran max-height, por eso el wrapper. */
+.cp-dash .hp-cell-body{ overflow:auto; min-width:0; }
 .cp-dash .hp-cell-area{ resize:none; line-height:1.5; min-height:36px; overflow:hidden; }
 .cp-dash .hp-cell-input:focus, .cp-dash .hp-cell-area:focus, .cp-dash .hp-cell-select:focus{ outline:1px solid var(--acc); outline-offset:-1px; background:var(--hl1); }
 .cp-dash .hp-cell-select{ cursor:pointer; }
@@ -1951,10 +1960,15 @@
 }
 
 /* Resize handle en headers */
+/* overflow:hidden va en el .hp-th-inner (NO en el <th>): el th es
+   position:sticky y ponerle overflow:hidden rompe el pegado en varios
+   navegadores. Con min-width:0 el label (flex:1) puede encogerse y el
+   overflow lo recorta, así el encabezado deja de ser el "ancho mínimo" real
+   de la columna. */
 .cp-dash .hp-th-inner{
-  display:flex; align-items:center; gap:2px;
+  display:flex; align-items:center; gap:2px; overflow:hidden;
 }
-.cp-dash .hp-th-label{ display:inline-flex; align-items:center; gap:3px; }
+.cp-dash .hp-th-label{ display:inline-flex; align-items:center; gap:3px; min-width:0; overflow:hidden; }
 .cp-dash .hp-th-sort-icon{ flex-shrink:0; }
 .cp-dash .hp-th-sort-icon-2{ opacity:0.55; }
 .cp-dash .hp-col-resizer{
