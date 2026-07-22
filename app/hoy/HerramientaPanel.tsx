@@ -4850,6 +4850,7 @@ export function TablaTool({
   const [sortDir2, setSortDir2] = useState<"asc" | "desc">("asc");
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
+  const [rowHeights, setRowHeights] = useState<Record<string, number>>({});
   const [compacto, setCompacto] = useState(false);
   const [pagina, setPagina] = useState(0);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -4866,6 +4867,7 @@ export function TablaTool({
   const tableRef = useRef<HTMLTableElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const resizingRef = useRef<{key: string; startX: number; startW: number} | null>(null);
+  const resizingRowRef = useRef<{id: string; startY: number; startH: number} | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [wrapMaxH, setWrapMaxH] = useState(480);
@@ -5077,7 +5079,10 @@ export function TablaTool({
     function aplicar() {
       rafId = null;
       if (!resizingRef.current) return;
-      const newW = Math.max(60, resizingRef.current.startW + lastClientX - resizingRef.current.startX);
+      // Sin tope alto: si el usuario quiere resignar el concepto (label) por
+      // más espacio de pantalla para otras columnas, puede — el mínimo es
+      // solo para que la columna no colapse a un ancho inutilizable.
+      const newW = Math.max(28, resizingRef.current.startW + lastClientX - resizingRef.current.startX);
       setColWidths(w => ({ ...w, [resizingRef.current!.key]: newW }));
     }
     function onMove(ev: MouseEvent) {
@@ -5087,6 +5092,37 @@ export function TablaTool({
     }
     function onUp() {
       resizingRef.current = null;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    }
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }
+
+  // Resize de filas — mismo patrón que startResize (throttle a 1 update por
+  // frame con requestAnimationFrame, aprendido del cuelgue de la pestaña que
+  // causaba hacerlo en cada mousemove crudo).
+  function startResizeRow(e: React.MouseEvent, id: string) {
+    e.preventDefault();
+    const tr = (e.target as HTMLElement).closest("tr");
+    const startH = tr?.getBoundingClientRect().height ?? 36;
+    resizingRowRef.current = { id, startY: e.clientY, startH };
+    let rafId: number | null = null;
+    let lastClientY = e.clientY;
+    function aplicar() {
+      rafId = null;
+      if (!resizingRowRef.current) return;
+      const newH = Math.max(28, resizingRowRef.current.startH + lastClientY - resizingRowRef.current.startY);
+      setRowHeights(h => ({ ...h, [resizingRowRef.current!.id]: newH }));
+    }
+    function onMove(ev: MouseEvent) {
+      if (!resizingRowRef.current) return;
+      lastClientY = ev.clientY;
+      if (rafId === null) rafId = requestAnimationFrame(aplicar);
+    }
+    function onUp() {
+      resizingRowRef.current = null;
       if (rafId !== null) cancelAnimationFrame(rafId);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
@@ -5201,8 +5237,13 @@ export function TablaTool({
     setDraggingId(null); setDragOverId(null);
   }
 
-  // Navegación de teclado entre celdas
+  // Navegación de teclado entre celdas. Excepción: en columnas "largo" (rich
+  // text multi-párrafo, ej. "Condiciones") Enter tiene que insertar un salto
+  // de línea dentro de la celda como espera cualquier editor de texto — no
+  // saltar a la fila de abajo. Se deja pasar el evento tal cual al
+  // contentEditable en ese caso (nada de preventDefault ni foco manual).
   function handleCellKeyDown(e: React.KeyboardEvent, rowIdx: number, colIdx: number) {
+    if (e.key === "Enter" && visibleCols[colIdx]?.tipo === "largo") return;
     if (!tableRef.current || (e.key !== "Tab" && e.key !== "Enter")) return;
     e.preventDefault();
     const nr = e.key === "Enter" ? rowIdx + 1 : rowIdx;
@@ -5543,6 +5584,7 @@ export function TablaTool({
                 const rowColor = f.datos?._rowColor || "";
                 const isSelected = seleccionadas.has(f.id);
                 const isDragOver = dragOverId === f.id;
+                const rowH = rowHeights[f.id];
                 return (
                     <tr
                       key={f.id}
@@ -5559,7 +5601,7 @@ export function TablaTool({
                       ].filter(Boolean).join(" ")}
                     >
                       {editable && (
-                        <td className="hp-td-check">
+                        <td className="hp-td-check" style={rowH ? {height: rowH, maxHeight: rowH} : undefined}>
                           <input type="checkbox" checked={isSelected} onChange={() => toggleFila(f.id)} />
                         </td>
                       )}
@@ -5586,12 +5628,16 @@ export function TablaTool({
                             ].filter(Boolean).join(" ")}
                             style={{
                               ...(colWidths[c.key] ? {width: colWidths[c.key], minWidth: colWidths[c.key]} : undefined),
+                              ...(rowH ? {height: rowH, maxHeight: rowH, overflowY: "auto" as const} : undefined),
                               ...(esFrozen && rowColor
                                 ? {boxShadow: [`inset 0 0 0 999px ${rowColor}18`, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")}
                                 : undefined),
                             }}
                             onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
                           >
+                            {esFrozen && (
+                              <span className="hp-row-resizer" onMouseDown={e => startResizeRow(e, f.id)} title={t("dragToResizeRow")} />
+                            )}
                             {isNum && dataBarPct > 0 && (
                               <div className="hp-databar" style={{width: `${dataBarPct}%`}} />
                             )}

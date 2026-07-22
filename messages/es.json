@@ -292,6 +292,7 @@
     "selected": "{n} sel.",
     "fillDown": "Rellenar",
     "fillDownHint": "Copiar valores de la primera fila seleccionada al resto",
+    "dragToResizeRow": "Arrastrar para cambiar el alto de la fila",
     "duplicate": "Duplicar",
     "delete": "Eliminar",
     "collapse": "Reducir",

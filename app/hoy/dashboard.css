@@ -1963,6 +1963,19 @@
   transition:border-color .15s;
 }
 .cp-dash .hp-th-sortable:hover .hp-col-resizer{ border-right-color:var(--acc); }
+/* Resize de fila: mismo espíritu que hp-col-resizer pero horizontal, anclado
+   al borde inferior de la celda congelada de cada fila (que ya es
+   position:sticky — containing block válido para el hijo absoluto).
+   bottom:0 (NO negativo): un offset negativo saca la franja de la caja de
+   este <td> y la fila SIGUIENTE (que pinta después en el orden normal del
+   documento, con su propio contexto de apilado por el isolation:isolate de
+   .hp-td-frozen) queda encima — inutiliza el handle porque los eventos de
+   mouse van a esa fila de abajo, no a este resizer. */
+.cp-dash .hp-row-resizer{
+  position:absolute; left:0; right:0; bottom:0; height:6px; cursor:row-resize;
+  z-index:5; border-bottom:2px solid transparent; transition:border-color .15s;
+}
+.cp-dash tr:hover .hp-row-resizer{ border-bottom-color:var(--acc); }
 
 /* Compact rows */
 .cp-dash .hp-tabla-compacta td,

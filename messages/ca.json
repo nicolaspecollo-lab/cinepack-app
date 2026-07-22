@@ -292,6 +292,7 @@
     "selected": "{n} sel.",
     "fillDown": "Omple avall",
     "fillDownHint": "Copia els valors de la primera fila seleccionada a la resta",
+    "dragToResizeRow": "Arrossega per canviar l'alçada de la fila",
     "duplicate": "Duplica",
     "delete": "Elimina",
     "collapse": "Redueix",

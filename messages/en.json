@@ -292,6 +292,7 @@
     "selected": "{n} sel.",
     "fillDown": "Fill down",
     "fillDownHint": "Copy values from the first selected row to the rest",
+    "dragToResizeRow": "Drag to resize the row",
     "duplicate": "Duplicate",
     "delete": "Delete",
     "collapse": "Collapse",
