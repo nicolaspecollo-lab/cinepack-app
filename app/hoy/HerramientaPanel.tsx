@@ -178,6 +178,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     CASHFLOW_IDS.has(id) ||
     FINANCIACION_PIPELINE_IDS.has(id) ||
     DOC_STATUS_IDS.has(id) ||
+    ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
     id === "prod-transporte" ||
