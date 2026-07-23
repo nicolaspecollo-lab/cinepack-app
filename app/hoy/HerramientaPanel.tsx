@@ -788,16 +788,18 @@ function HerramientaData({
       )}
 
       {herramienta.tipo === "tabla" && ENTIDAD_TABS_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <EntidadTabsBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && DOC_STATUS_IDS.has(herramienta.id) && (
@@ -6841,7 +6843,7 @@ function AdoptarEjemplos({
 // Wrapper "nunca en blanco" para vistas de 1ª generación (Foto/Arte/Ejecutivo)
 // SIN tocar su interior: cuando no hay filas, inyecta filas-ejemplo (fantasma)
 // en solo-lectura + barra de adopción. Render-prop: children(filasEfectivas, editableEfectivo).
-function VistaConEjemplos({ ejemplos, filas, editable, onCrear, children }: {
+export function VistaConEjemplos({ ejemplos, filas, editable, onCrear, children }: {
   ejemplos: Ejemplo[]; filas: Fila[]; editable: boolean;
   onCrear: (datos: Record<string, string>) => void;
   children: (filas: Fila[], editable: boolean) => React.ReactNode;
@@ -6908,7 +6910,70 @@ const EJ_MODELO: Ejemplo[] = [
 // Registro central de ejemplos por herramienta, para las herramientas que
 // reutilizan patrones compartidos (FichaEquipo / AgendaDia / DocStatusBoard).
 // Los componentes bespoke definen sus ejemplos inline; estos son para el resto.
-const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+  "ej-coproducciones": [
+    {
+      empresa: "Atlántida Films", pais: "Francia", rol: "Coproductor oficial", equity: "18", aportacion: "70000",
+      tratado: "En trámite", tier: "Tier 2", naturaleza: "Equity + distribución en Francia y Bélgica.",
+      territorios: JSON.stringify(["Francia", "Bélgica"]),
+      hitos: JSON.stringify([{ nombre: "A la firma", fecha: "2026-08-01", monto: "35000", estado: "Pendiente" }]),
+      documentos: JSON.stringify([{ nombre: "Acuerdo de coproducción", estado: "Falta" }]),
+      contactos: JSON.stringify([{ nombre: "Claire Dubois", rol: "Legal", email: "claire@atlantidafilms.fr" }]),
+    },
+    {
+      empresa: "Petra Cine", pais: "Argentina", rol: "Coproductor oficial", equity: "22", aportacion: "90000",
+      tratado: "Ibermedia", tier: "Tier 1 (pari passu)", naturaleza: "Equity + producción ejecutiva en Argentina.",
+      territorios: JSON.stringify(["Argentina", "Cono Sur"]),
+    },
+  ],
+  "ej-ayudas-subvenciones": [
+    {
+      organismo: "ICAA", expediente: "ICAA-2026-0451", concedido: "120000", fecha_concesion: "2026-05-10", plazo_limite: "2026-08-28",
+      partidas: JSON.stringify([{ partida: "Guion y desarrollo", presupuesto: "15000", justificado: "15000" }, { partida: "Rodaje", presupuesto: "90000", justificado: "18000" }]),
+      obligaciones: JSON.stringify([{ texto: "Rodaje mínimo 15 días en territorio español", cumplida: "Cumplida" }, { texto: "Estreno comercial antes de 24 meses", cumplida: "Pendiente" }]),
+      documentos: JSON.stringify([{ nombre: "Memoria de actividades", estado: "Subido" }, { nombre: "Memoria económica", estado: "Falta" }]),
+      historial: JSON.stringify([{ fecha: "2026-06-02", nota: "Consulta sobre partidas elegibles respondida por ICAA" }]),
+    },
+    {
+      organismo: "Ibermedia", expediente: "IB-2026-0912", concedido: "80000", fecha_concesion: "2026-04-15", plazo_limite: "2026-07-01",
+      partidas: JSON.stringify([{ partida: "Coproducción", presupuesto: "80000", justificado: "80000" }]),
+    },
+  ],
+  "ej-agenda-ejecutivo": [
+    {
+      nombre: "Claire Dubois", organizacion: "Atlántida Films", pais: "Francia", cargo: "Directora de coproducción",
+      email: "claire@atlantidafilms.fr", telefono: "+33 6 12 34 56 78", vinculo: "Coproductores · Atlántida Films",
+      categorias: JSON.stringify(["Coproducción", "Mercados"]),
+      interacciones: JSON.stringify([{ fecha: "2026-07-22", tipo: "Videollamada", resumen: "Acepta 18% de equity, pide sumar Bélgica al territorio.", tarea: "Enviar contraoferta por escrito", tarea_fecha: "2026-07-25" }]),
+    },
+    {
+      nombre: "Sofía Reyes", organizacion: "Cinema Global Sales", pais: "España", cargo: "Directora de ventas",
+      email: "sofia@cinemaglobal.com", categorias: JSON.stringify(["Venta", "Agencias distribuidoras", "Festivales"]),
+    },
+  ],
+  "ej-deliverables": [
+    {
+      nombre_archivo: "DCPFINALv4", tipo_archivo: "DCP", fecha_recibido: "2026-07-18", tamano: "187 GB",
+      recibido_de: "Posproducción · Estudio DCP Madrid", checksum: "a3f9c2e771",
+      especificaciones: JSON.stringify([{ campo: "Resolución", valor: "2048×1080 (2K flat)" }, { campo: "Codec", valor: "JPEG2000, XYZ" }, { campo: "Frame rate", valor: "24 fps" }, { campo: "Audio", valor: "5.1 discreto, -27 dB FS" }]),
+    },
+    {
+      nombre_archivo: "TrailerFULLHDv7.mov", tipo_archivo: "Trailer", fecha_recibido: "2026-07-20", tamano: "2.4 GB",
+      recibido_de: "Posproducción · Montaje trailer",
+      especificaciones: JSON.stringify([{ campo: "Resolución", valor: "1920×1080" }, { campo: "Codec", valor: "ProRes 422 HQ" }]),
+    },
+  ],
+  "ej-notas-ejecutivo": [
+    {
+      nombre: "Renegociación de territorios con Atlántida", area: "Coproducción", estado_tema: "En seguimiento",
+      contexto: "Atlántida pidió incluir Bélgica en sus territorios a cambio de mantener Tier 2.",
+      registros: JSON.stringify([{ fecha: "2026-07-23", decidido_por: "Nicolás Pecollo", decision: "Se acepta incluir Bélgica manteniendo su posición en Tier 2.", alternativas: "Subir a Tier 1 a cambio de Bélgica — descartado por diluir el recoupment de los socios originales.", impacto: "Cap table, Territorios de Coproductores" }]),
+    },
+    {
+      nombre: "Cambio de fecha de estreno comercial", area: "Distribución", estado_tema: "Abierto",
+      contexto: "Posible conflicto con la ventana de festivales de otoño.",
+    },
+  ],
   "cast-cal-audiciones": [
     { fecha: "2026-07-10", hora: "10:00", candidato: "Lucía Fernández", personaje: "Marea", sala: "Sala A", tipo: "Callback", resultado: "En lista corta", notas: "Gran química en la escena del faro. Repetir con el otro Elsa." },
     { fecha: "2026-07-10", hora: "11:30", candidato: "Diego Molina", personaje: "Farero", sala: "Sala A", tipo: "Prueba cámara", resultado: "Seleccionado", notas: "Presencia física ideal. Confirmar disponibilidad de fechas." },
