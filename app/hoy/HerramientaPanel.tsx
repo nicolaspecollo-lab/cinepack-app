@@ -786,6 +786,19 @@ function HerramientaData({
         )}</VistaConEjemplos>
       )}
 
+      {herramienta.tipo === "tabla" && ENTIDAD_TABS_IDS.has(herramienta.id) && (
+        <EntidadTabsBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && DOC_STATUS_IDS.has(herramienta.id) && (
         <DocStatusBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -2659,9 +2672,9 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "ej-agenda-ejecutivo", "prod-agenda-coord", "prod-partes-diarios", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "prod-agenda-coord", "prod-partes-diarios", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts"]);
 
-function AgendaDia({
+export function AgendaDia({
   columnas,
   filas,
   editable: editableProp,
@@ -3560,11 +3573,9 @@ function CashflowChart({
 // el total € de cada columna en la cabecera.
 const FINANCIACION_PIPELINE_IDS = new Set([
   "ej-plan-financiacion",
-  "ej-ayudas-subvenciones",
-  "ej-coproducciones",
 ]);
 
-function FinanciacionPipeline({
+export function FinanciacionPipeline({
   columnas,
   filas,
   editable,
@@ -3745,7 +3756,6 @@ const DOC_STATUS_IDS = new Set([
   "ej-derechos-pi",
   "ej-polizas-permisos",
   "ej-facturas",
-  "ej-deliverables",
   "ej-pagos-nominas",
   "ej-cronograma-produccion",
   "prod-permisos",
@@ -3790,7 +3800,7 @@ const DOC_STATUS_IDS = new Set([
   "mo-entrevistas",
 ]);
 
-function DocStatusBoard({
+export function DocStatusBoard({
   columnas,
   filas,
   editable: editableProp,
@@ -3980,7 +3990,7 @@ function DocStatusBoard({
 // ---- Modelo financiero (escenarios optimista / base / conservador) ----
 // Tres escenarios lado a lado con el margen destacado — una comparación,
 // no tres filas de tabla.
-function ModeloFinanciero({
+export function ModeloFinanciero({
   columnas,
   filas,
   editable,
@@ -4074,6 +4084,438 @@ function ModeloFinanciero({
         <div className="hp-actions">
           <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
+      )}
+    </>
+  );
+}
+
+// ---- Ficha con pestañas por entidad (Coproductores, Subvenciones, Agenda, ----
+// ---- Deliverables, Historial de decisiones) ----
+// Estas 5 herramientas comparten la misma forma: una LISTA de entidades
+// (socios, expedientes, contactos, archivos, temas), donde cada fila abre
+// una ficha con varias pestañas. Un mismo motor genérico, configurado por id
+// (qué columna es el título, qué columnas resumir en la lista, cómo se
+// agrupan las demás en pestañas) — igual de específico para cada oficio
+// porque el contenido de cada pestaña sale de las columnas reales de
+// herramientas.ts, no de un formulario genérico de 5 campos.
+function parseArr<T>(s: string | undefined): T[] {
+  if (!s) return [];
+  try {
+    const v = JSON.parse(s);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo"]);
+
+type EntidadTab = { label: string; keys: string[] };
+type EntidadConfig = {
+  titleKey: string;
+  subtitleKey?: string;
+  listCols: string[];
+  tabs: EntidadTab[];
+  addLabel: string;
+  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador";
+};
+
+const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
+  "ej-coproducciones": {
+    titleKey: "empresa",
+    subtitleKey: "pais",
+    listCols: ["tratado", "equity", "tier", "aportacion"],
+    addLabel: "+ Agregar socio",
+    special: "waterfall",
+    tabs: [
+      { label: "Términos", keys: ["pais", "rol", "equity", "aportacion", "tratado", "tier", "naturaleza"] },
+      { label: "Territorios", keys: ["territorios"] },
+      { label: "Calendario de aportes", keys: ["hitos"] },
+      { label: "Documentos", keys: ["documentos"] },
+      { label: "Contactos", keys: ["contactos"] },
+    ],
+  },
+  "ej-ayudas-subvenciones": {
+    titleKey: "organismo",
+    subtitleKey: "expediente",
+    listCols: ["concedido", "plazo_limite"],
+    addLabel: "+ Agregar expediente",
+    special: "subvencion-risk",
+    tabs: [
+      { label: "Datos de la resolución", keys: ["organismo", "expediente", "concedido", "fecha_concesion", "plazo_limite", "resolucion_doc"] },
+      { label: "Partidas elegibles", keys: ["partidas"] },
+      { label: "Obligaciones", keys: ["obligaciones"] },
+      { label: "Documentos", keys: ["documentos"] },
+      { label: "Historial", keys: ["historial"] },
+    ],
+  },
+  "ej-agenda-ejecutivo": {
+    titleKey: "nombre",
+    subtitleKey: "organizacion",
+    listCols: ["categorias"],
+    addLabel: "+ Agregar contacto",
+    special: "categorias-filtro",
+    tabs: [
+      { label: "Datos de contacto", keys: ["nombre", "organizacion", "pais", "cargo", "email", "telefono", "vinculo"] },
+      { label: "Categorías", keys: ["categorias"] },
+      { label: "Interacciones", keys: ["interacciones"] },
+    ],
+  },
+  "ej-deliverables": {
+    titleKey: "nombre_archivo",
+    subtitleKey: "tipo_archivo",
+    listCols: ["tipo_archivo", "fecha_recibido", "tamano"],
+    addLabel: "+ Registrar archivo",
+    special: "buscador",
+    tabs: [
+      { label: "Ficha técnica", keys: ["nombre_archivo", "tipo_archivo", "fecha_recibido", "tamano", "recibido_de", "checksum"] },
+      { label: "Especificaciones", keys: ["especificaciones"] },
+    ],
+  },
+  "ej-notas-ejecutivo": {
+    titleKey: "nombre",
+    subtitleKey: "area",
+    listCols: ["area", "estado_tema"],
+    addLabel: "+ Agregar tema",
+    tabs: [
+      { label: "Contexto", keys: ["nombre", "area", "estado_tema", "contexto", "vinculo"] },
+      { label: "Registros de decisiones", keys: ["registros"] },
+    ],
+  },
+};
+
+// Campo simple (no repetible) dentro de una pestaña.
+function EntidadCampo({
+  col,
+  valor,
+  editable,
+  departamento,
+  herramientaId,
+  filaId,
+  onChange,
+}: {
+  col: Columna;
+  valor: string;
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  filaId: string;
+  onChange: (v: string) => void;
+}) {
+  if (col.tipo === "estado" && col.opciones) {
+    return (
+      <div className="hp-etb-field">
+        <span>{col.label}</span>
+        <EstadoSeg valor={valor} opciones={col.opciones} onPick={onChange} editable={editable} chip color />
+      </div>
+    );
+  }
+  if (col.tipo === "chips" && col.opciones) {
+    const activos = parseArr<string>(valor);
+    return (
+      <div className="hp-etb-field">
+        <span>{col.label}</span>
+        <div className="hp-etb-chiplist">
+          {col.opciones.map((op) => {
+            const on = activos.includes(op);
+            return (
+              <button
+                key={op}
+                type="button"
+                className={`hp-etb-chip${on ? " on" : ""}`}
+                disabled={!editable}
+                onClick={() => onChange(JSON.stringify(on ? activos.filter((a) => a !== op) : [...activos, op]))}
+              >
+                {op}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  if (col.tipo === "archivo") {
+    return (
+      <div className="hp-etb-field">
+        <span>{col.label}</span>
+        <ArchivoCell path={valor} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={filaId} colKey={col.key} onSave={onChange} />
+      </div>
+    );
+  }
+  if (col.tipo === "largo") {
+    return (
+      <div className="hp-etb-field">
+        <span>{col.label}</span>
+        <textarea defaultValue={valor} readOnly={!editable} rows={3} onBlur={(e) => onChange(e.target.value)} />
+      </div>
+    );
+  }
+  return (
+    <div className="hp-etb-field">
+      <span>{col.label}</span>
+      <input
+        type={col.tipo === "num" || col.tipo === "money" ? "number" : col.tipo === "fecha" ? "date" : "text"}
+        defaultValue={valor}
+        readOnly={!editable}
+        onBlur={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
+// Lista repetible dentro de una pestaña (hitos, documentos, obligaciones,
+// interacciones, registros de decisión...). Cada fila hija tiene su propio
+// mini-esquema de columnas (col.sub).
+function EntidadRepetible({
+  col,
+  valor,
+  editable,
+  departamento,
+  herramientaId,
+  filaId,
+  onChange,
+}: {
+  col: Columna;
+  valor: string;
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  filaId: string;
+  onChange: (v: string) => void;
+}) {
+  const items = parseArr<Record<string, string>>(valor);
+  const sub = col.sub ?? [];
+  function setItem(i: number, key: string, v: string) {
+    const next = items.map((it, idx) => (idx === i ? { ...it, [key]: v } : it));
+    onChange(JSON.stringify(next));
+  }
+  function addItem() {
+    onChange(JSON.stringify([...items, {}]));
+  }
+  function delItem(i: number) {
+    onChange(JSON.stringify(items.filter((_, idx) => idx !== i)));
+  }
+  return (
+    <div className="hp-etb-repetible">
+      {items.map((it, i) => (
+        <div className="hp-etb-rep-row" key={i}>
+          {sub.map((s) => (
+            <span key={s.key} className="hp-etb-rep-cell">
+              {s.tipo === "estado" && s.opciones ? (
+                <EstadoSeg valor={it[s.key] ?? ""} opciones={s.opciones} onPick={(v) => setItem(i, s.key, v)} editable={editable} chip color />
+              ) : s.tipo === "archivo" ? (
+                <ArchivoCell path={it[s.key] ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={`${filaId}-${col.key}-${i}`} colKey={s.key} onSave={(v) => setItem(i, s.key, v)} />
+              ) : s.tipo === "largo" ? (
+                <textarea defaultValue={it[s.key] ?? ""} placeholder={s.label} readOnly={!editable} rows={2} onBlur={(e) => setItem(i, s.key, e.target.value)} />
+              ) : (
+                <input
+                  type={s.tipo === "num" || s.tipo === "money" ? "number" : s.tipo === "fecha" ? "date" : "text"}
+                  defaultValue={it[s.key] ?? ""}
+                  placeholder={s.label}
+                  readOnly={!editable}
+                  onBlur={(e) => setItem(i, s.key, e.target.value)}
+                />
+              )}
+            </span>
+          ))}
+          {editable && <button className="hp-del" onClick={() => delItem(i)} title="Quitar">✕</button>}
+        </div>
+      ))}
+      {editable && <div className="hp-etb-add-line" onClick={addItem}>+ Agregar {col.label.toLowerCase()}</div>}
+    </div>
+  );
+}
+
+export function EntidadTabsBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const cfg = ENTIDAD_TABS_CONFIG[herramientaId];
+  const [abiertoId, setAbiertoId] = useState<string | null>(null);
+  const [tab, setTab] = useState(0);
+  const [filtroCategoria, setFiltroCategoria] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  if (!cfg) return null;
+
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+  const colTitle = colByKey.get(cfg.titleKey);
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  let visibles = filas;
+  if (cfg.special === "categorias-filtro" && filtroCategoria) {
+    visibles = filas.filter((f) => parseArr<string>(f.datos?.categorias).includes(filtroCategoria));
+  }
+  if (cfg.special === "buscador" && busqueda.trim()) {
+    const q = busqueda.trim().toLowerCase();
+    visibles = visibles.filter((f) => (f.datos?.[cfg.titleKey] ?? "").toLowerCase().includes(q));
+  }
+
+  const abierta = abiertoId ? filas.find((f) => f.id === abiertoId) ?? null : null;
+
+  // Waterfall de recoupment (solo Coproductores): agrupa aportación por tier.
+  const waterfall = cfg.special === "waterfall"
+    ? (() => {
+        const porTier = new Map<string, { total: number; nombres: string[] }>();
+        for (const f of filas) {
+          const tier = f.datos?.tier || "Sin tier";
+          const cur = porTier.get(tier) ?? { total: 0, nombres: [] };
+          cur.total += ejNum(f.datos?.aportacion);
+          cur.nombres.push(f.datos?.empresa || "—");
+          porTier.set(tier, cur);
+        }
+        return [...porTier.entries()];
+      })()
+    : null;
+
+  // Riesgo de reintegro (solo Subvenciones): % justificado y días al plazo.
+  function subvencionRiesgo(f: Fila) {
+    const partidas = parseArr<Record<string, string>>(f.datos?.partidas);
+    const presup = partidas.reduce((s, p) => s + ejNum(p.presupuesto), 0);
+    const justif = partidas.reduce((s, p) => s + ejNum(p.justificado), 0);
+    const pct = presup > 0 ? Math.round((justif / presup) * 100) : 0;
+    const plazo = f.datos?.plazo_limite;
+    const dias = plazo ? Math.ceil((new Date(plazo).getTime() - Date.now()) / 86400000) : null;
+    const riesgo = dias !== null && dias >= 0 && dias < 30 && pct < 80;
+    return { pct, dias, riesgo };
+  }
+
+  return (
+    <>
+      {cfg.special === "categorias-filtro" && (
+        <div className="hp-etb-filtros">
+          <button className={`hp-etb-fchip${!filtroCategoria ? " on" : ""}`} onClick={() => setFiltroCategoria(null)}>Todas</button>
+          {(colByKey.get("categorias")?.opciones ?? []).map((op) => (
+            <button key={op} className={`hp-etb-fchip${filtroCategoria === op ? " on" : ""}`} onClick={() => setFiltroCategoria(op)}>{op}</button>
+          ))}
+        </div>
+      )}
+      {cfg.special === "buscador" && (
+        <input className="hp-etb-search" placeholder="Buscar por nombre de archivo..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+      )}
+
+      {visibles.length === 0 ? (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>{t("emptyTitle")}</p>
+          {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
+        </div>
+      ) : (
+        <div className="hp-etb-list">
+          {visibles.map((f) => (
+            <div className="hp-etb-row" key={f.id} onClick={() => { setAbiertoId(f.id); setTab(0); }}>
+              <div className="hp-etb-row-title">
+                <div className="hp-etb-row-name">{f.datos?.[cfg.titleKey] || colTitle?.label || "—"}</div>
+                {cfg.subtitleKey && <div className="hp-etb-row-sub">{f.datos?.[cfg.subtitleKey] || ""}</div>}
+              </div>
+              {cfg.listCols.map((k) => {
+                const c = colByKey.get(k);
+                if (!c) return null;
+                const v = f.datos?.[k] ?? "";
+                if (c.tipo === "chips") {
+                  const arr = parseArr<string>(v);
+                  return (
+                    <div className="hp-etb-row-cats" key={k}>
+                      {arr.slice(0, 3).map((a) => <span className="hp-etb-cat" key={a}>{a}</span>)}
+                    </div>
+                  );
+                }
+                if (c.tipo === "money") return <div className="hp-etb-row-money" key={k}>{ejMoney(ejNum(v))}</div>;
+                return <div className="hp-etb-row-cell" key={k}>{v || "—"}</div>;
+              })}
+              {cfg.special === "subvencion-risk" && (() => {
+                const r = subvencionRiesgo(f);
+                return (
+                  <div className={`hp-etb-risk ${r.riesgo ? "bad" : "ok"}`}>
+                    {r.pct}% justificado{r.dias !== null ? ` · ${r.dias}d` : ""}
+                  </div>
+                );
+              })()}
+              <span className="hp-etb-open">Abrir ›</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {waterfall && filas.length > 0 && (
+        <div className="hp-etb-waterfall">
+          <div className="hp-etb-wf-title">Waterfall de recoupment</div>
+          {waterfall.map(([tier, info]) => (
+            <div className="hp-etb-wf-row" key={tier}>
+              <span className="hp-etb-wf-lbl">{tier}</span>
+              <span className="hp-etb-wf-nombres">{info.nombres.join(", ")}</span>
+              <span className="hp-etb-wf-total">{ejMoney(info.total)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editable && (
+        <div className="hp-actions">
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{cfg.addLabel}</button>
+        </div>
+      )}
+
+      {abierta && createPortal(
+        <div className="hp-etb-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setAbiertoId(null); }}>
+          <div className="hp-etb-modal">
+            <button className="hp-etb-close" onClick={() => setAbiertoId(null)}>✕</button>
+            <div className="hp-etb-m-head">
+              <div className="hp-etb-m-name">{abierta.datos?.[cfg.titleKey] || "—"}</div>
+              {editable && <button className="hp-del" onClick={() => { onBorrar(abierta.id); setAbiertoId(null); }}>Eliminar</button>}
+            </div>
+            <div className="hp-etb-tabs">
+              {cfg.tabs.map((tb, i) => (
+                <span key={tb.label} className={`hp-etb-tab${tab === i ? " on" : ""}`} onClick={() => setTab(i)}>{tb.label}</span>
+              ))}
+            </div>
+            <div className="hp-etb-pane">
+              {cfg.tabs[tab].keys.map((k) => {
+                const c = colByKey.get(k);
+                if (!c) return null;
+                if (c.tipo === "repetible") {
+                  return (
+                    <div key={k} className="hp-etb-tab-repblock">
+                      <span className="hp-etb-rep-label">{c.label}</span>
+                      <EntidadRepetible col={c} valor={abierta.datos?.[k] ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={abierta.id} onChange={(v) => set(abierta, k, v)} />
+                    </div>
+                  );
+                }
+                return (
+                  <EntidadCampo
+                    key={k}
+                    col={c}
+                    valor={abierta.datos?.[k] ?? ""}
+                    editable={editable}
+                    departamento={departamento}
+                    herramientaId={herramientaId}
+                    filaId={abierta.id}
+                    onChange={(v) => set(abierta, k, v)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        typeof document !== "undefined" ? document.querySelector(".cp-dash") ?? document.body : (null as unknown as Element)
       )}
     </>
   );

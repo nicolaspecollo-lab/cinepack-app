@@ -13,13 +13,14 @@ import { CATEGORIAS_FINANCIACION } from "./hoy/eventosCalendario";
 
 export type ToolKind = "tabla" | "nota" | "checklist" | "ficha" | "galeria" | "accesos";
 
-export type ColTipo = "texto" | "largo" | "num" | "money" | "fecha" | "estado" | "archivo" | "link";
+export type ColTipo = "texto" | "largo" | "num" | "money" | "fecha" | "estado" | "archivo" | "link" | "chips" | "repetible";
 
 export type Columna = {
   key: string;
   label: string;
   tipo?: ColTipo;     // por defecto "texto"
-  opciones?: string[]; // para tipo "estado" (dropdown)
+  opciones?: string[]; // para tipo "estado" (dropdown) o "chips" (multi-selección)
+  sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
 };
 
 export type Herramienta = {
@@ -183,45 +184,90 @@ const ejCoproducciones: Herramienta = {
   id: "ej-coproducciones",
   nombre: "Gestión de coproductores",
   tipo: "tabla",
-  hint: "Registro de todos los socios coproductores: aportación, porcentaje, estado de firma y contacto.",
+  hint: "Estructura de capital de la coproducción: cap table, waterfall de recoupment y ficha completa por socio.",
   columnas: [
     { key: "empresa", label: "Empresa" },
     { key: "pais", label: "País" },
-    { key: "aportacion", label: "Aportación", tipo: "money" as const },
-    { key: "porcentaje", label: "Porcentaje %", tipo: "num" as const },
-    { key: "contacto", label: "Contacto" },
-    { key: "estado_firma", label: "Estado firma", tipo: "estado", opciones: ["Pendiente", "Enviado", "Firmado", "Rechazado"] },
+    { key: "rol", label: "Rol", tipo: "estado", opciones: ["Coproductor oficial", "Productor de línea", "Inversor"] },
+    { key: "equity", label: "% Equity", tipo: "num" as const },
+    { key: "aportacion", label: "Aportación total", tipo: "money" as const },
+    { key: "tratado", label: "Tratado", tipo: "estado", opciones: ["Coprod. oficial", "Ibermedia", "En trámite", "No aplica"] },
+    { key: "tier", label: "Tier de recoupment", tipo: "estado", opciones: ["Tier 1 (pari passu)", "Tier 2", "Tier 3 / subordinado"] },
+    { key: "naturaleza", label: "Naturaleza del aporte", tipo: "largo" },
+    { key: "territorios", label: "Territorios", tipo: "chips", opciones: ["España", "Portugal", "Francia", "Argentina", "Cono Sur", "México", "LatAm resto", "Alemania", "Resto del mundo"] },
+    { key: "hitos", label: "Calendario de aportes", tipo: "repetible", sub: [
+      { key: "nombre", label: "Hito" },
+      { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+      { key: "monto", label: "Monto", tipo: "money" as const },
+      { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "Recibido", "Atrasado"] },
+    ]},
+    { key: "documentos", label: "Documentos", tipo: "repetible", sub: [
+      { key: "nombre", label: "Documento" },
+      { key: "estado", label: "Estado", tipo: "estado", opciones: ["Falta", "Subido"] },
+      { key: "archivo", label: "Archivo", tipo: "archivo" as const },
+    ]},
+    { key: "contactos", label: "Contactos", tipo: "repetible", sub: [
+      { key: "nombre", label: "Nombre" },
+      { key: "rol", label: "Rol" },
+      { key: "email", label: "Email" },
+    ]},
   ],
 };
 
 const ejAyudasSubvenciones: Herramienta = {
   id: "ej-ayudas-subvenciones",
-  nombre: "Ayudas y subvenciones",
+  nombre: "Justificación de Subvenciones",
   tipo: "tabla",
-  hint: "Control de todas las convocatorias solicitadas: importes, resoluciones y estado de justificación.",
+  hint: "Cumplimiento post-concesión de cada expediente: partidas elegibles, obligaciones, documentos y plazos de justificación.",
   columnas: [
-    { key: "convocatoria", label: "Convocatoria" },
     { key: "organismo", label: "Organismo" },
-    { key: "importe_solicitado", label: "Importe solicitado", tipo: "money" as const },
-    { key: "importe_concedido", label: "Importe concedido", tipo: "money" as const },
-    { key: "fecha_resolucion", label: "Fecha resolución", tipo: "fecha" as const },
-    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "Concedida", "Denegada", "Justificando"] },
-    { key: "expediente", label: "Expediente" },
+    { key: "expediente", label: "Nº de expediente" },
+    { key: "concedido", label: "Importe concedido", tipo: "money" as const },
+    { key: "fecha_concesion", label: "Fecha de concesión", tipo: "fecha" as const },
+    { key: "plazo_limite", label: "Plazo de justificación (fecha límite)", tipo: "fecha" as const },
+    { key: "resolucion_doc", label: "Resolución (PDF)", tipo: "archivo" as const },
+    { key: "partidas", label: "Partidas elegibles", tipo: "repetible", sub: [
+      { key: "partida", label: "Partida" },
+      { key: "presupuesto", label: "Presupuesto", tipo: "money" as const },
+      { key: "justificado", label: "Justificado", tipo: "money" as const },
+    ]},
+    { key: "obligaciones", label: "Obligaciones", tipo: "repetible", sub: [
+      { key: "texto", label: "Obligación" },
+      { key: "cumplida", label: "Estado", tipo: "estado", opciones: ["Pendiente", "Cumplida"] },
+    ]},
+    { key: "documentos", label: "Documentos de justificación", tipo: "repetible", sub: [
+      { key: "nombre", label: "Documento" },
+      { key: "estado", label: "Estado", tipo: "estado", opciones: ["Falta", "Subido"] },
+      { key: "archivo", label: "Archivo", tipo: "archivo" as const },
+    ]},
+    { key: "historial", label: "Historial con el organismo", tipo: "repetible", sub: [
+      { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+      { key: "nota", label: "Nota" },
+    ]},
   ],
 };
 
 const ejAgendaEjecutivo: Herramienta = {
   id: "ej-agenda-ejecutivo",
-  nombre: "Agenda ejecutiva (reuniones y calls)",
+  nombre: "Agenda ejecutiva (relaciones y contactos)",
   tipo: "tabla",
-  hint: "Log de reuniones, calls y proyecciones: con quién, de qué y cuál fue el resultado.",
+  hint: "CRM de relaciones ejecutivas: un mismo contacto puede servir a venta, coproducción, derechos, mercados, festivales, etc.",
   columnas: [
-    { key: "fecha", label: "Fecha", tipo: "fecha" as const },
-    { key: "hora", label: "Hora" },
-    { key: "con_quien", label: "Con quién" },
-    { key: "asunto", label: "Asunto", tipo: "largo" },
-    { key: "resultado", label: "Resultado", tipo: "largo" },
-    { key: "seguimiento", label: "Seguimiento", tipo: "estado", opciones: ["Pendiente", "Hecho", "Cancelada"] },
+    { key: "nombre", label: "Nombre" },
+    { key: "organizacion", label: "Organización" },
+    { key: "pais", label: "País" },
+    { key: "cargo", label: "Cargo" },
+    { key: "email", label: "Email" },
+    { key: "telefono", label: "Teléfono" },
+    { key: "vinculo", label: "Vincular a (deal/expediente)" },
+    { key: "categorias", label: "Categorías", tipo: "chips", opciones: ["Venta", "Coproducción", "Derechos", "Agencias distribuidoras", "Mercados", "Festivales", "Partners", "Organismos públicos"] },
+    { key: "interacciones", label: "Interacciones", tipo: "repetible", sub: [
+      { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+      { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Llamada", "Videollamada", "Reunión presencial", "Email"] },
+      { key: "resumen", label: "Resumen y decisiones", tipo: "largo" },
+      { key: "tarea", label: "Tarea de seguimiento" },
+      { key: "tarea_fecha", label: "Fecha límite de la tarea", tipo: "fecha" as const },
+    ]},
   ],
 };
 
@@ -242,24 +288,42 @@ const ejCronogramaProduccion: Herramienta = {
 
 const ejDeliverables: Herramienta = {
   id: "ej-deliverables",
-  nombre: "Deliverables del proyecto",
+  nombre: "Deliverables",
   tipo: "tabla",
-  hint: "Todos los entregables comprometidos: a quién, en qué formato, cuándo y si ya se enviaron.",
+  hint: "Biblioteca de archivos exportados por Posproducción, con la ficha técnica completa de cada uno (sin matriz de destinatarios).",
   columnas: [
-    { key: "entregable", label: "Entregable" },
-    { key: "formato", label: "Formato" },
-    { key: "para_quien", label: "Para quién" },
-    { key: "fecha_entrega", label: "Fecha entrega", tipo: "fecha" as const },
-    { key: "archivo_final", label: "Archivo final", tipo: "archivo" as const },
-    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En proceso", "Entregado", "Aprobado"] },
+    { key: "nombre_archivo", label: "Nombre de archivo" },
+    { key: "tipo_archivo", label: "Tipo", tipo: "estado", opciones: ["DCP", "Máster", "Trailer", "Audio", "Subtítulos", "Documento"] },
+    { key: "fecha_recibido", label: "Recibido el", tipo: "fecha" as const },
+    { key: "tamano", label: "Tamaño" },
+    { key: "recibido_de", label: "Recibido de (Posproducción)" },
+    { key: "checksum", label: "Checksum (MD5)" },
+    { key: "especificaciones", label: "Especificaciones técnicas", tipo: "repetible", sub: [
+      { key: "campo", label: "Campo" },
+      { key: "valor", label: "Valor" },
+    ]},
   ],
 };
 
 const ejNotasEjecutivo: Herramienta = {
   id: "ej-notas-ejecutivo",
-  nombre: "Memoria ejecutiva del proyecto",
-  tipo: "nota",
-  hint: "Decisiones estratégicas, acuerdos verbales y contexto clave que no está en ningún otro documento.",
+  nombre: "Historial de decisiones ejecutivas",
+  tipo: "tabla",
+  hint: "Registro de decisiones estratégicas agrupadas por tema: qué se decidió, qué alternativas se descartaron y qué impacto tuvo.",
+  columnas: [
+    { key: "nombre", label: "Tema" },
+    { key: "area", label: "Área afectada", tipo: "estado", opciones: ["Coproducción", "Financiación", "Legal", "Distribución", "Producción"] },
+    { key: "estado_tema", label: "Estado del tema", tipo: "estado", opciones: ["Abierto", "En seguimiento", "Cerrado"] },
+    { key: "contexto", label: "Contexto", tipo: "largo" },
+    { key: "vinculo", label: "Vincular a (opcional)" },
+    { key: "registros", label: "Registros de decisiones", tipo: "repetible", sub: [
+      { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+      { key: "decidido_por", label: "Decidido por" },
+      { key: "decision", label: "Decisión tomada", tipo: "largo" },
+      { key: "alternativas", label: "Alternativas descartadas", tipo: "largo" },
+      { key: "impacto", label: "Impacto / a quién afecta" },
+    ]},
+  ],
 };
 
 const ejKpis: Herramienta = {
@@ -2133,7 +2197,6 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Producción ejecutiva": {
       departamento: [presupuestoGeneral, presupuestoDepto, planFinanciacion],
       cargo: [
-        { id: "ej-memoria", nombre: "Memoria ejecutiva del proyecto", tipo: "nota", hint: "Estado general y decisiones clave." },
         ejCashflow,
         ejCoproducciones,
         ejAyudasSubvenciones,
