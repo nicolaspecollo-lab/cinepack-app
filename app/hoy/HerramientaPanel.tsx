@@ -822,6 +822,7 @@ function HerramientaData({
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
+          departamento={departamento}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
@@ -3760,7 +3761,6 @@ const DOC_STATUS_IDS = new Set([
   "ej-polizas-permisos",
   "ej-facturas",
   "ej-pagos-nominas",
-  "ej-cronograma-produccion",
   "prod-permisos",
   "prod-equipo-tecnico",
   "prod-reporte-incidencias-loc",
@@ -3990,13 +3990,26 @@ export function DocStatusBoard({
   );
 }
 
-// ---- Modelo financiero (escenarios optimista / base / conservador) ----
-// Tres escenarios lado a lado con el margen destacado — una comparación,
-// no tres filas de tabla.
+// ---- Modelo financiero (proyección por ventana × 3 escenarios) ----
+// La pregunta real de un modelo financiero de cine no es "cuánto gano", es
+// "bajo qué escenario recupera cada socio su dinero". Por eso la tabla de
+// ingresos por ventana de explotación se corre contra el MISMO waterfall de
+// recoupment que vive en Gestión de coproductores (tiers y aportaciones se
+// leen de ahí, no se recargan a mano) y se muestra qué % recupera cada tier
+// en cada escenario, más el punto de equilibrio.
+const MF_ESCENARIOS = [
+  { key: "conservador", label: "Conservador", tono: "bad" as const },
+  { key: "base", label: "Base", tono: "warn" as const },
+  { key: "optimista", label: "Optimista", tono: "ok" as const },
+];
+
+type MfTier = { tier: string; total: number; socios: string[] };
+
 export function ModeloFinanciero({
   columnas,
   filas,
   editable,
+  departamento,
   onCrear,
   onGuardar,
   onBorrar,
@@ -4004,91 +4017,211 @@ export function ModeloFinanciero({
   columnas: Columna[];
   filas: Fila[];
   editable: boolean;
+  departamento: string;
   onCrear: () => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
+  const [tiers, setTiers] = useState<MfTier[]>([]);
+
+  // Waterfall real: se lee de Gestión de coproductores para no duplicar el
+  // dato. Si esa herramienta está vacía, el bloque de recoupment no se dibuja.
+  useEffect(() => {
+    (async () => {
+      const projectId = localStorage.getItem("cinepack-proyecto-id");
+      if (!projectId) return;
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("herramienta_filas")
+        .select("datos")
+        .eq("project_id", projectId)
+        .eq("departamento", departamento)
+        .eq("herramienta_id", "ej-coproducciones");
+      const porTier = new Map<string, MfTier>();
+      for (const row of (data ?? []) as { datos: Record<string, string> }[]) {
+        const tier = row.datos?.tier || "Sin tier";
+        const cur = porTier.get(tier) ?? { tier, total: 0, socios: [] };
+        cur.total += ejNum(row.datos?.aportacion);
+        if (row.datos?.empresa) cur.socios.push(row.datos.empresa);
+        porTier.set(tier, cur);
+      }
+      setTiers([...porTier.values()].sort((a, b) => a.tier.localeCompare(b.tier)));
+    })();
+  }, [departamento]);
+
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
   }
 
-  const colEscenario = columnas.find((c) => c.key === "escenario") ?? columnas[0];
+  const colConcepto = columnas.find((c) => c.key === "concepto") ?? columnas[0];
+  const colTipo = columnas.find((c) => c.key === "tipo");
   const colHipotesis = columnas.find((c) => c.tipo === "largo");
-  const moneyCols = columnas.filter((c) => c.tipo === "money");
-  const colMargen = moneyCols.find((c) => c.key === "margen");
-  const orden = colEscenario.opciones ?? [];
-  const ordenadas = [...filas].sort(
-    (a, b) => orden.indexOf(a.datos?.[colEscenario.key] ?? "") - orden.indexOf(b.datos?.[colEscenario.key] ?? "")
-  );
 
-  function MoneyField({ f, col, big }: { f: Fila; col: Columna; big?: boolean }) {
-    const v = ejNum(f.datos?.[col.key]);
+  const esCoste = (f: Fila) => (f.datos?.[colTipo?.key ?? "tipo"] ?? "Ingreso") === "Coste";
+  function totalDe(escKey: string, coste: boolean) {
+    return filas.filter((f) => esCoste(f) === coste).reduce((s, f) => s + ejNum(f.datos?.[escKey]), 0);
+  }
+
+  // El punto de equilibrio es el coste total: por debajo de eso nadie
+  // termina de recuperar. Se calcula del escenario Base (los costes no
+  // suelen variar entre escenarios, pero se toma el mayor por prudencia).
+  const costeEquilibrio = Math.max(...MF_ESCENARIOS.map((e) => totalDe(e.key, true)), 0);
+
+  function recuperadoPorTier(escKey: string) {
+    // Cascada: el ingreso disponible se reparte por orden de tier, cada uno
+    // cobra hasta completar su aportación antes de que empiece el siguiente.
+    let disponible = totalDe(escKey, false);
+    return tiers.map((tr) => {
+      const cobra = Math.min(disponible, tr.total);
+      disponible -= cobra;
+      const pct = tr.total > 0 ? Math.round((cobra / tr.total) * 100) : 0;
+      return { ...tr, cobra, pct };
+    });
+  }
+
+  if (filas.length === 0) {
     return (
-      <div className={`hp-mf-fig ${big ? "hp-mf-fig-big" : ""}`}>
-        <span className="hp-mf-fig-label">{col.label}</span>
-        <span className={`hp-pre-money-wrap ${big ? `hp-mf-margen tono-${v < 0 ? "bad" : "ok"}` : ""}`}>
-          <input
-            className="hp-pre-money"
-            type="number"
-            defaultValue={f.datos?.[col.key] ?? ""}
-            readOnly={!editable}
-            placeholder="0"
-            onBlur={(e) => set(f, col.key, e.target.value)}
-          />
-          <span className="hp-pre-money-eur">€</span>
-        </span>
+      <div className="hp-tabla-empty">
+        <span className="hex"></span>
+        <p>{t("emptyTitle")}</p>
+        {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
       </div>
     );
   }
 
-  function Escenario(f: Fila) {
-    const esc = f.datos?.[colEscenario.key] ?? "";
-    return (
-      <div className={`hp-mf-card tono-${estadoTono(esc)}`} key={f.id}>
-        <div className="hp-mf-head">
-          {colEscenario.opciones ? (
-            <EstadoSeg valor={esc} opciones={colEscenario.opciones} onPick={(v) => set(f, colEscenario.key, v)} editable={editable} color />
-          ) : (
-            <input className="hp-mf-escenario" defaultValue={esc} readOnly={!editable} onBlur={(e) => set(f, colEscenario.key, e.target.value)} />
-          )}
-          {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
-        </div>
-        <div className="hp-mf-figs">
-          {moneyCols.filter((c) => c.key !== colMargen?.key).map((c) => <MoneyField key={c.key} f={f} col={c} />)}
-          {colMargen && <MoneyField f={f} col={colMargen} big />}
-        </div>
-        {colHipotesis && (
-          <textarea
-            className="hp-mf-hipotesis"
-            defaultValue={f.datos?.[colHipotesis.key] ?? ""}
-            placeholder={colHipotesis.label}
-            readOnly={!editable}
-            onBlur={(e) => set(f, colHipotesis.key, e.target.value)}
-            rows={3}
-          />
-        )}
-      </div>
-    );
-  }
+  const ingresos = MF_ESCENARIOS.map((e) => totalDe(e.key, false));
+  const costes = MF_ESCENARIOS.map((e) => totalDe(e.key, true));
 
   return (
-    <>
-      {filas.length === 0 ? (
-        <div className="hp-tabla-empty">
-          <span className="hex"></span>
-          <p>{t("emptyTitle")}</p>
-          {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+    <div className="hp-mf2">
+      <span className="hp-mf2-panal" aria-hidden="true"></span>
+
+      <div className="hp-mf2-tablewrap">
+        <table className="hp-mf2-tbl">
+          <thead>
+            <tr>
+              <th>{colConcepto.label}</th>
+              {MF_ESCENARIOS.map((e) => (
+                <th key={e.key} className={`hp-mf2-th tono-${e.tono}`}>{e.label}</th>
+              ))}
+              {editable && <th></th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filas.map((f) => (
+              <tr key={f.id} className={esCoste(f) ? "hp-mf2-coste" : ""}>
+                <td className="hp-mf2-concepto">
+                  <input
+                    defaultValue={f.datos?.[colConcepto.key] ?? ""}
+                    placeholder={colConcepto.label}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, colConcepto.key, e.target.value)}
+                  />
+                  {colTipo && (
+                    <EstadoSeg
+                      valor={f.datos?.[colTipo.key] ?? "Ingreso"}
+                      opciones={colTipo.opciones ?? []}
+                      onPick={(v) => set(f, colTipo.key, v)}
+                      editable={editable}
+                      chip
+                      color
+                    />
+                  )}
+                  {colHipotesis && (
+                    <textarea
+                      className="hp-mf2-hipotesis"
+                      defaultValue={f.datos?.[colHipotesis.key] ?? ""}
+                      placeholder={colHipotesis.label}
+                      readOnly={!editable}
+                      rows={1}
+                      onBlur={(e) => set(f, colHipotesis.key, e.target.value)}
+                    />
+                  )}
+                </td>
+                {MF_ESCENARIOS.map((e) => (
+                  <td key={e.key}>
+                    <input
+                      className="hp-mf2-money"
+                      type="number"
+                      defaultValue={f.datos?.[e.key] ?? ""}
+                      placeholder="0"
+                      readOnly={!editable}
+                      onBlur={(ev) => set(f, e.key, ev.target.value)}
+                    />
+                  </td>
+                ))}
+                {editable && (
+                  <td>
+                    <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>
+                  </td>
+                )}
+              </tr>
+            ))}
+            <tr className="hp-mf2-total">
+              <td>Ingreso bruto total</td>
+              {ingresos.map((v, i) => <td key={i}>{ejMoney(v)}</td>)}
+              {editable && <td></td>}
+            </tr>
+            <tr className="hp-mf2-total">
+              <td>Costes</td>
+              {costes.map((v, i) => <td key={i} className="hp-mf2-neg">{ejMoney(v)}</td>)}
+              {editable && <td></td>}
+            </tr>
+            <tr className="hp-mf2-total hp-mf2-margen">
+              <td>Margen</td>
+              {ingresos.map((v, i) => {
+                const m = v - costes[i];
+                return <td key={i} className={m < 0 ? "hp-mf2-neg" : "hp-mf2-pos"}>{ejMoney(m)}</td>;
+              })}
+              {editable && <td></td>}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {tiers.length > 0 && (
+        <div className="hp-mf2-wf">
+          <div className="hp-mf2-wf-title">¿Cuánto recupera cada tier bajo cada escenario?</div>
+          {tiers.map((tr, idx) => (
+            <div className="hp-mf2-wf-row" key={tr.tier}>
+              <span className="hp-mf2-wf-lbl" title={tr.socios.join(", ")}>
+                {tr.tier}
+                <small>{ejMoney(tr.total)}</small>
+              </span>
+              {MF_ESCENARIOS.map((e) => {
+                const r = recuperadoPorTier(e.key)[idx];
+                const tono = r.pct >= 100 ? "ok" : r.pct > 0 ? "warn" : "bad";
+                return (
+                  <span className={`hp-mf2-wf-cell tono-${tono}`} key={e.key}>{r.pct}%</span>
+                );
+              })}
+            </div>
+          ))}
         </div>
-      ) : (
-        <div className="hp-mf-grid">{ordenadas.map(Escenario)}</div>
       )}
-      {editable && filas.length > 0 && (
+
+      {costeEquilibrio > 0 && (
+        <div className="hp-mf2-breakeven">
+          Punto de equilibrio: <b>{ejMoney(costeEquilibrio)}</b> de ingreso bruto.{" "}
+          {MF_ESCENARIOS.map((e, i) => {
+            const dif = ingresos[i] - costeEquilibrio;
+            return (
+              <span key={e.key}>
+                {e.label}: {dif >= 0 ? `lo supera por ${ejMoney(dif)}` : `queda ${ejMoney(-dif)} por debajo`}
+                {i < MF_ESCENARIOS.length - 1 ? " · " : "."}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {editable && (
         <div className="hp-actions">
           <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -6902,9 +7035,11 @@ const EJ_PIPELINE: Ejemplo[] = [
   { fuente: "Coproducción Francia", importe: "120000", estado: "Acordado", estado_firma: "Parcial" },
 ];
 const EJ_MODELO: Ejemplo[] = [
-  { escenario: "Optimista", margen: "22", ingresos: "900000", gastos: "700000" },
-  { escenario: "Base", margen: "10", ingresos: "780000", gastos: "700000" },
-  { escenario: "Conservador", margen: "-4", ingresos: "670000", gastos: "700000" },
+  { concepto: "Taquilla (España)", tipo: "Ingreso", conservador: "120000", base: "180000", optimista: "260000", hipotesis: "35.000 espectadores en el escenario base." },
+  { concepto: "Ventas internacionales", tipo: "Ingreso", conservador: "140000", base: "220000", optimista: "340000", hipotesis: "Mínimo garantizado del sales agent + 6 territorios." },
+  { concepto: "VOD / streaming", tipo: "Ingreso", conservador: "60000", base: "90000", optimista: "130000", hipotesis: "" },
+  { concepto: "TV / free-TV", tipo: "Ingreso", conservador: "40000", base: "60000", optimista: "80000", hipotesis: "" },
+  { concepto: "Coste de producción", tipo: "Coste", conservador: "460000", base: "460000", optimista: "460000", hipotesis: "Presupuesto cerrado, no varía por escenario." },
 ];
 
 // Registro central de ejemplos por herramienta, para las herramientas que

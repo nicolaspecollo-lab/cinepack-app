@@ -4514,6 +4514,89 @@
 }
 
 /* ===========================================================================
+   Modelo financiero — proyección por ventana × 3 escenarios + waterfall
+   Esquinas RECTAS en todos los recuadros de cifra/porcentaje (§10.2).
+   =========================================================================== */
+.cp-dash .hp-mf2{ position:relative; overflow:hidden; padding-top:4px; }
+/* Panal de esquina: mismo hexágono SVG oficial que .hcard-hexbg (§10.9),
+   teñido con el acento del departamento y disuelto hacia el resto del panel
+   con una máscara radial — el patrón no se corta, se difumina. */
+.cp-dash .hp-mf2-panal{
+  position:absolute; top:-40px; right:-60px; width:340px; height:340px; pointer-events:none; z-index:0;
+  background:var(--acc, #C98AF2);
+  -webkit-mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 78% 22%, #000 0%, transparent 62%);
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 78% 22%, #000 0%, transparent 62%);
+  -webkit-mask-repeat:repeat, no-repeat; mask-repeat:repeat, no-repeat;
+  -webkit-mask-size:70px 61px, 100% 100%; mask-size:70px 61px, 100% 100%;
+  -webkit-mask-composite:source-in; mask-composite:intersect;
+  opacity:.2;
+}
+.cp-dash .hp-mf2-tablewrap{ position:relative; z-index:1; overflow-x:auto; }
+.cp-dash table.hp-mf2-tbl{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:560px; }
+.cp-dash .hp-mf2-tbl th{
+  text-align:right; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+  padding:8px 10px; border-bottom:2px solid var(--line); font-weight:700; font-family:'Poppins',sans-serif;
+}
+.cp-dash .hp-mf2-tbl th:first-child{ text-align:left; }
+.cp-dash .hp-mf2-th.tono-bad{ color:var(--rose); }
+.cp-dash .hp-mf2-th.tono-warn{ color:var(--amber); }
+.cp-dash .hp-mf2-th.tono-ok{ color:var(--lime); }
+.cp-dash .hp-mf2-tbl td{ padding:8px 10px; border-bottom:1px solid var(--line); text-align:right; vertical-align:top; }
+.cp-dash .hp-mf2-tbl td:first-child{ text-align:left; }
+.cp-dash .hp-mf2-concepto{ min-width:200px; display:flex; flex-direction:column; gap:5px; }
+.cp-dash .hp-mf2-concepto > input{
+  width:100%; background:var(--bg-2); border:1px solid var(--line); border-radius:0;
+  color:var(--text); font:inherit; font-size:12.5px; font-weight:600; padding:6px 8px;
+}
+.cp-dash .hp-mf2-hipotesis{
+  width:100%; background:var(--bg-2); border:1px solid var(--line); border-radius:0;
+  color:var(--muted); font:inherit; font-size:11px; padding:5px 7px; resize:vertical;
+}
+.cp-dash .hp-mf2-money{
+  width:110px; text-align:right; background:var(--bg-2); border:1px solid var(--line); border-radius:0;
+  color:var(--text); font-family:'Poppins',sans-serif; font-weight:600; font-size:12.5px; padding:7px 8px;
+}
+.cp-dash .hp-mf2-money:focus{ outline:1px solid var(--acc); }
+.cp-dash .hp-mf2-coste td:first-child{ opacity:.9; }
+.cp-dash tr.hp-mf2-total td{
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:13px; border-top:2px solid var(--line); padding-top:10px;
+}
+.cp-dash tr.hp-mf2-margen td{ font-size:14.5px; }
+.cp-dash .hp-mf2-neg{ color:var(--rose); }
+.cp-dash .hp-mf2-pos{ color:var(--lime); }
+
+.cp-dash .hp-mf2-wf{ position:relative; z-index:1; margin-top:22px; }
+.cp-dash .hp-mf2-wf-title{
+  font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; margin-bottom:11px;
+}
+.cp-dash .hp-mf2-wf-row{ display:flex; align-items:stretch; gap:8px; margin-bottom:8px; }
+.cp-dash .hp-mf2-wf-lbl{
+  width:150px; flex-shrink:0; font-size:11.5px; font-weight:700; display:flex; flex-direction:column; justify-content:center;
+}
+.cp-dash .hp-mf2-wf-lbl small{ font-weight:400; color:var(--muted); font-size:10px; }
+.cp-dash .hp-mf2-wf-cell{
+  flex:1; text-align:center; padding:9px 4px; border-radius:0;
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:13px;
+}
+.cp-dash .hp-mf2-wf-cell.tono-ok{ background:color-mix(in srgb, var(--lime) 18%, transparent); color:var(--lime); }
+.cp-dash .hp-mf2-wf-cell.tono-warn{ background:color-mix(in srgb, var(--amber) 18%, transparent); color:var(--amber); }
+.cp-dash .hp-mf2-wf-cell.tono-bad{ background:color-mix(in srgb, var(--rose) 18%, transparent); color:var(--rose); }
+
+.cp-dash .hp-mf2-breakeven{
+  position:relative; z-index:1; margin-top:16px; padding:11px 14px; border-radius:0;
+  background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--acc); font-size:11.5px; line-height:1.6;
+}
+
+@media (max-width:640px){
+  .cp-dash .hp-mf2-wf-row{ flex-wrap:wrap; }
+  .cp-dash .hp-mf2-wf-lbl{ width:100%; }
+}
+
+/* ===========================================================================
    Ficha con pestañas por entidad (Coproductores, Subvenciones, Agenda,
    Deliverables, Historial de decisiones) — EntidadTabsBoard
    =========================================================================== */

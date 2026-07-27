@@ -271,21 +271,6 @@ const ejAgendaEjecutivo: Herramienta = {
   ],
 };
 
-const ejCronogramaProduccion: Herramienta = {
-  id: "ej-cronograma-produccion",
-  nombre: "Cronograma de producción (hitos)",
-  tipo: "tabla",
-  hint: "Todos los hitos del proyecto con fecha prevista y real, responsable y estado actual.",
-  columnas: [
-    { key: "hito", label: "Hito" },
-    { key: "fecha_prevista", label: "Fecha prevista", tipo: "fecha" as const },
-    { key: "fecha_real", label: "Fecha real", tipo: "fecha" as const },
-    { key: "responsable", label: "Responsable" },
-    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Completado", "Atrasado"] },
-    { key: "notas", label: "Notas", tipo: "largo" },
-  ],
-};
-
 const ejDeliverables: Herramienta = {
   id: "ej-deliverables",
   nombre: "Deliverables",
@@ -2201,7 +2186,6 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
         ejCoproducciones,
         ejAyudasSubvenciones,
         ejAgendaEjecutivo,
-        ejCronogramaProduccion,
         ejDeliverables,
         ejNotasEjecutivo,
         ejKpis,
@@ -2213,12 +2197,14 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "ej-modelo-financiero", nombre: "Modelo financiero y proyección", tipo: "tabla",
+          hint: "Proyección por ventana de explotación en tres escenarios, corrida contra el waterfall de recoupment real de los coproductores.",
           columnas: [
-            { key: "escenario", label: "Escenario", tipo: "estado", opciones: ["Optimista", "Base", "Conservador"] },
-            { key: "hipotesis", label: "Hipótesis", tipo: "largo" },
-            { key: "ingreso", label: "Ingreso proyectado", tipo: "money" },
-            { key: "coste", label: "Coste proyectado", tipo: "money" },
-            { key: "margen", label: "Margen", tipo: "money" },
+            { key: "concepto", label: "Concepto" },
+            { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Ingreso", "Coste"] },
+            { key: "conservador", label: "Conservador", tipo: "money" },
+            { key: "base", label: "Base", tipo: "money" },
+            { key: "optimista", label: "Optimista", tipo: "money" },
+            { key: "hipotesis", label: "Hipótesis / supuesto", tipo: "largo" },
           ],
         },
       ],
