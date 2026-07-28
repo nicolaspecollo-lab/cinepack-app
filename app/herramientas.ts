@@ -2253,7 +2253,19 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Administración": {
       departamento: [facturas, contratos],
       cargo: [
-        { id: "ej-gestion-documental", nombre: "Gestión documental administrativa", tipo: "checklist", hint: "Archivo y digitalización." },
+        {
+          id: "ej-gestion-documental", nombre: "Gestión documental administrativa", tipo: "tabla",
+          hint: "Registro de documentos administrativos con su plazo legal de conservación calculado y la validez de su digitalización — no duplica los archivos que ya llevan Facturas o Contratos.",
+          columnas: [
+            { key: "nombre", label: "Documento" },
+            { key: "categoria", label: "Categoría", tipo: "estado", opciones: ["Contable", "Societario", "Seguros", "Licencias", "Fiscal", "Laboral"] },
+            { key: "fecha_documento", label: "Fecha del documento", tipo: "fecha" as const },
+            { key: "anios_conservacion", label: "Años de conservación", tipo: "num" as const },
+            { key: "permanencia", label: "Permanencia", tipo: "estado", opciones: ["Conservación temporal", "Permanente"] },
+            { key: "estado_digitalizacion", label: "Digitalización", tipo: "estado", opciones: ["Sin digitalizar", "Solo copia", "Certificada"] },
+            { key: "archivo", label: "Archivo", tipo: "archivo" as const },
+          ],
+        },
       ],
     },
     "Legal": {

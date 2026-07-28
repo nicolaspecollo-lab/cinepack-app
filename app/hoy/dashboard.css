@@ -4514,6 +4514,45 @@
 }
 
 /* ===========================================================================
+   Gestión documental administrativa — registro de documentos con plazo de
+   conservación legal calculado. Sin <table>: cada documento es una
+   tarjeta-fila. Categoría editable (datalist) para sumar un criterio
+   nuevo sin tocar código. Responsive desde ~375px.
+   =========================================================================== */
+.cp-dash .hp-gd{ padding:4px var(--gutter) 30px; }
+.cp-dash .hp-gd .hp-actions{ padding-left:0; padding-right:0; }
+.cp-dash .hp-gd-alert{ background:color-mix(in srgb, var(--amber) 12%, transparent); border:1px solid color-mix(in srgb, var(--amber) 35%, transparent); padding:10px 13px; margin-bottom:14px; font-size:12px; line-height:1.5; }
+.cp-dash .hp-gd-alert b{ color:var(--amber); }
+.cp-dash .hp-gd-filtros{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.cp-dash .hp-gd-fchip{ font-size:10.5px; font-weight:600; padding:5px 11px; border:1px solid var(--line); border-radius:0; background:none; color:var(--muted); cursor:pointer; }
+.cp-dash .hp-gd-fchip.on{ border-color:var(--acc); color:var(--acc); background:color-mix(in srgb, var(--acc) 12%, transparent); }
+
+.cp-dash .hp-gd-list{ display:flex; flex-direction:column; gap:10px; }
+.cp-dash .hp-gd-card{ background:var(--bg-2); border:1px solid var(--line); padding:12px 14px; }
+.cp-dash .hp-gd-row1{ display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.cp-dash .hp-gd-nombre{ flex:1.4; font-weight:700; font-size:13px; font-family:'Poppins',sans-serif; background:var(--panel); border:1px solid var(--line); border-radius:0; color:var(--text); padding:7px 9px; min-width:0; }
+.cp-dash .hp-gd-categoria{ flex:1; font-size:11.5px; background:var(--panel); border:1px solid var(--line); border-radius:0; color:var(--text); padding:7px 9px; min-width:0; }
+.cp-dash .hp-gd-row2{ display:flex; flex-wrap:wrap; gap:14px; margin-bottom:10px; }
+.cp-dash .hp-gd-row2 label{ font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:flex; flex-direction:column; gap:4px; flex:1; min-width:140px; }
+.cp-dash .hp-gd-row2 input{ background:var(--panel); border:1px solid var(--line); border-radius:0; color:var(--text); font-family:'Poppins',sans-serif; font-size:12.5px; padding:6px 8px; text-transform:none; letter-spacing:normal; }
+.cp-dash .hp-gd-permanencia{ flex:1.4; min-width:200px; }
+.cp-dash .hp-gd-row3{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.cp-dash .hp-gd-chip{ font-size:10px; font-weight:700; padding:4px 9px; text-transform:uppercase; border-radius:0; }
+.cp-dash .hp-gd-chip.tono-ok{ background:color-mix(in srgb, var(--lime) 18%, transparent); color:var(--lime); }
+.cp-dash .hp-gd-chip.tono-warn{ background:color-mix(in srgb, var(--amber) 18%, transparent); color:var(--amber); }
+.cp-dash .hp-gd-chip.tono-bad{ background:color-mix(in srgb, var(--rose) 18%, transparent); color:var(--rose); }
+.cp-dash .hp-gd-chip.tono-neutral{ background:var(--panel); color:var(--muted); border:1px solid var(--line); }
+
+@media (max-width:640px){
+  .cp-dash .hp-gd-row1{ flex-wrap:wrap; }
+  .cp-dash .hp-gd-nombre, .cp-dash .hp-gd-categoria{ flex-basis:100%; }
+}
+@media (max-width:400px){
+  .cp-dash .hp-gd-row2{ flex-direction:column; gap:8px; }
+  .cp-dash .hp-gd-row2 label{ min-width:0; }
+}
+
+/* ===========================================================================
    Pagos, nóminas, caja chica y rendiciones — 6 pestañas, cumplimiento legal
    de altas/bajas calculado (no un campo manual). Esquinas rectas (§10.2),
    margen lateral var(--gutter) desde el vamos (§10.15).

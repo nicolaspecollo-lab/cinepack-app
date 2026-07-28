@@ -173,6 +173,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "ej-deliverables",
   "ej-notas-ejecutivo",
   "ej-pagos-nominas",
+  "ej-gestion-documental",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -196,6 +197,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     FINANCIACION_PIPELINE_IDS.has(id) ||
     DOC_STATUS_IDS.has(id) ||
     id === "ej-pagos-nominas" ||
+    id === "ej-gestion-documental" ||
     ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
@@ -826,6 +828,21 @@ function HerramientaData({
       {herramienta.tipo === "tabla" && herramienta.id === "ej-pagos-nominas" && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PagosNominasBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "ej-gestion-documental" && (
+        <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <GestionDocumentalBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
@@ -4295,6 +4312,145 @@ export function PagosNominasBoard({
   );
 }
 
+// ---- Gestión documental administrativa ----
+// El eje real no es "archivar y digitalizar" (el checklist genérico que
+// había antes): es el plazo LEGAL de conservación de cada documento — 6
+// años para libros contables (art. 30 Código de Comercio), variable según
+// categoría, o permanente para societarios — y si la digitalización tiene
+// validez legal certificada (hash/firma/sellado de tiempo, RD 1619/2012)
+// o es solo una copia de referencia. Sin <table>: cada documento es una
+// fila-tarjeta, y la categoría es editable (datalist) para poder sumar un
+// criterio nuevo sin tocar código.
+const GD_DEFAULT_ANIOS: Record<string, number> = {
+  Contable: 6,
+  Fiscal: 4,
+  Laboral: 4,
+  Seguros: 5,
+  Licencias: 2,
+};
+
+function gdEstado(f: Fila): { label: string; tono: "ok" | "warn" | "bad" | "neutral" } {
+  if ((f.datos?.permanencia ?? "") === "Permanente") return { label: "Conservación permanente", tono: "neutral" };
+  const fecha = f.datos?.fecha_documento ? new Date(f.datos.fecha_documento) : null;
+  const anios = ejNum(f.datos?.anios_conservacion);
+  if (!fecha || !anios) return { label: "—", tono: "neutral" };
+  const limite = new Date(fecha);
+  limite.setFullYear(limite.getFullYear() + anios);
+  const dias = Math.round((limite.getTime() - Date.now()) / 86400000);
+  const fechaTxt = limite.toLocaleDateString("es-ES");
+  if (dias < 0) return { label: `Vencido (${fechaTxt})`, tono: "bad" };
+  if (dias <= 90) return { label: `Vence ${fechaTxt}`, tono: "warn" };
+  return { label: `Vigente hasta ${fechaTxt}`, tono: "ok" };
+}
+
+export function GestionDocumentalBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [filtro, setFiltro] = useState<string | null>(null);
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+  const colCategoria = colByKey.get("categoria");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+  function setCategoria(f: Fila, v: string) {
+    const cambios: Record<string, string> = { ...f.datos, categoria: v };
+    if (!f.datos?.anios_conservacion && GD_DEFAULT_ANIOS[v]) {
+      cambios.anios_conservacion = String(GD_DEFAULT_ANIOS[v]);
+    }
+    onGuardar(f.id, cambios, f);
+  }
+
+  const categoriasVistas = Array.from(new Set([...(colCategoria?.opciones ?? []), ...filas.map((f) => f.datos?.categoria).filter(Boolean) as string[]]));
+  const visibles = filtro ? filas.filter((f) => (f.datos?.categoria ?? "") === filtro) : filas;
+  const vencidosOVenciendo = filas.filter((f) => { const e = gdEstado(f); return e.tono === "bad" || e.tono === "warn"; });
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p>{editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}</div>
+    );
+  }
+
+  return (
+    <div className="hp-gd">
+      {vencidosOVenciendo.length > 0 && (
+        <div className="hp-gd-alert">
+          <b>{vencidosOVenciendo.length}</b> documento{vencidosOVenciendo.length === 1 ? "" : "s"} vencido{vencidosOVenciendo.length === 1 ? "" : "s"} o por vencer su plazo de conservación.
+        </div>
+      )}
+
+      {categoriasVistas.length > 0 && (
+        <div className="hp-gd-filtros">
+          <button className={`hp-gd-fchip${!filtro ? " on" : ""}`} onClick={() => setFiltro(null)}>Todas</button>
+          {categoriasVistas.map((c) => (
+            <button key={c} className={`hp-gd-fchip${filtro === c ? " on" : ""}`} onClick={() => setFiltro(c)}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="hp-gd-list">
+        {visibles.map((f) => {
+          const estado = gdEstado(f);
+          const esPermanente = (f.datos?.permanencia ?? "") === "Permanente";
+          return (
+            <div className="hp-gd-card" key={f.id}>
+              <div className="hp-gd-row1">
+                <input className="hp-gd-nombre" defaultValue={f.datos?.nombre ?? ""} placeholder="Nombre del documento" readOnly={!editable} onBlur={(e) => set(f, "nombre", e.target.value)} />
+                <input
+                  className="hp-gd-categoria"
+                  defaultValue={f.datos?.categoria ?? ""}
+                  placeholder="Categoría (o escribí una nueva)"
+                  list="hp-gd-categorias-list"
+                  readOnly={!editable}
+                  onBlur={(e) => setCategoria(f, e.target.value)}
+                />
+                {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+              </div>
+              <div className="hp-gd-row2">
+                <label>Fecha del documento<input type="date" defaultValue={f.datos?.fecha_documento ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha_documento", e.target.value)} /></label>
+                <label className="hp-gd-permanencia">
+                  Permanencia
+                  <EstadoSeg valor={f.datos?.permanencia || "Conservación temporal"} opciones={colByKey.get("permanencia")?.opciones ?? []} onPick={(v) => set(f, "permanencia", v)} editable={editable} chip color />
+                </label>
+                {!esPermanente && (
+                  <label>Años de conservación<input type="number" defaultValue={f.datos?.anios_conservacion ?? ""} readOnly={!editable} onBlur={(e) => set(f, "anios_conservacion", e.target.value)} /></label>
+                )}
+              </div>
+              <div className="hp-gd-row3">
+                <span className={`hp-gd-chip tono-${estado.tono}`}>{estado.label}</span>
+                <EstadoSeg valor={f.datos?.estado_digitalizacion ?? ""} opciones={colByKey.get("estado_digitalizacion")?.opciones ?? []} onPick={(v) => set(f, "estado_digitalizacion", v)} editable={editable} chip color />
+                <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <datalist id="hp-gd-categorias-list">
+        {categoriasVistas.map((c) => <option key={c} value={c} />)}
+      </datalist>
+
+      {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Agregar documento</button></div>}
+    </div>
+  );
+}
+
 // ---- Modelo financiero (proyección por ventana × 3 escenarios) ----
 // La pregunta real de un modelo financiero de cine no es "cuánto gano", es
 // "bajo qué escenario recupera cada socio su dinero". Por eso la tabla de
@@ -7426,6 +7582,13 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     { tipo_registro: "Alta y Baja", nombre: "Sofía Reyes", cargo: "Ayudante de cámara", fecha_inicio: "2026-07-28" },
     { tipo_registro: "Alta y Baja", nombre: "Marta Gil", cargo: "Arte", fecha_inicio: "2026-06-10", fecha_alta_ss: "2026-06-05", fecha_fin: "2026-07-20", estado_finiquito: "Pendiente" },
     { tipo_registro: "Alta y Baja", nombre: "Kepa Aguirre", cargo: "Sonido", fecha_inicio: "2026-06-02", fecha_alta_ss: "2026-05-30", fecha_fin: "2026-07-15", fecha_baja_ss: "2026-07-17", estado_finiquito: "Pagado", monto_finiquito: "1800" },
+  ],
+  "ej-gestion-documental": [
+    { nombre: "Libro diario 2020", categoria: "Contable", fecha_documento: "2020-12-31", anios_conservacion: "6", permanencia: "Conservación temporal", estado_digitalizacion: "Certificada" },
+    { nombre: "Escritura de constitución", categoria: "Societario", fecha_documento: "2019-03-14", permanencia: "Permanente", estado_digitalizacion: "Certificada" },
+    { nombre: "Póliza responsabilidad civil 2025", categoria: "Seguros", fecha_documento: "2025-01-01", anios_conservacion: "5", permanencia: "Conservación temporal", estado_digitalizacion: "Solo copia" },
+    { nombre: "Licencia municipal de rodaje", categoria: "Licencias", fecha_documento: "2026-06-10", anios_conservacion: "2", permanencia: "Conservación temporal", estado_digitalizacion: "Certificada" },
+    { nombre: "Modelo 190 · IRPF 2025", categoria: "Fiscal", fecha_documento: "2026-01-31", anios_conservacion: "4", permanencia: "Conservación temporal", estado_digitalizacion: "Sin digitalizar" },
   ],
   "ej-notas-ejecutivo": [
     {
