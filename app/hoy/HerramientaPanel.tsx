@@ -175,6 +175,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "ej-pagos-nominas",
   "ej-gestion-documental",
   "ej-derechos-pi",
+  "ej-polizas-permisos",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -3811,7 +3812,6 @@ export function FinanciacionPipeline({
 const DOC_STATUS_IDS = new Set([
   "ej-contratos",
   "ej-cesion-nda",
-  "ej-polizas-permisos",
   "ej-facturas",
   "prod-permisos",
   "prod-equipo-tecnico",
@@ -4718,7 +4718,7 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos"]);
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -4727,7 +4727,7 @@ type EntidadConfig = {
   listCols: string[];
   tabs: EntidadTab[];
   addLabel: string;
-  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador" | "derechos-vencimiento";
+  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador" | "derechos-vencimiento" | "polizas-vencimiento";
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
@@ -4801,6 +4801,18 @@ const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
     tabs: [
       { label: "Titularidad", keys: ["elemento", "titular", "tipo"] },
       { label: "Cesiones y licencias", keys: ["cesiones"] },
+      { label: "Documentos", keys: ["documentos"] },
+    ],
+  },
+  "ej-polizas-permisos": {
+    titleKey: "item",
+    subtitleKey: "aseguradora",
+    listCols: ["tipo", "estado", "certificados"],
+    addLabel: "+ Agregar póliza",
+    special: "polizas-vencimiento",
+    tabs: [
+      { label: "Datos de la póliza", keys: ["item", "aseguradora", "tipo", "cobertura", "limite_cobertura", "prima", "desde", "hasta", "estado"] },
+      { label: "Asegurados adicionales", keys: ["certificados"] },
       { label: "Documentos", keys: ["documentos"] },
     ],
   },
@@ -5038,12 +5050,37 @@ export function EntidadTabsBoard({
       })()
     : null;
 
+  // Vencimientos de certificados de asegurado adicional (solo Pólizas de
+  // seguro): mira TODOS los certificados de TODAS las pólizas y cuenta
+  // cuántos ya vencieron o vencen pronto (≤90 días), sin importar en qué
+  // póliza ni qué pestaña esté el usuario.
+  const polizasVencimiento = cfg.special === "polizas-vencimiento"
+    ? (() => {
+        let vencidas = 0, porVencer = 0;
+        for (const f of filas) {
+          for (const c of parseArr<Record<string, string>>(f.datos?.certificados)) {
+            if (!c.vigencia_hasta) continue;
+            const dias = Math.ceil((new Date(c.vigencia_hasta).getTime() - Date.now()) / 86400000);
+            if (dias < 0) vencidas++;
+            else if (dias <= 90) porVencer++;
+          }
+        }
+        return { vencidas, porVencer };
+      })()
+    : null;
+
   return (
     <div className="hp-etb-wrap">
       {derechosVencimiento && (derechosVencimiento.vencidas > 0 || derechosVencimiento.porVencer > 0) && (
         <div className="hp-etb-alert">
           {derechosVencimiento.vencidas > 0 && <span><b>{derechosVencimiento.vencidas}</b> cesión{derechosVencimiento.vencidas === 1 ? "" : "es"} vencida{derechosVencimiento.vencidas === 1 ? "" : "s"}. </span>}
           {derechosVencimiento.porVencer > 0 && <span><b>{derechosVencimiento.porVencer}</b> por vencer en los próximos 90 días.</span>}
+        </div>
+      )}
+      {polizasVencimiento && (polizasVencimiento.vencidas > 0 || polizasVencimiento.porVencer > 0) && (
+        <div className="hp-etb-alert">
+          {polizasVencimiento.vencidas > 0 && <span><b>{polizasVencimiento.vencidas}</b> certificado{polizasVencimiento.vencidas === 1 ? "" : "s"} vencido{polizasVencimiento.vencidas === 1 ? "" : "s"}. </span>}
+          {polizasVencimiento.porVencer > 0 && <span><b>{polizasVencimiento.porVencer}</b> por vencer en los próximos 90 días.</span>}
         </div>
       )}
       {cfg.special === "categorias-filtro" && (
@@ -7650,6 +7687,26 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
       elemento: "Banda sonora original", titular: "Compositor (cesión exclusiva a la productora)", tipo: "Música",
       cesiones: JSON.stringify([
         { licenciado_a: "El Vínculo Producciones", territorio: "Mundial", exclusividad: "Exclusiva", royalties_pct: "0", vigencia: "2025-09-01", caducidad: "", estado: "Firmado" },
+      ]),
+    },
+  ],
+  "ej-polizas-permisos": [
+    {
+      item: "Responsabilidad civil general", aseguradora: "AXA Seguros", tipo: "Responsabilidad civil general",
+      cobertura: "Daños a terceros durante el rodaje, en cualquier locación del proyecto.",
+      limite_cobertura: "600000", prima: "4200", desde: "2026-01-15", hasta: "2027-01-15", estado: "Vigente",
+      certificados: JSON.stringify([
+        { locacion_proveedor: "Estudio Ciudad Vieja", vigencia_desde: "2026-06-01", vigencia_hasta: "2026-09-20", estado: "Emitido" },
+        { locacion_proveedor: "Ayuntamiento (rodaje en vía pública)", vigencia_desde: "2026-07-01", vigencia_hasta: "2028-07-01", estado: "Emitido" },
+      ]),
+      documentos: JSON.stringify([{ nombre: "Póliza completa — AXA" }]),
+    },
+    {
+      item: "Equipo y cámara", aseguradora: "Mapfre", tipo: "Equipo y cámara",
+      cobertura: "Cámaras, ópticas y equipo de grip/eléctrico alquilado o propio.",
+      limite_cobertura: "180000", prima: "1500", desde: "2026-05-01", hasta: "2027-05-01", estado: "Vigente",
+      certificados: JSON.stringify([
+        { locacion_proveedor: "Proveedor de grúa técnica", vigencia_desde: "2026-05-01", vigencia_hasta: "2026-08-10", estado: "Emitido" },
       ]),
     },
   ],
