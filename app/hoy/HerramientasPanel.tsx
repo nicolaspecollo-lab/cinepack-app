@@ -196,7 +196,7 @@ export default function HerramientasPanel({
     const id = localStorage.getItem(openKey(departamento, seccion));
     if (!id) return;
     const candidatos =
-      seccion === "departamento"
+      seccion === "departamento" || isAdmin
         ? [...deptTools(departamento), ...cargoGroups(departamento).flatMap((g) => g.tools)]
         : [
             ...deptTools(departamento),
@@ -363,7 +363,20 @@ export default function HerramientasPanel({
   const compartidasEditables = deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos");
   const miGrupo = cargo ? cargoGroups(departamento).find((g) => g.cargo === cargo) : undefined;
   const misCargoTools = (miGrupo?.tools ?? []).filter((h) => !ocultas.has(h.id));
-  if (compartidasEditables.length === 0 && misCargoTools.length === 0 && personalTools.length === 0 && !creandoEspacio) {
+  // Un admin (super_admin/is_admin) supervisa TODO el departamento, no solo
+  // su propio cargo — sin este bypass quedaba encerrado en las herramientas
+  // de un único cargo y todo lo de los demás cargos (Tesorería, Legal,
+  // Administración, etc.) le aparecía en modo solo-lectura para siempre,
+  // sin ningún camino para editarlas. Se muestran agrupadas por cargo,
+  // igual que en la vista "Departamento", pero acá SÍ son editables
+  // (heredan editable={seccion==="cargo"} del panel).
+  const otrosCargoGrupos = isAdmin
+    ? cargoGroups(departamento)
+        .filter((g) => g.cargo !== cargo)
+        .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id)) }))
+        .filter((g) => g.tools.length > 0)
+    : [];
+  if (compartidasEditables.length === 0 && misCargoTools.length === 0 && otrosCargoGrupos.length === 0 && personalTools.length === 0 && !creandoEspacio) {
     return (
       <div className="hp-index">
         <div className="soon-box">
@@ -437,6 +450,19 @@ export default function HerramientasPanel({
           </div>
         </section>
       )}
+      {otrosCargoGrupos.map((g) => (
+        <section className="hp-group" key={`admin-${g.cargo}`}>
+          <span className="hp-group-label">
+            <span className="hex" style={{ width: "8px", height: "7px" }} />
+            {g.cargo}
+          </span>
+          <div className="hp-cards">
+            {g.tools.map((h) => (
+              <ToolCard key={`admin-${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
