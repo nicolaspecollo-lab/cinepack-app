@@ -7440,23 +7440,15 @@ function AdoptarEjemplos({
     <div className="cp-ejbar">
       <div className="cp-ejbar-txt"><b>{t("ejTitle")}</b> {t("ejDesc")}</div>
       <div className="cp-ejbar-actions">
-        <button
-          className="cp-btn cp-btn-acc"
-          onClick={() => {
-            // Se llama a crearFila() N veces seguidas de forma síncrona (sin
-            // esperar cada insert): si el orden se calculara leyendo el
-            // estado "filas" en cada llamada, las N quedarían con el mismo
-            // valor (el estado todavía no se actualizó entre llamadas) y
-            // chocarían contra el índice único de orden en la base. Por eso
-            // se fuerza el orden explícito 0..N-1 acá — AdoptarEjemplos solo
-            // se muestra cuando filas.length === 0, así que arrancar en 0
-            // siempre es seguro.
-            ejemplos.forEach((e, i) => onCrear(e, i));
-          }}
-        >
-          {t("ejUse")}
-        </button>
-        <button className="cp-btn" onClick={() => onCrear({})}>{t("ejBlank")}</button>
+        {/* Antes había un botón "Comenzar con este ejemplo" que sembraba TODOS
+            los ejemplos de golpe (crearFila() N veces). Se sacó: además del
+            volumen de filas creadas sin revisar, en herramientas con un
+            índice único legado a nivel de fila (ver Biblia §4.8) una
+            segunda fila cualquiera rompe igual, ejemplo o no — el problema
+            de fondo se resuelve en la base, no evitando el batch. Ahora un
+            solo botón: descarta el ejemplo y arranca con una fila en blanco
+            para cargar la propia. */}
+        <button className="cp-btn cp-btn-acc" onClick={() => onCrear({})}>{t("ejBlank")}</button>
       </div>
     </div>
   );
