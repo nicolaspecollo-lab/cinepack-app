@@ -4187,39 +4187,45 @@ export function ModeloFinanciero({
         </table>
       </div>
 
-      {tiers.length > 0 && (
-        <div className="hp-mf2-wf">
-          <div className="hp-mf2-wf-title">¿Cuánto recupera cada tier bajo cada escenario?</div>
-          {tiers.map((tr, idx) => (
-            <div className="hp-mf2-wf-row" key={tr.tier}>
-              <span className="hp-mf2-wf-lbl" title={tr.socios.join(", ")}>
-                {tr.tier}
-                <small>{ejMoney(tr.total)}</small>
-              </span>
-              {MF_ESCENARIOS.map((e) => {
-                const r = recuperadoPorTier(e.key)[idx];
-                const tono = r.pct >= 100 ? "ok" : r.pct > 0 ? "warn" : "bad";
-                return (
-                  <span className={`hp-mf2-wf-cell tono-${tono}`} key={e.key}>{r.pct}%</span>
-                );
-              })}
+      {(tiers.length > 0 || costeEquilibrio > 0) && (
+        <div className="hp-mf2-bottom">
+          {tiers.length > 0 && (
+            <div className="hp-mf2-wf">
+              <div className="hp-mf2-wf-title">¿Cuánto recupera cada tier bajo cada escenario?</div>
+              {tiers.map((tr, idx) => (
+                <div className="hp-mf2-wf-row" key={tr.tier}>
+                  <span className="hp-mf2-wf-lbl" title={tr.socios.join(", ")}>
+                    {tr.tier}
+                    <small>{ejMoney(tr.total)}</small>
+                  </span>
+                  {MF_ESCENARIOS.map((e) => {
+                    const r = recuperadoPorTier(e.key)[idx];
+                    const tono = r.pct >= 100 ? "ok" : r.pct > 0 ? "warn" : "bad";
+                    return (
+                      <span className={`hp-mf2-wf-cell tono-${tono}`} key={e.key}>{r.pct}%</span>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {costeEquilibrio > 0 && (
-        <div className="hp-mf2-breakeven">
-          Punto de equilibrio: <b>{ejMoney(costeEquilibrio)}</b> de ingreso bruto.{" "}
-          {MF_ESCENARIOS.map((e, i) => {
-            const dif = ingresos[i] - costeEquilibrio;
-            return (
-              <span key={e.key}>
-                {e.label}: {dif >= 0 ? `lo supera por ${ejMoney(dif)}` : `queda ${ejMoney(-dif)} por debajo`}
-                {i < MF_ESCENARIOS.length - 1 ? " · " : "."}
-              </span>
-            );
-          })}
+          {costeEquilibrio > 0 && (
+            <div className="hp-mf2-breakeven">
+              <div className="hp-mf2-breakeven-title">Punto de equilibrio</div>
+              <div className="hp-mf2-breakeven-fig">{ejMoney(costeEquilibrio)}</div>
+              <div className="hp-mf2-breakeven-detail">
+                {MF_ESCENARIOS.map((e, i) => {
+                  const dif = ingresos[i] - costeEquilibrio;
+                  return (
+                    <div key={e.key} className={dif >= 0 ? "hp-mf2-pos" : "hp-mf2-neg"}>
+                      {e.label}: {dif >= 0 ? `+${ejMoney(dif)}` : `-${ejMoney(-dif)}`}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -4542,7 +4548,7 @@ export function EntidadTabsBoard({
   }
 
   return (
-    <>
+    <div className="hp-etb-wrap">
       {cfg.special === "categorias-filtro" && (
         <div className="hp-etb-filtros">
           <button className={`hp-etb-fchip${!filtroCategoria ? " on" : ""}`} onClick={() => setFiltroCategoria(null)}>Todas</button>
@@ -4660,7 +4666,7 @@ export function EntidadTabsBoard({
         </div>,
         typeof document !== "undefined" ? document.querySelector(".cp-dash") ?? document.body : (null as unknown as Element)
       )}
-    </>
+    </div>
   );
 }
 

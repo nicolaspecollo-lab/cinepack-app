@@ -4517,7 +4517,9 @@
    Modelo financiero — proyección por ventana × 3 escenarios + waterfall
    Esquinas RECTAS en todos los recuadros de cifra/porcentaje (§10.2).
    =========================================================================== */
-.cp-dash .hp-mf2{ position:relative; overflow:hidden; padding-top:4px; }
+.cp-dash .hp-mf2{ position:relative; overflow:hidden; padding:4px var(--gutter) 30px; }
+/* .hp-actions ya trae su propio padding lateral (mismo valor) — no duplicar. */
+.cp-dash .hp-mf2 .hp-actions{ padding-left:0; padding-right:0; }
 /* Panal de esquina: mismo hexágono SVG oficial que .hcard-hexbg (§10.9),
    teñido con el acento del departamento y disuelto hacia el resto del panel
    con una máscara radial — el patrón no se corta, se difumina. */
@@ -4587,7 +4589,13 @@
 .cp-dash .hp-mf2-neg{ color:var(--rose); }
 .cp-dash .hp-mf2-pos{ color:var(--lime); }
 
-.cp-dash .hp-mf2-wf{ position:relative; z-index:1; margin-top:22px; }
+/* Fila inferior en 2 columnas (waterfall + punto de equilibrio lado a
+   lado): en vez de apilar todo en una sola columna angosta, se aprovecha
+   el ancho completo del panel — la misma superficie que el gutter le
+   garantiza a cualquier herramienta (ver arriba). */
+.cp-dash .hp-mf2-bottom{
+  position:relative; z-index:1; margin-top:24px; display:grid; grid-template-columns:1.4fr 1fr; gap:20px; align-items:start;
+}
 .cp-dash .hp-mf2-wf-title{
   font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; margin-bottom:11px;
 }
@@ -4605,10 +4613,16 @@
 .cp-dash .hp-mf2-wf-cell.tono-bad{ background:color-mix(in srgb, var(--rose) 18%, transparent); color:var(--rose); }
 
 .cp-dash .hp-mf2-breakeven{
-  position:relative; z-index:1; margin-top:16px; padding:11px 14px; border-radius:0;
-  background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--acc); font-size:11.5px; line-height:1.6;
+  padding:16px 18px; border-radius:0; height:100%;
+  background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--acc);
 }
+.cp-dash .hp-mf2-breakeven-title{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:700; }
+.cp-dash .hp-mf2-breakeven-fig{ font-family:'Poppins',sans-serif; font-weight:800; font-size:22px; margin:6px 0 12px; }
+.cp-dash .hp-mf2-breakeven-detail{ display:flex; flex-direction:column; gap:5px; font-size:12px; }
 
+@media (max-width:900px){
+  .cp-dash .hp-mf2-bottom{ grid-template-columns:1fr; }
+}
 @media (max-width:640px){
   .cp-dash .hp-mf2-wf-row{ flex-wrap:wrap; }
   .cp-dash .hp-mf2-wf-lbl{ width:100%; }
@@ -4618,6 +4632,9 @@
    Ficha con pestañas por entidad (Coproductores, Subvenciones, Agenda,
    Deliverables, Historial de decisiones) — EntidadTabsBoard
    =========================================================================== */
+.cp-dash .hp-etb-wrap{ padding:4px var(--gutter) 4px; }
+/* .hp-actions ya trae su propio padding lateral (mismo valor) — no duplicar. */
+.cp-dash .hp-etb-wrap .hp-actions{ padding-left:0; padding-right:0; }
 .cp-dash .hp-etb-filtros{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
 .cp-dash .hp-etb-fchip{ font-size:11px; font-weight:600; padding:5px 11px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; }
 .cp-dash .hp-etb-fchip.on{ border-color:var(--acc); color:var(--acc); background:color-mix(in srgb, var(--acc) 12%, transparent); }
