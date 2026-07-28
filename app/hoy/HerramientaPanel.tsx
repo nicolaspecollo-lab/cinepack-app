@@ -10,6 +10,7 @@ import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
 import CpSelect from "../components/CpSelect";
+import CarpetaNavegable from "./CarpetaNavegable";
 
 type Intervencion = { accion: string; usuario: string; fecha: string };
 type Visionado = { usuario: string; fecha: string };
@@ -193,6 +194,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     CASHFLOW_IDS.has(id) ||
     FINANCIACION_PIPELINE_IDS.has(id) ||
     DOC_STATUS_IDS.has(id) ||
+    id === "ej-pagos-nominas" ||
     ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
@@ -808,6 +810,21 @@ function HerramientaData({
       {herramienta.tipo === "tabla" && ENTIDAD_TABS_IDS.has(herramienta.id) && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <EntidadTabsBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "ej-pagos-nominas" && (
+        <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <PagosNominasBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
@@ -3778,7 +3795,6 @@ const DOC_STATUS_IDS = new Set([
   "ej-derechos-pi",
   "ej-polizas-permisos",
   "ej-facturas",
-  "ej-pagos-nominas",
   "prod-permisos",
   "prod-equipo-tecnico",
   "prod-reporte-incidencias-loc",
@@ -4005,6 +4021,276 @@ export function DocStatusBoard({
         </div>
       )}
     </>
+  );
+}
+
+// ---- Pagos, nóminas, caja chica y rendiciones ----
+// Tesorería no es un tablero de estado: son 5 obligaciones con flujos y
+// plazos distintos. La más crítica es legal, no contable — el alta en la
+// Seguridad Social debe estar hecha ANTES de que la persona empiece a
+// trabajar, y la baja tiene un plazo de 3 días naturales desde el cese —
+// por eso "Altas y Bajas" calcula solo el estado de cumplimiento en vez de
+// pedir un campo de estado manual. Los pagos a proveedores NO se
+// duplican acá: ya viven en Facturas.
+const PN_TABS = [
+  { key: "nomina", label: "Nómina" },
+  { key: "caja", label: "Caja chica" },
+  { key: "rend", label: "Rendiciones" },
+  { key: "ant", label: "Anticipos" },
+  { key: "altas", label: "Altas y Bajas" },
+  { key: "arch", label: "Archivos" },
+] as const;
+type PnTabKey = (typeof PN_TABS)[number]["key"];
+
+const PN_SUBCARPETAS = ["Contratos", "Nóminas sin firmar", "Nóminas firmadas", "Finiquitos", "Altas", "Bajas"];
+
+function pnDias(desde: Date, hasta: Date): number {
+  return Math.round((hasta.getTime() - desde.getTime()) / 86400000);
+}
+
+function pnEstadoAlta(f: Fila): { label: string; tono: "ok" | "warn" | "bad" | "neutral" } {
+  const inicio = f.datos?.fecha_inicio ? new Date(f.datos.fecha_inicio) : null;
+  const alta = f.datos?.fecha_alta_ss ? new Date(f.datos.fecha_alta_ss) : null;
+  if (!inicio) return { label: "—", tono: "neutral" };
+  if (alta) return { label: `Hecha ${alta.toLocaleDateString("es-ES")}`, tono: alta <= inicio ? "ok" : "bad" };
+  const dias = pnDias(new Date(), inicio);
+  if (dias < 0) return { label: "Vencida", tono: "bad" };
+  if (dias <= 7) return { label: `Vence en ${dias} día${dias === 1 ? "" : "s"}`, tono: "warn" };
+  return { label: "Pendiente", tono: "neutral" };
+}
+
+function pnEstadoBaja(f: Fila): { label: string; tono: "ok" | "warn" | "bad" | "neutral" } {
+  const fin = f.datos?.fecha_fin ? new Date(f.datos.fecha_fin) : null;
+  if (!fin) return { label: "—", tono: "neutral" };
+  const baja = f.datos?.fecha_baja_ss ? new Date(f.datos.fecha_baja_ss) : null;
+  const limite = new Date(fin.getTime() + 3 * 86400000);
+  if (baja) return { label: `Tramitada ${baja.toLocaleDateString("es-ES")}`, tono: baja <= limite ? "ok" : "bad" };
+  const dias = pnDias(new Date(), limite);
+  if (dias < 0) return { label: "Vencida", tono: "bad" };
+  if (dias <= 3) return { label: `Vence en ${dias} día${dias === 1 ? "" : "s"}`, tono: "warn" };
+  return { label: "Pendiente", tono: "neutral" };
+}
+
+export function PagosNominasBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [tab, setTab] = useState<PnTabKey>("nomina");
+  const [archivosListos, setArchivosListos] = useState(false);
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+  const porTipo = (tipo: string) => filas.filter((f) => (f.datos?.tipo_registro ?? "") === tipo);
+  const nominas = porTipo("Nómina");
+  const cajas = porTipo("Caja chica");
+  const rendiciones = porTipo("Rendición");
+  const anticipos = porTipo("Anticipo");
+  const altasBajas = porTipo("Alta y Baja");
+
+  const alertaLegal = altasBajas.find((f) => pnEstadoAlta(f).tono === "bad" || pnEstadoBaja(f).tono === "bad");
+
+  const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+  const archivosBase = projectId ? `${projectId}/${safeKey(departamento)}/herramientas/${safeKey(herramientaId)}` : null;
+
+  useEffect(() => {
+    if (tab !== "arch" || archivosListos || !archivosBase) return;
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase.storage.from("documentos").list(archivosBase, { limit: 1 });
+      if (!data || data.length === 0) {
+        const blob = new Blob([""]);
+        for (const nombre of PN_SUBCARPETAS) {
+          await supabase.storage.from("documentos").upload(`${archivosBase}/${safeKey(nombre)}/.keep`, blob);
+        }
+      }
+      setArchivosListos(true);
+    })();
+  }, [tab, archivosListos, archivosBase]);
+
+  function Money({ v }: { v: string | undefined }) {
+    return <span className="hp-pn-money">{ejMoney(ejNum(v))}</span>;
+  }
+
+  function AddBtn({ tipo, label }: { tipo: string; label: string }) {
+    if (!editable) return null;
+    return <button className="cp-btn cp-btn-acc" onClick={() => onCrear({ tipo_registro: tipo })}>{label}</button>;
+  }
+
+  return (
+    <div className="hp-pn">
+      {alertaLegal && (
+        <div className="hp-pn-alert">
+          <b>{alertaLegal.datos?.nombre || "Alguien"}</b>{" "}
+          {pnEstadoAlta(alertaLegal).tono === "bad"
+            ? "tiene el alta en Seguridad Social vencida — la ley exige tramitarla antes del primer día trabajado."
+            : "tiene la baja en Seguridad Social vencida — el plazo es de 3 días naturales desde el cese."}
+        </div>
+      )}
+
+      <div className="hp-pn-tabs">
+        {PN_TABS.map((tb) => (
+          <span key={tb.key} className={`hp-pn-tab${tab === tb.key ? " on" : ""}`} onClick={() => setTab(tb.key)}>{tb.label}</span>
+        ))}
+      </div>
+
+      {tab === "nomina" && (
+        <div className="hp-pn-pane">
+          {nominas.length === 0 ? (
+            <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p></div>
+          ) : (
+            <table className="hp-pn-tbl">
+              <thead><tr><th>Período</th><th>Personas</th><th>Total bruto</th><th>Sin firmar</th><th>Firmada</th><th>Estado</th>{editable && <th></th>}</tr></thead>
+              <tbody>
+                {nominas.map((f) => (
+                  <tr key={f.id}>
+                    <td><input defaultValue={f.datos?.nombre ?? ""} placeholder="Período · equipo" readOnly={!editable} onBlur={(e) => set(f, "nombre", e.target.value)} /></td>
+                    <td><input type="number" defaultValue={f.datos?.personas ?? ""} readOnly={!editable} onBlur={(e) => set(f, "personas", e.target.value)} /></td>
+                    <td><Money v={f.datos?.total_bruto} /></td>
+                    <td><ArchivoCell path={f.datos?.nomina_sin_firmar ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="nomina_sin_firmar" onSave={(v) => set(f, "nomina_sin_firmar", v)} /></td>
+                    <td><ArchivoCell path={f.datos?.nomina_firmada ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="nomina_firmada" onSave={(v) => set(f, "nomina_firmada", v)} /></td>
+                    <td><EstadoSeg valor={f.datos?.estado_nomina ?? ""} opciones={colByKey.get("estado_nomina")?.opciones ?? []} onPick={(v) => set(f, "estado_nomina", v)} editable={editable} chip color /></td>
+                    {editable && <td><button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button></td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <div className="hp-actions"><AddBtn tipo="Nómina" label="+ Agregar nómina" /></div>
+        </div>
+      )}
+
+      {tab === "caja" && (
+        <div className="hp-pn-pane">
+          {cajas.length === 0 ? (
+            <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p></div>
+          ) : cajas.map((f) => {
+            const fondo = ejNum(f.datos?.fondo_asignado);
+            const rendido = ejNum(f.datos?.rendido);
+            const saldo = fondo - rendido;
+            const pct = fondo > 0 ? Math.max(0, Math.min(100, (saldo / fondo) * 100)) : 0;
+            const tono = pct > 40 ? "ok" : pct > 10 ? "warn" : "bad";
+            const recibos = parseArr<Record<string, string>>(f.datos?.recibos);
+            return (
+              <div className="hp-pn-caja" key={f.id}>
+                <div className="hp-pn-caja-head">
+                  <input className="hp-pn-caja-nombre" defaultValue={f.datos?.nombre ?? ""} placeholder="Custodio" readOnly={!editable} onBlur={(e) => set(f, "nombre", e.target.value)} />
+                  <input className="hp-pn-caja-cargo" defaultValue={f.datos?.cargo ?? ""} placeholder="Cargo / depto" readOnly={!editable} onBlur={(e) => set(f, "cargo", e.target.value)} />
+                  <div className={`hp-pn-caja-bal tono-${tono}`}>
+                    <b>{ejMoney(saldo)}</b><span>de {ejMoney(fondo)} restantes</span>
+                  </div>
+                  {editable && <button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button>}
+                </div>
+                <div className="hp-pn-caja-bar"><span className={`tono-${tono}`} style={{ width: `${pct}%` }}></span></div>
+                <div className="hp-pn-caja-figs">
+                  <label>Fondo asignado<input type="number" defaultValue={f.datos?.fondo_asignado ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fondo_asignado", e.target.value)} /></label>
+                  <label>Rendido<input type="number" defaultValue={f.datos?.rendido ?? ""} readOnly={!editable} onBlur={(e) => set(f, "rendido", e.target.value)} /></label>
+                </div>
+                <EntidadRepetible col={colByKey.get("recibos")!} valor={f.datos?.recibos ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} onChange={(v) => set(f, "recibos", v)} />
+              </div>
+            );
+          })}
+          <div className="hp-actions"><AddBtn tipo="Caja chica" label="+ Agregar custodio" /></div>
+        </div>
+      )}
+
+      {tab === "rend" && (
+        <div className="hp-pn-pane">
+          {rendiciones.length === 0 ? (
+            <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p></div>
+          ) : rendiciones.map((f) => (
+            <div className="hp-pn-row" key={f.id}>
+              <input className="hp-pn-row-name" defaultValue={f.datos?.nombre ?? ""} placeholder="Rendición · persona" readOnly={!editable} onBlur={(e) => set(f, "nombre", e.target.value)} />
+              <Money v={f.datos?.rendido} />
+              <EstadoSeg valor={f.datos?.estado_rendicion ?? ""} opciones={colByKey.get("estado_rendicion")?.opciones ?? []} onPick={(v) => set(f, "estado_rendicion", v)} editable={editable} chip color />
+              {editable && <button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button>}
+            </div>
+          ))}
+          <div className="hp-actions"><AddBtn tipo="Rendición" label="+ Agregar rendición" /></div>
+        </div>
+      )}
+
+      {tab === "ant" && (
+        <div className="hp-pn-pane">
+          {anticipos.length === 0 ? (
+            <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p></div>
+          ) : anticipos.map((f) => (
+            <div className="hp-pn-row" key={f.id}>
+              <input className="hp-pn-row-name" defaultValue={f.datos?.nombre ?? ""} placeholder="Beneficiario" readOnly={!editable} onBlur={(e) => set(f, "nombre", e.target.value)} />
+              <input className="hp-pn-row-sub" defaultValue={f.datos?.a_descontar_de ?? ""} placeholder="A descontar de..." readOnly={!editable} onBlur={(e) => set(f, "a_descontar_de", e.target.value)} />
+              <Money v={f.datos?.monto_anticipo} />
+              <EstadoSeg valor={f.datos?.estado_anticipo ?? ""} opciones={colByKey.get("estado_anticipo")?.opciones ?? []} onPick={(v) => set(f, "estado_anticipo", v)} editable={editable} chip color />
+              {editable && <button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button>}
+            </div>
+          ))}
+          <div className="hp-actions"><AddBtn tipo="Anticipo" label="+ Agregar anticipo" /></div>
+        </div>
+      )}
+
+      {tab === "altas" && (
+        <div className="hp-pn-pane">
+          {altasBajas.length === 0 ? (
+            <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p></div>
+          ) : (
+            <table className="hp-pn-tbl">
+              <thead><tr><th>Persona</th><th>Inicio</th><th>Alta SS</th><th>Fin</th><th>Baja SS</th><th>Finiquito</th>{editable && <th></th>}</tr></thead>
+              <tbody>
+                {altasBajas.map((f) => {
+                  const alta = pnEstadoAlta(f);
+                  const baja = pnEstadoBaja(f);
+                  return (
+                    <tr key={f.id}>
+                      <td>
+                        <input defaultValue={f.datos?.nombre ?? ""} placeholder="Nombre" readOnly={!editable} onBlur={(e) => set(f, "nombre", e.target.value)} />
+                        <input className="hp-pn-cargo-sub" defaultValue={f.datos?.cargo ?? ""} placeholder="Cargo" readOnly={!editable} onBlur={(e) => set(f, "cargo", e.target.value)} />
+                      </td>
+                      <td><input type="date" defaultValue={f.datos?.fecha_inicio ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha_inicio", e.target.value)} /></td>
+                      <td>
+                        <span className={`hp-pn-chip tono-${alta.tono}`}>{alta.label}</span>
+                        {editable && <input type="date" defaultValue={f.datos?.fecha_alta_ss ?? ""} onBlur={(e) => set(f, "fecha_alta_ss", e.target.value)} />}
+                      </td>
+                      <td><input type="date" defaultValue={f.datos?.fecha_fin ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha_fin", e.target.value)} /></td>
+                      <td>
+                        <span className={`hp-pn-chip tono-${baja.tono}`}>{baja.label}</span>
+                        {editable && <input type="date" defaultValue={f.datos?.fecha_baja_ss ?? ""} onBlur={(e) => set(f, "fecha_baja_ss", e.target.value)} />}
+                      </td>
+                      <td>
+                        <EstadoSeg valor={f.datos?.estado_finiquito ?? ""} opciones={colByKey.get("estado_finiquito")?.opciones ?? []} onPick={(v) => set(f, "estado_finiquito", v)} editable={editable} chip color />
+                      </td>
+                      {editable && <td><button className="hp-del" onClick={() => onBorrar(f.id)}>✕</button></td>}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          <div className="hp-actions"><AddBtn tipo="Alta y Baja" label="+ Agregar persona" /></div>
+        </div>
+      )}
+
+      {tab === "arch" && (
+        <div className="hp-pn-pane">
+          {archivosBase && <CarpetaNavegable base={archivosBase} editable={editable} />}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -7128,6 +7414,17 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
       recibido_de: "Posproducción · Montaje trailer",
       especificaciones: JSON.stringify([{ campo: "Resolución", valor: "1920×1080" }, { campo: "Codec", valor: "ProRes 422 HQ" }]),
     },
+  ],
+  "ej-pagos-nominas": [
+    { tipo_registro: "Nómina", nombre: "Julio 2026 · Equipo de arte", personas: "8", total_bruto: "14200", estado_nomina: "Pendiente" },
+    { tipo_registro: "Nómina", nombre: "Junio 2026 · Equipo de sonido", personas: "4", total_bruto: "7100", estado_nomina: "Pagada" },
+    { tipo_registro: "Caja chica", nombre: "Diego Aramburu", cargo: "Producción", fondo_asignado: "800", rendido: "460" },
+    { tipo_registro: "Caja chica", nombre: "Marta Gil", cargo: "Arte", fondo_asignado: "500", rendido: "460" },
+    { tipo_registro: "Rendición", nombre: "Rendición #34 · Marta Gil", rendido: "460", estado_rendicion: "En revisión" },
+    { tipo_registro: "Anticipo", nombre: "Sofía Reyes", monto_anticipo: "1200", a_descontar_de: "Rendición #36", estado_anticipo: "Sin reconciliar" },
+    { tipo_registro: "Alta y Baja", nombre: "Sofía Reyes", cargo: "Ayudante de cámara", fecha_inicio: "2026-07-28" },
+    { tipo_registro: "Alta y Baja", nombre: "Marta Gil", cargo: "Arte", fecha_inicio: "2026-06-10", fecha_alta_ss: "2026-06-05", fecha_fin: "2026-07-20", estado_finiquito: "Pendiente" },
+    { tipo_registro: "Alta y Baja", nombre: "Kepa Aguirre", cargo: "Sonido", fecha_inicio: "2026-06-02", fecha_alta_ss: "2026-05-30", fecha_fin: "2026-07-15", fecha_baja_ss: "2026-07-17", estado_finiquito: "Pagado", monto_finiquito: "1800" },
   ],
   "ej-notas-ejecutivo": [
     {

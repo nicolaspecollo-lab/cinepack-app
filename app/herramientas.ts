@@ -2214,14 +2214,38 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "ej-pagos-nominas", nombre: "Pagos, nóminas, caja chica y rendiciones", tipo: "tabla",
+          hint: "Nómina, caja chica, rendiciones, anticipos y el cumplimiento legal de altas/bajas en Seguridad Social. Los pagos a proveedores se registran en Facturas, no aquí.",
           columnas: [
-            { key: "beneficiario", label: "Beneficiario" },
-            { key: "concepto", label: "Concepto", tipo: "estado", opciones: ["Nómina", "Pago proveedor", "Caja chica", "Rendición", "Anticipo"] },
-            { key: "importe", label: "Importe", tipo: "money" },
-            { key: "fecha", label: "Fecha", tipo: "fecha" },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "Pagado", "Rendido"] },
-            { key: "nomina_sin_firmar", label: "Nómina sin firmar", tipo: "archivo" },
-            { key: "nomina_firmada", label: "Nómina firmada", tipo: "archivo" },
+            { key: "tipo_registro", label: "Tipo", tipo: "estado", opciones: ["Nómina", "Caja chica", "Rendición", "Anticipo", "Alta y Baja"] },
+            { key: "nombre", label: "Nombre / Período" },
+            { key: "cargo", label: "Cargo / Departamento" },
+            // Nómina
+            { key: "personas", label: "Nº de personas", tipo: "num" as const },
+            { key: "total_bruto", label: "Total bruto", tipo: "money" as const },
+            { key: "nomina_sin_firmar", label: "Nómina sin firmar", tipo: "archivo" as const },
+            { key: "nomina_firmada", label: "Nómina firmada", tipo: "archivo" as const },
+            { key: "estado_nomina", label: "Estado de la nómina", tipo: "estado", opciones: ["Pendiente", "Pagada"] },
+            // Caja chica
+            { key: "fondo_asignado", label: "Fondo asignado", tipo: "money" as const },
+            { key: "rendido", label: "Rendido", tipo: "money" as const },
+            { key: "recibos", label: "Recibos", tipo: "repetible", sub: [
+              { key: "descripcion", label: "Descripción" },
+              { key: "monto", label: "Monto", tipo: "money" as const },
+              { key: "archivo", label: "Comprobante", tipo: "archivo" as const },
+            ]},
+            // Rendición
+            { key: "estado_rendicion", label: "Estado de la rendición", tipo: "estado", opciones: ["En revisión", "Aprobada", "Rechazada"] },
+            // Anticipo
+            { key: "monto_anticipo", label: "Monto del anticipo", tipo: "money" as const },
+            { key: "a_descontar_de", label: "A descontar de" },
+            { key: "estado_anticipo", label: "Estado del anticipo", tipo: "estado", opciones: ["Sin reconciliar", "Reconciliado"] },
+            // Alta y Baja (obligación legal: alta ANTES del inicio, baja en 3 días naturales desde el cese)
+            { key: "fecha_inicio", label: "Inicio de contrato", tipo: "fecha" as const },
+            { key: "fecha_alta_ss", label: "Fecha de alta en Seguridad Social", tipo: "fecha" as const },
+            { key: "fecha_fin", label: "Fin de contrato", tipo: "fecha" as const },
+            { key: "fecha_baja_ss", label: "Fecha de baja en Seguridad Social", tipo: "fecha" as const },
+            { key: "estado_finiquito", label: "Finiquito", tipo: "estado", opciones: ["No aplica", "Pendiente", "Pagado"] },
+            { key: "monto_finiquito", label: "Monto del finiquito", tipo: "money" as const },
           ],
         },
       ],
