@@ -4561,6 +4561,24 @@
   color:var(--text); font-family:'Poppins',sans-serif; font-weight:600; font-size:12.5px; padding:7px 8px;
 }
 .cp-dash .hp-mf2-money:focus{ outline:1px solid var(--acc); }
+/* Sin flechas de spinner en los campos de monto (pedido explícito). */
+.cp-dash .hp-mf2-money::-webkit-outer-spin-button,
+.cp-dash .hp-mf2-money::-webkit-inner-spin-button{ -webkit-appearance:none; appearance:none; margin:0; }
+.cp-dash .hp-mf2-money{ -moz-appearance:textfield; appearance:textfield; }
+
+/* Modo ejemplo: las filas todavía no se adoptaron, así que están en solo
+   lectura. Sin marca visible se lee como "la herramienta no funciona" — por
+   eso el borde punteado, el cursor bloqueado y el chip EJEMPLO. */
+.cp-dash .hp-mf2-ejemplo .hp-mf2-money,
+.cp-dash .hp-mf2-ejemplo .hp-mf2-concepto > input,
+.cp-dash .hp-mf2-ejemplo .hp-mf2-hipotesis{
+  border-style:dashed; cursor:not-allowed;
+}
+.cp-dash .hp-mf2-ej-chip{
+  display:inline-block; margin-left:8px; padding:2px 7px; border:1px dashed var(--acc, #C98AF2);
+  color:var(--acc, #C98AF2); font-family:'Poppins',sans-serif; font-weight:700; font-size:9px;
+  letter-spacing:.06em; text-transform:uppercase; vertical-align:middle;
+}
 .cp-dash .hp-mf2-coste td:first-child{ opacity:.9; }
 .cp-dash tr.hp-mf2-total td{
   font-family:'Poppins',sans-serif; font-weight:800; font-size:13px; border-top:2px solid var(--line); padding-top:10px;

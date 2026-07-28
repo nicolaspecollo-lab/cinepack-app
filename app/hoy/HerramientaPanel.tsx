@@ -4092,16 +4092,23 @@ export function ModeloFinanciero({
 
   const ingresos = MF_ESCENARIOS.map((e) => totalDe(e.key, false));
   const costes = MF_ESCENARIOS.map((e) => totalDe(e.key, true));
+  // Modo ejemplo: las filas son fantasma (aún no adoptadas) y por eso están
+  // en solo lectura. Sin una marca clara se lee como "la herramienta está
+  // rota" — hay que decir por qué no se puede escribir todavía.
+  const modoEjemplo = filas.some(esGhost);
 
   return (
-    <div className="hp-mf2">
+    <div className={`hp-mf2${modoEjemplo ? " hp-mf2-ejemplo" : ""}`}>
       <span className="hp-mf2-panal" aria-hidden="true"></span>
 
       <div className="hp-mf2-tablewrap">
         <table className="hp-mf2-tbl">
           <thead>
             <tr>
-              <th>{colConcepto.label}</th>
+              <th>
+                {colConcepto.label}
+                {modoEjemplo && <span className="hp-mf2-ej-chip">{t("ejChip")}</span>}
+              </th>
               {MF_ESCENARIOS.map((e) => (
                 <th key={e.key} className={`hp-mf2-th tono-${e.tono}`}>{e.label}</th>
               ))}
