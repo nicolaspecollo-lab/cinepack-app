@@ -2386,9 +2386,25 @@
     "featureFlags": "Feature flags",
     "support": "Soporte",
     "management": "Gestión",
+    "development": "Desarrollo",
     "adminPanel": "Panel de administrador",
     "exitAdmin": "Salir del admin",
     "productBible": "Biblia de Producto"
+  },
+  "adminDesarrollo": {
+    "statusTitle": "Estado de las herramientas por departamento",
+    "logTitle": "Historial de actividad de desarrollo",
+    "toolCount": "{count, plural, one {# herramienta} other {# herramientas}}",
+    "deptTools": "Herramientas de departamento",
+    "neverTouched": "Sin tocar",
+    "loading": "Cargando…",
+    "noActivityYet": "Todavía no hay actividad registrada.",
+    "colWhen": "Cuándo",
+    "colDept": "Departamento",
+    "colTool": "Herramienta",
+    "colStatus": "Estado",
+    "colNote": "Nota",
+    "colCommit": "Commit"
   },
   "adminDashboard": {
     "payBetaFree": "Beta gratis",

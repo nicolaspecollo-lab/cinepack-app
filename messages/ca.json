@@ -2386,9 +2386,25 @@
     "featureFlags": "Feature flags",
     "support": "Suport",
     "management": "Gestió",
+    "development": "Desenvolupament",
     "adminPanel": "Panell d'administrador",
     "exitAdmin": "Surt de l'admin",
     "productBible": "Bíblia de Producte"
+  },
+  "adminDesarrollo": {
+    "statusTitle": "Estat de les eines per departament",
+    "logTitle": "Historial d'activitat de desenvolupament",
+    "toolCount": "{count, plural, one {# eina} other {# eines}}",
+    "deptTools": "Eines de departament",
+    "neverTouched": "Sense tocar",
+    "loading": "Carregant…",
+    "noActivityYet": "Encara no hi ha activitat registrada.",
+    "colWhen": "Quan",
+    "colDept": "Departament",
+    "colTool": "Eina",
+    "colStatus": "Estat",
+    "colNote": "Nota",
+    "colCommit": "Commit"
   },
   "adminDashboard": {
     "payBetaFree": "Beta gratuïta",

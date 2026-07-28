@@ -2386,9 +2386,25 @@
     "featureFlags": "Feature flags",
     "support": "Support",
     "management": "Management",
+    "development": "Development",
     "adminPanel": "Admin panel",
     "exitAdmin": "Exit admin",
     "productBible": "Product Bible"
+  },
+  "adminDesarrollo": {
+    "statusTitle": "Tool status by department",
+    "logTitle": "Development activity log",
+    "toolCount": "{count, plural, one {# tool} other {# tools}}",
+    "deptTools": "Department tools",
+    "neverTouched": "Not touched yet",
+    "loading": "Loading…",
+    "noActivityYet": "No activity logged yet.",
+    "colWhen": "When",
+    "colDept": "Department",
+    "colTool": "Tool",
+    "colStatus": "Status",
+    "colNote": "Note",
+    "colCommit": "Commit"
   },
   "adminDashboard": {
     "payBetaFree": "Free beta",

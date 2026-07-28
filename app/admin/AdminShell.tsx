@@ -25,6 +25,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     { href: "/admin/flags", label: t("featureFlags") },
     { href: "/admin/soporte", label: t("support") },
     { href: "/admin/gestion", label: t("management") },
+    { href: "/admin/desarrollo", label: t("development") },
   ];
 
   return (

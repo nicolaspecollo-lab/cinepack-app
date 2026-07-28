@@ -107,6 +107,24 @@
 .cp-dash .cp-cm-entry-btn:hover{ border-color:var(--cyan); color:var(--cyan); }
 .cp-dash .cp-cm-entry-btn .hex{ width:11px; height:9px; background:var(--cyan); flex-shrink:0; }
 
+/* ===== Historial de desarrollo (/admin/desarrollo) ===== */
+.cp-dash .cp-dev-depto{ border:1px solid var(--line); background:var(--panel); margin-bottom:10px; }
+.cp-dash .cp-dev-depto summary{
+  display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer; list-style:none;
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:13px;
+}
+.cp-dash .cp-dev-depto summary::-webkit-details-marker{ display:none; }
+.cp-dash .cp-dev-depto summary::before{ content:'›'; display:inline-block; transition:transform .15s ease; color:var(--muted); }
+.cp-dash .cp-dev-depto[open] summary::before{ transform:rotate(90deg); }
+.cp-dash .cp-dev-depto summary .cp-dev-count{ color:var(--muted); font-weight:400; font-size:11.5px; margin-left:auto; }
+.cp-dash .cp-dev-cargo-label{ padding:8px 16px 4px; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
+.cp-dash .cp-dev-row{ display:grid; grid-template-columns:1fr 110px 130px; gap:10px; align-items:center; padding:8px 16px; border-top:1px solid var(--line); font-size:12.5px; }
+.cp-dash .cp-dev-row .nombre{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-dash .cp-dev-row .fecha{ color:var(--muted); font-size:11.5px; }
+@media (max-width: 640px){
+  .cp-dash .cp-dev-row{ grid-template-columns:1fr; gap:4px; }
+}
+
 .cp-dash .cp-cm-head{ display:flex; align-items:center; gap:10px; margin-bottom:2px; }
 .cp-dash .cp-cm-head .hex{ width:14px; height:12px; background:var(--cyan); flex-shrink:0; }
 .cp-dash .cp-cm-sub{ font-size:11.5px; color:var(--muted); margin:0 0 16px; }

@@ -3598,6 +3598,23 @@ export function cargoGroups(departamento: string): { cargo: string; tools: Herra
   return Object.keys(dep).map((c) => ({ cargo: c, tools: dep[c].cargo }));
 }
 
+// Catálogo completo, para el historial de desarrollo del admin: cada
+// departamento con sus herramientas de departamento (compartidas entre
+// cargos) y sus herramientas exclusivas agrupadas por cargo.
+export type CatalogoDepartamento = {
+  departamento: string;
+  deptoTools: Herramienta[];
+  cargos: { cargo: string; tools: Herramienta[] }[];
+};
+
+export function catalogoCompleto(): CatalogoDepartamento[] {
+  return Object.keys(HERRAMIENTAS).map((departamento) => ({
+    departamento,
+    deptoTools: deptTools(departamento),
+    cargos: cargoGroups(departamento).filter((g) => g.tools.length > 0),
+  }));
+}
+
 // Índice id → herramienta (para resolver propuestas por escena, etc.).
 export const HERRAMIENTA_POR_ID: Record<string, Herramienta> = (() => {
   const map: Record<string, Herramienta> = {};
