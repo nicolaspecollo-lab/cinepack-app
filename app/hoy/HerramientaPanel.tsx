@@ -158,6 +158,21 @@ export default function HerramientaPanel({
   );
 }
 
+// Herramientas donde la vista "Tabla" (planilla genérica con
+// buscar/filtrar/ordenar/exportar) no aporta nada: son las 6 del Ejecutivo
+// ya elevadas al estándar de ficha/entidad dedicada — si el cliente
+// necesita una tabla suelta, ya tiene el espacio genérico para crearla
+// aparte. Pedido explícito de Nicolás (27-jul-2026): "démosle el valor
+// que la herramienta merece" en vez de ofrecer el escape hatch genérico.
+const SIN_VISTA_TABLA_IDS = new Set([
+  "ej-modelo-financiero",
+  "ej-coproducciones",
+  "ej-ayudas-subvenciones",
+  "ej-agenda-ejecutivo",
+  "ej-deliverables",
+  "ej-notas-ejecutivo",
+]);
+
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
 // TablaTool genérico. Centralizado acá para no arrastrar una cadena de
 // negaciones en el render (cada patrón nuevo se suma a esta lista).
@@ -572,6 +587,7 @@ function HerramientaData({
   const extraCampos: Columna[] = filas[0]?.datos?._extra ? JSON.parse(filas[0].datos._extra) : [];
   const esTabla = herramienta.tipo === "tabla";
   const tieneTablero = esTabla && tablaTieneVistaBespoke(herramienta.id);
+  const tieneVistaTabla = !SIN_VISTA_TABLA_IDS.has(herramienta.id);
 
   return (
     <div className="hp">
@@ -596,9 +612,11 @@ function HerramientaData({
                 <Icon name="film" size={12} /> {t("viewBoard")}
               </button>
             )}
-            <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
-              <Icon name="table" size={12} /> {t("viewTable")}
-            </button>
+            {tieneVistaTabla && (
+              <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
+                <Icon name="table" size={12} /> {t("viewTable")}
+              </button>
+            )}
             <button className={`dsubtab ${vista === "archivos" ? "active" : ""}`} onClick={() => setVista("archivos")}>
               <Icon name="folder" size={12} /> {t("viewFiles")}
             </button>
