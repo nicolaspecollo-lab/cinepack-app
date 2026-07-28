@@ -172,6 +172,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "ej-agenda-ejecutivo",
   "ej-deliverables",
   "ej-notas-ejecutivo",
+  "ej-pagos-nominas",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
