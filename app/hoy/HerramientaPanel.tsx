@@ -174,6 +174,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "ej-notas-ejecutivo",
   "ej-pagos-nominas",
   "ej-gestion-documental",
+  "ej-derechos-pi",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -3810,7 +3811,6 @@ export function FinanciacionPipeline({
 const DOC_STATUS_IDS = new Set([
   "ej-contratos",
   "ej-cesion-nda",
-  "ej-derechos-pi",
   "ej-polizas-permisos",
   "ej-facturas",
   "prod-permisos",
@@ -4718,7 +4718,7 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi"]);
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -4727,7 +4727,7 @@ type EntidadConfig = {
   listCols: string[];
   tabs: EntidadTab[];
   addLabel: string;
-  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador";
+  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador" | "derechos-vencimiento";
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
@@ -4790,6 +4790,18 @@ const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
     tabs: [
       { label: "Contexto", keys: ["nombre", "area", "estado_tema", "contexto", "vinculo"] },
       { label: "Registros de decisiones", keys: ["registros"] },
+    ],
+  },
+  "ej-derechos-pi": {
+    titleKey: "elemento",
+    subtitleKey: "titular",
+    listCols: ["tipo", "cesiones"],
+    addLabel: "+ Agregar obra / elemento",
+    special: "derechos-vencimiento",
+    tabs: [
+      { label: "Titularidad", keys: ["elemento", "titular", "tipo"] },
+      { label: "Cesiones y licencias", keys: ["cesiones"] },
+      { label: "Documentos", keys: ["documentos"] },
     ],
   },
 };
@@ -5008,8 +5020,32 @@ export function EntidadTabsBoard({
     return { pct, dias, riesgo };
   }
 
+  // Vencimientos de cesiones (solo Derechos de PI): mira TODAS las cesiones
+  // de TODAS las obras y cuenta cuántas ya vencieron o vencen pronto (≤90
+  // días), sin importar en qué obra ni qué pestaña esté el usuario.
+  const derechosVencimiento = cfg.special === "derechos-vencimiento"
+    ? (() => {
+        let vencidas = 0, porVencer = 0;
+        for (const f of filas) {
+          for (const c of parseArr<Record<string, string>>(f.datos?.cesiones)) {
+            if (!c.caducidad) continue;
+            const dias = Math.ceil((new Date(c.caducidad).getTime() - Date.now()) / 86400000);
+            if (dias < 0) vencidas++;
+            else if (dias <= 90) porVencer++;
+          }
+        }
+        return { vencidas, porVencer };
+      })()
+    : null;
+
   return (
     <div className="hp-etb-wrap">
+      {derechosVencimiento && (derechosVencimiento.vencidas > 0 || derechosVencimiento.porVencer > 0) && (
+        <div className="hp-etb-alert">
+          {derechosVencimiento.vencidas > 0 && <span><b>{derechosVencimiento.vencidas}</b> cesión{derechosVencimiento.vencidas === 1 ? "" : "es"} vencida{derechosVencimiento.vencidas === 1 ? "" : "s"}. </span>}
+          {derechosVencimiento.porVencer > 0 && <span><b>{derechosVencimiento.porVencer}</b> por vencer en los próximos 90 días.</span>}
+        </div>
+      )}
       {cfg.special === "categorias-filtro" && (
         <div className="hp-etb-filtros">
           <button className={`hp-etb-fchip${!filtroCategoria ? " on" : ""}`} onClick={() => setFiltroCategoria(null)}>Todas</button>
@@ -5049,6 +5085,10 @@ export function EntidadTabsBoard({
                   );
                 }
                 if (c.tipo === "money") return <div className="hp-etb-row-money" key={k}>{ejMoney(ejNum(v))}</div>;
+                if (c.tipo === "repetible") {
+                  const n = parseArr<Record<string, string>>(v).length;
+                  return <div className="hp-etb-row-cell" key={k}>{n} {c.label.toLowerCase()}</div>;
+                }
                 return <div className="hp-etb-row-cell" key={k}>{v || "—"}</div>;
               })}
               {cfg.special === "subvencion-risk" && (() => {
@@ -7596,6 +7636,22 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     { nombre: "Póliza responsabilidad civil 2025", categoria: "Seguros", fecha_documento: "2025-01-01", anios_conservacion: "5", permanencia: "Conservación temporal", estado_digitalizacion: "Solo copia" },
     { nombre: "Licencia municipal de rodaje", categoria: "Licencias", fecha_documento: "2026-06-10", anios_conservacion: "2", permanencia: "Conservación temporal", estado_digitalizacion: "Certificada" },
     { nombre: "Modelo 190 · IRPF 2025", categoria: "Fiscal", fecha_documento: "2026-01-31", anios_conservacion: "4", permanencia: "Conservación temporal", estado_digitalizacion: "Sin digitalizar" },
+  ],
+  "ej-derechos-pi": [
+    {
+      elemento: "Guion original \"Siempre te fui sincero\"", titular: "El Vínculo Producciones", tipo: "Guion",
+      cesiones: JSON.stringify([
+        { licenciado_a: "Atlántida Films (distribución)", territorio: "Francia, Bélgica", exclusividad: "Exclusiva", royalties_pct: "8", vigencia: "2026-01-15", caducidad: "2026-11-15", estado: "Firmado" },
+        { licenciado_a: "Ventana Sur Media (VOD)", territorio: "México", exclusividad: "No exclusiva", royalties_pct: "5", vigencia: "2026-03-01", caducidad: "2028-03-01", estado: "Firmado" },
+      ]),
+      documentos: JSON.stringify([{ nombre: "Contrato de licencia — Atlántida" }]),
+    },
+    {
+      elemento: "Banda sonora original", titular: "Compositor (cesión exclusiva a la productora)", tipo: "Música",
+      cesiones: JSON.stringify([
+        { licenciado_a: "El Vínculo Producciones", territorio: "Mundial", exclusividad: "Exclusiva", royalties_pct: "0", vigencia: "2025-09-01", caducidad: "", estado: "Firmado" },
+      ]),
+    },
   ],
   "ej-notas-ejecutivo": [
     {

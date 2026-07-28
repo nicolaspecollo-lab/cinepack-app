@@ -4730,6 +4730,8 @@
 .cp-dash .hp-etb-wrap{ padding:4px var(--gutter) 4px; }
 /* .hp-actions ya trae su propio padding lateral (mismo valor) — no duplicar. */
 .cp-dash .hp-etb-wrap .hp-actions{ padding-left:0; padding-right:0; }
+.cp-dash .hp-etb-alert{ background:color-mix(in srgb, var(--rose) 10%, transparent); border:1px solid color-mix(in srgb, var(--rose) 35%, transparent); padding:10px 13px; margin-bottom:14px; font-size:12px; line-height:1.5; }
+.cp-dash .hp-etb-alert b{ color:var(--rose); }
 .cp-dash .hp-etb-filtros{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
 .cp-dash .hp-etb-fchip{ font-size:11px; font-weight:600; padding:5px 11px; border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; }
 .cp-dash .hp-etb-fchip.on{ border-color:var(--acc); color:var(--acc); background:color-mix(in srgb, var(--acc) 12%, transparent); }
