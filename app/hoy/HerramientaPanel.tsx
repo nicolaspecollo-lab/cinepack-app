@@ -7433,14 +7433,29 @@ function AdoptarEjemplos({
   onCrear,
 }: {
   ejemplos: Ejemplo[];
-  onCrear: (datos?: Record<string, string>) => void;
+  onCrear: (datos?: Record<string, string>, ordenForzado?: number) => void;
 }) {
   const t = useTranslations("hp");
   return (
     <div className="cp-ejbar">
       <div className="cp-ejbar-txt"><b>{t("ejTitle")}</b> {t("ejDesc")}</div>
       <div className="cp-ejbar-actions">
-        <button className="cp-btn cp-btn-acc" onClick={() => ejemplos.forEach((e) => onCrear(e))}>{t("ejUse")}</button>
+        <button
+          className="cp-btn cp-btn-acc"
+          onClick={() => {
+            // Se llama a crearFila() N veces seguidas de forma síncrona (sin
+            // esperar cada insert): si el orden se calculara leyendo el
+            // estado "filas" en cada llamada, las N quedarían con el mismo
+            // valor (el estado todavía no se actualizó entre llamadas) y
+            // chocarían contra el índice único de orden en la base. Por eso
+            // se fuerza el orden explícito 0..N-1 acá — AdoptarEjemplos solo
+            // se muestra cuando filas.length === 0, así que arrancar en 0
+            // siempre es seguro.
+            ejemplos.forEach((e, i) => onCrear(e, i));
+          }}
+        >
+          {t("ejUse")}
+        </button>
         <button className="cp-btn" onClick={() => onCrear({})}>{t("ejBlank")}</button>
       </div>
     </div>
@@ -7452,14 +7467,14 @@ function AdoptarEjemplos({
 // en solo-lectura + barra de adopción. Render-prop: children(filasEfectivas, editableEfectivo).
 export function VistaConEjemplos({ ejemplos, filas, editable, onCrear, children }: {
   ejemplos: Ejemplo[]; filas: Fila[]; editable: boolean;
-  onCrear: (datos: Record<string, string>) => void;
+  onCrear: (datos: Record<string, string>, ordenForzado?: number) => void;
   children: (filas: Fila[], editable: boolean) => React.ReactNode;
 }) {
   const hay = filas.length > 0;
   const fs = hay ? filas : ghostFilas(ejemplos);
   return (
     <>
-      {!hay && editable && <AdoptarEjemplos ejemplos={ejemplos} onCrear={(d) => onCrear(d ?? {})} />}
+      {!hay && editable && <AdoptarEjemplos ejemplos={ejemplos} onCrear={(d, ord) => onCrear(d ?? {}, ord)} />}
       <div className={!hay ? "cp-ghost-grid" : ""}>{children(fs, editable && hay)}</div>
     </>
   );
