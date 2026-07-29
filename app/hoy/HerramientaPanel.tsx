@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
-import { REVISION_COLORES } from "../herramientas";
+import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
@@ -178,6 +178,9 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "ej-derechos-pi",
   "ej-polizas-permisos",
   "ej-presupuesto-costos",
+  "guion-notas-reescritura",
+  "guion-informe-doctor",
+  "guion-banco-investigacion",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -220,6 +223,9 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "guion-historial" ||
     id === "guion-desglose-escenas" ||
     id === "guion-comentarios" ||
+    id === "guion-notas-reescritura" ||
+    id === "guion-informe-doctor" ||
+    id === "guion-banco-investigacion" ||
     id === "cast-candidatos" ||
     id === "cast-breakdown-actores" ||
     id === "cast-tabla-disponibilidad" ||
@@ -1035,6 +1041,49 @@ function HerramientaData({
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-notas-reescritura" && (
+        <VistaConEjemplos ejemplos={EJ_PLAN_REESCRITURA} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <PlanReescrituraBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-informe-doctor" && (
+        <VistaConEjemplos ejemplos={EJ_INFORMES} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <InformesAnalisisBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-banco-investigacion" && (
+        <VistaConEjemplos ejemplos={EJ_BANCO_INV} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <BancoInvestigacionBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "guion-comentarios" && (
@@ -7736,6 +7785,67 @@ const EJ_PRESUPUESTO_COSTOS: Ejemplo[] = [
   { capitulo: "Sonido", partida: "Equipo de grabación", presupuestado: "22000", comprometido: "22000", real: "24100", limite_alerta: "21000", responsable: "Kepa Aguirre", comentario: "Se sumó un boom extra no previsto." },
   { capitulo: "Cámara", partida: "Alquiler de cámara y ópticas", presupuestado: "38000", comprometido: "38000", real: "36500", responsable: "Diego Aramburu" },
 ];
+const EJ_PLAN_REESCRITURA: Ejemplo[] = [
+  { tipo_registro: "Pase", nombre: "Pase de estructura", estado_pase: "En curso", version_origen: "v4.0", version_destino: "v5.0", fecha_entrega: "2026-08-30", objetivo: "Resolver la caída del segundo acto señalada en el informe de Laura Sanz." },
+  { tipo_registro: "Pase", nombre: "Pase de diálogo", estado_pase: "Planificado", version_origen: "v5.0", version_destino: "v6.0", objetivo: "Bajar el nivel expositivo, sobre todo en Elsa." },
+  { tipo_registro: "Nota", texto: "Adelantar el hallazgo del cuaderno a la página 38.", origen: "Script doctor", escenas: "12, 13", pase: "Pase de estructura", estado_nota: "Hecha" },
+  { tipo_registro: "Nota", texto: "Recortar la secuencia del puerto a la mitad.", origen: "Propia", escenas: "7", pase: "Pase de estructura", estado_nota: "Hecha" },
+  { tipo_registro: "Nota", texto: "Reescribir la salida de Elsa: hoy no tiene consecuencia sobre Marea.", origen: "Script doctor", escenas: "22, 23, 30", pase: "Pase de estructura", estado_nota: "En el pase" },
+  { tipo_registro: "Nota", texto: "Fusionar las secuencias 14 y 16, cumplen la misma función.", origen: "Script doctor", escenas: "14, 16", pase: "Pase de estructura", estado_nota: "En el pase" },
+  { tipo_registro: "Nota", texto: "La secuencia 16 es la que se usa en el teaser, mantenerla entera.", origen: "Producción", escenas: "16", estado_nota: "Sin triar" },
+  { tipo_registro: "Nota", texto: "Decidir de una vez si el faro se apaga antes o después del clímax.", origen: "Propia", estado_nota: "Sin triar" },
+  { tipo_registro: "Nota", texto: "Probar un prólogo en el mar antes del título.", origen: "Dirección", estado_nota: "Pospuesta" },
+];
+const EJ_INFORMES: Ejemplo[] = [
+  {
+    version_analizada: "v4.0", origen: "Encargado", autor: "Laura Sanz", fecha: "2026-08-12",
+    veredicto: "Necesita otro pase",
+    logline: "Una farera que perdió la voz descubre que las cartas sin remite que recibe hace veinte años las escribió ella misma.",
+    diagnostico: "El concepto sostiene la película entera, pero el segundo acto se apoya en repetición: tres secuencias distintas cumplen la misma función dramática. El ritmo cae entre las páginas 45 y 62.",
+    valoracion: JSON.stringify([
+      { categoria: "Concepto", nivel: "Excelente" }, { categoria: "Estructura", nivel: "Bueno" },
+      { categoria: "Personajes", nivel: "Bueno" }, { categoria: "Diálogo", nivel: "Aceptable" },
+      { categoria: "Ritmo", nivel: "Aceptable" },
+    ]),
+    recomendaciones: JSON.stringify([
+      { severidad: "Bloqueante", escenas: "Esc. 14, 16 · pág. 45-62", texto: "Tres secuencias del segundo acto cumplen la misma función dramática. Fusionar dos o darle a una un giro que la justifique.", estado: "Sin triar" },
+      { severidad: "Bloqueante", escenas: "Esc. 22", texto: "La salida de Elsa no tiene consecuencia sobre Marea. Sin eso el tercer acto arranca sin motor.", estado: "En el plan" },
+      { severidad: "Opcional", escenas: "Esc. 3", texto: "Considerar abrir con la carta en vez del faro.", estado: "Descartada", motivo: "Rompe el punto de vista de Marea, ya se probó en v2.0." },
+    ]),
+  },
+  {
+    version_analizada: "v3.0", origen: "Coverage recibido", autor: "Ikusmira Berriak", fecha: "2026-06-18",
+    veredicto: "Considerar",
+    valoracion: JSON.stringify([
+      { categoria: "Concepto", nivel: "Excelente" }, { categoria: "Estructura", nivel: "Aceptable" },
+      { categoria: "Personajes", nivel: "Bueno" }, { categoria: "Diálogo", nivel: "Bueno" },
+      { categoria: "Ritmo", nivel: "Flojo" },
+    ]),
+  },
+];
+const EJ_BANCO_INV: Ejemplo[] = [
+  {
+    tema: "Señales de niebla en faros del Cantábrico", tipo_fuente: "Archivo",
+    fuente: "Autoridad Portuaria de Santander", referencia: "Expediente 1974/AP-233 · caja 12",
+    cita: "La sirena emitía dos toques de tres segundos cada treinta segundos en condiciones de visibilidad reducida.",
+    escenas: "1, 12", uso: "Dato de contexto", verificado: "Verificado",
+    verificado_por: "Marta Ruiz", fecha_verificacion: "2026-06-03", consulta_legal: "No hace falta",
+  },
+  {
+    tema: "Fotografía del faro, 1958", tipo_fuente: "Prensa",
+    fuente: "Diario Montañés · hemeroteca", referencia: "14 nov 1958 · autor sin identificar",
+    escenas: "5", uso: "Se reproduce en pantalla", verificado: "Sin verificar", consulta_legal: "Abierta",
+  },
+  {
+    tema: "Afasia por trauma: recuperación parcial del habla", tipo_fuente: "Entrevista",
+    fuente: "Dra. Iríbar, neuróloga",
+    cita: "La recuperación no es lineal: puede volver una palabra suelta años antes que una frase.",
+    escenas: "22, 30", uso: "Dato de contexto", verificado: "Verificado",
+    verificado_por: "Marta Ruiz", fecha_verificacion: "2026-07-11",
+    contradice_a: "Manual de afasia, Ed. Panamericana 2019",
+    decision_contradiccion: "Se usa la entrevista: describe casos atípicos documentados. Se anota como licencia dramática consultada con especialista.",
+  },
+];
 const EJ_CASHFLOW: Ejemplo[] = [
   { periodo: "2026-08-03", concepto: "Cobro anticipo ICAA", ingresos_previstos: "50000", ingresos_reales: "50000", gastos_previstos: "30000", gastos_reales: "32000", saldo: "18000", estado: "OK" },
   { periodo: "2026-08-10", concepto: "Nómina semana de rodaje 2", ingresos_previstos: "0", ingresos_reales: "0", gastos_previstos: "25000", gastos_reales: "28000", saldo: "-10000", estado: "Déficit", notas: "Cubrir con el anticipo de la semana anterior." },
@@ -8745,6 +8855,649 @@ function ed_actoAdd(acto: string, editable: boolean, hayFilas: boolean, onCrear:
       <span className="gesc-add-plus">+</span>
       <span className="gesc-add-lbl">{t("addSequence")}</span>
     </button>
+  );
+}
+
+// ===========================================================================
+// INFORMES DE ANÁLISIS (Guion / Script doctor) — vista de quien ESCRIBE
+// ---------------------------------------------------------------------------
+// El doctor no tría sus propias recomendaciones: las escribe. El triaje vive
+// en el Plan de reescritura del guionista y acá solo vuelve como estado.
+// La matriz compara la valoración entre versiones; avisa cuando los informes
+// son de autores distintos, porque la escala es la misma pero el criterio no.
+// ===========================================================================
+const IA_NIVEL_TONO: Record<string, string> = {
+  "Flojo": "var(--rose)", "Aceptable": "var(--amber)", "Bueno": "var(--lime)", "Excelente": "var(--lime)",
+};
+const IA_EST_TONO: Record<string, string> = {
+  "Sin triar": "esp", "En el plan": "plan", "Descartada": "desc",
+};
+export function InformesAnalisisBoard({
+  columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar,
+}: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [abierto, setAbierto] = useState<string | null>(null);
+  const [tab, setTab] = useState(0);
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+  const colRec = colByKey.get("recomendaciones");
+  const colVal = colByKey.get("valoracion");
+
+  // Orden cronológico para la matriz, más nuevo primero para la lista.
+  const porFecha = [...filas].sort((a, b) => (gVal(a, "fecha") || "").localeCompare(gVal(b, "fecha") || ""));
+  const lista = [...filas].sort((a, b) => (gVal(b, "fecha") || "").localeCompare(gVal(a, "fecha") || ""));
+  const conValoracion = porFecha.filter((f) => parseArr<Record<string, string>>(f.datos?.valoracion).length > 0);
+  const autoresDistintos = new Set(conValoracion.map((f) => gVal(f, "autor")).filter(Boolean)).size > 1;
+
+  function nivelDe(f: Fila, cat: string): string {
+    return parseArr<Record<string, string>>(f.datos?.valoracion).find((v) => v.categoria === cat)?.nivel ?? "";
+  }
+  const nivelIdx = (n: string) => VALORACION_NIVELES.indexOf(n);
+  const categorias = colVal?.sub?.find((s) => s.key === "categoria")?.opciones ?? VALORACION_CATEGORIAS;
+  const catsUsadas = categorias.filter((c) => conValoracion.some((f) => nivelDe(f, c)));
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p>
+        {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}</div>
+    );
+  }
+
+  return (
+    <div className="ia">
+      <p className="ia-rol">Vista del cargo <b>Script doctor</b>: acá se escribe el informe. El triaje de las recomendaciones vive en el Plan de reescritura del guionista.</p>
+
+      {conValoracion.length > 1 && catsUsadas.length > 0 && (
+        <>
+          <div className="ia-lbl">Evolución de la valoración</div>
+          <div className="ia-mx">
+            <div className="ia-mrow head" style={{ ["--cols" as string]: conValoracion.length }}>
+              <span />
+              {conValoracion.map((f) => (
+                <span className="ia-mhc" key={f.id}>
+                  <u>{gVal(f, "version_analizada") || "—"}</u>
+                  <s>{gVal(f, "autor") || "sin autor"}</s>
+                </span>
+              ))}
+              <span />
+            </div>
+            {catsUsadas.map((cat) => {
+              const niveles = conValoracion.map((f) => nivelDe(f, cat));
+              const prim = nivelIdx(niveles[0]), ult = nivelIdx(niveles[niveles.length - 1]);
+              const d = prim >= 0 && ult >= 0 ? ult - prim : 0;
+              return (
+                <div className="ia-mrow" key={cat} style={{ ["--cols" as string]: conValoracion.length }}>
+                  <span className="ia-mk">{cat}</span>
+                  {niveles.map((n, i) => (
+                    <span className="ia-lad" key={i} style={{ ["--t" as string]: IA_NIVEL_TONO[n] ?? "var(--line)" }}>
+                      {VALORACION_NIVELES.map((_, j) => <i key={j} className={nivelIdx(n) >= j ? "on" : ""} />)}
+                    </span>
+                  ))}
+                  <span className={`ia-dl ${d > 0 ? "up" : d < 0 ? "dn" : "eq"}`}>{d > 0 ? `+${d}` : d < 0 ? `${d}` : "="}</span>
+                </div>
+              );
+            })}
+            {autoresDistintos && (
+              <div className="ia-warn"><b>Ojo</b>
+                <span>Hay informes de autores distintos. La escala es la misma pero el criterio no: comparar entre ellos mezcla dos miradas.</span></div>
+            )}
+            <div className="ia-mleg">
+              {VALORACION_NIVELES.map((n, i) => (
+                <span key={n}><i>{VALORACION_NIVELES.map((_, j) => <b key={j} className={i >= j ? "on" : ""} />)}</i>{n}</span>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="ia-lbl">Informes</div>
+      {lista.map((f) => {
+        const open = abierto === f.id;
+        const recs = parseArr<Record<string, string>>(f.datos?.recomendaciones);
+        const triadas = recs.filter((r) => r.estado && r.estado !== "Sin triar").length;
+        const vals = parseArr<Record<string, string>>(f.datos?.valoracion);
+        const tabs = ["Datos", "Valoración", `Recomendaciones ${recs.length}`, "Documento"];
+        return (
+          <div className={`ia-rep${open ? " open" : ""}`} key={f.id}>
+            <div className="ia-rh" onClick={() => { setAbierto(open ? null : f.id); setTab(0); }}>
+              <span className="ia-rv">{gVal(f, "version_analizada") || "—"}</span>
+              {gVal(f, "origen") && <span className="ia-kind">{gVal(f, "origen")}</span>}
+              {gVal(f, "veredicto") && <span className={`ia-verd t-${estadoTono(gVal(f, "veredicto"))}`}>{gVal(f, "veredicto")}</span>}
+              {recs.length > 0 && <span className="ia-prog">{triadas} de {recs.length} triadas</span>}
+              <span className="ia-rm"><span>{gVal(f, "autor")}</span><span>{gVal(f, "fecha")}</span></span>
+            </div>
+
+            {open && (
+              <>
+                <div className="ia-tabs">
+                  {tabs.map((lb, i) => (
+                    <button key={lb} className={`ia-tab${tab === i ? " on" : ""}`} onClick={() => setTab(i)}>{lb}</button>
+                  ))}
+                </div>
+                <div className="ia-body">
+                  {tab === 0 && (
+                    <div className="ia-datos">
+                      <label>Versión analizada<input defaultValue={gVal(f, "version_analizada")} placeholder="v4.0" readOnly={!editable} onBlur={(e) => set(f, "version_analizada", e.target.value)} /></label>
+                      <label>Autor del informe<input defaultValue={gVal(f, "autor")} placeholder="Quién lo firma" readOnly={!editable} onBlur={(e) => set(f, "autor", e.target.value)} /></label>
+                      <label>Fecha<input type="date" defaultValue={gVal(f, "fecha")} readOnly={!editable} onBlur={(e) => set(f, "fecha", e.target.value)} /></label>
+                      <label className="ancho">Origen
+                        <EstadoSeg valor={gVal(f, "origen")} opciones={colByKey.get("origen")?.opciones ?? []} onPick={(v) => set(f, "origen", v)} editable={editable} chip /></label>
+                      <label className="ancho">Veredicto
+                        <EstadoSeg valor={gVal(f, "veredicto")} opciones={colByKey.get("veredicto")?.opciones ?? []} onPick={(v) => set(f, "veredicto", v)} editable={editable} chip color /></label>
+                      <label className="ancho">Logline<textarea rows={2} defaultValue={stripHtml(gVal(f, "logline"))} readOnly={!editable} onBlur={(e) => set(f, "logline", e.target.value)} /></label>
+                      <label className="ancho">Diagnóstico<textarea rows={4} defaultValue={stripHtml(gVal(f, "diagnostico"))} readOnly={!editable} onBlur={(e) => set(f, "diagnostico", e.target.value)} /></label>
+                      {editable && <div className="ia-borrar"><button className="cp-btn" onClick={() => onBorrar(f.id)}>Borrar informe</button></div>}
+                    </div>
+                  )}
+                  {tab === 1 && colVal && (
+                    <>
+                      <p className="ia-note">Opcional. Solo hace falta si querés comparar la evolución del guion entre versiones.</p>
+                      <EntidadRepetible col={colVal} valor={f.datos?.valoracion ?? ""} editable={editable}
+                        departamento={departamento} herramientaId={herramientaId} filaId={f.id}
+                        onChange={(v) => set(f, "valoracion", v)} />
+                      {vals.length === 0 && <p className="ia-note">Sin valoración cargada: este informe no aparece en la matriz de arriba.</p>}
+                    </>
+                  )}
+                  {tab === 2 && colRec && (
+                    <>
+                      <p className="ia-note">El estado lo devuelve el Plan de reescritura del guionista. Desde acá se escriben las recomendaciones, no se decide qué hacer con ellas.</p>
+                      {recs.map((r, i) => (
+                        <div className="ia-rec" key={i}>
+                          <div className="ia-rec1">
+                            {r.severidad && <span className={`ia-sev s-${(r.severidad || "").toLowerCase()}`}>{r.severidad}</span>}
+                            {r.escenas && <span className="ia-rsc">{r.escenas}</span>}
+                          </div>
+                          {r.texto && <p className="ia-rtx">{r.texto}</p>}
+                          <div className="ia-est">
+                            <span className={`ia-estk ${IA_EST_TONO[r.estado || "Sin triar"]}`}>{r.estado || "Sin triar"}</span>
+                            {r.motivo && <span className="ia-estn">{r.motivo}</span>}
+                            {!r.motivo && (r.estado || "Sin triar") === "Sin triar" && <span className="ia-estn">El guionista todavía no la movió</span>}
+                          </div>
+                        </div>
+                      ))}
+                      <EntidadRepetible col={colRec} valor={f.datos?.recomendaciones ?? ""} editable={editable}
+                        departamento={departamento} herramientaId={herramientaId} filaId={f.id}
+                        onChange={(v) => set(f, "recomendaciones", v)} />
+                    </>
+                  )}
+                  {tab === 3 && (
+                    <>
+                      <p className="ia-note">Con el veredicto y las recomendaciones alcanza para guardar el informe. El PDF es opcional.</p>
+                      <ArchivoCell path={gVal(f, "documento")} editable={editable} departamento={departamento}
+                        herramientaId={herramientaId} filaId={f.id} colKey="documento" onSave={(v) => set(f, "documento", v)} />
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
+      {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Cargar informe</button></div>}
+    </div>
+  );
+}
+
+// ===========================================================================
+// BANCO DE INVESTIGACIÓN (Guion / Documentación)
+// ---------------------------------------------------------------------------
+// Alta mínima: tema + fuente y listo. La verificación solo se EXIGE cuando el
+// material se reproduce (ahí está el riesgo real, no en un dato de contexto).
+// Archivar sin poder recuperar es un cementerio: por eso buscador y la
+// relación con escenas, que se lee también desde el desglose.
+// ===========================================================================
+function biSeReproduce(f: Fila): boolean {
+  return (gVal(f, "uso") || "").startsWith("Se reproduce");
+}
+export function BancoInvestigacionBoard({
+  columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar,
+}: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [tema, setTema] = useState("");
+  const [fuente, setFuente] = useState("");
+  const [q, setQ] = useState("");
+  const [filtro, setFiltro] = useState<string | null>(null);
+  const [abierto, setAbierto] = useState<string | null>(null);
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+
+  const riesgoVerif = filas.filter((f) => biSeReproduce(f) && gVal(f, "verificado") !== "Verificado");
+  const riesgoLegal = filas.filter((f) => gVal(f, "consulta_legal") === "Abierta");
+  const riesgoContra = filas.filter((f) => gVal(f, "contradice_a") && !gVal(f, "decision_contradiccion"));
+
+  let visibles = filas;
+  if (filtro === "reproduce") visibles = visibles.filter(biSeReproduce);
+  else if (filtro === "sinverif") visibles = visibles.filter((f) => gVal(f, "verificado") !== "Verificado");
+  else if (filtro === "legal") visibles = visibles.filter((f) => gVal(f, "consulta_legal") === "Abierta");
+  else if (filtro) visibles = visibles.filter((f) => gVal(f, "tipo_fuente") === filtro);
+  if (q.trim()) {
+    const s = q.trim().toLowerCase();
+    visibles = visibles.filter((f) => ["tema", "fuente", "referencia", "cita", "escenas"]
+      .some((k) => (gVal(f, k) || "").toLowerCase().includes(s)));
+  }
+
+  function alta() {
+    if (!tema.trim()) return;
+    onCrear({ tema: tema.trim(), fuente: fuente.trim(), verificado: "Sin verificar", uso: "Dato de contexto" });
+    setTema(""); setFuente("");
+  }
+
+  return (
+    <div className="bi">
+      {editable && (
+        <>
+          <div className="bi-cap">
+            <input className="bi-cap-in" value={tema} placeholder="Tema o hallazgo…"
+              onChange={(e) => setTema(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") alta(); }} />
+            <input className="bi-cap-in url" value={fuente} placeholder="Enlace o fuente"
+              onChange={(e) => setFuente(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") alta(); }} />
+            <button className="bi-cap-btn" onClick={alta}>Guardar</button>
+          </div>
+          <p className="bi-cap-hint">Con eso alcanza para crear la ficha. La cita, la verificación y el uso se completan cuando importan.</p>
+        </>
+      )}
+
+      {filas.length > 0 && (
+        <div className="bi-risk">
+          <button className={`bi-rk r-bad${filtro === "reproduce" ? " on" : ""}`} onClick={() => setFiltro(filtro === "reproduce" ? null : "reproduce")}>
+            <span className="bi-rkn">{riesgoVerif.length}</span>
+            <span className="bi-rkl">Se reproducen y no están verificadas</span>
+          </button>
+          <button className={`bi-rk r-info${filtro === "legal" ? " on" : ""}`} onClick={() => setFiltro(filtro === "legal" ? null : "legal")}>
+            <span className="bi-rkn">{riesgoLegal.length}</span>
+            <span className="bi-rkl">Esperando autorización de Legal</span>
+          </button>
+          <div className="bi-rk r-warn">
+            <span className="bi-rkn">{riesgoContra.length}</span>
+            <span className="bi-rkl">Contradicción sin resolver</span>
+          </div>
+        </div>
+      )}
+
+      {filas.length > 0 && (
+        <>
+          <input className="bi-srch" value={q} placeholder="Buscar por tema, fuente, cita o escena…" onChange={(e) => setQ(e.target.value)} />
+          <div className="bi-fils">
+            <button className={`bi-fc${!filtro ? " on" : ""}`} onClick={() => setFiltro(null)}>Todas</button>
+            <button className={`bi-fc${filtro === "sinverif" ? " on" : ""}`} onClick={() => setFiltro("sinverif")}>Sin verificar</button>
+            {(colByKey.get("tipo_fuente")?.opciones ?? []).map((op) => (
+              <button key={op} className={`bi-fc${filtro === op ? " on" : ""}`} onClick={() => setFiltro(filtro === op ? null : op)}>{op}</button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {filas.length === 0 ? (
+        <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p></div>
+      ) : visibles.length === 0 ? (
+        <div className="bi-vacio">Ninguna ficha coincide con la búsqueda.</div>
+      ) : visibles.map((f) => {
+        const repro = biSeReproduce(f);
+        const verif = gVal(f, "verificado");
+        const tono = verif === "Verificado" ? "ok" : repro ? "bad" : "info";
+        const open = abierto === f.id;
+        return (
+          <div className={`bi-f t-${tono}`} key={f.id}>
+            <div className="bi-fst" />
+            <div className="bi-fin">
+              <div className="bi-f1">
+                <input className="bi-tema" defaultValue={gVal(f, "tema")} placeholder="Tema o hallazgo"
+                  readOnly={!editable} onBlur={(e) => set(f, "tema", e.target.value)} />
+                {gVal(f, "tipo_fuente") && <span className="bi-tipo">{gVal(f, "tipo_fuente")}</span>}
+                <span className={`bi-ver v-${tono}`}>
+                  {verif === "Verificado" ? "Verificado" : repro ? "Verificar antes de usar" : "Verificación no exigida"}
+                </span>
+              </div>
+              <input className="bi-fuente" defaultValue={gVal(f, "fuente")} placeholder="Enlace o fuente"
+                readOnly={!editable} onBlur={(e) => set(f, "fuente", e.target.value)} />
+              {gVal(f, "referencia") && <div className="bi-ref">{gVal(f, "referencia")}</div>}
+              {verif === "Verificado" && gVal(f, "verificado_por") && (
+                <div className="bi-traz">Verificado por {gVal(f, "verificado_por")}{gVal(f, "fecha_verificacion") ? ` el ${gVal(f, "fecha_verificacion")}` : ""}</div>
+              )}
+              {gVal(f, "cita") && <p className="bi-cita">{stripHtml(gVal(f, "cita"))}</p>}
+
+              <div className="bi-row">
+                <span className="bi-mini">Respalda</span>
+                <input className="bi-esc-in" defaultValue={gVal(f, "escenas")} placeholder="Escenas (5, 12)"
+                  readOnly={!editable} onBlur={(e) => set(f, "escenas", e.target.value)} />
+              </div>
+              <div className="bi-row">
+                <span className="bi-mini">Uso</span>
+                <EstadoSeg valor={gVal(f, "uso") || "Dato de contexto"} opciones={colByKey.get("uso")?.opciones ?? []}
+                  onPick={(v) => set(f, "uso", v)} editable={editable} chip color />
+              </div>
+              {gVal(f, "consulta_legal") === "Abierta" && (
+                <div className="bi-track"><span className="bi-trk">Consulta abierta</span><span>Esperando respuesta de Legal</span></div>
+              )}
+              {gVal(f, "contradice_a") && (
+                <div className={`bi-cx${gVal(f, "decision_contradiccion") ? " resuelta" : ""}`}>
+                  <div className="bi-cx-t">Contradice a: {gVal(f, "contradice_a")}</div>
+                  <textarea className="bi-cx-in" rows={2} defaultValue={stripHtml(gVal(f, "decision_contradiccion"))}
+                    readOnly={!editable} placeholder="Con cuál fuente te quedás y por qué…"
+                    onBlur={(e) => set(f, "decision_contradiccion", e.target.value)} />
+                </div>
+              )}
+
+              {editable && (
+                <div className="bi-acc">
+                  {repro && verif !== "Verificado" && (
+                    <button className="cp-btn cp-btn-acc" onClick={() => onGuardar(f.id, { ...f.datos, verificado: "Verificado", fecha_verificacion: new Date().toISOString().slice(0, 10) }, f)}>Marcar verificado</button>
+                  )}
+                  {repro && gVal(f, "consulta_legal") !== "Abierta" && (
+                    <button className="cp-btn" onClick={() => set(f, "consulta_legal", "Abierta")}>Abrir consulta a Legal</button>
+                  )}
+                  <button className="cp-btn" onClick={() => setAbierto(open ? null : f.id)}>{open ? "Ocultar detalle" : "Completar ficha"}</button>
+                  <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>
+                </div>
+              )}
+
+              {open && (
+                <div className="bi-det">
+                  <label>Tipo de fuente
+                    <EstadoSeg valor={gVal(f, "tipo_fuente")} opciones={colByKey.get("tipo_fuente")?.opciones ?? []}
+                      onPick={(v) => set(f, "tipo_fuente", v)} editable={editable} chip /></label>
+                  <label>Referencia formal<input defaultValue={gVal(f, "referencia")} placeholder="Expediente, página, fecha de consulta…"
+                    readOnly={!editable} onBlur={(e) => set(f, "referencia", e.target.value)} /></label>
+                  <label className="ancho">Cita textual<textarea rows={2} defaultValue={stripHtml(gVal(f, "cita"))}
+                    readOnly={!editable} onBlur={(e) => set(f, "cita", e.target.value)} /></label>
+                  <label>Verificado por<input defaultValue={gVal(f, "verificado_por")} readOnly={!editable}
+                    onBlur={(e) => set(f, "verificado_por", e.target.value)} /></label>
+                  <label>Contradice a<input defaultValue={gVal(f, "contradice_a")} placeholder="Tema de la otra ficha"
+                    readOnly={!editable} onBlur={(e) => set(f, "contradice_a", e.target.value)} /></label>
+                  <label className="ancho">Documento
+                    <ArchivoCell path={gVal(f, "archivo")} editable={editable} departamento={departamento}
+                      herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} /></label>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ===========================================================================
+// PLAN DE REESCRITURA (Guion) — bandeja de notas + pases
+// ---------------------------------------------------------------------------
+// Compite con un archivo de texto, no con otro software: si anotar una idea
+// tarda más que escribirla en un txt, la herramienta muere. Por eso lo
+// primero es un campo de captura de una línea y todo lo demás es opcional,
+// salvo el motivo al descartar — el único dato que hoy se pierde siempre.
+// Dos tipos de fila en una sola tabla (mismo patrón que Pagos y nóminas).
+// ===========================================================================
+const PR_ORIGEN_COLOR: Record<string, string> = {
+  "Propia": "var(--amber)", "Script doctor": "var(--cyan)", "Coguionista": "var(--lime)",
+  "Dirección": "var(--violet)", "Producción": "var(--rose)", "Otro": "var(--muted)",
+};
+// Escenas afectadas: texto libre "12, 14" → lista, para contar carga real.
+function prEscenas(v: string): string[] {
+  return (v || "").split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+}
+export function PlanReescrituraBoard({
+  columnas, filas, editable, onCrear, onGuardar, onBorrar,
+}: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [captura, setCaptura] = useState("");
+  const [descartando, setDescartando] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+
+  const pases = filas.filter((f) => gVal(f, "tipo_registro") === "Pase");
+  const notas = filas.filter((f) => gVal(f, "tipo_registro") === "Nota");
+  const bandeja = notas.filter((f) => (gVal(f, "estado_nota") || "Sin triar") === "Sin triar");
+  const pospuestas = notas.filter((f) => gVal(f, "estado_nota") === "Pospuesta");
+
+  function notasDePase(nombre: string) {
+    return notas.filter((f) => gVal(f, "pase") === nombre && ["En el pase", "Hecha"].includes(gVal(f, "estado_nota")));
+  }
+  // Carga de trabajo: escenas únicas que quedan por tocar en el pase.
+  function cargaPase(nombre: string) {
+    const items = notasDePase(nombre);
+    const todas = new Set<string>(), pendientes = new Set<string>();
+    for (const f of items) {
+      const es = prEscenas(gVal(f, "escenas"));
+      es.forEach((e) => todas.add(e));
+      if (gVal(f, "estado_nota") !== "Hecha") es.forEach((e) => pendientes.add(e));
+    }
+    return { total: todas.size, pend: pendientes.size, items };
+  }
+  // Conflicto: dos notas vivas de origen distinto sobre la misma escena.
+  // Heurística honesta — no interpreta el contenido, solo avisa.
+  const conflictos = (() => {
+    const vivas = notas.filter((f) => ["Sin triar", "En el pase"].includes(gVal(f, "estado_nota") || "Sin triar"));
+    const porEscena = new Map<string, Fila[]>();
+    for (const f of vivas) for (const e of prEscenas(gVal(f, "escenas"))) {
+      porEscena.set(e, [...(porEscena.get(e) ?? []), f]);
+    }
+    const out: { escena: string; filas: Fila[] }[] = [];
+    for (const [escena, fs] of porEscena) {
+      if (fs.length < 2) continue;
+      if (new Set(fs.map((f) => gVal(f, "origen"))).size < 2) continue;
+      if (fs.some((f) => gVal(f, "_sin_conflicto") === "si")) continue;
+      out.push({ escena, filas: fs });
+    }
+    return out;
+  })();
+
+  function anotar() {
+    const txt = captura.trim();
+    if (!txt) return;
+    onCrear({ tipo_registro: "Nota", texto: txt, origen: "Propia", estado_nota: "Sin triar" });
+    setCaptura("");
+  }
+  function triar(f: Fila, estado: string, extra?: Record<string, string>) {
+    onGuardar(f.id, { ...f.datos, estado_nota: estado, ...(extra ?? {}) }, f);
+  }
+  function confirmarDescarte(f: Fila) {
+    if (!motivo.trim()) return;
+    triar(f, "Descartada", { motivo_descarte: motivo.trim() });
+    setDescartando(null); setMotivo("");
+  }
+
+  return (
+    <div className="pr">
+      {editable && (
+        <>
+          <div className="pr-cap">
+            <input
+              className="pr-cap-in"
+              value={captura}
+              placeholder="Escribí lo que se te ocurra y entra…"
+              onChange={(e) => setCaptura(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") anotar(); }}
+            />
+            <button className="pr-cap-btn" onClick={anotar}>Anotar</button>
+          </div>
+          <p className="pr-cap-hint">Entra a la bandeja con origen &quot;Propia&quot;. El pase, la escena y lo demás se completa después, o nunca.</p>
+        </>
+      )}
+
+      {conflictos.map((c) => (
+        <div className="pr-conf" key={c.escena}>
+          <div className="pr-conf-t">Posible conflicto en la escena {c.escena}</div>
+          <div className="pr-conf-w">Dos notas abiertas de origen distinto tocan la misma escena. La app no interpreta el contenido, avisa para que lo revises.</div>
+          {c.filas.map((f) => (
+            <div className="pr-conf-r" key={f.id}>
+              <b>{gVal(f, "origen") || "Sin origen"}</b>
+              <span>{stripHtml(gVal(f, "texto"))}</span>
+            </div>
+          ))}
+          {editable && (
+            <div className="pr-conf-a">
+              <button className="cp-btn" onClick={() => c.filas.forEach((f) => set(f, "_sin_conflicto", "si"))}>No es conflicto</button>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="pr-lbl">Bandeja de entrada <u>notas sin triar</u></div>
+      {bandeja.length === 0 && <div className="pr-vacio">Nada sin triar.</div>}
+      {bandeja.map((f) => (
+        <div className={`pr-card${descartando === f.id ? " descartando" : ""}`} key={f.id}>
+          <div className="pr-c1">
+            <span className="pr-org" style={{ ["--o" as string]: PR_ORIGEN_COLOR[gVal(f, "origen")] ?? "var(--muted)" }}>
+              {gVal(f, "origen") || "Sin origen"}
+            </span>
+            <input className="pr-esc-in" defaultValue={gVal(f, "escenas")} placeholder="Escenas (12, 14)"
+              readOnly={!editable} onBlur={(e) => set(f, "escenas", e.target.value)} />
+            {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+          </div>
+          <textarea className="pr-txt" defaultValue={stripHtml(gVal(f, "texto"))} rows={2}
+            readOnly={!editable} placeholder="Qué hay que cambiar…" onBlur={(e) => set(f, "texto", e.target.value)} />
+          {descartando === f.id ? (
+            <div className="pr-dsc">
+              <div className="pr-dsc-t">Por qué se descarta</div>
+              <textarea className="pr-dsc-in" rows={2} value={motivo} autoFocus
+                placeholder="Dentro de un año no vas a acordarte. Escribilo ahora."
+                onChange={(e) => setMotivo(e.target.value)} />
+              <div className="pr-dsc-f">
+                <button className="cp-btn cp-btn-acc" disabled={!motivo.trim()} onClick={() => confirmarDescarte(f)}>Confirmar descarte</button>
+                <button className="cp-btn" onClick={() => { setDescartando(null); setMotivo(""); }}>Cancelar</button>
+                <span className="pr-dsc-w">Único campo obligatorio: sin motivo, la decisión se pierde.</span>
+              </div>
+            </div>
+          ) : editable && (
+            <div className="pr-acc">
+              <CpSelect value={gVal(f, "pase")} options={pases.map((p) => gVal(p, "nombre")).filter(Boolean)}
+                placeholder="Elegí un pase" onChange={(v) => set(f, "pase", v)} />
+              <button className="cp-btn cp-btn-acc" disabled={!gVal(f, "pase")}
+                onClick={() => triar(f, "En el pase")}>Aplicar</button>
+              <button className="cp-btn" onClick={() => triar(f, "Pospuesta")}>Posponer</button>
+              <button className="cp-btn" onClick={() => { setDescartando(f.id); setMotivo(""); }}>Descartar</button>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="pr-lbl">Pases</div>
+      {pases.length === 0 && <div className="pr-vacio">Todavía no hay pases. Creá uno para agrupar el trabajo.</div>}
+      {pases.map((p) => {
+        const nombre = gVal(p, "nombre");
+        const { total, pend, items } = cargaPase(nombre);
+        const enCurso = gVal(p, "estado_pase") === "En curso";
+        const sinResolver = items.filter((f) => gVal(f, "estado_nota") !== "Hecha").length;
+        return (
+          <div className={`pr-pase${enCurso ? " on" : ""}`} key={p.id}>
+            <div className="pr-ph">
+              <input className="pr-pn" defaultValue={nombre} placeholder="Nombre del pase"
+                readOnly={!editable} onBlur={(e) => set(p, "nombre", e.target.value)} />
+              <EstadoSeg valor={gVal(p, "estado_pase") || "Planificado"} opciones={colByKey.get("estado_pase")?.opciones ?? []}
+                onPick={(v) => set(p, "estado_pase", v)} editable={editable} chip color />
+              <span className="pr-pm">{items.length} item{items.length === 1 ? "" : "s"}</span>
+              {editable && <button className="hp-del" onClick={() => onBorrar(p.id)} title={t("delete")}>✕</button>}
+            </div>
+            <textarea className="pr-pobj" defaultValue={stripHtml(gVal(p, "objetivo"))} rows={1}
+              readOnly={!editable} placeholder="Objetivo del pase…" onBlur={(e) => set(p, "objetivo", e.target.value)} />
+            <div className="pr-pv">
+              <input className="pr-pv-in" defaultValue={gVal(p, "version_origen")} placeholder="v4.0"
+                readOnly={!editable} onBlur={(e) => set(p, "version_origen", e.target.value)} />
+              <span className="pr-pv-ar">→</span>
+              <input className="pr-pv-in" defaultValue={gVal(p, "version_destino")} placeholder="v5.0"
+                readOnly={!editable} onBlur={(e) => set(p, "version_destino", e.target.value)} />
+              <input type="date" className="pr-pv-fe" defaultValue={gVal(p, "fecha_entrega")}
+                readOnly={!editable} onBlur={(e) => set(p, "fecha_entrega", e.target.value)} />
+            </div>
+            {total > 0 && (
+              <div className="pr-load">
+                <span className="pr-load-n">{pend}</span>
+                <span className="pr-load-l">escena{pend === 1 ? "" : "s"} por tocar<br />de {total} afectada{total === 1 ? "" : "s"}</span>
+                <span className="pr-load-b">
+                  {Array.from({ length: total }).map((_, i) => (
+                    <i key={i} className={i < total - pend ? "on" : ""} />
+                  ))}
+                </span>
+              </div>
+            )}
+            {items.map((f) => {
+              const hecha = gVal(f, "estado_nota") === "Hecha";
+              const enConf = conflictos.some((c) => c.filas.some((x) => x.id === f.id));
+              const tono = hecha ? "ok" : enConf ? "warn" : "bad";
+              return (
+                <div className={`pr-it${hecha ? " done" : ""}`} key={f.id} data-tono={tono}>
+                  <div className="pr-it-st" />
+                  <div className="pr-it-in">
+                    <div className="pr-it-r1">
+                      <button className="pr-cb" disabled={!editable} aria-label="Marcar como hecha"
+                        onClick={() => triar(f, hecha ? "En el pase" : "Hecha")} />
+                      <span className="pr-it-txt">{stripHtml(gVal(f, "texto"))}</span>
+                      {editable && <button className="hp-del" onClick={() => triar(f, "Sin triar", { pase: "" })} title="Devolver a la bandeja">↩</button>}
+                    </div>
+                    <div className="pr-it-r2">
+                      <span className="pr-mini">Origen</span>
+                      <span className="pr-ch">{gVal(f, "origen") || "—"}</span>
+                      {prEscenas(gVal(f, "escenas")).length > 0 && <span className="pr-mini">Escenas</span>}
+                      {prEscenas(gVal(f, "escenas")).map((e, i) => <span className="pr-ch" key={i}>{e}</span>)}
+                      {enConf && <span className="pr-ch conf">En conflicto</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="pr-leg">
+              <span><i data-tono="ok" />Resuelto</span>
+              <span><i data-tono="bad" />Pendiente</span>
+              <span><i data-tono="warn" />Con conflicto abierto</span>
+            </div>
+            {editable && (
+              <div className="pr-pfoot">
+                <button className="cp-btn cp-btn-acc" disabled={sinResolver > 0 || !gVal(p, "version_destino")}
+                  onClick={() => set(p, "estado_pase", "Cerrado")}>
+                  Cerrar pase{gVal(p, "version_destino") ? ` y crear ${gVal(p, "version_destino")}` : ""}
+                </button>
+                <span className="pr-pfoot-w">
+                  {sinResolver > 0
+                    ? `Quedan ${sinResolver} item${sinResolver === 1 ? "" : "s"} sin resolver`
+                    : !gVal(p, "version_destino")
+                      ? "Falta indicar la versión destino"
+                      : "Todo resuelto, se puede cerrar"}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {pospuestas.length > 0 && (
+        <>
+          <div className="pr-lbl">Pospuestas <u>vuelven a la bandeja cuando las reactivás</u></div>
+          {pospuestas.map((f) => (
+            <div className="pr-posp" key={f.id}>
+              <span className="pr-org" style={{ ["--o" as string]: PR_ORIGEN_COLOR[gVal(f, "origen")] ?? "var(--muted)" }}>
+                {gVal(f, "origen") || "Sin origen"}
+              </span>
+              <span className="pr-posp-t">{stripHtml(gVal(f, "texto"))}</span>
+              {editable && <>
+                <button className="cp-btn" onClick={() => triar(f, "Sin triar")}>Reactivar</button>
+                <button className="cp-btn" onClick={() => { setDescartando(f.id); setMotivo(""); }}>Descartar</button>
+              </>}
+            </div>
+          ))}
+        </>
+      )}
+
+      {editable && (
+        <div className="hp-actions">
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear({ tipo_registro: "Pase", estado_pase: "Planificado" })}>+ Agregar pase</button>
+        </div>
+      )}
+    </div>
   );
 }
 

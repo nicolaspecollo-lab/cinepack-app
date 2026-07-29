@@ -567,6 +567,99 @@ const desgloseEscenas: Herramienta = {
     { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
+// ---- Informes de análisis (cargo Script doctor) ----
+// Vista de quien ESCRIBE el informe. El triaje de las recomendaciones no
+// vive acá sino en el Plan de reescritura del guionista: acá cada
+// recomendación solo muestra el estado que vuelve de allá.
+export const VALORACION_NIVELES = ["Flojo", "Aceptable", "Bueno", "Excelente"];
+export const VALORACION_CATEGORIAS = ["Concepto", "Estructura", "Personajes", "Diálogo", "Ritmo", "Originalidad"];
+
+const informesAnalisis: Herramienta = {
+  id: "guion-informe-doctor",
+  nombre: "Informes de análisis",
+  tipo: "tabla",
+  hint: "Un informe por versión analizada. La valoración por categoría permite comparar cómo evolucionó el guion; las recomendaciones se trían desde el Plan de reescritura, no desde acá.",
+  columnas: [
+    { key: "version_analizada", label: "Versión analizada" },
+    { key: "origen", label: "Origen", tipo: "estado", opciones: ["Encargado", "Coverage recibido"] },
+    { key: "autor", label: "Autor del informe" },
+    { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+    { key: "veredicto", label: "Veredicto", tipo: "estado", opciones: ["Listo para enviar", "Necesita otro pase", "Reescritura de fondo", "Recomendar", "Considerar", "Descartar"] },
+    { key: "logline", label: "Logline", tipo: "largo" },
+    { key: "diagnostico", label: "Diagnóstico", tipo: "largo" },
+    { key: "valoracion", label: "Valoración", tipo: "repetible", sub: [
+      { key: "categoria", label: "Categoría", tipo: "estado", opciones: VALORACION_CATEGORIAS },
+      { key: "nivel", label: "Nivel", tipo: "estado", opciones: VALORACION_NIVELES },
+    ]},
+    { key: "recomendaciones", label: "Recomendaciones", tipo: "repetible", sub: [
+      { key: "severidad", label: "Severidad", tipo: "estado", opciones: ["Bloqueante", "Importante", "Opcional"] },
+      { key: "escenas", label: "Escenas / páginas" },
+      { key: "texto", label: "Recomendación", tipo: "largo" },
+      { key: "estado", label: "Estado", tipo: "estado", opciones: ["Sin triar", "En el plan", "Descartada"] },
+      { key: "motivo", label: "Motivo (si se descartó)", tipo: "largo" },
+    ]},
+    { key: "documento", label: "Informe (PDF)", tipo: "archivo" as const },
+  ],
+};
+
+// ---- Plan de reescritura (cargo Guion) ----
+// Una sola tabla con dos tipos de fila (pase / nota), como Pagos y nóminas.
+// Compite con un archivo de texto, así que la captura tiene que ser de un
+// solo campo: todo lo demás es opcional salvo el motivo al descartar, que
+// es el dato que hoy se pierde siempre.
+export const NOTA_ORIGENES = ["Propia", "Script doctor", "Coguionista", "Dirección", "Producción", "Otro"];
+
+const planReescritura: Herramienta = {
+  id: "guion-notas-reescritura",
+  nombre: "Plan de reescritura",
+  tipo: "tabla",
+  hint: "Bandeja de notas de todos los orígenes, triadas en pases de reescritura. Anotá primero y clasificá después.",
+  columnas: [
+    { key: "tipo_registro", label: "Tipo", tipo: "estado", opciones: ["Pase", "Nota"] },
+    // Pase
+    { key: "nombre", label: "Nombre del pase" },
+    { key: "objetivo", label: "Objetivo del pase", tipo: "largo" },
+    { key: "estado_pase", label: "Estado del pase", tipo: "estado", opciones: ["Planificado", "En curso", "Cerrado"] },
+    { key: "version_origen", label: "Versión de origen" },
+    { key: "version_destino", label: "Versión destino" },
+    { key: "fecha_entrega", label: "Fecha de entrega", tipo: "fecha" as const },
+    // Nota
+    { key: "texto", label: "Nota", tipo: "largo" },
+    { key: "origen", label: "Origen", tipo: "estado", opciones: NOTA_ORIGENES },
+    { key: "escenas", label: "Escenas afectadas" },
+    { key: "pase", label: "Pase asignado" },
+    { key: "estado_nota", label: "Estado", tipo: "estado", opciones: ["Sin triar", "En el pase", "Hecha", "Pospuesta", "Descartada"] },
+    { key: "motivo_descarte", label: "Por qué se descarta", tipo: "largo" },
+  ],
+};
+
+// ---- Banco de investigación (cargo Documentación) ----
+// Alta mínima (tema + fuente) y el resto cuando importa. La verificación
+// solo se exige cuando el material se reproduce: ahí está el riesgo real,
+// no en un dato de contexto.
+const bancoInvestigacion: Herramienta = {
+  id: "guion-banco-investigacion",
+  nombre: "Banco de investigación",
+  tipo: "tabla",
+  hint: "Fichas de investigación con su cita, qué escenas respaldan y si el material se reproduce (y por lo tanto necesita verificarse y autorizarse).",
+  columnas: [
+    { key: "tema", label: "Tema o hallazgo" },
+    { key: "fuente", label: "Fuente o enlace" },
+    { key: "tipo_fuente", label: "Tipo de fuente", tipo: "estado", opciones: ["Libro", "Prensa", "Entrevista", "Archivo", "Web", "Documental", "Otro"] },
+    { key: "referencia", label: "Referencia formal" },
+    { key: "cita", label: "Cita textual", tipo: "largo" },
+    { key: "escenas", label: "Escenas que respalda" },
+    { key: "uso", label: "Uso", tipo: "estado", opciones: ["Dato de contexto", "Se reproduce en pantalla", "Se reproduce textual"] },
+    { key: "verificado", label: "Verificación", tipo: "estado", opciones: ["Sin verificar", "Verificado", "Descartada"] },
+    { key: "verificado_por", label: "Verificado por" },
+    { key: "fecha_verificacion", label: "Fecha de verificación", tipo: "fecha" as const },
+    { key: "contradice_a", label: "Contradice a" },
+    { key: "decision_contradiccion", label: "Decisión sobre la contradicción", tipo: "largo" },
+    { key: "consulta_legal", label: "Consulta a Legal", tipo: "estado", opciones: ["No hace falta", "Abierta", "Resuelta"] },
+    { key: "archivo", label: "Documento", tipo: "archivo" as const },
+  ],
+};
+
 // Antes "Cesión de derechos de guion" — se solapaba con "Cadena de
 // titularidad y derechos" de Ejecutivo/Legal (licencias/cesiones a
 // terceros), pero Guion no tiene acceso a esa herramienta exclusiva de
@@ -2952,7 +3045,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       departamento: [historialVersiones, sinopsisEscaleta, desgloseEscenas],
       cargo: [
         cesionGuion,
-        { id: "guion-notas-reescritura", nombre: "Notas de reescritura y pendientes", tipo: "nota" },
+        planReescritura,
         ACCESOS,
       ],
     },
@@ -2972,15 +3065,11 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     },
     "Script doctor": {
       departamento: [historialVersiones, sinopsisEscaleta],
-      cargo: [
-        { id: "guion-informe-doctor", nombre: "Informe de script doctor", tipo: "nota", hint: "Diagnóstico y recomendaciones." },
-      ],
+      cargo: [informesAnalisis],
     },
     "Documentación": {
       departamento: [sinopsisEscaleta, desgloseEscenas],
-      cargo: [
-        { id: "guion-banco-investigacion", nombre: "Banco de investigación y referencias", tipo: "galeria", columnas: [{ key: "tema", label: "Tema" }, { key: "fuente", label: "Fuente / Link" }, { key: "nota", label: "Nota", tipo: "largo" }] },
-      ],
+      cargo: [bancoInvestigacion],
     },
   },
 
