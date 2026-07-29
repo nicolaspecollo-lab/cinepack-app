@@ -92,17 +92,27 @@ const planFinanciacion: Herramienta = {
     { key: "bases_doc", label: "Bases / Convocatoria (PDF o enlace)", tipo: "archivo" as const },
   ],
 };
+// Flujo de caja: antes existía duplicada (herramienta de departamento
+// "Flujo de caja" + exclusiva de Producción ejecutiva "Control de flujo de
+// caja semanal"), ambas trackeando lo mismo semana a semana con el mismo
+// componente de render (CashflowChart) pero 2 datasets separados — cada
+// cargo hubiera visto una caja distinta. Fusionadas en una sola, de
+// departamento, visible para las 3 cargos que la necesitan.
 const flujoCaja: Herramienta = {
   id: "ej-flujo-caja",
   nombre: "Flujo de caja (cashflow)",
   tipo: "tabla",
-  hint: "Entradas y salidas previstas semana a semana.",
+  hint: "Entradas y salidas semana a semana, previsto vs. real.",
   columnas: [
     { key: "periodo", label: "Semana / Fecha", tipo: "fecha" },
     { key: "concepto", label: "Concepto principal" },
-    { key: "ingresos", label: "Ingresos", tipo: "money" },
-    { key: "egresos", label: "Egresos", tipo: "money" },
-    { key: "saldo", label: "Saldo", tipo: "money" },
+    { key: "ingresos_previstos", label: "Ingresos previstos", tipo: "money" as const },
+    { key: "ingresos_reales", label: "Ingresos reales", tipo: "money" as const },
+    { key: "gastos_previstos", label: "Gastos previstos", tipo: "money" as const },
+    { key: "gastos_reales", label: "Gastos reales", tipo: "money" as const },
+    { key: "saldo", label: "Saldo", tipo: "money" as const },
+    { key: "estado", label: "Estado", tipo: "estado", opciones: ["OK", "Déficit", "Superávit"] },
+    { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
 const facturas: Herramienta = {
@@ -140,24 +150,6 @@ const contratos: Herramienta = {
     { key: "notas_legales", label: "Notas legales", tipo: "largo" },
     { key: "firma", label: "Firma", tipo: "estado", opciones: ["Pendiente", "Enviado", "Firmado"] },
     { key: "contrato_firmado", label: "Contrato firmado", tipo: "archivo" as const },
-  ],
-};
-
-// Nuevas herramientas ejecutivo
-const ejCashflow: Herramienta = {
-  id: "ej-cashflow",
-  nombre: "Control de flujo de caja semanal",
-  tipo: "tabla",
-  hint: "Seguimiento semana a semana de ingresos y gastos reales vs. previstos. Detecta déficits antes de que ocurran.",
-  columnas: [
-    { key: "semana", label: "Semana" },
-    { key: "ingresos_previstos", label: "Ingresos previstos", tipo: "money" as const },
-    { key: "ingresos_reales", label: "Ingresos reales", tipo: "money" as const },
-    { key: "gastos_previstos", label: "Gastos previstos", tipo: "money" as const },
-    { key: "gastos_reales", label: "Gastos reales", tipo: "money" as const },
-    { key: "saldo", label: "Saldo", tipo: "money" as const },
-    { key: "estado", label: "Estado", tipo: "estado", opciones: ["OK", "Déficit", "Superávit"] },
-    { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
 
@@ -2161,9 +2153,8 @@ const moEntrevistas: Herramienta = {
 export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
   Ejecutivo: {
     "Producción ejecutiva": {
-      departamento: [presupuestoCostos, planFinanciacion],
+      departamento: [presupuestoCostos, planFinanciacion, flujoCaja],
       cargo: [
-        ejCashflow,
         ejCoproducciones,
         ejAyudasSubvenciones,
         ejAgendaEjecutivo,

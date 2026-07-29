@@ -3624,7 +3624,7 @@ export function PresupuestoCostosBoard({
 // ---- Cashflow (flujo de caja semana a semana) ----
 // "Detecta déficits antes de que ocurran" — eso pide barras de ingreso vs.
 // egreso por período y el saldo coloreado, no una grilla de números.
-const CASHFLOW_IDS = new Set(["ej-flujo-caja", "ej-cashflow"]);
+const CASHFLOW_IDS = new Set(["ej-flujo-caja"]);
 
 function CashflowChart({
   columnas,
@@ -7736,8 +7736,8 @@ const EJ_PRESUPUESTO_COSTOS: Ejemplo[] = [
   { capitulo: "Cámara", partida: "Alquiler de cámara y ópticas", presupuestado: "38000", comprometido: "38000", real: "36500", responsable: "Diego Aramburu" },
 ];
 const EJ_CASHFLOW: Ejemplo[] = [
-  { periodo: "Semana 1", ingresos: "50000", egresos: "32000", saldo: "18000" },
-  { periodo: "Semana 2", ingresos: "0", egresos: "28000", saldo: "-10000" },
+  { periodo: "2026-08-03", concepto: "Cobro anticipo ICAA", ingresos_previstos: "50000", ingresos_reales: "50000", gastos_previstos: "30000", gastos_reales: "32000", saldo: "18000", estado: "OK" },
+  { periodo: "2026-08-10", concepto: "Nómina semana de rodaje 2", ingresos_previstos: "0", ingresos_reales: "0", gastos_previstos: "25000", gastos_reales: "28000", saldo: "-10000", estado: "Déficit", notas: "Cubrir con el anticipo de la semana anterior." },
 ];
 const EJ_PIPELINE: Ejemplo[] = [
   { fuente: "ICAA (ayuda selectiva)", importe: "180000", estado: "En negociación", estado_firma: "Pendiente" },
