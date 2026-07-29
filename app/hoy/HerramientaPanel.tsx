@@ -9020,9 +9020,14 @@ export function InformesAnalisisBoard({
                           </div>
                         </div>
                       ))}
-                      <EntidadRepetible col={colRec} valor={f.datos?.recomendaciones ?? ""} editable={editable}
-                        departamento={departamento} herramientaId={herramientaId} filaId={f.id}
-                        onChange={(v) => set(f, "recomendaciones", v)} />
+                      {editable && (
+                        <details className="ia-editor">
+                          <summary>Escribir o editar recomendaciones</summary>
+                          <EntidadRepetible col={colRec} valor={f.datos?.recomendaciones ?? ""} editable={editable}
+                            departamento={departamento} herramientaId={herramientaId} filaId={f.id}
+                            onChange={(v) => set(f, "recomendaciones", v)} />
+                        </details>
+                      )}
                     </>
                   )}
                   {tab === 3 && (
@@ -9079,6 +9084,7 @@ export function BancoInvestigacionBoard({
   if (filtro === "reproduce") visibles = visibles.filter(biSeReproduce);
   else if (filtro === "sinverif") visibles = visibles.filter((f) => gVal(f, "verificado") !== "Verificado");
   else if (filtro === "legal") visibles = visibles.filter((f) => gVal(f, "consulta_legal") === "Abierta");
+  else if (filtro === "contra") visibles = visibles.filter((f) => gVal(f, "contradice_a") && !gVal(f, "decision_contradiccion"));
   else if (filtro) visibles = visibles.filter((f) => gVal(f, "tipo_fuente") === filtro);
   if (q.trim()) {
     const s = q.trim().toLowerCase();
@@ -9117,10 +9123,10 @@ export function BancoInvestigacionBoard({
             <span className="bi-rkn">{riesgoLegal.length}</span>
             <span className="bi-rkl">Esperando autorización de Legal</span>
           </button>
-          <div className="bi-rk r-warn">
+          <button className={`bi-rk r-warn${filtro === "contra" ? " on" : ""}`} onClick={() => setFiltro(filtro === "contra" ? null : "contra")}>
             <span className="bi-rkn">{riesgoContra.length}</span>
             <span className="bi-rkl">Contradicción sin resolver</span>
-          </div>
+          </button>
         </div>
       )}
 
@@ -9210,8 +9216,13 @@ export function BancoInvestigacionBoard({
                     readOnly={!editable} onBlur={(e) => set(f, "referencia", e.target.value)} /></label>
                   <label className="ancho">Cita textual<textarea rows={2} defaultValue={stripHtml(gVal(f, "cita"))}
                     readOnly={!editable} onBlur={(e) => set(f, "cita", e.target.value)} /></label>
+                  <label className="ancho">Verificación
+                    <EstadoSeg valor={gVal(f, "verificado") || "Sin verificar"} opciones={colByKey.get("verificado")?.opciones ?? []}
+                      onPick={(v) => set(f, "verificado", v)} editable={editable} chip color /></label>
                   <label>Verificado por<input defaultValue={gVal(f, "verificado_por")} readOnly={!editable}
                     onBlur={(e) => set(f, "verificado_por", e.target.value)} /></label>
+                  <label>Fecha de verificación<input type="date" defaultValue={gVal(f, "fecha_verificacion")} readOnly={!editable}
+                    onBlur={(e) => set(f, "fecha_verificacion", e.target.value)} /></label>
                   <label>Contradice a<input defaultValue={gVal(f, "contradice_a")} placeholder="Tema de la otra ficha"
                     readOnly={!editable} onBlur={(e) => set(f, "contradice_a", e.target.value)} /></label>
                   <label className="ancho">Documento
@@ -9263,6 +9274,9 @@ export function PlanReescrituraBoard({
   const notas = filas.filter((f) => gVal(f, "tipo_registro") === "Nota");
   const bandeja = notas.filter((f) => (gVal(f, "estado_nota") || "Sin triar") === "Sin triar");
   const pospuestas = notas.filter((f) => gVal(f, "estado_nota") === "Pospuesta");
+  // Las descartadas NO se ocultan: el motivo es el dato de más valor de la
+  // herramienta y esconderlo la vaciaría de sentido. Se agrupan al final.
+  const descartadas = notas.filter((f) => gVal(f, "estado_nota") === "Descartada");
 
   function notasDePase(nombre: string) {
     return notas.filter((f) => gVal(f, "pase") === nombre && ["En el pase", "Hecha"].includes(gVal(f, "estado_nota")));
@@ -9290,7 +9304,9 @@ export function PlanReescrituraBoard({
     for (const [escena, fs] of porEscena) {
       if (fs.length < 2) continue;
       if (new Set(fs.map((f) => gVal(f, "origen"))).size < 2) continue;
-      if (fs.some((f) => gVal(f, "_sin_conflicto") === "si")) continue;
+      // El descarte es POR ESCENA, no por nota: una nota que toca 14 y 16
+      // puede tener conflicto real en una y no en la otra.
+      if (fs.some((f) => prEscenas(gVal(f, "_sin_conflicto")).includes(escena))) continue;
       out.push({ escena, filas: fs });
     }
     return out;
@@ -9341,7 +9357,10 @@ export function PlanReescrituraBoard({
           ))}
           {editable && (
             <div className="pr-conf-a">
-              <button className="cp-btn" onClick={() => c.filas.forEach((f) => set(f, "_sin_conflicto", "si"))}>No es conflicto</button>
+              <button className="cp-btn" onClick={() => c.filas.forEach((f) => {
+                const ya = prEscenas(gVal(f, "_sin_conflicto"));
+                if (!ya.includes(c.escena)) set(f, "_sin_conflicto", [...ya, c.escena].join(", "));
+              })}>No es conflicto en la escena {c.escena}</button>
             </div>
           )}
         </div>
@@ -9457,15 +9476,15 @@ export function PlanReescrituraBoard({
             </div>
             {editable && (
               <div className="pr-pfoot">
-                <button className="cp-btn cp-btn-acc" disabled={sinResolver > 0 || !gVal(p, "version_destino")}
+                <button className="cp-btn cp-btn-acc" disabled={sinResolver > 0 || gVal(p, "estado_pase") === "Cerrado"}
                   onClick={() => set(p, "estado_pase", "Cerrado")}>
-                  Cerrar pase{gVal(p, "version_destino") ? ` y crear ${gVal(p, "version_destino")}` : ""}
+                  Cerrar pase
                 </button>
                 <span className="pr-pfoot-w">
-                  {sinResolver > 0
-                    ? `Quedan ${sinResolver} item${sinResolver === 1 ? "" : "s"} sin resolver`
-                    : !gVal(p, "version_destino")
-                      ? "Falta indicar la versión destino"
+                  {gVal(p, "estado_pase") === "Cerrado"
+                    ? `Pase cerrado. Cargá ${gVal(p, "version_destino") || "la versión nueva"} en Historial de versiones.`
+                    : sinResolver > 0
+                      ? `Quedan ${sinResolver} item${sinResolver === 1 ? "" : "s"} sin resolver`
                       : "Todo resuelto, se puede cerrar"}
                 </span>
               </div>
@@ -9487,6 +9506,26 @@ export function PlanReescrituraBoard({
                 <button className="cp-btn" onClick={() => triar(f, "Sin triar")}>Reactivar</button>
                 <button className="cp-btn" onClick={() => { setDescartando(f.id); setMotivo(""); }}>Descartar</button>
               </>}
+            </div>
+          ))}
+        </>
+      )}
+
+      {descartadas.length > 0 && (
+        <>
+          <div className="pr-lbl">Descartadas <u>se guardan con el motivo, para no volver a discutirlas</u></div>
+          {descartadas.map((f) => (
+            <div className="pr-desc" key={f.id}>
+              <div className="pr-desc-h">
+                <span className="pr-org" style={{ ["--o" as string]: PR_ORIGEN_COLOR[gVal(f, "origen")] ?? "var(--muted)" }}>
+                  {gVal(f, "origen") || "Sin origen"}
+                </span>
+                <span className="pr-desc-t">{stripHtml(gVal(f, "texto"))}</span>
+                {editable && <button className="cp-btn" onClick={() => triar(f, "Sin triar", { motivo_descarte: "" })}>Reabrir</button>}
+              </div>
+              {gVal(f, "motivo_descarte") && (
+                <div className="pr-desc-m"><b>Por qué se descartó</b>{stripHtml(gVal(f, "motivo_descarte"))}</div>
+              )}
             </div>
           ))}
         </>

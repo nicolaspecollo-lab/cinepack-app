@@ -3862,6 +3862,22 @@
 .cp-dash .pr-posp{ display:flex; align-items:center; gap:9px; padding:9px 13px; border:1px solid var(--line);
   background:var(--hl1); margin-bottom:6px; flex-wrap:wrap; }
 .cp-dash .pr-posp-t{ font-size:12px; flex:1; min-width:150px; color:var(--muted); }
+/* descartadas: el motivo es el dato de más valor, nunca se esconde */
+.cp-dash .pr-desc{ border:1px solid var(--line); background:var(--hl1); padding:10px 13px; margin-bottom:6px; }
+.cp-dash .pr-desc-h{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.cp-dash .pr-desc-t{ font-size:12px; flex:1; min-width:150px; color:var(--muted); text-decoration:line-through; }
+.cp-dash .pr-desc-m{ font-size:11.5px; line-height:1.55; margin-top:8px; padding-left:10px;
+  border-left:2px solid color-mix(in srgb, var(--rose) 45%, transparent); }
+.cp-dash .pr-desc-m b{ display:block; font-family:'Poppins',sans-serif; font-weight:700; font-size:8.5px;
+  text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin-bottom:3px; }
+/* editor de recomendaciones plegado: evita mostrar cada una dos veces */
+.cp-dash .ia-editor{ margin-top:10px; border-top:1px solid var(--line); padding-top:10px; }
+.cp-dash .ia-editor summary{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9.5px;
+  text-transform:uppercase; letter-spacing:.07em; color:var(--muted); cursor:pointer; list-style:none; }
+.cp-dash .ia-editor summary::-webkit-details-marker{ display:none; }
+.cp-dash .ia-editor summary::before{ content:'+ '; }
+.cp-dash .ia-editor[open] summary::before{ content:'– '; }
+.cp-dash .ia-editor summary:hover{ color:var(--acc); }
 
 /* -- Informes de análisis -- */
 .cp-dash .ia{ padding:4px var(--gutter) 30px; }
