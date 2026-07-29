@@ -555,18 +555,26 @@ const desgloseEscenas: Herramienta = {
     { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
+// Antes "Cesión de derechos de guion" — se solapaba con "Cadena de
+// titularidad y derechos" de Ejecutivo/Legal (licencias/cesiones a
+// terceros), pero Guion no tiene acceso a esa herramienta exclusiva de
+// otro departamento. Redefinida por pedido de Nicolás como lo que el
+// guionista necesita a mano: su propio registro de propiedad intelectual
+// (en España, el Registro de la Propiedad Intelectual — certificado que
+// prueba autoría y fecha), no el seguimiento de cesiones a terceros.
 const cesionGuion: Herramienta = {
   id: "guion-cesion",
-  nombre: "Cesión de derechos de guion",
+  nombre: "Mi propiedad intelectual",
   tipo: "ficha",
+  hint: "Tu registro de autoría, siempre a mano. Las cesiones y licencias a terceros se gestionan en Ejecutivo/Legal, no acá.",
   campos: [
     { key: "obra", label: "Obra / Título" },
     { key: "autor", label: "Autor/es" },
-    { key: "cesionario", label: "Cesionario" },
-    { key: "alcance", label: "Alcance de la cesión", tipo: "largo" },
-    { key: "territorio", label: "Territorio" },
-    { key: "vigencia", label: "Vigencia" },
-    { key: "estado", label: "Estado de firma", tipo: "estado", opciones: ["Pendiente", "Firmado"] },
+    { key: "entidad_registro", label: "Entidad de registro" },
+    { key: "numero_registro", label: "Número de registro" },
+    { key: "fecha_registro", label: "Fecha de registro", tipo: "fecha" as const },
+    { key: "certificado", label: "Certificado de registro", tipo: "archivo" as const },
+    { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
 
@@ -2929,8 +2937,9 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
 
   Guion: {
     "Guion": {
-      departamento: [historialVersiones, sinopsisEscaleta, desgloseEscenas, cesionGuion],
+      departamento: [historialVersiones, sinopsisEscaleta, desgloseEscenas],
       cargo: [
+        cesionGuion,
         { id: "guion-notas-reescritura", nombre: "Notas de reescritura y pendientes", tipo: "nota" },
         ACCESOS,
       ],
