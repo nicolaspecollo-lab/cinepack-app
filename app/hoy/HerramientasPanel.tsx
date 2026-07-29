@@ -41,6 +41,7 @@ const TIPO_TAG_KEY: Record<Herramienta["tipo"], string> = {
   ficha: "tipoFicha",
   galeria: "tipoGaleria",
   accesos: "tipoAccesos",
+  registro: "tipoRegistro",
 };
 
 // Ícono del sello hexagonal según el tipo de herramienta — ver Hcard.tsx.
@@ -51,6 +52,7 @@ const TIPO_ICON: Record<Herramienta["tipo"], React.ComponentProps<typeof Icon>["
   ficha: "id-card",
   galeria: "image",
   accesos: "key",
+  registro: "bell",
 };
 
 const openKey = (dept: string, seccion: string) => `cinepack-open-tool-${dept}-${seccion}`;

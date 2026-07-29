@@ -6,7 +6,6 @@ import ConsultasPanel from "./ConsultasPanel";
 import ComunicadosPanel from "./ComunicadosPanel";
 import GuionPanel from "./GuionPanel";
 import GuionTecnicoPanel from "./GuionTecnicoPanel";
-import NotificacionesPanel from "./NotificacionesPanel";
 import EscenasPanel from "./EscenasPanel";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import VisionadoPanel from "./VisionadoPanel";
@@ -26,7 +25,7 @@ import Hcard from "./Hcard";
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
 // que despliega sub-pestañas. Iguales para todo el proyecto.
 export type Sub =
-  | "comunicados" | "consultas" | "notificaciones" | "guion" | "guiontec"
+  | "comunicados" | "consultas" | "guion" | "guiontec"
   | "calendario" | "plan" | "orden" | "escena3d"
   | "espacio" | "visionado" | "equipo" | "accesos" | "pipeline"
   | "contactos" | "wrap";
@@ -53,7 +52,6 @@ const PROPIETARIOS: Partial<Record<Sub, string[] | null>> = {
 const ICON_POR_SUB: Record<Sub, React.ComponentProps<typeof Icon>["name"]> = {
   comunicados: "message",
   consultas: "message",
-  notificaciones: "bell",
   guion: "file-text",
   guiontec: "film",
   calendario: "calendar",
@@ -87,7 +85,6 @@ type SubDef = {
 
 const SUBS: SubDef[] = [
   { id: "comunicados",    label: "Comunicados",          desc: "Avisos y mensajes internos para el equipo.",              editores: null,                                                           visores: "todos" },
-  { id: "notificaciones", label: "Notificaciones",       desc: "Centro de alertas globales del proyecto.",                editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo"],             cond: (d) => d === "Ejecutivo" },
   { id: "consultas",      label: "Consultas",            desc: "Canal de preguntas entre departamentos.",                 editores: null,                                                           visores: "todos" },
   { id: "calendario",     label: "Calendario general",   desc: "Hitos globales y fechas del proyecto.",                   editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
   { id: "guion",          label: "Guion",                desc: "Guion literario compartido con el equipo.",               editores: ["Guion", "Ejecutivo"],                                         visores: "todos" },
@@ -228,7 +225,6 @@ export default function GeneralesPanel({
 
       <div className="gen-body">
         {sub === "comunicados" && <ComunicadosPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
-        {sub === "notificaciones" && <NotificacionesPanel />}
         {sub === "consultas" && <ConsultasPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
         {sub === "guion" && <GuionPanel fullName={fullName} canEdit={ce("guion")} />}
         {sub === "guiontec" && <GuionTecnicoPanel fullName={fullName} canEdit={ce("guiontec")} />}

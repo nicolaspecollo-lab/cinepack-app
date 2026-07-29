@@ -381,6 +381,7 @@
     "tipoFicha": "Sheet",
     "tipoGaleria": "Gallery",
     "tipoAccesos": "Access",
+    "tipoRegistro": "Log",
     "unitItems": "items",
     "unitPhotos": "photos",
     "unitRows": "rows",

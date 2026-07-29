@@ -8,6 +8,7 @@ import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
+import RegistroActividadPanel from "./RegistroActividadPanel";
 import Icon from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
 import CpSelect from "../components/CpSelect";
@@ -149,6 +150,9 @@ export default function HerramientaPanel({
 }) {
   if (herramienta.tipo === "accesos") {
     return <GestionAccesosPanel departamento={departamento} scope="departamento" />;
+  }
+  if (herramienta.tipo === "registro") {
+    return <RegistroActividadPanel />;
   }
   return (
     <HerramientaData

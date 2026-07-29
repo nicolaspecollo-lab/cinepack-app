@@ -54,7 +54,7 @@ function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
   return t("timeDaysAgo", { n: days });
 }
 
-export default function NotificacionesPanel() {
+export default function RegistroActividadPanel() {
   const t = useTranslations("notificaciones");
   const tHp = useTranslations("hp");
   const [eventos, setEventos] = useState<Evento[]>([]);

@@ -11,7 +11,9 @@
 
 import { CATEGORIAS_FINANCIACION } from "./hoy/eventosCalendario";
 
-export type ToolKind = "tabla" | "nota" | "checklist" | "ficha" | "galeria" | "accesos";
+// "accesos" y "registro" son marcadores: no guardan filas propias, montan un
+// panel dedicado que lee de otras tablas (asignaciones / actividad del equipo).
+export type ToolKind = "tabla" | "nota" | "checklist" | "ficha" | "galeria" | "accesos" | "registro";
 
 export type ColTipo = "texto" | "largo" | "num" | "money" | "fecha" | "estado" | "archivo" | "link" | "chips" | "repetible";
 
@@ -567,6 +569,18 @@ const desgloseEscenas: Herramienta = {
     { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
+// Registro de actividad — exclusiva de Producción ejecutiva, SOLO LECTURA.
+// Antes vivía en Generales como "Notificaciones", disponible para todos: no
+// tenía sentido que la bitácora de todo el equipo fuera de acceso general.
+// Agrega cambios de perfil, consultas, comunicados y solicitudes de acceso
+// del proyecto, de más reciente a más antigua. No guarda filas propias.
+const registroActividad: Herramienta = {
+  id: "ej-registro-actividad",
+  nombre: "Registro de actividad",
+  tipo: "registro",
+  hint: "Todo lo que hace el equipo en el proyecto, de lo más reciente a lo más antiguo. Solo lectura.",
+};
+
 // ---- Informes de análisis (cargo Script doctor) ----
 // Vista de quien ESCRIBE el informe. El triaje de las recomendaciones no
 // vive acá sino en el Plan de reescritura del guionista: acá cada
@@ -2280,6 +2294,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
         ejDeliverables,
         ejNotasEjecutivo,
         ejKpis,
+        registroActividad,
         ACCESOS,
       ],
     },

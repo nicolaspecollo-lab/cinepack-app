@@ -14,7 +14,6 @@ import Icon from "../components/Icon";
 const HERRAMIENTAS_GENERALES = [
   "Hoy",
   "Comunicados",
-  "Notificaciones",
   "Consultas",
   "Calendario general del proyecto",
   "Guion",
