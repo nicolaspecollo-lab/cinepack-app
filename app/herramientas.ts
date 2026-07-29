@@ -130,17 +130,23 @@ const facturas: Herramienta = {
     { key: "adjunto", label: "Factura (PDF)", tipo: "archivo" },
   ],
 };
+// "Reparto" se sacó de tipo: ya lo cubre "Contratos de reparto y cesión de
+// imagen" (Casting/Reparto, cast-contratos-reparto) con mucho más detalle
+// (caché, jornadas, cesión de imagen) — evita cargar el mismo contrato dos
+// veces. "hasta" (antes "fin") usa la convención de nombre que
+// DocStatusBoard ya reconoce (colFecha) para disparar alertas de
+// vencimiento solo, sin tocar el componente compartido.
 const contratos: Herramienta = {
   id: "ej-contratos",
-  nombre: "Contratos (equipo, reparto, proveedores)",
+  nombre: "Contratos (equipo, proveedores, coproducción)",
   tipo: "tabla",
-  hint: "Estado de firma de todos los contratos del proyecto. Incluye garante, penalizaciones y estado de pago.",
+  hint: "Estado de firma de todos los contratos del proyecto (equipo, proveedores, coproducción). Los contratos de reparto y cesión de imagen se cargan en Casting/Reparto, no acá.",
   columnas: [
     { key: "contraparte", label: "Contraparte" },
-    { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Equipo", "Reparto", "Proveedor", "Coproducción"] },
+    { key: "tipo", label: "Tipo", tipo: "estado", opciones: ["Equipo", "Proveedor", "Coproducción"] },
     { key: "importe", label: "Importe", tipo: "money" },
     { key: "inicio", label: "Inicio", tipo: "fecha" },
-    { key: "fin", label: "Fin", tipo: "fecha" },
+    { key: "hasta", label: "Fin", tipo: "fecha" as const },
     { key: "fecha_firma", label: "Fecha firma", tipo: "fecha" },
     { key: "archivo_contrato", label: "Archivo contrato", tipo: "archivo" as const },
     { key: "renovacion_automatica", label: "Renovación automática", tipo: "estado", opciones: ["Sí", "No"] },
