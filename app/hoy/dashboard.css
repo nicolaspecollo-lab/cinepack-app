@@ -3665,15 +3665,68 @@
 .cp-dash .gesc-add-plus{ font-family:'Poppins',sans-serif; font-weight:800; font-size:24px; color:var(--acc); line-height:1; }
 .cp-dash .gesc-add-lbl{ font-family:'Poppins',sans-serif; font-weight:600; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; }
 
-/* -- Historial: línea de tiempo vertical -- */
-.cp-dash .ghist-line{ position:relative; padding-left:8px; }
-.cp-dash .ghist-node{ position:relative; display:grid; grid-template-columns:34px 1fr; gap:12px; padding-bottom:16px; }
-.cp-dash .ghist-node:not(:last-child)::before{ content:""; position:absolute; left:16px; top:26px; bottom:0; width:1px; background:var(--line); }
-.cp-dash .ghist-dot{ display:flex; justify-content:center; padding-top:6px; }
-.cp-dash .ghist-dot span{ width:13px; height:13px; border-radius:50%; background:var(--bg); border:2px solid var(--line); }
-.cp-dash .ghist-latest .ghist-dot span{ background:var(--acc); border-color:var(--acc); box-shadow:0 0 0 4px color-mix(in srgb, var(--acc) 18%, transparent); }
-.cp-dash .ghist-card{ border:1px solid var(--line); background:var(--bg-2); padding:13px 15px; display:flex; flex-direction:column; gap:9px; }
-.cp-dash .ghist-latest .ghist-card{ border-left:3px solid var(--acc); }
+/* -- Historial de versiones: secuencia de colores de revisión + drafts --
+   Los colores de revisión (--rev) son colores de PAPEL reales de la
+   convención de la industria, no de la paleta de la app: son el dato en
+   sí. Todo lo demás usa tokens para funcionar igual en claro y oscuro. */
+.cp-dash .ghist-seq{ border:1px solid var(--line); background:var(--bg-2); padding:13px 15px 11px; margin-bottom:16px; }
+.cp-dash .ghist-seq-hd{ display:flex; gap:15px; margin-bottom:10px; font-family:'Poppins',sans-serif;
+  font-weight:700; font-size:9px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+.cp-dash .ghist-seq-hd span{ display:flex; align-items:center; gap:5px; }
+.cp-dash .ghist-key{ width:9px; height:9px; background:var(--muted); display:inline-block; }
+.cp-dash .ghist-key.pend{ background:none; opacity:.5; outline:1px dashed var(--line); outline-offset:1px; }
+.cp-dash .ghist-seq-row{ display:flex; gap:4px; }
+.cp-dash .ghist-s{ flex:1; min-width:0; text-align:center; }
+.cp-dash .ghist-s-sw{ height:26px; background:var(--rev); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent); }
+.cp-dash .ghist-s.pend .ghist-s-sw{ opacity:.22; box-shadow:none; outline:1px dashed var(--line); outline-offset:-1px; }
+.cp-dash .ghist-s-ln{ height:4px; margin-top:3px; background:none; }
+.cp-dash .ghist-s.here .ghist-s-ln{ background:var(--rev); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent); }
+.cp-dash .ghist-s-lb{ font-size:8.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);
+  margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cp-dash .ghist-s.here .ghist-s-lb{ color:var(--text); font-weight:700; }
+.cp-dash .ghist-s-vr{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9px; margin-top:1px; color:var(--text); min-height:13px; }
+.cp-dash .ghist-s.pend .ghist-s-vr{ color:var(--muted); opacity:.5; }
+.cp-dash .ghist-seq-ft{ font-size:10.5px; color:var(--muted); margin-top:9px; text-align:center; }
+.cp-dash .ghist-seq-ft b{ color:var(--text); font-weight:700; }
+.cp-dash .ghist-add{ display:flex; align-items:center; gap:9px; width:100%; margin-bottom:12px; padding:11px 15px;
+  border:1px dashed var(--line); background:none; cursor:pointer; color:var(--muted);
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; text-transform:uppercase;
+  letter-spacing:.06em; border-radius:0; appearance:none; -webkit-appearance:none; }
+.cp-dash .ghist-add:hover{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .ghist-add-sw{ width:11px; height:11px; background:var(--rev); opacity:.6; flex-shrink:0; }
+.cp-dash .ghist-add-hint{ margin-left:auto; font-family:'Courier New',monospace; font-weight:400;
+  text-transform:none; letter-spacing:0; font-size:10.5px; }
+.cp-dash .ghist-line{ position:relative; }
+.cp-dash .ghist-node{ position:relative; display:grid; grid-template-columns:15px 1fr; margin-bottom:8px; }
+.cp-dash .ghist-edge{ background:
+    repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in srgb, var(--text) 14%, transparent) 3px 4px),
+    var(--rev);
+  box-shadow:inset -1px 0 0 color-mix(in srgb, var(--text) 20%, transparent),
+             inset 1px 0 0 color-mix(in srgb, var(--text) 12%, transparent); }
+.cp-dash .ghist-card{ border:1px solid var(--line); border-left:none; background:var(--bg-2);
+  padding:13px 15px; display:flex; flex-direction:column; gap:9px; }
+.cp-dash .ghist-node.here .ghist-card{ border-color:color-mix(in srgb, var(--rev) 55%, var(--line));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--rev) 22%, transparent); }
+.cp-dash .ghist-cname{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9.5px; text-transform:uppercase;
+  letter-spacing:.08em; color:var(--muted); display:flex; align-items:center; gap:5px; }
+.cp-dash .ghist-cname i{ width:9px; height:9px; background:var(--rev); display:inline-block;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--text) 18%, transparent); }
+.cp-dash .ghist-color-sel{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9.5px; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--text); background:var(--bg); border:1px solid var(--line);
+  border-radius:0; padding:3px 6px; }
+.cp-dash .ghist-pgs{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.cp-dash .ghist-pgs-lb{ font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-right:2px; }
+.cp-dash .ghist-pgs-in{ flex:1; min-width:120px; font-family:'Courier New',monospace; font-size:12px;
+  color:var(--text); background:var(--bg); border:1px solid var(--line); border-radius:0; padding:4px 7px; }
+.cp-dash .ghist-pgs-in:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .ghist-pg{ font-family:'Courier New',monospace; font-size:10.5px; padding:2px 7px;
+  border:1px solid color-mix(in srgb, var(--rev) 55%, var(--line));
+  background:color-mix(in srgb, var(--rev) 18%, transparent); color:var(--text); }
+.cp-dash .ghist-pgs-none{ font-size:10.5px; color:var(--muted); }
+@media (max-width:640px){
+  .cp-dash .ghist-s-lb{ font-size:0; }
+  .cp-dash .ghist-s.here .ghist-s-lb{ font-size:8.5px; }
+}
 .cp-dash .ghist-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .cp-dash .ghist-ver{ font-family:'Poppins',sans-serif; font-weight:800; font-size:19px; color:var(--text); background:none; border:none;
   border-bottom:1px solid transparent; padding:0; width:5ch; }

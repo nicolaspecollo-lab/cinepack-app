@@ -519,15 +519,27 @@ const presupuestoArte: Herramienta = {
 // ===========================================================================
 // GUION
 // ===========================================================================
+// Secuencia oficial de colores de revisión de guion (WGA). Cada tanda de
+// revisiones se imprime en el color siguiente y solo se reparten las
+// páginas que cambiaron, marcadas con asterisco. Si se agotan, se
+// reinicia en Doble Blanco.
+export const REVISION_COLORES = [
+  "Blanco", "Azul", "Rosa", "Amarillo", "Verde",
+  "Dorado", "Beige", "Salmón", "Cereza", "Bronceado",
+];
+
 const historialVersiones: Herramienta = {
   id: "guion-historial",
   nombre: "Historial de versiones y cambios",
   tipo: "tabla",
+  hint: "Cada versión con su color de revisión según la convención de la industria y las páginas que cambiaron. El color siguiente se sugiere solo.",
   columnas: [
     { key: "version", label: "Versión" },
+    { key: "color_revision", label: "Color de revisión", tipo: "estado", opciones: REVISION_COLORES },
     { key: "fecha", label: "Fecha", tipo: "fecha" },
     { key: "autor", label: "Autor" },
     { key: "cambios", label: "Cambios principales", tipo: "largo" },
+    { key: "paginas", label: "Páginas revisadas" },
     { key: "estado", label: "Estado", tipo: "estado", opciones: ESTADO_DOC },
   ],
 };

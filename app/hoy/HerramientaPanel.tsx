@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
+import { REVISION_COLORES } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import Icon from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
@@ -8747,13 +8748,31 @@ function ed_actoAdd(acto: string, editable: boolean, hayFilas: boolean, onCrear:
   );
 }
 
-// ---- Historial de versiones: línea de tiempo vertical de drafts ----
+// ---- Historial de versiones: secuencia de colores de revisión + drafts ----
+// En la industria del guion cada tanda de revisiones se imprime en el color
+// siguiente de una secuencia fija (WGA) y solo se reparten las páginas que
+// cambiaron, marcadas con asterisco. La herramienta refleja eso: la tira de
+// arriba muestra la secuencia completa (entregadas en color pleno, pendientes
+// atenuadas) con la versión que usó cada color, y el color siguiente se
+// sugiere solo al agregar una revisión.
+// Colores de PAPEL reales, no de la paleta de la app: son el dato, no la marca.
+const REV_HEX: Record<string, string> = {
+  "Blanco": "#EDEAE3", "Azul": "#5B8DD9", "Rosa": "#E8749B", "Amarillo": "#E8C34A",
+  "Verde": "#7CC47F", "Dorado": "#D9A441", "Beige": "#D9C9A8", "Salmón": "#E89478",
+  "Cereza": "#C1485E", "Bronceado": "#C4A582",
+};
 const EJ_HISTORIAL: Ejemplo[] = [
-  { version: "v3.0", fecha: "2026-06-20", autor: "Marta Ruiz", cambios: "Reescritura del tercer acto: nuevo clímax en la torre. Se elimina la subtrama del hermano.", estado: "Aprobado" },
-  { version: "v2.1", fecha: "2026-05-08", autor: "Marta Ruiz", cambios: "Pulido de diálogos de Elsa. Ajuste de tono en secuencias 4 y 5 tras notas de dirección.", estado: "En revisión" },
-  { version: "v1.0", fecha: "2026-03-15", autor: "Marta Ruiz", cambios: "Primer borrador completo a partir de la escaleta aprobada.", estado: "Borrador" },
+  { version: "v4.0", color_revision: "Amarillo", fecha: "2026-07-20", autor: "Marta Ruiz", cambios: "Reescritura del tercer acto: nuevo clímax en la torre. Se elimina la subtrama del hermano y se reordena la salida de Elsa.", paginas: "12, 13, 14, 15, 22", estado: "Aprobado" },
+  { version: "v3.0", color_revision: "Rosa", fecha: "2026-06-08", autor: "Marta Ruiz", cambios: "Pulido de diálogos de Elsa. Ajuste de tono en secuencias 4 y 5 tras las notas de dirección.", paginas: "4, 5, 30", estado: "En revisión" },
+  { version: "v2.0", color_revision: "Azul", fecha: "2026-05-02", autor: "Marta Ruiz", cambios: "Primera tanda de revisiones tras la lectura con producción. Se recorta el arranque en dos páginas.", paginas: "8, 9, 17", estado: "Aprobado" },
+  { version: "v1.0", color_revision: "Blanco", fecha: "2026-03-15", autor: "Marta Ruiz", cambios: "Primer borrador completo a partir de la escaleta aprobada.", estado: "Aprobado" },
 ];
-function HistorialVersiones({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+// Páginas revisadas: se guardan como texto libre ("12, 13, 22") y se
+// muestran como chips. Tolera rangos y separadores sueltos del usuario.
+function revPaginas(v: string): string[] {
+  return v.split(/[,;]/).map((p) => p.trim()).filter(Boolean);
+}
+export function HistorialVersiones({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
   columnas: Columna[]; filas: Fila[]; editable: boolean;
   onCrear: (datos?: Record<string, string>) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
@@ -8762,26 +8781,102 @@ function HistorialVersiones({ columnas, filas, editable, onCrear, onGuardar, onB
   const t = useTranslations("hp");
   const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
   const colEstado = columnas.find((c) => c.key === "estado");
+  const colColor = columnas.find((c) => c.key === "color_revision");
+  const secuencia = colColor?.opciones ?? REVISION_COLORES;
   const hayFilas = filas.length > 0;
   const base = hayFilas ? filas : ghostFilas(EJ_HISTORIAL);
+  // Más nueva arriba: es un historial de versiones, no una lectura cronológica.
   const sorted = [...base].sort((a, b) => (gVal(b, "fecha") || "").localeCompare(gVal(a, "fecha") || ""));
+
+  // Qué versión usó cada color. La "actual" es la del color más avanzado de
+  // la secuencia que ya se entregó, no la fila más reciente por fecha: si
+  // alguien carga una versión con fecha vieja no se rompe el indicador.
+  const versionPorColor = new Map<string, string>();
+  for (const f of [...base].sort((a, b) => (gVal(a, "fecha") || "").localeCompare(gVal(b, "fecha") || ""))) {
+    const c = gVal(f, "color_revision");
+    if (c) versionPorColor.set(c, gVal(f, "version") || "—");
+  }
+  const usados = secuencia.filter((c) => versionPorColor.has(c));
+  const colorActual = usados.length > 0 ? usados[usados.length - 1] : "";
+  const idxActual = secuencia.indexOf(colorActual);
+  const colorSiguiente = idxActual >= 0 && idxActual < secuencia.length - 1 ? secuencia[idxActual + 1] : "";
+  const restantes = idxActual >= 0 ? secuencia.length - 1 - idxActual : secuencia.length;
+  const nRevisiones = Math.max(0, usados.length - 1);
 
   return (
     <div className="ghist-wrap">
       {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_HISTORIAL} onCrear={onCrear} />}
+
+      <div className="ghist-seq">
+        <div className="ghist-seq-hd">
+          <span><i className="ghist-key" /> {t("revDelivered")}</span>
+          <span><i className="ghist-key pend" /> {t("revPending")}</span>
+        </div>
+        <div className="ghist-seq-row">
+          {secuencia.map((c) => {
+            const usado = versionPorColor.has(c);
+            const esActual = c === colorActual;
+            const esSiguiente = c === colorSiguiente;
+            return (
+              <div
+                key={c}
+                className={`ghist-s${usado ? "" : " pend"}${esActual ? " here" : ""}`}
+                style={{ ["--rev" as string]: REV_HEX[c] ?? "var(--muted)" }}
+                title={usado ? `${c} · ${versionPorColor.get(c)}` : c}
+              >
+                <div className="ghist-s-sw" />
+                <div className="ghist-s-ln" />
+                <div className="ghist-s-lb">{c}</div>
+                <div className="ghist-s-vr">{usado ? versionPorColor.get(c) : esSiguiente ? "·" : ""}</div>
+              </div>
+            );
+          })}
+        </div>
+        {colorActual && (
+          <div className="ghist-seq-ft">
+            {t.rich("revProgress", {
+              n: nRevisiones,
+              restantes,
+              b: (chunks) => <b>{chunks}</b>,
+            })}
+          </div>
+        )}
+      </div>
+
+      {hayFilas && editable && (
+        <button className="ghist-add" style={{ ["--rev" as string]: REV_HEX[colorSiguiente] ?? "var(--muted)" }}
+          onClick={() => onCrear(colorSiguiente ? { color_revision: colorSiguiente } : {})}>
+          <span className="ghist-add-sw" /> {t("addVersion")}
+          {colorSiguiente && <span className="ghist-add-hint">{t("revNext", { color: colorSiguiente })}</span>}
+        </button>
+      )}
+
       <div className="ghist-line">
-        {sorted.map((f, i) => {
+        {sorted.map((f) => {
           const gh = esGhost(f); const ed = editable && !gh;
+          const color = gVal(f, "color_revision");
+          const hex = REV_HEX[color] ?? "var(--line)";
+          const esActual = !!color && color === colorActual;
+          const pags = revPaginas(gVal(f, "paginas"));
           return (
-            <div key={f.id} className={`ghist-node ${gh ? "cp-ghost" : ""} ${i === 0 ? "ghist-latest" : ""}`}>
+            <div key={f.id} className={`ghist-node${gh ? " cp-ghost" : ""}${esActual ? " here" : ""}`}
+              style={{ ["--rev" as string]: hex }}>
               {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
-              <div className="ghist-dot"><span /></div>
+              <div className="ghist-edge" />
               <div className="ghist-card">
                 <div className="ghist-head">
                   {ed
                     ? <input className="ghist-ver" defaultValue={gVal(f, "version")} placeholder="v1.0" onBlur={(e) => set(f, "version", e.target.value)} />
                     : <span className="ghist-ver">{gVal(f, "version") || "v—"}</span>}
-                  {i === 0 && <span className="ghist-current">{t("versionCurrent")}</span>}
+                  {colColor && (
+                    ed
+                      ? <select className="ghist-color-sel" defaultValue={color} onChange={(e) => set(f, "color_revision", e.target.value)}>
+                          <option value="">{colColor.label}</option>
+                          {secuencia.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      : color ? <span className="ghist-cname"><i /> {color}</span> : null
+                  )}
+                  {esActual && <span className="ghist-current">{t("versionCurrent")}</span>}
                   <div className="ghist-meta">
                     {ed
                       ? <input type="date" className="ghist-fecha" defaultValue={gVal(f, "fecha")} onBlur={(e) => set(f, "fecha", e.target.value)} />
@@ -8795,6 +8890,14 @@ function HistorialVersiones({ columnas, filas, editable, onCrear, onGuardar, onB
                 {ed
                   ? <textarea className="ghist-cambios" defaultValue={stripHtml(gVal(f, "cambios"))} placeholder={t("phHistorialCambios")} rows={2} onBlur={(e) => set(f, "cambios", e.target.value)} />
                   : <div className="ghist-cambios">{stripHtml(gVal(f, "cambios"))}</div>}
+                <div className="ghist-pgs">
+                  <span className="ghist-pgs-lb">{gLbl(columnas, "paginas")}</span>
+                  {ed
+                    ? <input className="ghist-pgs-in" defaultValue={gVal(f, "paginas")} placeholder={t("phPaginas")} onBlur={(e) => set(f, "paginas", e.target.value)} />
+                    : pags.length > 0
+                      ? pags.map((p, i) => <span className="ghist-pg" key={i}>{p}*</span>)
+                      : <span className="ghist-pgs-none">{t("revNoPages")}</span>}
+                </div>
                 {colEstado && (
                   <div className="ghist-foot">
                     <EstadoSeg valor={gVal(f, "estado")} opciones={colEstado.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={ed} color />
@@ -8805,7 +8908,6 @@ function HistorialVersiones({ columnas, filas, editable, onCrear, onGuardar, onB
           );
         })}
       </div>
-      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addVersion")}</button></div>}
     </div>
   );
 }
