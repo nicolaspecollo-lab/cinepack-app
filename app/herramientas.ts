@@ -51,33 +51,27 @@ const ACCESOS: Herramienta = {
 // ===========================================================================
 // EJECUTIVO
 // ===========================================================================
-const presupuestoGeneral: Herramienta = {
-  id: "ej-presupuesto-general",
-  nombre: "Presupuesto general (top sheet)",
+// Presupuesto y costos: fusiona lo que antes eran 3 herramientas separadas
+// (Presupuesto general/top sheet, Presupuesto por departamento, Control de
+// costos/cost report) en una sola tabla de partidas. Las 3 son, en software
+// de presupuestación real (Movie Magic Budgeting, EP), la MISMA data —
+// un chart of accounts con presupuestado/real— vista con 3 agrupamientos
+// distintos, nunca 3 fuentes separadas que haya que mantener sincronizadas.
+const presupuestoCostos: Herramienta = {
+  id: "ej-presupuesto-costos",
+  nombre: "Presupuesto y costos",
   tipo: "tabla",
-  hint: "Top sheet por capítulos: lo presupuestado, comprometido y real del proyecto entero.",
+  hint: "Una sola tabla de partidas con 3 vistas: top sheet (por capítulo), por departamento y cost report (detalle con desvío). Estado y desvío se calculan solos.",
   columnas: [
-    { key: "cap", label: "Capítulo" },
-    { key: "concepto", label: "Concepto" },
-    { key: "presup", label: "Presupuestado", tipo: "money" },
-    { key: "comprometido", label: "Comprometido", tipo: "money" },
-    { key: "real", label: "Real", tipo: "money" },
-    { key: "estado", label: "Estado", tipo: "estado", opciones: ["En presupuesto", "En riesgo", "Sobrepasado"] },
-    { key: "doc", label: "Documento", tipo: "archivo" },
-  ],
-};
-const presupuestoDepto: Herramienta = {
-  id: "ej-presupuesto-depto",
-  nombre: "Presupuesto por departamento",
-  tipo: "tabla",
-  hint: "Asignación y límite de gasto por departamento.",
-  columnas: [
-    { key: "depto", label: "Departamento" },
-    { key: "asignado", label: "Asignado", tipo: "money" },
-    { key: "gastado", label: "Gastado", tipo: "money" },
-    { key: "disponible", label: "Disponible", tipo: "money" },
-    { key: "limite", label: "Límite de alerta", tipo: "money" },
+    { key: "capitulo", label: "Capítulo / Departamento" },
+    { key: "partida", label: "Partida" },
+    { key: "presupuestado", label: "Presupuestado", tipo: "money" as const },
+    { key: "comprometido", label: "Comprometido", tipo: "money" as const },
+    { key: "real", label: "Real a la fecha", tipo: "money" as const },
+    { key: "limite_alerta", label: "Límite de alerta", tipo: "money" as const },
     { key: "responsable", label: "Responsable" },
+    { key: "comentario", label: "Comentario", tipo: "largo" },
+    { key: "doc", label: "Documento", tipo: "archivo" as const },
   ],
 };
 const planFinanciacion: Herramienta = {
@@ -96,19 +90,6 @@ const planFinanciacion: Herramienta = {
     { key: "resolucion", label: "Fecha resolución", tipo: "fecha" },
     { key: "condiciones", label: "Condiciones", tipo: "largo" },
     { key: "bases_doc", label: "Bases / Convocatoria (PDF o enlace)", tipo: "archivo" as const },
-  ],
-};
-const controlCostos: Herramienta = {
-  id: "ej-control-costos",
-  nombre: "Control de costos (cost report)",
-  tipo: "tabla",
-  hint: "Presupuestado vs. real por partida, con desvío.",
-  columnas: [
-    { key: "partida", label: "Partida" },
-    { key: "presup", label: "Presupuestado", tipo: "money" },
-    { key: "real", label: "Real a la fecha", tipo: "money" },
-    { key: "ejec", label: "% ejecutado", tipo: "num" },
-    { key: "comentario", label: "Comentario", tipo: "largo" },
   ],
 };
 const flujoCaja: Herramienta = {
@@ -2180,7 +2161,7 @@ const moEntrevistas: Herramienta = {
 export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
   Ejecutivo: {
     "Producción ejecutiva": {
-      departamento: [presupuestoGeneral, presupuestoDepto, planFinanciacion],
+      departamento: [presupuestoCostos, planFinanciacion],
       cargo: [
         ejCashflow,
         ejCoproducciones,
@@ -2193,7 +2174,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       ],
     },
     "Dirección financiera": {
-      departamento: [presupuestoGeneral, presupuestoDepto, controlCostos, flujoCaja],
+      departamento: [presupuestoCostos, flujoCaja],
       cargo: [
         {
           id: "ej-modelo-financiero", nombre: "Modelo financiero y proyección", tipo: "tabla",
@@ -2210,7 +2191,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       ],
     },
     "Tesorería": {
-      departamento: [controlCostos, flujoCaja, facturas],
+      departamento: [presupuestoCostos, flujoCaja, facturas],
       cargo: [
         {
           id: "ej-pagos-nominas", nombre: "Pagos, nóminas, caja chica y rendiciones", tipo: "tabla",

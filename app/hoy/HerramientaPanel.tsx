@@ -176,6 +176,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "ej-gestion-documental",
   "ej-derechos-pi",
   "ej-polizas-permisos",
+  "ej-presupuesto-costos",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -200,6 +201,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     DOC_STATUS_IDS.has(id) ||
     id === "ej-pagos-nominas" ||
     id === "ej-gestion-documental" ||
+    id === "ej-presupuesto-costos" ||
     ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
@@ -771,6 +773,21 @@ function HerramientaData({
       {herramienta.tipo === "tabla" && PRESUPUESTO_BOARD_IDS.has(herramienta.id) && (
         <VistaConEjemplos ejemplos={EJ_PRESUP} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PresupuestoBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "ej-presupuesto-costos" && (
+        <VistaConEjemplos ejemplos={EJ_PRESUPUESTO_COSTOS} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <PresupuestoCostosBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
@@ -3264,9 +3281,6 @@ function ejMoney(n: number): string {
 // ejecutivo necesita ver primero: cuánto del presupuesto está consumido y
 // si hay desvío, no una grilla de cifras sin sumar.
 const PRESUPUESTO_BOARD_IDS = new Set([
-  "ej-presupuesto-general",
-  "ej-presupuesto-depto",
-  "ej-control-costos",
   "prod-presup-operativo",
 ]);
 
@@ -3473,6 +3487,137 @@ function PresupuestoBoard({
         </div>
       )}
     </>
+  );
+}
+
+// ---- Presupuesto y costos: 3 vistas sobre UNA sola tabla de partidas ----
+// Antes eran 3 herramientas separadas (top sheet, por departamento, cost
+// report) que había que cargar 3 veces con el mismo dato. En presupuestación
+// real (Movie Magic Budgeting, EP) son 3 lecturas del MISMO chart of
+// accounts. Acá: "capitulo" agrupa las partidas; Top sheet y Por
+// departamento muestran el mismo agrupamiento con distinto encuadre
+// (financiero vs. control de gasto), Cost report es el detalle editable
+// fila por fila (reutiliza PresupuestoBoard, ya construido para esto).
+function pcRollup(filas: Fila[]) {
+  const map = new Map<string, { presupuestado: number; comprometido: number; real: number; limite: number }>();
+  for (const f of filas) {
+    const key = f.datos?.capitulo?.trim() || "Sin capítulo";
+    const cur = map.get(key) ?? { presupuestado: 0, comprometido: 0, real: 0, limite: 0 };
+    cur.presupuestado += ejNum(f.datos?.presupuestado);
+    cur.comprometido += ejNum(f.datos?.comprometido);
+    cur.real += ejNum(f.datos?.real);
+    cur.limite += ejNum(f.datos?.limite_alerta);
+    map.set(key, cur);
+  }
+  return [...map.entries()].sort((a, b) => b[1].presupuestado - a[1].presupuestado);
+}
+
+function PresupuestoCostosRollup({ filas, modo }: { filas: Fila[]; modo: "topsheet" | "depto" }) {
+  const grupos = pcRollup(filas);
+  const totalPresup = grupos.reduce((s, [, g]) => s + g.presupuestado, 0);
+  const totalReal = grupos.reduce((s, [, g]) => s + g.real, 0);
+
+  return (
+    <div className="hp-pc-rollup">
+      {grupos.map(([nombre, g]) => {
+        const pct = g.presupuestado > 0 ? (g.real / g.presupuestado) * 100 : 0;
+        const superoLimite = modo === "depto" && g.limite > 0 && g.real >= g.limite;
+        const tono = pct > 100 ? "bad" : pct >= 90 || superoLimite ? "warn" : "ok";
+        const disponible = g.presupuestado - g.real;
+        return (
+          <div className={`hp-pre-header tono-${tono}`} key={nombre}>
+            <div className="hp-pre-h-item hp-pc-h-nombre">
+              <span className="hp-pre-h-val">{nombre}</span>
+              {modo === "depto" && superoLimite && <span className="hp-pc-limite-warn">Superó el límite de alerta ({ejMoney(g.limite)})</span>}
+            </div>
+            {modo === "topsheet" ? (
+              <>
+                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Presupuestado</span><span className="hp-pre-h-val">{ejMoney(g.presupuestado)}</span></div>
+                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Comprometido</span><span className="hp-pre-h-val">{ejMoney(g.comprometido)}</span></div>
+                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Real</span><span className="hp-pre-h-val">{ejMoney(g.real)}</span></div>
+              </>
+            ) : (
+              <>
+                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Asignado</span><span className="hp-pre-h-val">{ejMoney(g.presupuestado)}</span></div>
+                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Gastado</span><span className="hp-pre-h-val">{ejMoney(g.real)}</span></div>
+                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Disponible</span><span className={`hp-pre-h-val tono-${disponible < 0 ? "bad" : "ok"}`}>{ejMoney(disponible)}</span></div>
+              </>
+            )}
+            <div className="hp-pre-h-gauge">
+              <div className="hp-pre-h-bar"><div className={`hp-pre-bar-fill tono-${tono}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
+              <span className={`hp-pre-pct tono-${tono}`}>{g.presupuestado > 0 ? `${Math.round(pct)}%` : "—"}</span>
+            </div>
+          </div>
+        );
+      })}
+      <div className="hp-pc-total">
+        <span>Total</span>
+        <span>{ejMoney(totalPresup)} presupuestado · {ejMoney(totalReal)} real</span>
+      </div>
+    </div>
+  );
+}
+
+const PC_VISTAS = [
+  { key: "topsheet" as const, label: "Top sheet" },
+  { key: "depto" as const, label: "Por departamento" },
+  { key: "costreport" as const, label: "Cost report" },
+];
+
+export function PresupuestoCostosBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [vista, setVista] = useState<"topsheet" | "depto" | "costreport">("topsheet");
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty">
+        <span className="hex"></span>
+        <p>{t("emptyTitle")}</p>
+        {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="hp-pc">
+      <div className="hp-etb-filtros hp-pc-vistas">
+        {PC_VISTAS.map((v) => (
+          <button key={v.key} className={`hp-etb-fchip${vista === v.key ? " on" : ""}`} onClick={() => setVista(v.key)}>{v.label}</button>
+        ))}
+      </div>
+      {vista === "costreport" ? (
+        <PresupuestoBoard
+          columnas={columnas}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramientaId}
+          onCrear={onCrear}
+          onGuardar={onGuardar}
+          onBorrar={onBorrar}
+        />
+      ) : (
+        <PresupuestoCostosRollup filas={filas} modo={vista} />
+      )}
+    </div>
   );
 }
 
@@ -7583,6 +7728,12 @@ const EJ_CONTINUIDAD_G: Ejemplo[] = [
 const EJ_PRESUP: Ejemplo[] = [
   { partida: "Equipo de cámara", presupuestado: "12000", real: "11200", estado: "En presupuesto" },
   { partida: "Localizaciones", presupuestado: "8000", real: "9500", estado: "Sobrepasado" },
+];
+const EJ_PRESUPUESTO_COSTOS: Ejemplo[] = [
+  { capitulo: "Arte", partida: "Alquiler de decorados", presupuestado: "45000", comprometido: "45000", real: "38200", limite_alerta: "43000", responsable: "Marta Gil" },
+  { capitulo: "Arte", partida: "Materiales y construcción", presupuestado: "18000", comprometido: "16500", real: "17200", responsable: "Marta Gil" },
+  { capitulo: "Sonido", partida: "Equipo de grabación", presupuestado: "22000", comprometido: "22000", real: "24100", limite_alerta: "21000", responsable: "Kepa Aguirre", comentario: "Se sumó un boom extra no previsto." },
+  { capitulo: "Cámara", partida: "Alquiler de cámara y ópticas", presupuestado: "38000", comprometido: "38000", real: "36500", responsable: "Diego Aramburu" },
 ];
 const EJ_CASHFLOW: Ejemplo[] = [
   { periodo: "Semana 1", ingresos: "50000", egresos: "32000", saldo: "18000" },
