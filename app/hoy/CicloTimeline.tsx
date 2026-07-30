@@ -68,6 +68,34 @@ function asignarCarriles(puntos: PuntoBase[]): Punto[] {
   });
 }
 
+// La línea de "Hoy" tiene que vivir en el MISMO espacio visual que los
+// puntos. asignarCarriles empuja los puntos a la derecha para que no se
+// pisen y ese desplazamiento se ACUMULA: con GAP_MIN_PX=182, un puñado de
+// convocatorias juntas corre todo lo posterior varios cientos de píxeles.
+// Si Hoy usa la x cronológica cruda queda muy a la izquierda, incluso
+// detrás de eventos anteriores a hoy. Se interpola el desfase de los
+// puntos vecinos (cada uno guarda su xReal) para ubicarla donde
+// corresponde entre ellos.
+function xVisualDe(xReal: number, puntos: Punto[]): number {
+  if (puntos.length === 0) return xReal;
+  const orden = [...puntos].sort((a, b) => a.xReal - b.xReal);
+  const primero = orden[0];
+  const ultimo = orden[orden.length - 1];
+  if (xReal <= primero.xReal) return xReal + (primero.x - primero.xReal);
+  if (xReal >= ultimo.xReal) return xReal + (ultimo.x - ultimo.xReal);
+  for (let i = 0; i < orden.length - 1; i++) {
+    const a = orden[i];
+    const b = orden[i + 1];
+    if (xReal >= a.xReal && xReal <= b.xReal) {
+      const offA = a.x - a.xReal;
+      const offB = b.x - b.xReal;
+      const t = b.xReal === a.xReal ? 0 : (xReal - a.xReal) / (b.xReal - a.xReal);
+      return xReal + offA + (offB - offA) * t;
+    }
+  }
+  return xReal;
+}
+
 export default function CicloTimeline() {
   const t = useTranslations("ciclo");
   const tEt = useTranslations("etapas");
@@ -144,7 +172,11 @@ export default function CicloTimeline() {
     // ancho cronológico, la pista crece para que no queden pisados contra
     // el borde derecho.
     const maxX = puntos.reduce((m, p) => Math.max(m, p.x), 0);
-    const width = Math.max(anchoBase, maxX + pad);
+    // Hoy también arrastra el desfase visual, así que entra en el ancho:
+    // si el proyecto no tiene eventos futuros, la línea puede caer más a la
+    // derecha que el último punto y quedaría cortada contra el borde.
+    const hoyX = xVisualDe(xDe(Date.now()), puntos);
+    const width = Math.max(anchoBase, maxX + pad, hoyX + pad);
 
     // Usa la x visual (ya ajustada por asignarCarriles) del hito de cada
     // etapa, no la fecha cruda — así el color de fondo siempre arranca
@@ -159,7 +191,7 @@ export default function CicloTimeline() {
       return { x1, x2, color: COLOR_ETAPA[e.key] };
     });
 
-    return { puntos, width, hoyX: xDe(Date.now()), segmentos };
+    return { puntos, width, hoyX, segmentos };
   }, [fechas, eventos, zoom]);
 
   // Arrastre horizontal + zoom (rueda con Ctrl = pellizco de trackpad, y
