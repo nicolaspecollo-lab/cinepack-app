@@ -186,6 +186,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "guion-informe-doctor",
   "guion-banco-investigacion",
   "guion-traduccion",
+  "guion-tratamiento-traducido",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -232,6 +233,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "guion-informe-doctor" ||
     id === "guion-banco-investigacion" ||
     id === "guion-traduccion" ||
+    id === "guion-tratamiento-traducido" ||
     id === "cast-candidatos" ||
     id === "cast-breakdown-actores" ||
     id === "cast-tabla-disponibilidad" ||
@@ -1070,6 +1072,20 @@ function HerramientaData({
           editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-tratamiento-traducido" && (
+        <VistaConEjemplos ejemplos={EJ_TRATAMIENTO} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <TratamientoTraducidoBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          herramientaNombre={herramienta.nombre}
           onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
@@ -7866,6 +7882,14 @@ const EJ_BANCO_INV: Ejemplo[] = [
     decision_contradiccion: "Se usa la entrevista: describe casos atípicos documentados. Se anota como licencia dramática consultada con especialista.",
   },
 ];
+const EJ_TRATAMIENTO: Ejemplo[] = [
+  { tipo_documento: "Logline", version: "v2", fecha: "2026-07-10",
+    texto_original: "Una farera que perdió la voz descubre que las cartas sin remite que recibe hace veinte años las escribió ella misma.",
+    traducciones: JSON.stringify([{ idioma: "Inglés", texto: "A lighthouse keeper who lost her voice discovers that the unsigned letters she's received for twenty years were written by herself.", estado: "Revisado por nativo" }]) },
+  { tipo_documento: "Sinopsis", version: "v2", fecha: "2026-07-10",
+    texto_original: "Marea vive sola en el faro desde que su madre desapareció. Cuando una carta sin remite la obliga a enfrentar su pasado, descubre un secreto que va a cambiar todo lo que creía saber sobre esa noche.",
+    traducciones: JSON.stringify([{ idioma: "Inglés", texto: "Marea has lived alone at the lighthouse since her mother disappeared.", estado: "Traducción automática" }]) },
+];
 const EJ_TRADUCCION: Ejemplo[] = [
   { escena: "12", personaje: "Marea", texto_original: "No hay luz esta noche. El farol se apagó solo.", timecode_inicio: "00:14:22,100", timecode_fin: "00:14:24,800",
     traducciones: JSON.stringify([{ idioma: "Inglés", texto: "There's no light tonight. The lantern went out by itself.", estado: "Traducción automática" }]) },
@@ -9572,6 +9596,210 @@ export function TraduccionSubtituladoBoard({
             <div className="trad-export-warn">
               {sinTraducirOAuto > 0 && <span>{sinTraducirOAuto} línea{sinTraducirOAuto === 1 ? "" : "s"} sin traducir o sin revisión nativa. </span>}
               {conCPSMalo > 0 && <span>{conCPSMalo} línea{conCPSMalo === 1 ? "" : "s"} superan el CPS recomendado — se exportan igual.</span>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===========================================================================
+// TRATAMIENTO, SINOPSIS Y LOGLINE (Guion + Traductor, compartida)
+// ---------------------------------------------------------------------------
+// Mismo principio de comparar-y-reescribir que Traducción y subtitulado,
+// pero sin timecode ni CPS: acá el contenido es de formato largo (venta,
+// no subtitulado). A diferencia de esa herramienta, esta SÍ la comparten
+// dos cargos (Guion + Traductor) a propósito — no hay nada que aislar,
+// es material de venta, no el guion canónico.
+// ===========================================================================
+export function TratamientoTraducidoBoard({
+  columnas, filas, editable, herramientaNombre, onCrear, onGuardar, onBorrar,
+}: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; herramientaNombre: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+  const [idioma, setIdioma] = useState<string>("");
+  const [agregando, setAgregando] = useState(false);
+  const [nuevoIdioma, setNuevoIdioma] = useState("");
+  const [filtro, setFiltro] = useState<"todas" | "revisar">("revisar");
+  const [exportando, setExportando] = useState(false);
+
+  const idiomasUsados = Array.from(new Set(filas.flatMap((f) => traduccionesDe(f).map((tr) => tr.idioma)).filter(Boolean))).sort();
+  const idiomaActivo = idioma || idiomasUsados[0] || "";
+
+  function set(f: Fila, k: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  }
+  function setTraduccion(f: Fila, cambios: Record<string, string>) {
+    const actuales = traduccionesDe(f);
+    const idx = actuales.findIndex((tr) => tr.idioma === idiomaActivo);
+    const next = idx >= 0
+      ? actuales.map((tr, i) => (i === idx ? { ...tr, ...cambios } : tr))
+      : [...actuales, { idioma: idiomaActivo, estado: "Traducción automática", ...cambios }];
+    onGuardar(f.id, { ...f.datos, traducciones: JSON.stringify(next) }, f);
+  }
+  function agregarIdioma() {
+    const nombre = nuevoIdioma.trim();
+    if (!nombre) return;
+    setIdioma(nombre);
+    setNuevoIdioma("");
+    setAgregando(false);
+  }
+
+  const conteos = { "Sin traducir": 0, "Traducción automática": 0, "Revisado por nativo": 0, "Aprobado": 0 } as Record<string, number>;
+  for (const f of filas) {
+    const tr = idiomaActivo ? traduccionPara(f, idiomaActivo) : undefined;
+    conteos[tr?.estado || "Sin traducir"]++;
+  }
+  const visibles = filtro === "revisar"
+    ? filas.filter((f) => {
+        const tr = idiomaActivo ? traduccionPara(f, idiomaActivo) : undefined;
+        return !tr || tr.estado === "Sin traducir" || tr.estado === "Traducción automática";
+      })
+    : filas;
+
+  async function exportarPDF() {
+    if (!idiomaActivo) return;
+    setExportando(true);
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const marginLeft = 25, marginRight = 185, pageBottom = 280;
+      let y = 25;
+      function nuevaPagina() { doc.addPage(); y = 25; }
+      function asegurarEspacio(lineas: number) { if (y + lineas * 6 > pageBottom) nuevaPagina(); }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text(herramientaNombre, marginLeft, y);
+      y += 10;
+
+      for (const f of filas) {
+        const tr = traduccionPara(f, idiomaActivo);
+        if (!tr?.texto) continue;
+        asegurarEspacio(3);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text((gVal(f, "tipo_documento") || "Documento").toUpperCase(), marginLeft, y);
+        y += 7;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        const lineas = doc.splitTextToSize(stripHtml(tr.texto), marginRight - marginLeft);
+        asegurarEspacio(lineas.length);
+        doc.text(lineas, marginLeft, y);
+        y += lineas.length * 6 + 10;
+      }
+
+      const slug = `${herramientaNombre}-${idiomaActivo}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
+      doc.save(`${slug}.pdf`);
+    } finally {
+      setExportando(false);
+    }
+  }
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p>
+        {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}</div>
+    );
+  }
+
+  return (
+    <div className="trad">
+      <div className="trad-langs">
+        <span className="trad-lang muted">Original (ES)</span>
+        {idiomasUsados.map((l) => (
+          <button key={l} className={`trad-lang${l === idiomaActivo ? " on" : ""}`} onClick={() => setIdioma(l)}>{l}</button>
+        ))}
+        {agregando ? (
+          <span className="trad-lang-add-in">
+            <input autoFocus value={nuevoIdioma} placeholder="Nombre del idioma" list="trad-idiomas-sugeridos-2"
+              onChange={(e) => setNuevoIdioma(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") agregarIdioma(); if (e.key === "Escape") setAgregando(false); }} />
+            <button onClick={agregarIdioma}>Agregar</button>
+          </span>
+        ) : (
+          editable && <button className="trad-lang add" onClick={() => setAgregando(true)}>+ Agregar idioma</button>
+        )}
+        <datalist id="trad-idiomas-sugeridos-2">
+          {TRAD_IDIOMAS_SUGERIDOS.map((l) => <option key={l} value={l} />)}
+        </datalist>
+      </div>
+
+      {!idiomaActivo ? (
+        <div className="trad-vacio">Agregá un idioma para empezar a traducir.</div>
+      ) : (
+        <>
+          <div className="trad-sumbar">
+            <div className="trad-sum" data-tono="bad"><b>{conteos["Sin traducir"]}</b><span>Sin traducir</span></div>
+            <div className="trad-sum" data-tono="warn"><b>{conteos["Traducción automática"]}</b><span>Traducción automática</span></div>
+            <div className="trad-sum" data-tono="info"><b>{conteos["Revisado por nativo"]}</b><span>Revisado</span></div>
+            <div className="trad-sum" data-tono="ok"><b>{conteos["Aprobado"]}</b><span>Aprobado</span></div>
+            <div className="trad-filtros">
+              <button className={`trad-fc${filtro === "revisar" ? " on" : ""}`} onClick={() => setFiltro("revisar")}>Por revisar</button>
+              <button className={`trad-fc${filtro === "todas" ? " on" : ""}`} onClick={() => setFiltro("todas")}>Todas</button>
+            </div>
+          </div>
+
+          {visibles.length === 0 ? (
+            <div className="trad-vacio">Nada que mostrar con este filtro.</div>
+          ) : visibles.map((f) => {
+            const tr = traduccionPara(f, idiomaActivo);
+            return (
+              <div className="trad-linea" key={f.id}>
+                <div className="trad-l-top">
+                  <EstadoSeg valor={gVal(f, "tipo_documento") || "Otro"} opciones={colByKey.get("tipo_documento")?.opciones ?? []}
+                    onPick={(v) => set(f, "tipo_documento", v)} editable={editable} chip />
+                  <input className="trad-l-per" defaultValue={gVal(f, "version")} placeholder="Versión" readOnly={!editable} onBlur={(e) => set(f, "version", e.target.value)} />
+                  <input type="date" className="trad-l-tc" defaultValue={gVal(f, "fecha")} readOnly={!editable} onBlur={(e) => set(f, "fecha", e.target.value)} />
+                  <span className={`trad-l-est t-${TRAD_TONO[tr?.estado || "Sin traducir"]}`}>{tr?.estado || "Sin traducir"}</span>
+                  {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                </div>
+                <div className="trad-cmp">
+                  <div className="trad-orig">
+                    <span className="trad-lbl">Original (ES)</span>
+                    <textarea className="trad-otxt" rows={6} defaultValue={stripHtml(gVal(f, "texto_original"))}
+                      readOnly={!editable} onBlur={(e) => set(f, "texto_original", e.target.value)} />
+                  </div>
+                  <div className="trad-tr">
+                    <div className="trad-tr-top">
+                      <span className="trad-lbl">{idiomaActivo} — reescribir acá</span>
+                      {editable && (
+                        <EstadoSeg valor={tr?.estado || "Traducción automática"} opciones={TRADUCCION_ESTADOS} chip color
+                          editable onPick={(v) => setTraduccion(f, { estado: v })} />
+                      )}
+                    </div>
+                    <textarea className="trad-ttxt" rows={6} defaultValue={stripHtml(tr?.texto ?? "")}
+                      readOnly={!editable} placeholder="Escribí la traducción…"
+                      onBlur={(e) => setTraduccion(f, { texto: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {editable && (
+        <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Agregar documento</button></div>
+      )}
+
+      {idiomaActivo && (
+        <div className="trad-export">
+          <div className="trad-export-lbl">Exportar {idiomaActivo}</div>
+          <div className="trad-export-btns">
+            <button className="cp-btn cp-btn-acc" disabled={exportando} onClick={exportarPDF}>
+              {exportando ? "Generando…" : `Descargar documento en PDF (${idiomaActivo})`}
+            </button>
+          </div>
+          {conteos["Sin traducir"] + conteos["Traducción automática"] > 0 && (
+            <div className="trad-export-warn">
+              {conteos["Sin traducir"] + conteos["Traducción automática"]} documento{conteos["Sin traducir"] + conteos["Traducción automática"] === 1 ? "" : "s"} sin traducir o sin revisión nativa — se exportan igual.
             </div>
           )}
         </div>

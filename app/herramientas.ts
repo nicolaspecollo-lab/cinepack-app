@@ -607,6 +607,30 @@ const traduccionSubtitulado: Herramienta = {
   ],
 };
 
+// ---- Tratamiento, sinopsis y logline (traducidos) ----
+// Compartida entre Guion y Traductor a propósito: acá SÍ conviene que el
+// guionista y el traductor trabajen sobre el mismo dato (el guionista
+// aprueba cómo queda representada su historia en otro idioma antes de que
+// salga a un mercado). No es contenido canónico como Historial/Sinopsis-
+// escaleta/Desglose — es material de venta, formato largo, sin timecode.
+const tratamientoTraducido: Herramienta = {
+  id: "guion-tratamiento-traducido",
+  nombre: "Tratamiento, sinopsis y logline",
+  tipo: "tabla",
+  hint: "Material de venta para mercados internacionales, comparado y traducido documento por documento. El guionista aprueba, el traductor escribe.",
+  columnas: [
+    { key: "tipo_documento", label: "Documento", tipo: "estado", opciones: ["Logline", "Sinopsis", "Tratamiento", "Otro"] },
+    { key: "version", label: "Versión" },
+    { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+    { key: "texto_original", label: "Texto original (ES)", tipo: "largo" },
+    { key: "traducciones", label: "Traducciones", tipo: "repetible", sub: [
+      { key: "idioma", label: "Idioma" },
+      { key: "texto", label: "Traducción", tipo: "largo" },
+      { key: "estado", label: "Estado", tipo: "estado", opciones: TRADUCCION_ESTADOS },
+    ]},
+  ],
+};
+
 // ---- Informes de análisis (cargo Script doctor) ----
 // Vista de quien ESCRIBE el informe. El triaje de las recomendaciones no
 // vive acá sino en el Plan de reescritura del guionista: acá cada
@@ -3087,6 +3111,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         cesionGuion,
         planReescritura,
+        tratamientoTraducido,
         ACCESOS,
       ],
     },
@@ -3118,7 +3143,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     // nuevos: si no está en su departamento[], no lo ve ni lo edita.
     "Traductor": {
       departamento: [],
-      cargo: [traduccionSubtitulado],
+      cargo: [traduccionSubtitulado, tratamientoTraducido],
     },
   },
 
