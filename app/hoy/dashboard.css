@@ -3743,6 +3743,82 @@
 .cp-dash textarea.ghist-cambios:focus{ outline:none; border-color:var(--acc); }
 .cp-dash .ghist-foot{ display:flex; }
 
+/* -- Traducción y subtitulado -- */
+.cp-dash .trad input, .cp-dash .trad textarea, .cp-dash .trad button{ border-radius:0; }
+.cp-dash .trad{ padding:4px var(--gutter) 30px; }
+.cp-dash .trad .hp-actions{ padding-left:0; padding-right:0; }
+.cp-dash .trad-vacio{ font-size:12px; color:var(--muted); padding:14px 0; }
+.cp-dash .trad-langs{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.cp-dash .trad-lang{ font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; padding:7px 13px;
+  border:1px solid var(--line); background:none; color:var(--muted); cursor:pointer; }
+.cp-dash .trad-lang.muted{ opacity:.6; cursor:default; }
+.cp-dash .trad-lang.on{ border-color:var(--acc); color:var(--acc); background:color-mix(in srgb, var(--acc) 12%, transparent); }
+.cp-dash .trad-lang.add{ border-style:dashed; }
+.cp-dash .trad-lang.add:hover{ border-color:var(--acc); color:var(--acc); }
+.cp-dash .trad-lang-add-in{ display:flex; gap:6px; }
+.cp-dash .trad-lang-add-in input{ font-family:'Courier New',monospace; font-size:11px; padding:6px 9px;
+  border:1px solid var(--line); background:var(--bg); color:var(--text); }
+.cp-dash .trad-lang-add-in button{ font-family:'Poppins',sans-serif; font-weight:700; font-size:10px; text-transform:uppercase;
+  letter-spacing:.05em; padding:6px 11px; border:1px solid var(--acc); background:color-mix(in srgb, var(--acc) 16%, transparent); color:var(--text); cursor:pointer; }
+.cp-dash .trad-sumbar{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:11px 15px;
+  border:1px solid var(--line); background:var(--bg-2); margin-bottom:14px; }
+.cp-dash .trad-sum{ display:flex; flex-direction:column; gap:2px; }
+.cp-dash .trad-sum b{ font-family:'Poppins',sans-serif; font-weight:800; font-size:15px; }
+.cp-dash .trad-sum span{ font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.cp-dash .trad-sum[data-tono="bad"] b{ color:var(--rose); }
+.cp-dash .trad-sum[data-tono="warn"] b{ color:var(--amber); }
+.cp-dash .trad-sum[data-tono="info"] b{ color:var(--cyan); }
+.cp-dash .trad-sum[data-tono="ok"] b{ color:var(--lime); }
+.cp-dash .trad-filtros{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+.cp-dash .trad-fc{ font-size:10px; padding:5px 10px; border:1px solid var(--line); color:var(--muted);
+  text-transform:uppercase; letter-spacing:.04em; background:none; cursor:pointer; }
+.cp-dash .trad-fc.on{ border-color:var(--cyan); color:var(--cyan); background:color-mix(in srgb, var(--cyan) 12%, transparent); }
+.cp-dash .trad-linea{ border:1px solid var(--line); background:var(--bg-2); margin-bottom:8px; }
+.cp-dash .trad-l-top{ display:flex; align-items:center; gap:9px; padding:9px 13px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.cp-dash .trad-l-esc{ width:44px; font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; color:var(--muted);
+  background:none; border:none; border-bottom:1px solid transparent; padding:2px 0; }
+.cp-dash .trad-l-per{ font-family:'Poppins',sans-serif; font-weight:800; font-size:12px; color:var(--text);
+  background:none; border:none; border-bottom:1px solid transparent; padding:2px 0; min-width:90px; }
+.cp-dash .trad-l-esc:focus, .cp-dash .trad-l-per:focus{ outline:none; border-bottom-color:var(--acc); }
+.cp-dash .trad-l-tc{ font-family:'Courier New',monospace; font-size:10.5px; color:var(--muted); width:110px;
+  background:var(--bg); border:1px solid var(--line); padding:4px 6px; }
+.cp-dash .trad-l-tc:focus{ outline:none; border-color:var(--acc); color:var(--text); }
+.cp-dash .trad-l-ar{ color:var(--muted); font-size:11px; }
+.cp-dash .trad-l-est{ font-family:'Poppins',sans-serif; font-weight:700; font-size:8.5px; text-transform:uppercase;
+  letter-spacing:.06em; padding:3px 8px; margin-left:auto; }
+.cp-dash .trad-l-est.t-bad{ background:color-mix(in srgb, var(--rose) 30%, transparent); color:var(--rose); }
+.cp-dash .trad-l-est.t-warn{ background:color-mix(in srgb, var(--amber) 32%, transparent); color:var(--amber); }
+.cp-dash .trad-l-est.t-info{ background:color-mix(in srgb, var(--cyan) 30%, transparent); color:var(--cyan); }
+.cp-dash .trad-l-est.t-ok{ background:color-mix(in srgb, var(--lime) 30%, transparent); color:var(--lime); }
+.cp-dash .trad-cmp{ display:grid; grid-template-columns:1fr 1fr; }
+.cp-dash .trad-cmp > div{ padding:11px 13px; }
+.cp-dash .trad-orig{ border-right:1px solid var(--line); background:var(--hl1); }
+.cp-dash .trad-lbl{ font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:6px; display:block; }
+.cp-dash .trad-otxt{ width:100%; font-size:13px; line-height:1.5; color:var(--muted); background:none; border:none; resize:vertical; font-family:inherit; padding:0; }
+.cp-dash .trad-otxt:focus{ outline:none; }
+.cp-dash .trad-tr-top{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.cp-dash .trad-ttxt{ width:100%; font-size:13px; line-height:1.5; color:var(--text); background:var(--bg);
+  border:1px solid var(--line); padding:8px 10px; resize:vertical; font-family:inherit; }
+.cp-dash .trad-ttxt:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .trad-cps-row{ display:flex; align-items:center; gap:8px; margin-top:7px; font-size:10.5px; }
+.cp-dash .trad-cps{ font-family:'Poppins',sans-serif; font-weight:700; }
+.cp-dash .trad-cps.t-ok{ color:var(--lime); } .cp-dash .trad-cps.t-warn{ color:var(--amber); } .cp-dash .trad-cps.t-bad{ color:var(--rose); }
+.cp-dash .trad-cps-bar{ flex:1; height:5px; background:var(--hl3); }
+.cp-dash .trad-cps-fill.t-ok{ background:var(--lime); } .cp-dash .trad-cps-fill.t-warn{ background:var(--amber); } .cp-dash .trad-cps-fill.t-bad{ background:var(--rose); }
+.cp-dash .trad-cps-fill{ height:100%; }
+.cp-dash .trad-chars{ color:var(--muted); white-space:nowrap; }
+.cp-dash .trad-export{ border:1px solid var(--line); background:var(--bg-2); padding:14px 16px; margin-top:14px; }
+.cp-dash .trad-export-lbl{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9px; text-transform:uppercase;
+  letter-spacing:.09em; color:var(--muted); margin-bottom:10px; }
+.cp-dash .trad-export-btns{ display:flex; gap:8px; flex-wrap:wrap; }
+.cp-dash .trad-export-warn{ font-size:11px; color:var(--amber); margin-top:10px; line-height:1.5; }
+@media (max-width:640px){
+  .cp-dash .trad-cmp{ grid-template-columns:1fr; }
+  .cp-dash .trad-orig{ border-right:none; border-bottom:1px solid var(--line); }
+  .cp-dash .trad-l-top{ gap:6px; }
+  .cp-dash .trad-l-est{ margin-left:0; width:100%; }
+}
+
 /* ===================================================================
    GUION — Plan de reescritura / Informes de análisis / Banco de investigación
    Regla transversal (Biblia §10.2): TODO campo de entrada va con esquinas

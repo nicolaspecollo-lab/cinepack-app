@@ -581,6 +581,32 @@ const registroActividad: Herramienta = {
   hint: "Todo lo que hace el equipo en el proyecto, de lo más reciente a lo más antiguo. Solo lectura.",
 };
 
+// ---- Traducción y subtitulado (cargo Traductor) ----
+// Cada fila es una LÍNEA maestra del guion (escena, personaje, texto
+// original, timecode in/out) — el timecode es del corte, no cambia según
+// el idioma. Las traducciones van anidadas por idioma dentro de la misma
+// fila, así corregir un timecode no hay que repetirlo por cada idioma.
+export const TRADUCCION_ESTADOS = ["Sin traducir", "Traducción automática", "Revisado por nativo", "Aprobado"];
+
+const traduccionSubtitulado: Herramienta = {
+  id: "guion-traduccion",
+  nombre: "Traducción y subtitulado",
+  tipo: "tabla",
+  hint: "Traducí el guion línea por línea, comparando siempre con el original. Exportá subtítulos .srt para posproducción o el guion completo en formato de guion (PDF) para mercados internacionales.",
+  columnas: [
+    { key: "escena", label: "Escena" },
+    { key: "personaje", label: "Personaje" },
+    { key: "texto_original", label: "Texto original", tipo: "largo" },
+    { key: "timecode_inicio", label: "Timecode inicio" },
+    { key: "timecode_fin", label: "Timecode fin" },
+    { key: "traducciones", label: "Traducciones", tipo: "repetible", sub: [
+      { key: "idioma", label: "Idioma" },
+      { key: "texto", label: "Traducción", tipo: "largo" },
+      { key: "estado", label: "Estado", tipo: "estado", opciones: TRADUCCION_ESTADOS },
+    ]},
+  ],
+};
+
 // ---- Informes de análisis (cargo Script doctor) ----
 // Vista de quien ESCRIBE el informe. El triaje de las recomendaciones no
 // vive acá sino en el Plan de reescritura del guionista: acá cada
@@ -3085,6 +3111,14 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Documentación": {
       departamento: [sinopsisEscaleta, desgloseEscenas],
       cargo: [bancoInvestigacion],
+    },
+    // Sin departamento[]: a propósito. El traductor no debe poder tocar el
+    // guion original (Historial de versiones, Sinopsis/Escaleta, Desglose) —
+    // resuelto con el propio mecanismo de cargo/departamento, sin permisos
+    // nuevos: si no está en su departamento[], no lo ve ni lo edita.
+    "Traductor": {
+      departamento: [],
+      cargo: [traduccionSubtitulado],
     },
   },
 

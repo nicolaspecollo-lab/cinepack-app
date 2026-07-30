@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
-import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS } from "../herramientas";
+import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
 import Icon from "../components/Icon";
@@ -185,6 +185,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "guion-notas-reescritura",
   "guion-informe-doctor",
   "guion-banco-investigacion",
+  "guion-traduccion",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -230,6 +231,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "guion-notas-reescritura" ||
     id === "guion-informe-doctor" ||
     id === "guion-banco-investigacion" ||
+    id === "guion-traduccion" ||
     id === "cast-candidatos" ||
     id === "cast-breakdown-actores" ||
     id === "cast-tabla-disponibilidad" ||
@@ -1068,6 +1070,20 @@ function HerramientaData({
           editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "guion-traduccion" && (
+        <VistaConEjemplos ejemplos={EJ_TRADUCCION} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <TraduccionSubtituladoBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          herramientaNombre={herramienta.nombre}
           onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
@@ -7850,6 +7866,14 @@ const EJ_BANCO_INV: Ejemplo[] = [
     decision_contradiccion: "Se usa la entrevista: describe casos atípicos documentados. Se anota como licencia dramática consultada con especialista.",
   },
 ];
+const EJ_TRADUCCION: Ejemplo[] = [
+  { escena: "12", personaje: "Marea", texto_original: "No hay luz esta noche. El farol se apagó solo.", timecode_inicio: "00:14:22,100", timecode_fin: "00:14:24,800",
+    traducciones: JSON.stringify([{ idioma: "Inglés", texto: "There's no light tonight. The lantern went out by itself.", estado: "Traducción automática" }]) },
+  { escena: "12", personaje: "Elsa", texto_original: "Nunca se apaga solo. Alguien estuvo acá.", timecode_inicio: "00:14:25,200", timecode_fin: "00:14:27,900",
+    traducciones: JSON.stringify([{ idioma: "Inglés", texto: "It never goes out on its own. Someone was here.", estado: "Revisado por nativo" }]) },
+  { escena: "13", personaje: "Marea", texto_original: "¿Quién más tiene la llave del faro además de nosotras?", timecode_inicio: "00:14:31,000", timecode_fin: "00:14:32,400",
+    traducciones: JSON.stringify([{ idioma: "Inglés", texto: "Who else has the key to the lighthouse besides the two of us?", estado: "Traducción automática" }]) },
+];
 const EJ_CASHFLOW: Ejemplo[] = [
   { periodo: "2026-08-03", concepto: "Cobro anticipo ICAA", ingresos_previstos: "50000", ingresos_reales: "50000", gastos_previstos: "30000", gastos_reales: "32000", saldo: "18000", estado: "OK" },
   { periodo: "2026-08-10", concepto: "Nómina semana de rodaje 2", ingresos_previstos: "0", ingresos_reales: "0", gastos_previstos: "25000", gastos_reales: "28000", saldo: "-10000", estado: "Déficit", notas: "Cubrir con el anticipo de la semana anterior." },
@@ -9238,6 +9262,320 @@ export function BancoInvestigacionBoard({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ===========================================================================
+// TRADUCCIÓN Y SUBTITULADO (Guion / Traductor)
+// ---------------------------------------------------------------------------
+// Cada fila es una línea maestra (escena, personaje, texto original,
+// timecode in/out). Las traducciones viven anidadas por idioma DENTRO de la
+// fila: el timecode se corrige una sola vez y vale para todos los idiomas.
+// La interfaz se elige y se siente como "un proyecto por idioma" (más
+// simple de usar), pero por dentro no hay nada duplicado.
+// ===========================================================================
+const TRAD_TONO: Record<string, string> = {
+  "Sin traducir": "bad", "Traducción automática": "warn", "Revisado por nativo": "info", "Aprobado": "ok",
+};
+const TRAD_IDIOMAS_SUGERIDOS = ["Inglés", "Francés", "Alemán", "Italiano", "Portugués", "Otro"];
+
+// Timecode SRT: HH:MM:SS,mmm (la coma es parte del estándar, no un error).
+function tcASegundos(tc: string): number | null {
+  const m = (tc || "").trim().match(/^(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})$/);
+  if (!m) return null;
+  const [, h, mi, s, ms] = m;
+  return (+h) * 3600 + (+mi) * 60 + (+s) + (+ms.padEnd(3, "0")) / 1000;
+}
+function tcValido(tc: string): boolean {
+  return tcASegundos(tc) !== null;
+}
+// CPS (caracteres por segundo): referencia de industria 17 = cómodo,
+// 20 = techo (Netflix), más de eso es prácticamente ilegible.
+function calcularCPS(texto: string, ini: string, fin: string): number | null {
+  const a = tcASegundos(ini), b = tcASegundos(fin);
+  if (a === null || b === null || b <= a) return null;
+  const chars = stripHtml(texto || "").replace(/\n/g, "").length;
+  return chars / (b - a);
+}
+function tonoCPS(cps: number | null): "ok" | "warn" | "bad" | "" {
+  if (cps === null) return "";
+  if (cps > 20) return "bad";
+  if (cps > 17) return "warn";
+  return "ok";
+}
+function lineasLargas(texto: string): boolean {
+  const lineas = stripHtml(texto || "").split("\n").filter(Boolean);
+  return lineas.length > 2 || lineas.some((l) => l.length > 42);
+}
+function traduccionesDe(f: Fila): Record<string, string>[] {
+  return parseArr<Record<string, string>>(f.datos?.traducciones);
+}
+function traduccionPara(f: Fila, idioma: string): Record<string, string> | undefined {
+  return traduccionesDe(f).find((t) => t.idioma === idioma);
+}
+
+export function TraduccionSubtituladoBoard({
+  columnas, filas, editable, herramientaNombre, onCrear, onGuardar, onBorrar,
+}: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; herramientaNombre: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [idioma, setIdioma] = useState<string>("");
+  const [agregando, setAgregando] = useState(false);
+  const [nuevoIdioma, setNuevoIdioma] = useState("");
+  const [filtro, setFiltro] = useState<"todas" | "revisar" | "cps">("revisar");
+  const [exportando, setExportando] = useState<"srt" | "pdf" | null>(null);
+
+  const idiomasUsados = Array.from(new Set(filas.flatMap((f) => traduccionesDe(f).map((tr) => tr.idioma)).filter(Boolean))).sort();
+  const idiomaActivo = idioma || idiomasUsados[0] || "";
+
+  function set(f: Fila, k: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  }
+  function setTraduccion(f: Fila, cambios: Record<string, string>) {
+    const actuales = traduccionesDe(f);
+    const idx = actuales.findIndex((tr) => tr.idioma === idiomaActivo);
+    const next = idx >= 0
+      ? actuales.map((tr, i) => (i === idx ? { ...tr, ...cambios } : tr))
+      : [...actuales, { idioma: idiomaActivo, estado: "Traducción automática", ...cambios }];
+    onGuardar(f.id, { ...f.datos, traducciones: JSON.stringify(next) }, f);
+  }
+
+  function agregarIdioma() {
+    const nombre = nuevoIdioma.trim();
+    if (!nombre) return;
+    setIdioma(nombre);
+    setNuevoIdioma("");
+    setAgregando(false);
+  }
+
+  const conteos = { "Sin traducir": 0, "Traducción automática": 0, "Revisado por nativo": 0, "Aprobado": 0 } as Record<string, number>;
+  for (const f of filas) {
+    const tr = idiomaActivo ? traduccionPara(f, idiomaActivo) : undefined;
+    conteos[tr?.estado || "Sin traducir"]++;
+  }
+
+  let visibles = filas;
+  if (filtro === "revisar") {
+    visibles = filas.filter((f) => {
+      const tr = idiomaActivo ? traduccionPara(f, idiomaActivo) : undefined;
+      return !tr || tr.estado === "Sin traducir" || tr.estado === "Traducción automática";
+    });
+  } else if (filtro === "cps") {
+    visibles = filas.filter((f) => {
+      const tr = idiomaActivo ? traduccionPara(f, idiomaActivo) : undefined;
+      if (!tr?.texto) return false;
+      const cps = calcularCPS(tr.texto, f.datos?.timecode_inicio ?? "", f.datos?.timecode_fin ?? "");
+      return tonoCPS(cps) !== "ok" || lineasLargas(tr.texto);
+    });
+  }
+
+  function descargar(nombreArchivo: string, contenido: string, mime: string) {
+    const blob = new Blob(["﻿" + contenido], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nombreArchivo;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarSRT() {
+    if (!idiomaActivo) return;
+    setExportando("srt");
+    try {
+      let n = 0;
+      const bloques: string[] = [];
+      for (const f of filas) {
+        const tr = traduccionPara(f, idiomaActivo);
+        if (!tr?.texto) continue;
+        const ini = f.datos?.timecode_inicio ?? "", fin = f.datos?.timecode_fin ?? "";
+        if (!tcValido(ini) || !tcValido(fin)) continue;
+        n++;
+        bloques.push(`${n}\n${ini} --> ${fin}\n${stripHtml(tr.texto)}\n`);
+      }
+      const slug = `${idiomaActivo}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
+      descargar(`${slug}.srt`, bloques.join("\n"), "text/srt;charset=utf-8;");
+    } finally {
+      setExportando(null);
+    }
+  }
+
+  async function exportarPDF() {
+    if (!idiomaActivo) return;
+    setExportando("pdf");
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const marginLeft = 25, dialogLeft = 55, dialogRight = 165, pageBottom = 280;
+      let y = 20;
+      doc.setFont("courier", "normal");
+      function nuevaPagina() { doc.addPage(); y = 20; }
+      function asegurarEspacio(lineas: number) { if (y + lineas * 5 > pageBottom) nuevaPagina(); }
+
+      let escenaActual = "";
+      for (const f of filas) {
+        const tr = traduccionPara(f, idiomaActivo);
+        if (!tr?.texto) continue;
+        const escena = gVal(f, "escena") || "";
+        if (escena && escena !== escenaActual) {
+          escenaActual = escena;
+          asegurarEspacio(3);
+          doc.setFont("courier", "bold");
+          doc.setFontSize(11);
+          doc.text(`ESCENA ${escena}`.toUpperCase(), marginLeft, y);
+          y += 8;
+        }
+        asegurarEspacio(2);
+        doc.setFont("courier", "bold");
+        doc.setFontSize(10);
+        doc.text((gVal(f, "personaje") || "—").toUpperCase(), dialogLeft, y);
+        y += 5;
+        doc.setFont("courier", "normal");
+        const lineasDialogo = doc.splitTextToSize(stripHtml(tr.texto), dialogRight - dialogLeft);
+        asegurarEspacio(lineasDialogo.length);
+        doc.text(lineasDialogo, dialogLeft, y);
+        y += lineasDialogo.length * 5 + 5;
+      }
+
+      const slug = `${herramientaNombre}-${idiomaActivo}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
+      doc.save(`${slug}.pdf`);
+    } finally {
+      setExportando(null);
+    }
+  }
+
+  const sinTraducirOAuto = conteos["Sin traducir"] + conteos["Traducción automática"];
+  const conCPSMalo = idiomaActivo ? filas.filter((f) => {
+    const tr = traduccionPara(f, idiomaActivo);
+    if (!tr?.texto) return false;
+    return tonoCPS(calcularCPS(tr.texto, f.datos?.timecode_inicio ?? "", f.datos?.timecode_fin ?? "")) !== "ok" || lineasLargas(tr.texto);
+  }).length : 0;
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p>
+        {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}</div>
+    );
+  }
+
+  return (
+    <div className="trad">
+      <div className="trad-langs">
+        <span className="trad-lang muted">Original (ES)</span>
+        {idiomasUsados.map((l) => (
+          <button key={l} className={`trad-lang${l === idiomaActivo ? " on" : ""}`} onClick={() => setIdioma(l)}>{l}</button>
+        ))}
+        {agregando ? (
+          <span className="trad-lang-add-in">
+            <input autoFocus value={nuevoIdioma} placeholder="Nombre del idioma"
+              list="trad-idiomas-sugeridos"
+              onChange={(e) => setNuevoIdioma(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") agregarIdioma(); if (e.key === "Escape") setAgregando(false); }} />
+            <button onClick={agregarIdioma}>Agregar</button>
+          </span>
+        ) : (
+          editable && <button className="trad-lang add" onClick={() => setAgregando(true)}>+ Agregar idioma</button>
+        )}
+        <datalist id="trad-idiomas-sugeridos">
+          {TRAD_IDIOMAS_SUGERIDOS.map((l) => <option key={l} value={l} />)}
+        </datalist>
+      </div>
+
+      {!idiomaActivo ? (
+        <div className="trad-vacio">Agregá un idioma para empezar a traducir.</div>
+      ) : (
+        <>
+          <div className="trad-sumbar">
+            <div className="trad-sum" data-tono="bad"><b>{conteos["Sin traducir"]}</b><span>Sin traducir</span></div>
+            <div className="trad-sum" data-tono="warn"><b>{conteos["Traducción automática"]}</b><span>Traducción automática</span></div>
+            <div className="trad-sum" data-tono="info"><b>{conteos["Revisado por nativo"]}</b><span>Revisado</span></div>
+            <div className="trad-sum" data-tono="ok"><b>{conteos["Aprobado"]}</b><span>Aprobado</span></div>
+            <div className="trad-filtros">
+              <button className={`trad-fc${filtro === "revisar" ? " on" : ""}`} onClick={() => setFiltro("revisar")}>Por revisar</button>
+              <button className={`trad-fc${filtro === "cps" ? " on" : ""}`} onClick={() => setFiltro("cps")}>Con CPS alto{conCPSMalo > 0 ? ` (${conCPSMalo})` : ""}</button>
+              <button className={`trad-fc${filtro === "todas" ? " on" : ""}`} onClick={() => setFiltro("todas")}>Todas</button>
+            </div>
+          </div>
+
+          {visibles.length === 0 ? (
+            <div className="trad-vacio">Nada que mostrar con este filtro.</div>
+          ) : visibles.map((f) => {
+            const tr = traduccionPara(f, idiomaActivo);
+            const cps = tr?.texto ? calcularCPS(tr.texto, f.datos?.timecode_inicio ?? "", f.datos?.timecode_fin ?? "") : null;
+            const tono = tonoCPS(cps);
+            const largas = tr?.texto ? lineasLargas(tr.texto) : false;
+            const chars = tr?.texto ? stripHtml(tr.texto).split("\n").filter(Boolean).reduce((m, l) => Math.max(m, l.length), 0) : 0;
+            return (
+              <div className="trad-linea" key={f.id}>
+                <div className="trad-l-top">
+                  <input className="trad-l-esc" defaultValue={gVal(f, "escena")} placeholder="Esc." readOnly={!editable} onBlur={(e) => set(f, "escena", e.target.value)} />
+                  <input className="trad-l-per" defaultValue={gVal(f, "personaje")} placeholder="Personaje" readOnly={!editable} onBlur={(e) => set(f, "personaje", e.target.value)} />
+                  <input className="trad-l-tc" defaultValue={gVal(f, "timecode_inicio")} placeholder="00:00:00,000" readOnly={!editable} onBlur={(e) => set(f, "timecode_inicio", e.target.value)} />
+                  <span className="trad-l-ar">→</span>
+                  <input className="trad-l-tc" defaultValue={gVal(f, "timecode_fin")} placeholder="00:00:00,000" readOnly={!editable} onBlur={(e) => set(f, "timecode_fin", e.target.value)} />
+                  <span className={`trad-l-est t-${TRAD_TONO[tr?.estado || "Sin traducir"]}`}>{tr?.estado || "Sin traducir"}</span>
+                  {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                </div>
+                <div className="trad-cmp">
+                  <div className="trad-orig">
+                    <span className="trad-lbl">Original (ES)</span>
+                    <textarea className="trad-otxt" rows={2} defaultValue={stripHtml(gVal(f, "texto_original"))}
+                      readOnly={!editable} onBlur={(e) => set(f, "texto_original", e.target.value)} />
+                  </div>
+                  <div className="trad-tr">
+                    <div className="trad-tr-top">
+                      <span className="trad-lbl">{idiomaActivo} — reescribir acá</span>
+                      {editable && (
+                        <EstadoSeg valor={tr?.estado || "Traducción automática"} opciones={TRADUCCION_ESTADOS} chip color
+                          editable onPick={(v) => setTraduccion(f, { estado: v })} />
+                      )}
+                    </div>
+                    <textarea className="trad-ttxt" rows={2} defaultValue={stripHtml(tr?.texto ?? "")}
+                      readOnly={!editable} placeholder="Escribí la traducción…"
+                      onBlur={(e) => setTraduccion(f, { texto: e.target.value })} />
+                    {tr?.texto && (
+                      <div className="trad-cps-row">
+                        <span className={`trad-cps t-${tono}`}>{cps !== null ? `${cps.toFixed(1)} CPS` : "—"}</span>
+                        <div className="trad-cps-bar"><div className={`trad-cps-fill t-${tono}`} style={{ width: `${Math.min(100, ((cps ?? 0) / 26) * 100)}%` }} /></div>
+                        <span className="trad-chars">{chars}/42 por línea{largas ? " — no entra" : ""}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {editable && (
+        <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Agregar línea</button></div>
+      )}
+
+      {idiomaActivo && (
+        <div className="trad-export">
+          <div className="trad-export-lbl">Exportar {idiomaActivo}</div>
+          <div className="trad-export-btns">
+            <button className="cp-btn cp-btn-acc" disabled={exportando !== null} onClick={exportarSRT}>
+              {exportando === "srt" ? "Generando…" : `Descargar ${idiomaActivo.toLowerCase()}.srt`}
+            </button>
+            <button className="cp-btn cp-btn-acc" disabled={exportando !== null} onClick={exportarPDF}>
+              {exportando === "pdf" ? "Generando…" : `Descargar guion en PDF (${idiomaActivo})`}
+            </button>
+          </div>
+          {(sinTraducirOAuto > 0 || conCPSMalo > 0) && (
+            <div className="trad-export-warn">
+              {sinTraducirOAuto > 0 && <span>{sinTraducirOAuto} línea{sinTraducirOAuto === 1 ? "" : "s"} sin traducir o sin revisión nativa. </span>}
+              {conCPSMalo > 0 && <span>{conCPSMalo} línea{conCPSMalo === 1 ? "" : "s"} superan el CPS recomendado — se exportan igual.</span>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
