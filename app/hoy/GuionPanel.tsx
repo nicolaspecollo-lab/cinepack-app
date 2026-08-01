@@ -261,6 +261,16 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
       setMsg({ type: "err", text: error.message });
       return;
     }
+    if (estado === "confirmada") {
+      // Dispara el desglose de escenas por IA sin bloquear la UI — el
+      // usuario ya ve la escena confirmada, el desglose aparece solo
+      // cuando termina de generarse (unos segundos después).
+      fetch("/api/guion/desglose/generar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escenaId: id }),
+      }).catch(() => {});
+    }
     await load();
   }
 

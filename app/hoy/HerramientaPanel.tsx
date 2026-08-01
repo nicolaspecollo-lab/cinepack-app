@@ -1041,7 +1041,7 @@ function HerramientaData({
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "guion-desglose-escenas" && (
-        <DesgloseGuion
+        <DesgloseEscenasBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
           editable={editable}
@@ -10280,54 +10280,175 @@ const EJ_DESGLOSE_G: Ejemplo[] = [
   { escena: "2", loc: "EXT. Puerto / Amanecer", personajes: "Marea, Pescadores (figuración)", atrezzo: "Redes, cajas de pescado, bicicleta de Marea.", notas: "Se rueda a hora dorada. Marea llega en bici desde el faro." },
   { escena: "3", loc: "INT. Casa de Elsa — Cocina / Día", personajes: "Marea, Elsa", atrezzo: "Carta sin remite, servicio de té, fotos antiguas en la pared.", notas: "La carta debe quedar legible en primer plano." },
 ];
-function DesgloseGuion({ columnas, filas, editable, onCrear, onGuardar, onBorrar }: {
+// El desglose ya no se carga a mano: se genera solo (IA) cuando se confirma
+// o se modifica una escena en Guion (ver GuionPanel.tsx → persistEscena).
+// Acá solo se muestra, se corrige texto que la IA se equivocó, y se puede
+// volver a generar por si algún campo se borró sin querer.
+function camposExtraDe(f: Fila): Record<string, string>[] {
+  return parseArr<Record<string, string>>(f.datos?.campos_extra);
+}
+function DesgloseEscenasBoard({ filas, editable, onGuardar }: {
   columnas: Columna[]; filas: Fila[]; editable: boolean;
   onCrear: (datos?: Record<string, string>) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
-  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
-  const hayFilas = filas.length > 0;
-  const base = hayFilas ? filas : ghostFilas(EJ_DESGLOSE_G);
-  const sorted = [...base].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
-  const largos = ["atrezzo", "notas"] as const;
+  const [abierta, setAbierta] = useState<string | null>(null);
+  const [regenerando, setRegenerando] = useState<string | null>(null);
+  const sorted = [...filas].sort((a, b) => gNum(gVal(a, "escena")) - gNum(gVal(b, "escena")));
+  const fila = sorted.find((f) => f.id === abierta) ?? null;
+
+  function set(f: Fila, k: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  }
+
+  async function regenerar(f: Fila) {
+    const escenaId = gVal(f, "escena_id");
+    if (!escenaId) return;
+    setRegenerando(f.id);
+    try {
+      const res = await fetch("/api/guion/desglose/generar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escenaId }),
+      });
+      const json = await res.json();
+      if (res.ok && json.datos) {
+        onGuardar(f.id, { ...f.datos, ...json.datos }, f);
+      }
+    } finally {
+      setRegenerando(null);
+    }
+  }
 
   return (
     <div className="gdes-wrap">
-      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_DESGLOSE_G} onCrear={onCrear} />}
+      {sorted.length === 0 && (
+        <div className="gdes-empty">{t("desgloseEmpty")}</div>
+      )}
       <div className="gdes-grid">
         {sorted.map((f) => {
-          const gh = esGhost(f); const ed = editable && !gh;
           const pers = gChips(gVal(f, "personajes"));
+          const extra = camposExtraDe(f);
           return (
-            <div key={f.id} className={`gdes-card ${gh ? "cp-ghost" : ""}`}>
-              {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+            <button type="button" key={f.id} className="gdes-card" onClick={() => setAbierta(f.id)}>
               <div className="gdes-head">
-                {ed
-                  ? <input className="gdes-esc" defaultValue={gVal(f, "escena")} placeholder="1" onBlur={(e) => set(f, "escena", e.target.value)} />
-                  : <span className="gdes-esc">{gVal(f, "escena") || "•"}</span>}
-                <div className="gdes-head-r">
-                  {ed
-                    ? <input className="gdes-loc" defaultValue={gVal(f, "loc")} placeholder={gLbl(columnas, "loc")} onBlur={(e) => set(f, "loc", e.target.value)} />
-                    : <div className="gdes-loc">{gVal(f, "loc") || t("noScene")}</div>}
-                </div>
-                {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+                <span className="gdes-hex" />
+                <span className="gdes-esc">{t("sceneShort")} {gVal(f, "escena") || "•"}</span>
+                <span className="gdes-tag">{[gVal(f, "escena_int_ext"), gVal(f, "escena_dia_noche")].filter(Boolean).join(" · ")}</span>
               </div>
-              {ed
-                ? <input className="gdes-pers-in" defaultValue={gVal(f, "personajes")} placeholder={gLbl(columnas, "personajes") + " (coma)"} onBlur={(e) => set(f, "personajes", e.target.value)} />
-                : pers.length > 0 ? <div className="gdes-pers">{pers.map((p, i) => <span key={i} className="gdes-chip">{p}</span>)}</div> : null}
-              {largos.map((k) => (ed || gVal(f, k)) ? (
-                <label key={k} className="gdes-field">
-                  <span>{gLbl(columnas, k)}</span>
-                  <textarea className="gdes-ta" defaultValue={stripHtml(gVal(f, k))} placeholder={k === "atrezzo" ? t("phDesgloseAtrezzo") : t("phDesgloseNotas")} readOnly={!ed} rows={2} onBlur={(e) => set(f, k, e.target.value)} />
-                </label>
-              ) : null)}
-            </div>
+              {gVal(f, "resumen") && <p className="gdes-resumen">{stripHtml(gVal(f, "resumen"))}</p>}
+              <div className="gdes-meta">
+                {gVal(f, "loc") && <span>{gVal(f, "loc")}</span>}
+                {(gVal(f, "tiempo_estimado") || gVal(f, "planos_estimados")) && (
+                  <span>{[gVal(f, "tiempo_estimado"), gVal(f, "planos_estimados") && `${gVal(f, "planos_estimados")} ${t("shots")}`].filter(Boolean).join(" · ")}</span>
+                )}
+                {pers.length > 0 && <span>{pers.join(", ")}</span>}
+                {extra.length > 0 && <span>{t("customFieldsCount", { n: extra.length })}</span>}
+              </div>
+            </button>
           );
         })}
       </div>
-      {hayFilas && editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+
+      {fila && (
+        <div className="gdes-overlay" onClick={() => setAbierta(null)}>
+          <div className="gdes-detail" onClick={(e) => e.stopPropagation()}>
+            <div className="gdes-detail-head">
+              <div>
+                <p className="gdes-detail-sub">{t("sceneShort")} {gVal(fila, "escena")} · {[gVal(fila, "escena_int_ext"), gVal(fila, "escena_dia_noche")].filter(Boolean).join(" · ")}</p>
+                <h3><span className="hex" />{gVal(fila, "loc") || t("noScene")}</h3>
+              </div>
+              <button type="button" className="gdes-close" onClick={() => setAbierta(null)} aria-label={t("close")}>✕</button>
+            </div>
+
+            <div className="gdes-detail-stats">
+              <label className="gdes-field">
+                <span>{t("colLoc")}</span>
+                <input defaultValue={gVal(fila, "loc")} readOnly={!editable} onBlur={(e) => set(fila, "loc", e.target.value)} />
+              </label>
+              <label className="gdes-field">
+                <span>{t("colTiempoEstimado")}</span>
+                <input defaultValue={gVal(fila, "tiempo_estimado")} readOnly={!editable} onBlur={(e) => set(fila, "tiempo_estimado", e.target.value)} />
+              </label>
+              <label className="gdes-field">
+                <span>{t("colPlanosEstimados")}</span>
+                <input defaultValue={gVal(fila, "planos_estimados")} readOnly={!editable} onBlur={(e) => set(fila, "planos_estimados", e.target.value)} />
+              </label>
+            </div>
+
+            <label className="gdes-field">
+              <span>{t("colResumen")}</span>
+              <textarea rows={2} defaultValue={stripHtml(gVal(fila, "resumen"))} readOnly={!editable} onBlur={(e) => set(fila, "resumen", e.target.value)} />
+            </label>
+
+            {gChips(gVal(fila, "personajes")).length > 0 && (
+              <div className="gdes-field">
+                <span>{t("colPersonajes")}</span>
+                <div className="gdes-pers">{gChips(gVal(fila, "personajes")).map((p, i) => <span key={i} className="gdes-chip">{p}</span>)}</div>
+              </div>
+            )}
+
+            <label className="gdes-field">
+              <span>{t("colAtrezzo")}</span>
+              <textarea rows={2} defaultValue={stripHtml(gVal(fila, "atrezzo"))} readOnly={!editable} onBlur={(e) => set(fila, "atrezzo", e.target.value)} />
+            </label>
+
+            {editable && (
+              <div className="gdes-extra">
+                <span className="gdes-extra-lbl">{t("customFields")}</span>
+                {camposExtraDe(fila).map((c, idx) => (
+                  <div className="gdes-extra-row" key={idx}>
+                    <input
+                      defaultValue={c.nombre}
+                      placeholder={t("customFieldName")}
+                      onBlur={(e) => {
+                        const next = camposExtraDe(fila).map((x, i) => (i === idx ? { ...x, nombre: e.target.value } : x));
+                        onGuardar(fila.id, { ...fila.datos, campos_extra: JSON.stringify(next) }, fila);
+                      }}
+                    />
+                    <input
+                      defaultValue={c.valor}
+                      placeholder={t("customFieldValue")}
+                      onBlur={(e) => {
+                        const next = camposExtraDe(fila).map((x, i) => (i === idx ? { ...x, valor: e.target.value } : x));
+                        onGuardar(fila.id, { ...fila.datos, campos_extra: JSON.stringify(next) }, fila);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="hp-del"
+                      onClick={() => {
+                        const next = camposExtraDe(fila).filter((_, i) => i !== idx);
+                        onGuardar(fila.id, { ...fila.datos, campos_extra: JSON.stringify(next) }, fila);
+                      }}
+                    >✕</button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    const next = [...camposExtraDe(fila), { nombre: "", valor: "" }];
+                    onGuardar(fila.id, { ...fila.datos, campos_extra: JSON.stringify(next) }, fila);
+                  }}
+                >
+                  {t("addCustomField")}
+                </button>
+              </div>
+            )}
+
+            {editable && (
+              <div className="gdes-detail-actions">
+                <button type="button" className="btn" disabled={regenerando === fila.id} onClick={() => regenerar(fila)}>
+                  {regenerando === fila.id ? t("regenerating") : t("regenerateAi")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -557,6 +557,10 @@ const sinopsisEscaleta: Herramienta = {
     { key: "resumen", label: "Resumen", tipo: "largo" },
   ],
 };
+// Cada fila se genera sola (IA) al confirmar o modificar la escena en Guion
+// — no se crea a mano. "escena_id" (oculto, no es columna de UI) enlaza la
+// fila con la escena real y es lo que usa el endpoint de generación para
+// saber cuál actualizar en vez de crear duplicados.
 const desgloseEscenas: Herramienta = {
   id: "guion-desglose-escenas",
   nombre: "Desglose de escenas",
@@ -564,9 +568,15 @@ const desgloseEscenas: Herramienta = {
   columnas: [
     { key: "escena", label: "Escena" },
     { key: "loc", label: "Locación" },
+    { key: "tiempo_estimado", label: "Tiempo estimado" },
+    { key: "planos_estimados", label: "Planos estimados" },
     { key: "personajes", label: "Personajes" },
+    { key: "resumen", label: "Resumen", tipo: "largo" },
     { key: "atrezzo", label: "Atrezzo / Necesidades", tipo: "largo" },
-    { key: "notas", label: "Notas", tipo: "largo" },
+    { key: "campos_extra", label: "Campos personalizados", tipo: "repetible", sub: [
+      { key: "nombre", label: "Campo" },
+      { key: "valor", label: "Valor" },
+    ]},
   ],
 };
 // Registro de actividad — exclusiva de Producción ejecutiva, SOLO LECTURA.

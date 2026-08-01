@@ -4146,29 +4146,52 @@
   .cp-dash .ia-mrow{ grid-template-columns:64px repeat(var(--cols),1fr) 28px; gap:5px; }
 }
 
-/* -- Desglose de escenas -- */
-.cp-dash .gdes-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
-.cp-dash .gdes-card{ position:relative; border:1px solid var(--line); border-left:3px solid var(--acc); background:var(--bg-2);
-  padding:14px 15px; display:flex; flex-direction:column; gap:10px; }
-.cp-dash .gdes-head{ display:flex; align-items:flex-start; gap:11px; }
-.cp-dash .gdes-esc{ font-family:'Poppins',sans-serif; font-weight:800; font-size:26px; line-height:.9; color:var(--acc);
-  background:none; border:none; border-bottom:1px solid transparent; padding:0; width:2.6ch; flex-shrink:0; }
-.cp-dash input.gdes-esc:focus{ outline:none; border-bottom-color:var(--acc); }
-.cp-dash .gdes-head-r{ flex:1; min-width:0; }
-.cp-dash .gdes-loc{ font-family:'Courier New',monospace; font-size:12.5px; font-weight:700; color:var(--text); letter-spacing:.01em;
-  text-transform:uppercase; background:none; border:none; border-bottom:1px solid transparent; padding:0; width:100%; }
-.cp-dash input.gdes-loc:focus{ outline:none; border-bottom-color:var(--acc); }
-.cp-dash .gdes-pers{ display:flex; flex-wrap:wrap; gap:5px; }
-.cp-dash .gdes-chip{ font-size:11px; font-weight:600; color:var(--text); background:var(--panel); border:1px solid var(--line); padding:3px 9px; }
-.cp-dash .gdes-pers-in{ font-size:12.5px; color:var(--text); background:var(--bg); border:1px solid var(--line); padding:7px 9px; width:100%; }
-.cp-dash .gdes-pers-in:focus{ outline:none; border-color:var(--acc); }
-.cp-dash .gdes-field{ display:flex; flex-direction:column; gap:4px; }
+/* -- Desglose de escenas: tarjetas + ficha expandida a pantalla completa -- */
+.cp-dash .gdes-empty{ font-size:13px; color:var(--muted); border:1px dashed var(--line); padding:20px; text-align:center; }
+.cp-dash .gdes-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+.cp-dash .gdes-card{
+  position:relative; border:1px solid var(--line); border-left:3px solid var(--acc); background:var(--bg-2);
+  padding:14px 15px; display:flex; flex-direction:column; gap:8px; text-align:left; cursor:pointer;
+  font-family:inherit; color:var(--text); width:100%;
+}
+.cp-dash .gdes-card:hover{ border-color:var(--acc); }
+.cp-dash .gdes-head{ display:flex; align-items:center; gap:8px; }
+.cp-dash .gdes-hex{ width:12px; height:10px; background:var(--acc); flex-shrink:0;
+  clip-path:polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%); }
+.cp-dash .gdes-esc{ font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; color:var(--text); }
+.cp-dash .gdes-tag{ margin-left:auto; font-size:10px; color:var(--muted); border:1px solid var(--line); padding:2px 7px; text-transform:uppercase; letter-spacing:.04em; }
+.cp-dash .gdes-resumen{ font-size:12.5px; line-height:1.5; color:var(--muted); margin:0; }
+.cp-dash .gdes-meta{ display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--muted); border-top:1px solid var(--line); padding-top:8px; margin-top:auto; }
+
+.cp-dash .gdes-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:flex-start; justify-content:center;
+  padding:40px 20px; overflow-y:auto; z-index:200; }
+.cp-dash .gdes-detail{ background:var(--bg-2); border:1px solid var(--line); width:100%; max-width:620px; padding:24px; }
+.cp-dash .gdes-detail-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.cp-dash .gdes-detail-sub{ font-size:11px; color:var(--muted); margin:0 0 3px; text-transform:uppercase; letter-spacing:.04em; }
+.cp-dash .gdes-detail-head h3{ font-family:'Poppins',sans-serif; font-size:16px; font-weight:700; margin:0; display:flex; align-items:center; gap:8px; }
+.cp-dash .gdes-detail-head h3 .hex{ width:14px; height:12px; }
+.cp-dash .gdes-close{ appearance:none; background:none; border:1px solid var(--line); color:var(--muted); width:30px; height:30px;
+  cursor:pointer; flex-shrink:0; }
+.cp-dash .gdes-close:hover{ color:var(--acc); border-color:var(--acc); }
+.cp-dash .gdes-detail-stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+.cp-dash .gdes-field{ display:flex; flex-direction:column; gap:4px; margin-bottom:14px; }
 .cp-dash .gdes-field>span{ font-family:'Poppins',sans-serif; font-weight:600; font-size:9.5px; letter-spacing:.08em;
   text-transform:uppercase; color:var(--muted); }
-.cp-dash .gdes-ta{ font-size:12.5px; line-height:1.5; color:var(--text); background:var(--bg); border:1px solid var(--line);
-  padding:7px 9px; width:100%; resize:vertical; font-family:inherit; }
-.cp-dash .gdes-ta:focus{ outline:none; border-color:var(--acc); }
-.cp-dash .gdes-ta[readonly]{ background:transparent; border-color:transparent; padding:0; }
+.cp-dash .gdes-field input, .cp-dash .gdes-field textarea{
+  font-size:12.5px; line-height:1.5; color:var(--text); background:var(--bg); border:1px solid var(--line);
+  padding:8px 10px; width:100%; resize:vertical; font-family:inherit;
+}
+.cp-dash .gdes-field input:focus, .cp-dash .gdes-field textarea:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .gdes-field input[readonly], .cp-dash .gdes-field textarea[readonly]{ background:transparent; border-color:transparent; padding:0; }
+.cp-dash .gdes-pers{ display:flex; flex-wrap:wrap; gap:5px; }
+.cp-dash .gdes-chip{ font-size:11px; font-weight:600; color:var(--text); background:var(--panel); border:1px solid var(--line); padding:3px 9px; }
+.cp-dash .gdes-extra{ border:1px dashed var(--line); padding:12px; margin-bottom:14px; }
+.cp-dash .gdes-extra-lbl{ display:block; font-family:'Poppins',sans-serif; font-weight:600; font-size:9.5px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.cp-dash .gdes-extra-row{ display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:8px; }
+.cp-dash .gdes-extra-row input{ font-size:12.5px; color:var(--text); background:var(--bg); border:1px solid var(--line); padding:7px 9px; }
+.cp-dash .gdes-extra-row input:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .gdes-detail-actions{ display:flex; justify-content:flex-end; border-top:1px solid var(--line); padding-top:14px; }
 
 /* -- Comentarios: tablero por estado -- */
 .cp-dash .gcom-cols{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; align-items:start; }
