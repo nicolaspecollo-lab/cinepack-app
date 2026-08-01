@@ -646,6 +646,14 @@
 }
 .cp-dash .gdrow .rm{ font-size:10px; border:1px solid var(--line); padding:8px 10px; background:none; color:var(--muted); cursor:pointer; }
 .cp-dash .gdrow .rm:hover{ color:var(--rose); border-color:var(--rose); }
+.cp-dash .gdrow-accion{ grid-template-columns:1fr auto; }
+.cp-dash .gdrow-actions{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .gdrow-actions .mv{
+  font-size:11px; border:1px solid var(--line); padding:4px 8px; background:none; color:var(--muted); cursor:pointer;
+}
+.cp-dash .gdrow-actions .mv:hover:not(:disabled){ color:var(--acc); border-color:var(--acc); }
+.cp-dash .gdrow-actions .mv:disabled{ opacity:0.3; cursor:default; }
+.cp-dash .gdialog-add{ display:flex; gap:8px; flex-wrap:wrap; }
 .cp-dash .gcard-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
 /* Guion Técnico — tabla de desglose */
@@ -2273,6 +2281,10 @@
 .cp-dash .pqk-chk-box.on{ background:var(--lime); border-color:var(--lime); color:#0D0D12; }
 .cp-dash .pqk-chk-txt{ flex:1; font-size:13px; color:var(--text); }
 .cp-dash .pqk-chk-txt.done{ text-decoration:line-through; color:var(--muted); }
+.cp-dash input.pqk-chk-txt-in{ background:none; border:1px solid transparent; border-radius:0; padding:2px 4px;
+  font-family:inherit; }
+.cp-dash input.pqk-chk-txt-in:hover{ border-color:var(--line); }
+.cp-dash input.pqk-chk-txt-in:focus{ outline:none; border-color:var(--acc); background:var(--bg-2); }
 .cp-dash .pqk-chk-del{ appearance:none; background:none; border:none; color:var(--muted); cursor:pointer; opacity:0; display:inline-flex; }
 .cp-dash .pqk-chk-item:hover .pqk-chk-del{ opacity:1; }
 .cp-dash .pqk-chk-del:hover{ color:var(--rose); }

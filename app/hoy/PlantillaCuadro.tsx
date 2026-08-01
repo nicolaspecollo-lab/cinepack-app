@@ -390,7 +390,20 @@ function KModal({ row, editable, cols, colLabel, labelsCat, covers, miembros, tE
               <div className="pqk-chk-item" key={i}>
                 <button className={`pqk-chk-box${it.d ? " on" : ""}`} disabled={!editable}
                   onClick={() => setChk(checklist.map((x, j) => j === i ? { ...x, d: !x.d } : x))}>{it.d && <Icon name="check" size={12} />}</button>
-                <span className={`pqk-chk-txt${it.d ? " done" : ""}`}>{it.t}</span>
+                {editable ? (
+                  <input
+                    className={`pqk-chk-txt pqk-chk-txt-in${it.d ? " done" : ""}`}
+                    defaultValue={it.t}
+                    onBlur={(e) => {
+                      const val = e.target.value.trim();
+                      if (val && val !== it.t) setChk(checklist.map((x, j) => j === i ? { ...x, t: val } : x));
+                      else if (!val) e.target.value = it.t;
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                  />
+                ) : (
+                  <span className={`pqk-chk-txt${it.d ? " done" : ""}`}>{it.t}</span>
+                )}
                 {editable && <button className="pqk-chk-del" onClick={() => setChk(checklist.filter((_, j) => j !== i))}><Icon name="x" size={12} /></button>}
               </div>
             ))}

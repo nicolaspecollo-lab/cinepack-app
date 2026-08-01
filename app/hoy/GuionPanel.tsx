@@ -21,6 +21,15 @@ type DialogoLinea = {
   texto: string;
 };
 
+// La secuencia REAL de la escena, en el orden en que aparece en el guion
+// (acción → diálogo → acción → diálogo…). "descripcion"/"dialogo" siguen
+// existiendo (se derivan de esto al parsear) porque otras pantallas
+// (Escenas, Plan de rodaje) los leen así y no necesitan el orden exacto,
+// pero acá — edición y vista de guion — la fuente de verdad es "elementos".
+type ElementoAccion = { tipo: "accion"; texto: string };
+type ElementoDialogo = { tipo: "dialogo"; personaje: string; parentetico: string | null; texto: string };
+type ElementoGuion = ElementoAccion | ElementoDialogo;
+
 type EscenaEstado = "borrador" | "confirmada";
 
 type Escena = {
@@ -34,10 +43,24 @@ type Escena = {
   descripcion: string | null;
   personajes: string[];
   dialogo: DialogoLinea[];
+  elementos: ElementoGuion[];
   pagina_pdf: number | null;
   orden: number;
   estado: EscenaEstado;
 };
+
+// Compatibilidad: escenas parseadas ANTES de este cambio no tienen
+// "elementos" (columna nueva, default '[]'). Se reconstruye una secuencia
+// razonable (acción primero, diálogo después) para que se sigan viendo
+// bien — no se puede recuperar el orden real perdido en el parseo viejo,
+// pero al menos no rompe nada ni queda vacío.
+function elementosDe(e: Pick<Escena, "elementos" | "descripcion" | "dialogo">): ElementoGuion[] {
+  if (e.elementos && e.elementos.length > 0) return e.elementos;
+  const out: ElementoGuion[] = [];
+  if (e.descripcion) out.push({ tipo: "accion", texto: e.descripcion });
+  for (const d of e.dialogo ?? []) out.push({ tipo: "dialogo", ...d });
+  return out;
+}
 
 type ViewTab = "revision" | "guion";
 
@@ -89,7 +112,9 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
       const next = { ...prev };
       for (const e of escenas) {
         if (e.estado === "borrador" && !next[e.id]) {
-          next[e.id] = JSON.parse(JSON.stringify(e));
+          const copia: Escena = JSON.parse(JSON.stringify(e));
+          copia.elementos = elementosDe(copia);
+          next[e.id] = copia;
         }
       }
       return next;
@@ -174,29 +199,36 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
     updateField(id, "personajes", arr);
   }
 
-  function updateDialogo(id: string, idx: number, field: keyof DialogoLinea, value: string) {
+  function setElementos(id: string, next: ElementoGuion[]) {
+    setEdits((prev) => ({ ...prev, [id]: { ...prev[id], elementos: next } }));
+  }
+  function updateElemento(id: string, idx: number, cambios: Partial<Omit<ElementoAccion, "tipo"> & Omit<ElementoDialogo, "tipo">>) {
     setEdits((prev) => {
-      const esc = prev[id];
-      const dialogo = [...esc.dialogo];
-      dialogo[idx] = {
-        ...dialogo[idx],
-        [field]: field === "parentetico" && value.trim() === "" ? null : value,
-      };
-      return { ...prev, [id]: { ...esc, dialogo } };
+      const els = [...prev[id].elementos];
+      els[idx] = { ...els[idx], ...cambios } as ElementoGuion;
+      return { ...prev, [id]: { ...prev[id], elementos: els } };
     });
   }
-
-  function addDialogoRow(id: string) {
+  function insertElemento(id: string, idx: number, tipo: "accion" | "dialogo") {
     setEdits((prev) => {
-      const esc = prev[id];
-      return { ...prev, [id]: { ...esc, dialogo: [...esc.dialogo, { personaje: "", parentetico: null, texto: "" }] } };
+      const els = [...prev[id].elementos];
+      const nuevo: ElementoGuion = tipo === "accion"
+        ? { tipo: "accion", texto: "" }
+        : { tipo: "dialogo", personaje: "", parentetico: null, texto: "" };
+      els.splice(idx, 0, nuevo);
+      return { ...prev, [id]: { ...prev[id], elementos: els } };
     });
   }
-
-  function removeDialogoRow(id: string, idx: number) {
+  function removeElemento(id: string, idx: number) {
+    setEdits((prev) => ({ ...prev, [id]: { ...prev[id], elementos: prev[id].elementos.filter((_, i) => i !== idx) } }));
+  }
+  function moverElemento(id: string, idx: number, dir: -1 | 1) {
     setEdits((prev) => {
-      const esc = prev[id];
-      return { ...prev, [id]: { ...esc, dialogo: esc.dialogo.filter((_, i) => i !== idx) } };
+      const els = [...prev[id].elementos];
+      const j = idx + dir;
+      if (j < 0 || j >= els.length) return prev;
+      [els[idx], els[j]] = [els[j], els[idx]];
+      return { ...prev, [id]: { ...prev[id], elementos: els } };
     });
   }
 
@@ -204,6 +236,12 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
     const esc = edits[id];
     if (!esc) return;
     const supabase = createClient();
+    // descripcion/dialogo se re-derivan de elementos al guardar, así las
+    // pantallas que todavía leen esas dos columnas por separado (Escenas,
+    // Plan de rodaje) también reflejan lo que se acaba de editar acá.
+    const descripcion = esc.elementos.filter((el): el is ElementoAccion => el.tipo === "accion").map((el) => el.texto).join("\n\n") || null;
+    const dialogo = esc.elementos.filter((el): el is ElementoDialogo => el.tipo === "dialogo")
+      .map(({ personaje, parentetico, texto }) => ({ personaje, parentetico, texto }));
     const { error } = await supabase
       .from("escenas")
       .update({
@@ -212,9 +250,10 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
         lugar: esc.lugar,
         dia_noche: esc.dia_noche,
         encabezado: esc.encabezado,
-        descripcion: esc.descripcion,
+        descripcion,
         personajes: esc.personajes,
-        dialogo: esc.dialogo,
+        dialogo,
+        elementos: esc.elementos,
         estado,
       })
       .eq("id", id);
@@ -291,31 +330,32 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
         doc.text(slug, marginLeft, y);
         y += 7;
 
-        if (e.descripcion) {
-          doc.setFont("courier", "normal");
-          doc.setFontSize(10);
-          const lineas = doc.splitTextToSize(e.descripcion, marginRight - marginLeft);
-          asegurarEspacio(lineas.length);
-          doc.text(lineas, marginLeft, y);
-          y += lineas.length * 5 + 3;
-        }
-
-        e.dialogo.forEach((d) => {
+        elementosDe(e).forEach((el) => {
+          if (el.tipo === "accion") {
+            if (!el.texto) return;
+            doc.setFont("courier", "normal");
+            doc.setFontSize(10);
+            const lineas = doc.splitTextToSize(el.texto, marginRight - marginLeft);
+            asegurarEspacio(lineas.length);
+            doc.text(lineas, marginLeft, y);
+            y += lineas.length * 5 + 3;
+            return;
+          }
           asegurarEspacio(2);
           doc.setFont("courier", "bold");
           doc.setFontSize(10);
-          doc.text(d.personaje.toUpperCase(), dialogLeft, y);
+          doc.text(el.personaje.toUpperCase(), dialogLeft, y);
           y += 5;
 
-          if (d.parentetico) {
+          if (el.parentetico) {
             doc.setFont("courier", "italic");
             asegurarEspacio(1);
-            doc.text(`(${d.parentetico.replace(/^\(|\)$/g, "")})`, dialogLeft + 5, y);
+            doc.text(`(${el.parentetico.replace(/^\(|\)$/g, "")})`, dialogLeft + 5, y);
             y += 5;
           }
 
           doc.setFont("courier", "normal");
-          const lineasDialogo = doc.splitTextToSize(d.texto, dialogRight - dialogLeft);
+          const lineasDialogo = doc.splitTextToSize(el.texto, dialogRight - dialogLeft);
           asegurarEspacio(lineasDialogo.length);
           doc.text(lineasDialogo, dialogLeft, y);
           y += lineasDialogo.length * 5 + 3;
@@ -450,48 +490,60 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                 </label>
 
                 <label className="afield">
-                  <span>{t("description")}</span>
-                  <textarea
-                    rows={3}
-                    value={edit.descripcion ?? ""}
-                    onChange={(ev) => updateField(e.id, "descripcion", ev.target.value || null)}
-                  />
-                </label>
-
-                <label className="afield">
                   <span>{t("characters")}</span>
                   <input type="text" value={edit.personajes.join(", ")} onChange={(ev) => updatePersonajes(e.id, ev.target.value)} />
                 </label>
 
                 <div className="gdialog">
-                  <h5>{t("dialogue")}</h5>
-                  {edit.dialogo.map((d, idx) => (
-                    <div className="gdrow" key={idx}>
-                      <input
-                        type="text"
-                        placeholder={t("character")}
-                        value={d.personaje}
-                        onChange={(ev) => updateDialogo(e.id, idx, "personaje", ev.target.value)}
-                      />
-                      <input
-                        type="text"
-                        placeholder={t("parenthetical")}
-                        value={d.parentetico ?? ""}
-                        onChange={(ev) => updateDialogo(e.id, idx, "parentetico", ev.target.value)}
-                      />
-                      <textarea
-                        rows={1}
-                        placeholder={t("dialogueText")}
-                        value={d.texto}
-                        onChange={(ev) => updateDialogo(e.id, idx, "texto", ev.target.value)}
-                      />
-                      <button type="button" className="rm" onClick={() => removeDialogoRow(e.id, idx)}>
-                        {t("remove")}
-                      </button>
-                    </div>
-                  ))}
-                  <div>
-                    <button type="button" className="btn" onClick={() => addDialogoRow(e.id)}>
+                  <h5>{t("sceneContent")}</h5>
+                  {edit.elementos.map((el, idx) =>
+                    el.tipo === "accion" ? (
+                      <div className="gdrow gdrow-accion" key={idx}>
+                        <textarea
+                          rows={2}
+                          placeholder={t("description")}
+                          value={el.texto}
+                          onChange={(ev) => updateElemento(e.id, idx, { texto: ev.target.value })}
+                        />
+                        <div className="gdrow-actions">
+                          <button type="button" className="mv" disabled={idx === 0} onClick={() => moverElemento(e.id, idx, -1)}>↑</button>
+                          <button type="button" className="mv" disabled={idx === edit.elementos.length - 1} onClick={() => moverElemento(e.id, idx, 1)}>↓</button>
+                          <button type="button" className="rm" onClick={() => removeElemento(e.id, idx)}>{t("remove")}</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="gdrow" key={idx}>
+                        <input
+                          type="text"
+                          placeholder={t("character")}
+                          value={el.personaje}
+                          onChange={(ev) => updateElemento(e.id, idx, { personaje: ev.target.value })}
+                        />
+                        <input
+                          type="text"
+                          placeholder={t("parenthetical")}
+                          value={el.parentetico ?? ""}
+                          onChange={(ev) => updateElemento(e.id, idx, { parentetico: ev.target.value || null })}
+                        />
+                        <textarea
+                          rows={1}
+                          placeholder={t("dialogueText")}
+                          value={el.texto}
+                          onChange={(ev) => updateElemento(e.id, idx, { texto: ev.target.value })}
+                        />
+                        <div className="gdrow-actions">
+                          <button type="button" className="mv" disabled={idx === 0} onClick={() => moverElemento(e.id, idx, -1)}>↑</button>
+                          <button type="button" className="mv" disabled={idx === edit.elementos.length - 1} onClick={() => moverElemento(e.id, idx, 1)}>↓</button>
+                          <button type="button" className="rm" onClick={() => removeElemento(e.id, idx)}>{t("remove")}</button>
+                        </div>
+                      </div>
+                    )
+                  )}
+                  <div className="gdialog-add">
+                    <button type="button" className="btn" onClick={() => insertElemento(e.id, edit.elementos.length, "accion")}>
+                      {t("addDescription")}
+                    </button>
+                    <button type="button" className="btn" onClick={() => insertElemento(e.id, edit.elementos.length, "dialogo")}>
                       {t("addDialogueLine")}
                     </button>
                   </div>
@@ -561,14 +613,17 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
                   <span className="script-num">{e.numero}</span>
                   {e.encabezado}
                 </div>
-                {e.descripcion && <div className="script-desc">{e.descripcion}</div>}
-                {e.dialogo.map((d, idx) => (
-                  <div key={idx}>
-                    <div className="script-char">{d.personaje}</div>
-                    {d.parentetico && <div className="script-paren">({d.parentetico.replace(/^\(|\)$/g, "")})</div>}
-                    <div className="script-line">{d.texto}</div>
-                  </div>
-                ))}
+                {elementosDe(e).map((el, idx) =>
+                  el.tipo === "accion" ? (
+                    el.texto ? <div className="script-desc" key={idx}>{el.texto}</div> : null
+                  ) : (
+                    <div key={idx}>
+                      <div className="script-char">{el.personaje}</div>
+                      {el.parentetico && <div className="script-paren">({el.parentetico.replace(/^\(|\)$/g, "")})</div>}
+                      <div className="script-line">{el.texto}</div>
+                    </div>
+                  )
+                )}
               </div>
             </div>
           ))}
