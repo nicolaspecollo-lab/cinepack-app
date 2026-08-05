@@ -187,6 +187,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "guion-banco-investigacion",
   "guion-traduccion",
   "guion-tratamiento-traducido",
+  "guion-desglose-escenas",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
