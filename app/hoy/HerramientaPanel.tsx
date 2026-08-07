@@ -3021,7 +3021,7 @@ export function AgendaDia({
   const grupos = colFecha
     ? Object.entries(
         filasEff.reduce<Record<string, Fila[]>>((acc, f) => {
-          const fecha = (f.datos?.[colFecha.key] ?? "").trim() || t("noScene");
+          const fecha = (f.datos?.[colFecha.key] ?? "").trim() || t("noDate");
           (acc[fecha] ??= []).push(f);
           return acc;
         }, {})
