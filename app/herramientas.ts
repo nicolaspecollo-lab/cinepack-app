@@ -2685,16 +2685,22 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       departamento: [],
       cargo: [
         {
-          id: "prod-ficha-localizacion", nombre: "Fichas de localización y permisos", tipo: "ficha",
-          campos: [
+          // Era tipo "ficha" — un solo registro fijo para TODO el proyecto,
+          // así que la segunda localización que se cargaba pisaba a la
+          // primera. "ficha" en el catálogo es siempre de un solo registro
+          // (ver esSingle en HerramientaPanel.tsx); acá hacen falta muchas,
+          // una por localización. Pasa a tabla, con vista de catálogo
+          // (FICHA_EQUIPO_IDS) como los inventarios físicos con foto.
+          id: "prod-ficha-localizacion", nombre: "Fichas de localización y permisos", tipo: "tabla",
+          columnas: [
             { key: "nombre", label: "Localización" },
             { key: "direccion", label: "Dirección", tipo: "largo" },
             { key: "contacto", label: "Contacto propietario" },
             { key: "permiso", label: "Permiso", tipo: "estado", opciones: ["Pendiente", "Solicitado", "Concedido"] },
             { key: "coste", label: "Coste" },
             { key: "notas", label: "Notas (accesos, ruido, luz)", tipo: "largo" },
-            { key: "permiso_doc", label: "Permiso (documento)", tipo: "archivo" },
-            { key: "foto", label: "Foto de la localización", tipo: "archivo" },
+            { key: "permiso_doc", label: "Permiso (documento)", tipo: "archivo" as const },
+            { key: "foto", label: "Foto de la localización", tipo: "archivo" as const },
           ],
         },
       ],

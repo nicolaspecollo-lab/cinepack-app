@@ -2650,6 +2650,7 @@ const FICHA_EQUIPO_IDS = new Set([
   "foto-dit-color",
   "foto-dit-log-backup",
   "arte-ficha-maquillaje",
+  "prod-ficha-localizacion",
   "prod-material-prestado",
   "prod-proveedores-detalle",
   "cast-ficha-reparto",
