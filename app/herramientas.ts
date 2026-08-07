@@ -364,6 +364,10 @@ const stripboard: Herramienta = {
     { key: "ref", label: "Referencia / plano", tipo: "archivo" as const },
   ],
 };
+// Antes había una versión "general" (esta) y otra "por jornada" con
+// prácticamente los mismos campos — un catering log real no distingue
+// las dos cosas, es la misma planilla. Fusionadas acá con los campos que
+// solo tenía la de jornada (especiales dietéticos, hora de servicio, estado).
 const cateringDietas: Herramienta = {
   id: "prod-catering-general",
   nombre: "Catering y dietas",
@@ -372,22 +376,63 @@ const cateringDietas: Herramienta = {
     { key: "fecha", label: "Fecha", tipo: "fecha" },
     { key: "servicio", label: "Servicio", tipo: "estado", opciones: ["Desayuno", "Comida", "Cena", "Snacks"] },
     { key: "personas", label: "Nº personas", tipo: "num" },
-    { key: "menu", label: "Menú / Dietas especiales", tipo: "largo" },
+    { key: "especiales", label: "Restricciones dietéticas", tipo: "largo" },
+    { key: "menu", label: "Menú", tipo: "largo" },
+    { key: "hora_servicio", label: "Hora de servicio" },
     { key: "proveedor", label: "Proveedor" },
     { key: "coste", label: "Coste", tipo: "money" },
+    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Por confirmar", "Confirmado", "Servido", "Cancelado"] },
   ],
 };
-const partesProduccion: Herramienta = {
-  id: "prod-partes-diarios",
-  nombre: "Partes de producción diarios",
+// "Parte de producción diario" (más abajo, cargo Jefatura de producción)
+// reemplaza esta tabla: antes existían las dos por separado y era el mismo
+// dato tipeado dos veces (un log resumido acá + el documento completo allá).
+const parteDiario: Herramienta = {
+  // Un DPR (Daily Production Report) real es UNO por día — así que no puede
+  // ser tipo "ficha" (un solo registro fijo): es una tabla con una fila por
+  // jornada. El historial de estas filas ES el log, no hace falta una
+  // segunda herramienta aparte para eso.
+  id: "prod-parte-diario",
+  nombre: "Parte de producción diario",
   tipo: "tabla",
+  hint: "El documento maestro del día: resume todo lo que pasó en el set. Una tarjeta por jornada.",
   columnas: [
     { key: "fecha", label: "Fecha", tipo: "fecha" },
-    { key: "escenas", label: "Escenas previstas / rodadas" },
-    { key: "inicio", label: "1ª toma" },
-    { key: "fin", label: "Corte" },
-    { key: "paginas", label: "Páginas rodadas" },
-    { key: "incidencias", label: "Incidencias", tipo: "largo" },
+    { key: "dia", label: "Día de rodaje" },
+    { key: "locacion", label: "Localización" },
+    { key: "hora_inicio", label: "Hora de inicio" },
+    { key: "hora_fin", label: "Hora de fin" },
+    { key: "horas_extra", label: "Horas extra", tipo: "num" },
+    { key: "escenas_rodadas", label: "Escenas rodadas" },
+    { key: "paginas_rodadas", label: "Páginas rodadas" },
+    { key: "paginas_pendientes", label: "Páginas pendientes" },
+    { key: "extras", label: "Nº de figurantes", tipo: "num" },
+    { key: "accidentes", label: "Accidentes / incidencias", tipo: "largo" },
+    { key: "retrasos", label: "Motivos de retraso", tipo: "largo" },
+    { key: "notas", label: "Notas para producción", tipo: "largo" },
+    { key: "firma_dir", label: "Firma dirección" },
+    { key: "firma_prod", label: "Firma producción" },
+  ],
+};
+// Antes partido en "Control de transporte y vehículos por jornada"
+// (Jefatura de producción) y "Hojas de ruta y transporte" (Logística) — el
+// artefacto real (trip sheet del transportation captain) es uno solo.
+const transporteLogistica: Herramienta = {
+  id: "prod-transporte",
+  nombre: "Control de transporte y vehículos",
+  tipo: "tabla",
+  hint: "Qué vehículo sale a qué hora, con quién y a dónde.",
+  columnas: [
+    { key: "fecha", label: "Fecha", tipo: "fecha" },
+    { key: "vehiculo", label: "Vehículo / Matrícula" },
+    { key: "conductor", label: "Conductor" },
+    { key: "pasajeros", label: "Pasajeros" },
+    { key: "origen", label: "Desde" },
+    { key: "destino", label: "Hasta" },
+    { key: "hora_salida", label: "Hora de salida" },
+    { key: "hora_llegada", label: "Hora estimada llegada" },
+    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Programado", "En ruta", "Llegó", "Cancelado"] },
+    { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };
 
@@ -1516,9 +1561,14 @@ const dirChecklistPreproduccion: Herramienta = {
 // ===========================================================================
 // NUEVAS HERRAMIENTAS — PRODUCCIÓN
 // ===========================================================================
+// Antes existía también "Control de proveedores y alquileres" (versión
+// simple) al lado de esta — en producción real no hay dos fichas de
+// proveedor, hay una sola con más o menos campos cargados según el momento.
+// "periodo" (alquileres con fecha de devolución) era lo único que tenía la
+// simple y le faltaba a esta.
 const prodProveedoresDetalle: Herramienta = {
   id: "prod-proveedores-detalle",
-  nombre: "Control de proveedores (detalle completo)",
+  nombre: "Control de proveedores y alquileres",
   tipo: "tabla",
   hint: "Ficha completa de cada proveedor: contacto, precio acordado, forma de pago, contrato y valoración.",
   columnas: [
@@ -1527,6 +1577,7 @@ const prodProveedoresDetalle: Herramienta = {
     { key: "contacto", label: "Contacto" },
     { key: "telefono", label: "Teléfono" },
     { key: "email", label: "Email" },
+    { key: "periodo", label: "Periodo (si es alquiler)" },
     { key: "precio_acuerdo", label: "Precio acordado", tipo: "money" as const },
     { key: "forma_pago", label: "Forma de pago", tipo: "estado", opciones: ["Transferencia", "Efectivo", "Tarjeta"] },
     { key: "estado_pago", label: "Estado de pago", tipo: "estado", opciones: ["Pendiente", "Pagado", "Atrasado"] },
@@ -1553,23 +1604,12 @@ const prodEquipoTecnico: Herramienta = {
   ],
 };
 
-const prodLocalizacionesScouting: Herramienta = {
-  id: "prod-localizaciones-scouting",
-  nombre: "Localizaciones (scouting)",
-  tipo: "tabla",
-  hint: "Base de datos de localizaciones candidatas y confirmadas: precio, distancia, permisos y foto de referencia.",
-  columnas: [
-    { key: "nombre_lugar", label: "Nombre del lugar" },
-    { key: "direccion", label: "Dirección" },
-    { key: "contacto_propietario", label: "Contacto propietario" },
-    { key: "precio_dia", label: "Precio/día", tipo: "money" as const },
-    { key: "capacidad", label: "Capacidad" },
-    { key: "distancia_base", label: "Distancia a base (km)", tipo: "num" as const },
-    { key: "estado", label: "Estado", tipo: "estado", opciones: ["En scouting", "Pendiente permiso", "Confirmada", "Descartada"] },
-    { key: "foto_ref", label: "Foto referencia", tipo: "archivo" as const },
-    { key: "notas_tecnicas", label: "Notas técnicas", tipo: "largo" },
-  ],
-};
+// Existía acá y también como "Banco de localizaciones candidatas" en el
+// cargo Scouting — el pipeline real de locaciones (candidatas → aprobada
+// con permiso → asignada a jornada) ya vive en el cargo Scouting y en
+// Jefatura de locaciones; esta era una tercera base de datos redundante
+// sin relación de datos con las otras dos. Se comparte el pipeline de
+// Scouting como departamento[] en vez de mantener esta copia.
 
 const prodPermisos: Herramienta = {
   id: "prod-permisos",
@@ -2592,71 +2632,10 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       ],
     },
     "Jefatura de producción": {
-      departamento: [stripboard, cateringDietas],
+      departamento: [stripboard, cateringDietas, parteDiario, transporteLogistica],
       cargo: [
-        {
-          id: "prod-proveedores", nombre: "Control de proveedores y alquileres", tipo: "tabla",
-          columnas: [
-            { key: "proveedor", label: "Proveedor" },
-            { key: "servicio", label: "Servicio / Material" },
-            { key: "coste", label: "Coste", tipo: "money" },
-            { key: "periodo", label: "Periodo" },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Cotizando", "Reservado", "Confirmado", "Devuelto"] },
-          ],
-        },
-        {
-          id: "prod-parte-diario", nombre: "Parte de producción diario", tipo: "ficha",
-          hint: "El documento maestro del día: resume todo lo que pasó en el set.",
-          campos: [
-            { key: "fecha", label: "Fecha", tipo: "fecha" },
-            { key: "dia", label: "Día de rodaje" },
-            { key: "locacion", label: "Localización" },
-            { key: "hora_inicio", label: "Hora de inicio" },
-            { key: "hora_fin", label: "Hora de fin" },
-            { key: "horas_extra", label: "Horas extra", tipo: "num" },
-            { key: "escenas_rodadas", label: "Escenas rodadas" },
-            { key: "paginas_rodadas", label: "Páginas rodadas" },
-            { key: "paginas_pendientes", label: "Páginas pendientes" },
-            { key: "extras", label: "Nº de figurantes", tipo: "num" },
-            { key: "accidentes", label: "Accidentes / incidencias", tipo: "largo" },
-            { key: "retrasos", label: "Motivos de retraso", tipo: "largo" },
-            { key: "notas", label: "Notas para producción", tipo: "largo" },
-            { key: "firma_dir", label: "Firma dirección" },
-            { key: "firma_prod", label: "Firma producción" },
-          ],
-        },
-        {
-          id: "prod-transporte", nombre: "Control de transporte y vehículos por jornada", tipo: "tabla",
-          hint: "Qué vehículo sale a qué hora, con quién y a dónde.",
-          columnas: [
-            { key: "vehiculo", label: "Vehículo / Matrícula" },
-            { key: "conductor", label: "Conductor" },
-            { key: "pasajeros", label: "Pasajeros" },
-            { key: "origen", label: "Desde" },
-            { key: "destino", label: "Hasta" },
-            { key: "hora_salida", label: "Hora de salida" },
-            { key: "hora_llegada", label: "Hora estimada llegada" },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Programado", "En ruta", "Llegó", "Cancelado"] },
-            { key: "notas", label: "Notas", tipo: "largo" },
-          ],
-        },
-        {
-          id: "prod-catering", nombre: "Control de catering y dietas por jornada", tipo: "tabla",
-          hint: "Cantidad, especiales y coste de comidas. Nunca llegues al set sin saberlo.",
-          columnas: [
-            { key: "jornada", label: "Jornada / Fecha" },
-            { key: "proveedor", label: "Proveedor" },
-            { key: "cantidad", label: "Comensales", tipo: "num" },
-            { key: "especiales", label: "Restricciones dietéticas", tipo: "largo" },
-            { key: "menu", label: "Menú", tipo: "largo" },
-            { key: "hora_servicio", label: "Hora de servicio" },
-            { key: "coste", label: "Coste total", tipo: "money" },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Por confirmar", "Confirmado", "Servido", "Cancelado"] },
-          ],
-        },
         prodProveedoresDetalle,
         prodEquipoTecnico,
-        prodLocalizacionesScouting,
         prodPermisos,
         prodPlanSemana,
         prodComunicacionEquipo,
@@ -2682,13 +2661,13 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       ],
     },
     "Asistencia de producción": {
-      departamento: [partesProduccion],
+      departamento: [parteDiario],
       cargo: [
         { id: "prod-tareas-admin", nombre: "Tareas administrativas diarias", tipo: "checklist" },
       ],
     },
     "Coordinación de producción": {
-      departamento: [stripboard, partesProduccion],
+      departamento: [stripboard, parteDiario],
       cargo: [
         {
           id: "prod-agenda-coord", nombre: "Agenda de coordinación entre departamentos", tipo: "tabla",
@@ -2769,20 +2748,8 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       ],
     },
     "Logística": {
-      departamento: [cateringDietas],
-      cargo: [
-        {
-          id: "prod-hojas-ruta", nombre: "Hojas de ruta y transporte", tipo: "tabla",
-          columnas: [
-            { key: "fecha", label: "Fecha", tipo: "fecha" },
-            { key: "origen", label: "Origen" },
-            { key: "destino", label: "Destino" },
-            { key: "vehiculo", label: "Vehículo" },
-            { key: "pasajeros", label: "Pasajeros / Carga", tipo: "largo" },
-            { key: "salida", label: "Hora salida" },
-          ],
-        },
-      ],
+      departamento: [cateringDietas, transporteLogistica],
+      cargo: [],
     },
     "Driver": {
       departamento: [],

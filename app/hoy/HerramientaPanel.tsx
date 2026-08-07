@@ -188,6 +188,7 @@ const SIN_VISTA_TABLA_IDS = new Set([
   "guion-traduccion",
   "guion-tratamiento-traducido",
   "guion-desglose-escenas",
+  "prod-parte-diario",
 ]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
@@ -217,7 +218,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
     id === "prod-transporte" ||
-    id === "prod-hojas-ruta" ||
+    id === "prod-parte-diario" ||
     id === "prod-plan-semana" ||
     id === "prod-plan-locaciones-jornada" ||
     CATERING_IDS.has(id) ||
@@ -931,8 +932,19 @@ function HerramientaData({
         />
       )}
 
-      {(herramienta.id === "prod-transporte" || herramienta.id === "prod-hojas-ruta") && (
+      {herramienta.id === "prod-transporte" && (
         <TransporteBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.id === "prod-parte-diario" && (
+        <ParteDiarioBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
           editable={editable}
@@ -1412,17 +1424,7 @@ function HerramientaData({
         />
       )}
 
-      {herramienta.tipo === "ficha" && herramienta.id === "prod-parte-diario" && (
-        <ParteDiario
-          campos={[...(herramienta.campos ?? []), ...extraCampos]}
-          fila={filas[0]}
-          editable={editable}
-          asegurar={asegurarSingle}
-          onGuardar={guardarFila}
-        />
-      )}
-
-      {herramienta.tipo === "ficha" && herramienta.id !== "ej-kpis" && herramienta.id !== "prod-parte-diario" && (
+      {herramienta.tipo === "ficha" && herramienta.id !== "ej-kpis" && (
         <FichaTool
           campos={[...(herramienta.campos ?? []), ...extraCampos]}
           fila={filas[0]}
@@ -2164,7 +2166,6 @@ const PENDIENTES_BOARD_IDS = new Set([
   "luz-peticion-equipo",
   "arte-build-sheet",
   "arte-desglose-atrezzo",
-  "prod-proveedores",
 ]);
 // arte-desglose-atrezzo empieza por "escena", pero lo que identifica la
 // tarjeta es el objeto a conseguir, no la escena.
@@ -2649,7 +2650,6 @@ const FICHA_EQUIPO_IDS = new Set([
   "foto-dit-color",
   "foto-dit-log-backup",
   "arte-ficha-maquillaje",
-  "prod-localizaciones-scouting",
   "prod-material-prestado",
   "prod-proveedores-detalle",
   "cast-ficha-reparto",
@@ -2835,7 +2835,7 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "prod-agenda-coord", "prod-partes-diarios", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "prod-agenda-coord", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts"]);
 
 export function AgendaDia({
   columnas,
@@ -5840,31 +5840,103 @@ function StripboardTool({
 // Reemplaza la ficha genérica de campos por un parte: cómo fue la jornada
 // (horario + horas extra), qué se logró (escenas/páginas/figuración como
 // cifras grandes), incidencias destacadas y firmas de cierre.
-function ParteDiario({
-  campos,
-  fila,
+// Un DPR (Daily Production Report) real es uno por jornada — antes esto era
+// una "ficha" de un solo registro (servía para UN día nada más). Ahora es
+// tablero: una tarjeta resumen por jornada, que se expande a la misma ficha
+// rica de siempre. El historial de tarjetas ES el log, no hace falta una
+// tabla aparte para eso.
+function ParteDiarioBoard({
+  columnas,
+  filas,
   editable,
-  asegurar,
+  onCrear,
   onGuardar,
+  onBorrar,
 }: {
-  campos: Columna[];
-  fila: Fila | undefined;
+  columnas: Columna[];
+  filas: Fila[];
   editable: boolean;
-  asegurar: () => Promise<Fila>;
+  onCrear: () => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
-  async function set(key: string, v: string) {
-    const f = fila ?? (await asegurar());
+  const [abierta, setAbierta] = useState<string | null>(null);
+  const ordenadas = [...filas].sort((a, b) => (b.datos?.fecha ?? "").localeCompare(a.datos?.fecha ?? ""));
+  const fila = ordenadas.find((f) => f.id === abierta) ?? null;
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
+
+  function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
   }
-  const v = (k: string) => fila?.datos?.[k] ?? "";
-  const lbl = (k: string) => campos.find((c) => c.key === k)?.label ?? k;
+
+  return (
+    <div className="pd-wrap">
+      {ordenadas.length === 0 && <div className="pd-empty">{t("waitForData")}</div>}
+      <div className="pd-grid">
+        {ordenadas.map((f) => {
+          const d = f.datos ?? {};
+          const horasExtra = ejNum(d.horas_extra ?? "");
+          return (
+            <button type="button" className="pd-card" key={f.id} onClick={() => setAbierta(f.id)}>
+              <div className="pd-card-head">
+                <span className="pd-pill">{d.dia ? t("sbDay", { n: d.dia }) : t("pdTitle")}</span>
+                <span className="pd-card-fecha">{d.fecha || "—"}</span>
+              </div>
+              <div className="pd-card-loc">{d.locacion || "—"}</div>
+              <div className="pd-card-stats">
+                <span>{d.escenas_rodadas || "0"} {lbl("escenas_rodadas")}</span>
+                <span>{d.paginas_rodadas || "0"} {lbl("paginas_rodadas")}</span>
+                {horasExtra > 0 && <span className="pd-card-extra">{horasExtra} {lbl("horas_extra")}</span>}
+                {(d.accidentes || d.retrasos) && <span className="pd-card-alerta">{t("pdIncidents")}</span>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("pdAddDay")}</button></div>}
+
+      {fila && (
+        <div className="gdes-overlay" onClick={() => setAbierta(null)}>
+          <div className="pd-detail" onClick={(e) => e.stopPropagation()}>
+            <ParteDiarioDetalle
+              columnas={columnas}
+              fila={fila}
+              editable={editable}
+              onSet={(k, v) => set(fila, k, v)}
+              onCerrar={() => setAbierta(null)}
+              onBorrar={editable ? () => { onBorrar(fila.id); setAbierta(null); } : undefined}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ParteDiarioDetalle({
+  columnas,
+  fila,
+  editable,
+  onSet,
+  onCerrar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  fila: Fila;
+  editable: boolean;
+  onSet: (key: string, v: string) => void;
+  onCerrar: () => void;
+  onBorrar?: () => void;
+}) {
+  const t = useTranslations("hp");
+  const v = (k: string) => fila.datos?.[k] ?? "";
+  const lbl = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
   const horasExtra = ejNum(v("horas_extra"));
 
   function Campo({ k, cls, type }: { k: string; cls: string; type?: string }) {
     return (
-      <input className={cls} type={type ?? "text"} defaultValue={v(k)} readOnly={!editable} placeholder="—" onBlur={(e) => set(k, e.target.value)} />
+      <input className={cls} type={type ?? "text"} defaultValue={v(k)} readOnly={!editable} placeholder="—" onBlur={(e) => onSet(k, e.target.value)} />
     );
   }
   function Stat({ k }: { k: string }) {
@@ -5879,7 +5951,7 @@ function ParteDiario({
     return (
       <label className={`pd-inc tono-${tono}`}>
         <span className="pd-inc-l">{lbl(k)}</span>
-        <textarea defaultValue={v(k)} readOnly={!editable} rows={2} placeholder="—" onBlur={(e) => set(k, e.target.value)} />
+        <textarea defaultValue={v(k)} readOnly={!editable} rows={2} placeholder="—" onBlur={(e) => onSet(k, e.target.value)} />
       </label>
     );
   }
@@ -5892,6 +5964,7 @@ function ParteDiario({
           <div className="pd-metric"><span className="pd-metric-l">{lbl("fecha")}</span><Campo k="fecha" cls="pd-metric-v" type="date" /></div>
           <div className="pd-metric"><span className="pd-metric-l">{lbl("dia")}</span><Campo k="dia" cls="pd-metric-v" /></div>
           <div className="pd-metric pd-metric-grow"><span className="pd-metric-l">{lbl("locacion")}</span><Campo k="locacion" cls="pd-metric-v" /></div>
+          <button type="button" className="gdes-close" onClick={onCerrar} aria-label={t("close")}>✕</button>
         </div>
       </div>
 
@@ -5917,7 +5990,7 @@ function ParteDiario({
 
       <label className="pd-notas-wrap">
         <span className="pd-sec-l"><Icon name="file-text" size={13} /> {lbl("notas")}</span>
-        <textarea className="pd-notas" defaultValue={v("notas")} readOnly={!editable} rows={3} placeholder="—" onBlur={(e) => set("notas", e.target.value)} />
+        <textarea className="pd-notas" defaultValue={v("notas")} readOnly={!editable} rows={3} placeholder="—" onBlur={(e) => onSet("notas", e.target.value)} />
       </label>
 
       <div className="pd-firmas">
@@ -5925,7 +5998,7 @@ function ParteDiario({
         <label className="pd-firma"><span>{lbl("firma_prod")}</span><Campo k="firma_prod" cls="pd-firma-v" /></label>
       </div>
 
-      {!fila && <p className="hp-kpi-hint">{editable ? t("startAddingRow") : t("waitForData")}</p>}
+      {onBorrar && <div className="hp-actions"><button className="btn" onClick={onBorrar}>{t("delete")}</button></div>}
     </div>
   );
 }
@@ -6007,7 +6080,7 @@ function TransporteBoard({
 }
 
 // ---- Catering — servicio de comidas por jornada ----
-const CATERING_IDS = new Set(["prod-catering", "prod-catering-general"]);
+const CATERING_IDS = new Set(["prod-catering-general"]);
 function CateringBoard({
   columnas,
   filas,
