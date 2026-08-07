@@ -417,9 +417,11 @@ export default function GuionPanel({ fullName, canEdit = true }: { fullName: str
             <div className="gitem" key={g.id}>
               <span className="name">{g.nombre}</span>
               {g.estado === "procesando" && <span className="pill p-warn">{t("statusProcessing")}</span>}
-              {g.estado === "listo" && <span className="pill p-ok">{t("statusReady")}</span>}
+              {g.estado === "listo" && !g.error_msg && <span className="pill p-ok">{t("statusReady")}</span>}
+              {g.estado === "listo" && g.error_msg && <span className="pill p-warn">{t("statusReadyPartial")}</span>}
               {g.estado === "error" && <span className="pill p-bad" title={g.error_msg ?? ""}>{t("statusError")}</span>}
               <span className="meta">{new Date(g.created_at).toLocaleString("es-AR")}</span>
+              {g.estado === "listo" && g.error_msg && <div className="gwarn">{g.error_msg}</div>}
             </div>
           ))}
         </div>
