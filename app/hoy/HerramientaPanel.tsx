@@ -164,32 +164,13 @@ export default function HerramientaPanel({
   );
 }
 
-// Herramientas donde la vista "Tabla" (planilla genérica con
-// buscar/filtrar/ordenar/exportar) no aporta nada: son las 6 del Ejecutivo
-// ya elevadas al estándar de ficha/entidad dedicada — si el cliente
-// necesita una tabla suelta, ya tiene el espacio genérico para crearla
-// aparte. Pedido explícito de Nicolás (27-jul-2026): "démosle el valor
-// que la herramienta merece" en vez de ofrecer el escape hatch genérico.
-const SIN_VISTA_TABLA_IDS = new Set([
-  "ej-modelo-financiero",
-  "ej-coproducciones",
-  "ej-ayudas-subvenciones",
-  "ej-agenda-ejecutivo",
-  "ej-deliverables",
-  "ej-notas-ejecutivo",
-  "ej-pagos-nominas",
-  "ej-gestion-documental",
-  "ej-derechos-pi",
-  "ej-polizas-permisos",
-  "ej-presupuesto-costos",
-  "guion-notas-reescritura",
-  "guion-informe-doctor",
-  "guion-banco-investigacion",
-  "guion-traduccion",
-  "guion-tratamiento-traducido",
-  "guion-desglose-escenas",
-  "prod-parte-diario",
-]);
+// Regla fija (05-ago-2026, pedido explícito de Nicolás): si una herramienta
+// tiene tablero a medida, la vista "Tabla" genérica NO se ofrece como
+// alternativa — cada herramienta vive como sí misma, no como una planilla
+// con piel. Si el cliente necesita una tabla suelta, tiene "Espacio de
+// trabajo" aparte para armar la que quiera. Antes esto se mantenía a mano
+// en una lista (SIN_VISTA_TABLA_IDS); ahora se deriva directo de si existe
+// tablero, así no hay que acordarse de sumar cada id nuevo a dos lugares.
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
 // TablaTool genérico. Centralizado acá para no arrastrar una cadena de
@@ -613,7 +594,7 @@ function HerramientaData({
   const extraCampos: Columna[] = filas[0]?.datos?._extra ? JSON.parse(filas[0].datos._extra) : [];
   const esTabla = herramienta.tipo === "tabla";
   const tieneTablero = esTabla && tablaTieneVistaBespoke(herramienta.id);
-  const tieneVistaTabla = !SIN_VISTA_TABLA_IDS.has(herramienta.id);
+  const tieneVistaTabla = !tieneTablero;
 
   return (
     <div className="hp">
@@ -920,60 +901,83 @@ function HerramientaData({
       )}
 
       {herramienta.id === "prod-stripboard" && (
+        <VistaConEjemplos ejemplos={EJ_STRIPBOARD} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <StripboardTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
           onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.id === "prod-transporte" && (
+        <VistaConEjemplos ejemplos={EJ_TRANSPORTE} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <TransporteBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.id === "prod-parte-diario" && (
+        <VistaConEjemplos ejemplos={EJ_PARTE_DIARIO} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <ParteDiarioBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
       {CATERING_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_CATERING_GENERAL} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <CateringBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
       )}
 
-      {(herramienta.id === "prod-plan-semana" || herramienta.id === "prod-plan-locaciones-jornada") && (
+      {herramienta.id === "prod-plan-semana" && (
+        <VistaConEjemplos ejemplos={EJ_PLAN_SEMANA} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PlanSemanaBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
-          editable={editable}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
         />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.id === "prod-plan-locaciones-jornada" && (
+        <VistaConEjemplos ejemplos={EJ_PLAN_LOCACIONES_JORNADA} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <PlanSemanaBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
       )}
 
       {herramienta.tipo === "tabla" && DESGLOSE_DIR_IDS.has(herramienta.id) && (
@@ -7890,6 +7894,27 @@ const EJ_PRESUP: Ejemplo[] = [
   { partida: "Equipo de cámara", presupuestado: "12000", real: "11200", estado: "En presupuesto" },
   { partida: "Localizaciones", presupuestado: "8000", real: "9500", estado: "Sobrepasado" },
 ];
+const EJ_STRIPBOARD: Ejemplo[] = [
+  { dia: "3", escena: "1", intext: "INT", dianoche: "Amanecer", locacion: "Faro (interior)", paginas: "2 1/8", elenco: "Marea", sinopsis: "Marea encuentra la luz apagada y sube corriendo la escalera.", ref: "" },
+  { dia: "3", escena: "8", intext: "EXT", dianoche: "Día", locacion: "Puerto", paginas: "1 4/8", elenco: "Marea, Farero", sinopsis: "Marea busca al farero entre los pescadores del muelle.", ref: "" },
+];
+const EJ_TRANSPORTE: Ejemplo[] = [
+  { fecha: "2026-07-14", vehiculo: "Furgón 9 plazas — 4521-KTP", conductor: "Sergi Roma", pasajeros: "Equipo de cámara", origen: "Base de producción", destino: "Faro de Punta Alta", hora_salida: "05:30", hora_llegada: "06:15", estado: "Llegó", notas: "" },
+  { fecha: "2026-07-14", vehiculo: "Coche de producción — 7788-LMN", conductor: "Ana Puig", pasajeros: "Kepa Aguirre (DF)", origen: "Hotel equipo", destino: "Faro de Punta Alta", hora_salida: "05:45", hora_llegada: "06:20", estado: "En ruta", notas: "" },
+];
+const EJ_PARTE_DIARIO: Ejemplo[] = [
+  { fecha: "2026-07-14", dia: "3", locacion: "Faro de Punta Alta", hora_inicio: "06:00", hora_fin: "19:30", horas_extra: "1.5", escenas_rodadas: "1, 3", paginas_rodadas: "3 1/8", paginas_pendientes: "0", extras: "0", accidentes: "", retrasos: "Viento retrasó 30 min el montaje de luces.", notas: "Buen ritmo, se ganó media página al plan.", firma_dir: "", firma_prod: "" },
+];
+const EJ_CATERING_GENERAL: Ejemplo[] = [
+  { fecha: "2026-07-14", servicio: "Comida", personas: "32", especiales: "3 vegetarianos, 1 celíaco", menu: "Arroz de pescado + ensalada", hora_servicio: "13:30", proveedor: "Catering Costa", coste: "480", estado: "Confirmado" },
+];
+const EJ_PLAN_SEMANA: Ejemplo[] = [
+  { dia: "Lunes 14/7", localizacion: "Faro de Punta Alta", escenas: "1, 3", crew_necesario: "22", extras_necesarios: "0", hora_inicio: "06:00", hora_fin_estimada: "19:30", notas: "Amanecer a las 06:12, cámara lista 05:45.", estado: "Confirmado" },
+  { dia: "Martes 15/7", localizacion: "Puerto", escenas: "8", crew_necesario: "22", extras_necesarios: "8", hora_inicio: "08:00", hora_fin_estimada: "18:00", notas: "Figuración de pescadores, confirmar vestuario.", estado: "Planificado" },
+];
+const EJ_PLAN_LOCACIONES_JORNADA: Ejemplo[] = [
+  { dia: "3", fecha: "2026-07-14", locacion: "Faro de Punta Alta", direccion: "Camino del Faro s/n", hora_llegada: "05:30", hora_inicio: "06:00", hora_fin: "19:30", escenas: "1, 3", notas_logistica: "Sin señal, llevar walkies. Parking limitado a 6 vehículos.", permiso_doc: "" },
+];
 const EJ_PRESUPUESTO_COSTOS: Ejemplo[] = [
   { capitulo: "Arte", partida: "Alquiler de decorados", presupuestado: "45000", comprometido: "45000", real: "38200", limite_alerta: "43000", responsable: "Marta Gil" },
   { capitulo: "Arte", partida: "Materiales y construcción", presupuestado: "18000", comprometido: "16500", real: "17200", responsable: "Marta Gil" },
@@ -8345,6 +8370,34 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
   "bts-contactos-prensa": [
     { medio: "Fotogramas", periodista: "Elena Ríos", email: "elena@fotogramas.es", telefono: "+34 600 777 888", tipo_cobertura: "Set visit", estado_acreditacion: "Acreditado", notas: "Visita prevista semana 3." },
     { medio: "Cinemanía", periodista: "Pau Grau", email: "pau@cinemania.es", telefono: "+34 655 111 999", tipo_cobertura: "Entrevista", estado_acreditacion: "Pendiente", notas: "" },
+  ],
+  "prod-agenda-coord": [
+    { fecha: "2026-07-08", tema: "Bloqueo de la escena del faro", deptos: "Dirección, Fotografía, Arte", acuerdo: "Se rueda con luz natural de amanecer, arte prepara la linterna practicable para las 6:00.", estado: "Cerrado" },
+    { fecha: "2026-07-12", tema: "Figuración extra en escena de puerto", deptos: "Producción, Reparto, Vestuario", acuerdo: "Faltan confirmar 8 figurantes de pescadores. Vestuario necesita tallas antes del jueves.", estado: "En curso" },
+  ],
+  "prod-material-prestado": [
+    { objeto: "Grúa Technocrane 15ft", propietario: "Alquiler Camera Grip", responsable: "Jefe de producción", salida: "2026-07-10", devolucion: "2026-07-17", estado: "En uso", coste_dia: "450", foto: "" },
+    { objeto: "Generador 60kVA", propietario: "Devuelto — Genex Rental", responsable: "Eléctrico jefe", salida: "2026-07-01", devolucion: "2026-07-08", estado: "Devuelto", coste_dia: "180", foto: "" },
+  ],
+  "prod-ficha-localizacion": [
+    { nombre: "Faro de Punta Alta", direccion: "Camino del Faro s/n, Punta Alta", contacto: "Ayuntamiento — Marisa Cobos", permiso: "Concedido", coste: "300/día", notas: "Sin señal de móvil, llevar walkies. Viento fuerte por la tarde.", permiso_doc: "", foto: "" },
+    { nombre: "Casa de Elsa", direccion: "Calle Mayor 14", contacto: "Propietaria — Julia Ferrer", permiso: "Solicitado", coste: "150/día", notas: "Vecinos sensibles al ruido después de las 20:00.", permiso_doc: "", foto: "" },
+  ],
+  "prod-proveedores-detalle": [
+    { nombre: "Camera Grip Barcelona", servicio: "Alquiler de cámara y grip", contacto: "Oriol Bas", telefono: "+34 933 445 566", email: "oriol@cameragrip.es", periodo: "10-17 jul", precio_acuerdo: "3200", forma_pago: "Transferencia", estado_pago: "Pagado", contrato: "", valoracion: "Excelente" },
+    { nombre: "Genex Rental", servicio: "Generadores y eléctrico", contacto: "Marc Solé", telefono: "+34 655 222 111", email: "marc@genex.es", periodo: "1-8 jul", precio_acuerdo: "1260", forma_pago: "Transferencia", estado_pago: "Pendiente", contrato: "", valoracion: "Bueno" },
+  ],
+  "prod-equipo-tecnico": [
+    { nombre: "Kepa Aguirre", cargo_real: "Director de fotografía", departamento: "Fotografía", fecha_inicio: "2026-07-05", fecha_fin: "2026-07-20", tarifa_dia: "600", dias_trabajados: "12", total: "7200", estado_contrato: "Firmado" },
+    { nombre: "Marc Solé", cargo_real: "Eléctrico jefe", departamento: "Fotografía", fecha_inicio: "2026-07-05", fecha_fin: "2026-07-20", tarifa_dia: "280", dias_trabajados: "10", total: "2800", estado_contrato: "Pendiente" },
+  ],
+  "prod-permisos": [
+    { tipo_permiso: "Rodaje en vía pública", entidad: "Ayuntamiento de Punta Alta", solicitado: "2026-06-15", concedido: "2026-06-28", archivo_permiso: "", coste: "0", estado: "Concedido", contacto: "Marisa Cobos" },
+    { tipo_permiso: "Corte de tráfico 2h", entidad: "Policía Local", solicitado: "2026-07-01", concedido: "", archivo_permiso: "", coste: "120", estado: "Solicitado", contacto: "Marisa Cobos" },
+  ],
+  "prod-reporte-incidencias-loc": [
+    { locacion: "Faro de Punta Alta", dia: "3", descripcion: "Viento levantó un panel de luz, sin daños en la estructura del faro.", responsable: "Grip jefe", estado: "Gestionada", foto: "" },
+    { locacion: "Casa de Elsa", dia: "5", descripcion: "Vecino reclamó por ruido del generador después de las 20:00.", responsable: "Jefe de producción", estado: "Abierta", foto: "" },
   ],
 };
 
