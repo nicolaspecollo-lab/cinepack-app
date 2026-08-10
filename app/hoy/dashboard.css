@@ -1110,6 +1110,33 @@
 }
 .cp-dash .hcard-notif{ position:absolute; top:10px; right:10px; z-index:3; }
 
+/* ===================================================================
+   OPCIÓN C — índice de herramientas (Hcard) e índice de Generales.
+   El acento de cada herramienta sigue siendo var(--acc) (color del
+   departamento dueño, dinámico) — acá solo cambia tipografía, fondo
+   y bordes. Como Hcard es compartido, esto alcanza también a los
+   índices de Departamentos y Exclusivas apenas se les sume .cp-optc.
+=================================================================== */
+.cp-optc .hp-index{ background:var(--optc-bg); }
+.cp-optc .hp-group-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .hp-group-label .hex{ background:#C98AF2; }
+.cp-optc .hcard{ background:var(--optc-bg); border:1px solid var(--optc-line); border-radius:0; }
+.cp-optc .hcard:hover{ transform:none; }
+.cp-optc .hcard-hexbg{ opacity:.10; }
+.cp-optc .hcard-fade{ background:linear-gradient(to bottom, transparent 0%, var(--optc-bg) 62%); }
+.cp-optc .hcard-seal{ border-radius:0; box-shadow:none; color:var(--optc-text); }
+.cp-optc .hcard-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .hcard-desc{ font-family:var(--optc-font-body); color:var(--optc-muted); opacity:1; }
+.cp-optc .hcard-perm-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); opacity:1; }
+.cp-optc .hcard-badge{ font-family:var(--optc-font-mono); background:var(--optc-bg); color:var(--optc-text); border:1px solid var(--optc-line); border-radius:0; }
+.cp-optc .hcard-tipo-tag{ font-family:var(--optc-font-mono); color:var(--optc-muted); opacity:1; }
+.cp-optc .hcard-count{ font-family:var(--optc-font-mono); color:var(--optc-text); border-radius:0; }
+.cp-optc .hcard-soon{ font-family:var(--optc-font-mono); color:var(--optc-text); border-radius:0; }
+
+.cp-optc .gen-readonly-banner{ font-family:var(--optc-font-body); color:var(--optc-muted); border-color:var(--optc-line); }
+.cp-optc .hp-open-head h3{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .hp-open-tag{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-color:var(--optc-line); border-radius:0; }
+
 /* Vista abierta de una herramienta (se mantiene igual) */
 
 /* Vista abierta de una herramienta */
