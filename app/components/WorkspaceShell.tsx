@@ -119,6 +119,7 @@ export default function WorkspaceShell({
       <header className="cp-topbar cp-optc">
         <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
         <span className="cp-proj">{proyecto}</span>
+        <input className="cp-optc-search" type="text" placeholder="buscar o Cmd+K…" disabled />
         <div className="cp-topbar-break" aria-hidden="true"></div>
         <div className="cp-spacer"></div>
         <div className="cp-topbar-actions">

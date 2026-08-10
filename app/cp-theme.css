@@ -276,6 +276,19 @@
 .cp-optc .cp-menu-dept.active{ color:#C98AF2; border-left-color:#C98AF2; }
 .cp-optc .cp-menu-dept.active:hover{ background:#C98AF2; color:var(--optc-text); }
 
+/* Barra de búsqueda del topbar — visual, todavía sin función real
+   (no hay backend de búsqueda implementado). Queda lista para
+   conectarse cuando se construya esa funcionalidad. */
+.cp-optc-search{
+  flex:1; max-width:280px; margin-left:14px;
+  border:1px solid var(--optc-line); background:var(--optc-bg); color:var(--optc-text);
+  font-family:var(--optc-font-mono); font-size:10.5px; padding:7px 10px; border-radius:0;
+  opacity:1;
+}
+.cp-optc-search::placeholder{ color:var(--optc-muted); }
+.cp-optc-search:disabled{ opacity:1; cursor:default; }
+@media (max-width:640px){ .cp-optc-search{ display:none; } }
+
 /* ===================================================================
    AUTH — login / registro
 =================================================================== */
