@@ -5011,6 +5011,76 @@
 /* La placa toma la silueta rellena del isotipo (no un cuadrado) */
 .cp-dash .ct-mark-plate{ -webkit-mask:url(/iso-solid.png) center/contain no-repeat; mask:url(/iso-solid.png) center/contain no-repeat; }
 
+/* ===================================================================
+   OPCIÓN C — CicloTimeline. Reemplaza el fondo hexagonal verde por el
+   patrón estirado blanco/negro, y tipografía por el sistema nuevo.
+   El isotipo real (.cp-iso, mask de iso-cinepack.png) ya se usaba acá
+   antes de esta migración — no hace falta tocarlo.
+=================================================================== */
+.cp-optc .ct-wrap{
+  background:var(--optc-bg); border:1px solid var(--optc-line);
+  padding:16px 18px 0;
+}
+.cp-optc .ct-rail{ background-image:none; }
+.cp-optc .ct-track{ background:none; }
+.cp-optc .ct-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
+.cp-optc .ct-eyebrow .hex{ background:var(--violet); }
+.cp-optc .ct-etapa-name{ font-family:var(--optc-font-display); font-weight:400; letter-spacing:.01em; color:var(--optc-text); }
+.cp-optc .ct-etapa-range{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
+.cp-optc .ct-progress-txt{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .ct-progress-bar{ background:var(--optc-line-soft); }
+.cp-optc .ct-zoom-btn{ border:1px solid var(--optc-line); color:var(--optc-muted); background:var(--optc-bg); border-radius:0; }
+.cp-optc .ct-zoom-btn:hover:not(:disabled){ border-color:var(--violet); color:var(--violet); }
+.cp-optc .ct-zoom-pct{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .ct-line{ background:var(--optc-line); }
+.cp-optc .ct-hoy-line{ background:var(--optc-text); }
+.cp-optc .ct-hoy-badge{ background:var(--optc-text); color:var(--optc-bg); font-family:var(--optc-font-display); font-weight:400; }
+.cp-optc .ct-lab-t{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .ct-lab-s{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
+.cp-optc .ct-lab-d{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
+.cp-optc .ct-stem{ background:var(--optc-line); }
+.cp-optc .ct-mark-plate{ background:var(--optc-bg); }
+.cp-optc .ct-det{ border-color:var(--optc-line); }
+.cp-optc .ct-det-tipo{ font-family:var(--optc-font-mono); font-weight:600; }
+.cp-optc .ct-det-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .ct-det-date{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
+.cp-optc .ct-det-flab{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .ct-det-fval{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .ct-empty{ color:var(--optc-muted); }
+.cp-optc .ct-empty .hex{ background:var(--violet); }
+
+/* ===================================================================
+   OPCIÓN C — CalendarioProyecto
+=================================================================== */
+.cp-optc .cal-wrap{ background:var(--optc-bg); border:1px solid var(--optc-line); }
+.cp-optc .cal-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cal-title .hex{ background:var(--violet); }
+.cp-optc .cal-navbtn{ border:1px solid var(--optc-line); color:var(--optc-muted); border-radius:0; }
+.cp-optc .cal-navbtn:hover{ border-color:var(--violet); color:var(--violet); }
+.cp-optc .cal-dow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cal-cell{ border-color:var(--optc-line-soft); }
+.cp-optc .cal-cell:hover{ background:var(--optc-line-soft); }
+.cp-optc .cal-cell.hoy .cal-daynum{ color:var(--violet); }
+.cp-optc .cal-cell.sel{ outline-color:var(--violet); }
+.cp-optc .cal-daynum{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cal-prev-fecha{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cal-prev-empty{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cal-prev-item{ border-color:var(--optc-line); }
+.cp-optc .cal-prev-item-tipo{ font-family:var(--optc-font-mono); }
+.cp-optc .cal-prev-item-title{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cal-prev-item-hora{ font-family:var(--optc-font-mono); color:var(--violet); }
+.cp-optc .cal-prev-item-badge{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-color:var(--optc-line); }
+.cp-optc .cal-prev-field span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cal-prev-field b{ font-family:var(--optc-font-body); font-weight:400; color:var(--optc-text); }
+.cp-optc .cal-form{ background:var(--optc-bg); border-color:var(--optc-line); }
+.cp-optc .cal-form-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cal-form-tlabel{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+.cp-optc .cp-btn{ font-family:var(--optc-font-mono); border-radius:0; border-color:var(--optc-text); color:var(--optc-text); background:var(--optc-bg); }
+.cp-optc .cp-btn:hover{ border-color:var(--violet); color:var(--violet); }
+.cp-optc .cp-btn-acc{ color:var(--violet); border-color:var(--violet); }
+.cp-optc .cp-btn-acc:hover{ background:var(--violet); color:var(--optc-text); }
+
 /* ===========================================================================
    DOSSIER DE CONVOCATORIA (overlay) + explorador de carpetas navegable
    =========================================================================== */
