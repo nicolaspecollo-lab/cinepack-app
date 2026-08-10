@@ -236,6 +236,24 @@
 .cp-dash .cp-creditos-list dt{ color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600; }
 .cp-dash .cp-creditos-list dd{ margin:0; color:var(--text); font-size:12.5px; }
 
+/* ===== Opción C — tarjeta Créditos (primer corte de la migración de diseño) ===== */
+.cp-optc .cp-creditos-card{
+  background:var(--optc-bg); color:var(--optc-text);
+  border:1px solid var(--optc-line); border-radius:0;
+  padding:16px 18px; box-shadow:none;
+}
+.cp-optc .cp-creditos-card h4{
+  font-family:var(--optc-font-display); text-transform:uppercase;
+  letter-spacing:.02em; font-weight:400; font-size:15px; margin:0 0 12px;
+  display:flex; align-items:center; gap:8px;
+}
+.cp-optc .cp-creditos-card h4 .hex{ width:11px; height:11px; background:var(--violet); flex:none; }
+.cp-optc .cp-creditos-list dt{
+  font-family:var(--optc-font-mono); color:var(--optc-muted);
+  font-size:9.5px; letter-spacing:.06em;
+}
+.cp-optc .cp-creditos-list dd{ font-family:var(--optc-font-body); color:var(--optc-text); font-size:12.5px; }
+
 /* ===== Pipeline strip ===== */
 .cp-dash .pipe{ display:flex; align-items:center; gap:0; margin:22px 30px 0; flex-wrap:wrap; row-gap:10px; }
 .cp-dash .pipe-step{ display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted); }
@@ -1412,6 +1430,58 @@
 .cp-dash .hp-check-bar.pulso-bar.pulso-bar-sm{ height:4px; }
 .cp-dash .pulso-bar-label{ font-size:11px; color:var(--muted); }
 .cp-dash .pulso-loading{ padding:30px; font-size:12px; color:var(--muted); }
+
+/* ===================================================================
+   OPCIÓN C — capa genérica que restyla TODAS las tarjetas de Pulso
+   (tareas, notificaciones, avance, equipo, actividad, contratos,
+   semáforo, compartir) de una sola vez, porque todas comparten las
+   mismas clases base (.tcard.pulso-card, .hex, .cp-notif-acceso, etc).
+   No usar var(--acc) del tema oscuro: acá el acento es fijo (violeta).
+=================================================================== */
+.cp-optc.pulso{ background:var(--optc-bg); }
+.cp-optc .tcard{
+  background:var(--optc-bg); border:1px solid var(--optc-line); border-top:1px solid var(--optc-line);
+  border-radius:0; box-shadow:none; padding:16px 17px;
+}
+.cp-optc .tcard:hover{ background:var(--optc-bg); }
+.cp-optc .tcard h4{
+  font-family:var(--optc-font-mono); font-weight:600; font-size:10px;
+  letter-spacing:.1em; color:var(--optc-muted); gap:7px;
+}
+.cp-optc .tcard h4 .hex{ width:11px; height:9px; background:var(--violet); }
+.cp-optc .tcard p{ font-family:var(--optc-font-body); color:var(--optc-muted); font-size:12.5px; }
+.cp-optc .tcard li span:last-child{ color:var(--optc-muted); }
+
+.cp-optc .cp-notif-acceso{ border:1px solid var(--optc-line); background:var(--optc-bg); border-radius:0; }
+.cp-optc .cp-notif-acceso:hover{ border-color:var(--violet); }
+.cp-optc .cp-notif-acceso-txt{ font-family:var(--optc-font-mono); font-weight:500; letter-spacing:.02em; color:var(--optc-text); }
+
+.cp-optc .hp-check-bar{ background:var(--optc-line-soft); border-radius:0; }
+.cp-optc .hp-check-bar span{ background:var(--optc-text); border-radius:0; }
+.cp-optc .hp-check-bar.pulso-bar-sm span{ background:var(--violet); }
+.cp-optc .pulso-bar-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-size:9.5px; }
+
+.cp-optc .cp-pulso-mini-stat b{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cp-pulso-mini-stat span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-pulso-etapa-sub{ border-top:1px solid var(--optc-line-soft); }
+.cp-optc .cp-pulso-etapa-sub-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+.cp-optc .cp-pulso-equipo-nombre{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cp-pulso-equipo-rol{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+.cp-optc .cp-activity-card{ border-top:none; }
+.cp-optc .cp-activity-list{ border:1px solid var(--optc-line); }
+.cp-optc .cp-activity-list li{ background:var(--optc-bg); border-bottom:1px solid var(--optc-line-soft); font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cp-activity-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+.cp-optc .btn{ font-family:var(--optc-font-mono); border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text); border-radius:0; }
+.cp-optc .btn:hover{ border-color:var(--violet); color:var(--violet); }
+.cp-optc .btn.acc{ background:var(--violet); color:var(--optc-text); border-color:var(--violet); }
+
+.cp-optc .cp-semaforo-item,
+.cp-optc .cp-contratos-list li,
+.cp-optc .cp-share-list li{ font-family:var(--optc-font-body); }
+.cp-optc .cp-share-form input{ font-family:var(--optc-font-body); border-radius:0; border:1px solid var(--optc-line); background:var(--optc-bg); color:var(--optc-text); }
 
 /* Sub-bloque "Avance de la etapa: X" dentro de la tarjeta de avance del
    proyecto, y previsualización numérica compartida (tareas / financiación). */

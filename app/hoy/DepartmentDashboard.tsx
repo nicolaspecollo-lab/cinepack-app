@@ -325,7 +325,7 @@ export default function DepartmentDashboard({
       </div>
 
       {tab === "pulso" && (
-        <div className="tpanel active">
+        <div className="tpanel active cp-optc">
           <CicloTimeline />
           <ModoRodajePanel onVerOrden={irAOrdenRodaje} />
           <CalendarioProyecto departamento={nombre} cargo={cargo} isAdmin={isAdmin} fullName={fullName} />

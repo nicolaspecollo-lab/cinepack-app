@@ -297,7 +297,7 @@ export default function ProyectoPulsoPanel({
   }
 
   return (
-    <div className="pulso">
+    <div className="pulso cp-optc">
       {creditos && (creditos.escrito_por.length > 0 || creditos.dirigido_por.length > 0 || creditos.producido_por.length > 0) && (
         <div className="tcard pulso-card cp-creditos-card">
           <h4><span className="hex"></span>{creditos.nombre}</h4>
