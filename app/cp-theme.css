@@ -258,15 +258,14 @@
    dentro de cada workspace: wtabs, tarjetas, etc).
 =================================================================== */
 .cp-optc.cp-topbar{
-  background:var(--optc-bg); border-bottom:2px solid var(--optc-text);
+  background-color:var(--optc-bg); border-bottom:2px solid var(--optc-text);
   padding:12px 22px; gap:14px;
 }
-.cp-optc.cp-topbar.cp-optc-hexbg{ background-color:var(--optc-bg); }
 .cp-optc .cp-logo{
   font-family:var(--optc-font-display); font-weight:400; font-size:13px;
   letter-spacing:.02em; color:var(--optc-text); gap:8px; text-transform:uppercase;
 }
-.cp-optc .cp-logo-mark{ width:15px; height:auto; display:block; flex:none; }
+.cp-optc .cp-logo-mark{ width:15px; height:15px; flex:none; }
 .cp-optc .cp-proj{ font-family:var(--optc-font-mono); font-size:11px; color:var(--optc-muted); border-left:1px solid var(--optc-line); padding-left:14px; text-transform:uppercase; }
 .cp-optc .cp-topbar-theme-btn{
   width:26px; height:26px; border:1px solid var(--optc-line); background:var(--optc-bg);

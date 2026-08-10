@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import GeneralesPanel, { type Sub as GeneralesSub } from "./GeneralesPanel";
 import ModoRodajePanel from "./ModoRodajePanel";
 import CicloTimeline from "./CicloTimeline";
+import ProyectoInfoCard from "./ProyectoInfoCard";
 import CalendarioProyecto from "./CalendarioProyecto";
 import HerramientasPanel, { useNombreHerramienta } from "./HerramientasPanel";
 import ArchivosPanel from "./ArchivosPanel";
@@ -326,6 +327,7 @@ export default function DepartmentDashboard({
 
       {tab === "pulso" && (
         <div className="tpanel active cp-optc">
+          <ProyectoInfoCard />
           <CicloTimeline />
           <ModoRodajePanel onVerOrden={irAOrdenRodaje} />
           <CalendarioProyecto departamento={nombre} cargo={cargo} isAdmin={isAdmin} fullName={fullName} />

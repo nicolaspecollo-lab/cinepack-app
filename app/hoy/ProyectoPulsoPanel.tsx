@@ -86,7 +86,6 @@ export default function ProyectoPulsoPanel({
   const [projectId, setProjectId] = useState<string | null>(null);
   const [esEjecutivo, setEsEjecutivo] = useState(false);
   const [contratosVencen, setContratosVencen] = useState<ContratoVence[]>([]);
-  const [creditos, setCreditos] = useState<{ nombre: string; escrito_por: string[]; dirigido_por: string[]; producido_por: string[] } | null>(null);
   const [tareasResumen, setTareasResumen] = useState<TareasPersonalesResumen | null>(null);
   const [etapaAvance, setEtapaAvance] = useState<EtapaAvance | null>(null);
 
@@ -102,17 +101,9 @@ export default function ProyectoPulsoPanel({
 
       const { data: proyectoCreditos } = await supabase
         .from("proyectos")
-        .select(`nombre, escrito_por, dirigido_por, producido_por, ${CICLO_SELECT}`)
+        .select(`nombre, ${CICLO_SELECT}`)
         .eq("id", projectId)
         .single();
-      if (proyectoCreditos) {
-        setCreditos({
-          nombre: proyectoCreditos.nombre,
-          escrito_por: (proyectoCreditos.escrito_por as string[]) ?? [],
-          dirigido_por: (proyectoCreditos.dirigido_por as string[]) ?? [],
-          producido_por: (proyectoCreditos.producido_por as string[]) ?? [],
-        });
-      }
       const fechasCiclo = fechasCicloDesdeFila(proyectoCreditos as Record<string, string | null> | null);
       const avancePct = avanceProyectoPct(fechasCiclo);
       const enCurso = etapaEnCursoPct(fechasCiclo);
@@ -298,32 +289,6 @@ export default function ProyectoPulsoPanel({
 
   return (
     <div className="pulso cp-optc">
-      {creditos && (creditos.escrito_por.length > 0 || creditos.dirigido_por.length > 0 || creditos.producido_por.length > 0) && (
-        <div className="tcard pulso-card cp-creditos-card">
-          <h4><span className="hex"></span>{creditos.nombre}</h4>
-          <dl className="cp-creditos-list">
-            {creditos.dirigido_por.length > 0 && (
-              <>
-                <dt>{t("directedBy")}</dt>
-                <dd>{creditos.dirigido_por.join(", ")}</dd>
-              </>
-            )}
-            {creditos.escrito_por.length > 0 && (
-              <>
-                <dt>{t("writtenBy")}</dt>
-                <dd>{creditos.escrito_por.join(", ")}</dd>
-              </>
-            )}
-            {creditos.producido_por.length > 0 && (
-              <>
-                <dt>{t("producedBy")}</dt>
-                <dd>{creditos.producido_por.join(", ")}</dd>
-              </>
-            )}
-          </dl>
-        </div>
-      )}
-
       {esEjecutivo && contratosVencen.length > 0 && (
         <div className="tcard pulso-card cp-contratos-vencen">
           <h4><span className="hex"></span>{t("contractsExpiring")}</h4>

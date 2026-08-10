@@ -133,7 +133,8 @@
    var(--acc), dinámico por departamento (igual que en el resto de la
    app) — acá solo cambia tipografía, fondo y el patrón de fondo.
 =================================================================== */
-.cp-optc.wtabs{ background-image:none; background:var(--optc-bg); border-bottom:1px solid var(--optc-line); min-height:44px; }
+.cp-optc.wtabs,
+.cp-dash.cp-light .cp-optc.wtabs{ background-image:none !important; background-color:var(--optc-bg); border-bottom:1px solid var(--optc-line); min-height:44px; }
 .cp-optc .cp-wdept-label{ border-right:1px solid var(--optc-line); padding:0 16px; gap:8px; }
 .cp-optc .cp-wdept-label span:last-child{ font-family:var(--optc-font-mono); font-size:9px; letter-spacing:.06em; }
 .cp-optc .cp-wdept-mono{
@@ -265,18 +266,19 @@
 .cp-dash .cp-creditos-list dt{ color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; font-weight:600; }
 .cp-dash .cp-creditos-list dd{ margin:0; color:var(--text); font-size:12.5px; }
 
-/* ===== Opción C — tarjeta Créditos (primer corte de la migración de diseño) ===== */
+/* ===== Opción C — tarjeta Info del proyecto (primera tarjeta de Pulso,
+   antes de CicloTimeline — ver ProyectoInfoCard.tsx) ===== */
 .cp-optc .cp-creditos-card{
   background:var(--optc-bg); color:var(--optc-text);
   border:1px solid var(--optc-line); border-radius:0;
-  padding:16px 18px; box-shadow:none;
+  padding:16px 18px; box-shadow:none; margin-bottom:14px;
 }
 .cp-optc .cp-creditos-card h4{
   font-family:var(--optc-font-display); text-transform:uppercase;
   letter-spacing:.02em; font-weight:400; font-size:15px; margin:0 0 12px;
   display:flex; align-items:center; gap:8px;
 }
-.cp-optc .cp-creditos-card h4 .hex{ width:11px; height:11px; background:var(--violet); flex:none; }
+.cp-optc .cp-creditos-card h4 .hex{ width:11px; height:11px; background:var(--optc-text); flex:none; }
 .cp-optc .cp-creditos-list dt{
   font-family:var(--optc-font-mono); color:var(--optc-muted);
   font-size:9.5px; letter-spacing:.06em;
@@ -1132,7 +1134,7 @@
 =================================================================== */
 .cp-optc .hp-index{ background:var(--optc-bg); }
 .cp-optc .hp-group-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
-.cp-optc .hp-group-label .hex{ background:#C98AF2; }
+.cp-optc .hp-group-label .hex{ background:var(--optc-text); }
 .cp-optc .hcard{ background:var(--optc-bg); border:1px solid var(--optc-line); border-radius:0; }
 .cp-optc .hcard:hover{ transform:none; }
 .cp-optc .hcard-hexbg{ opacity:.10; }
@@ -1504,15 +1506,17 @@
   font-family:var(--optc-font-mono); font-weight:600; font-size:10px;
   letter-spacing:.1em; color:var(--optc-muted); gap:7px;
 }
-.cp-optc .tcard h4 .hex{ width:11px; height:9px; background:var(--violet); }
+.cp-optc .tcard h4 .hex{ width:11px; height:9px; background:var(--optc-text); }
 .cp-optc .tcard p{ font-family:var(--optc-font-body); color:var(--optc-muted); font-size:12.5px; }
 .cp-optc .tcard li span:last-child{ color:var(--optc-muted); }
 
 .cp-optc .cp-notif-acceso{ border:1px solid var(--optc-line); background:var(--optc-bg); border-radius:0; }
 .cp-optc .cp-notif-acceso:hover{ border-color:var(--violet); }
 .cp-optc .cp-notif-acceso-txt{ font-family:var(--optc-font-mono); font-weight:500; letter-spacing:.02em; color:var(--optc-text); }
-.cp-optc .cp-notif-acceso-ic{ clip-path:none; background:var(--violet); color:var(--optc-text); }
-.cp-optc .cp-acceso-icon{ clip-path:none; background:var(--violet); color:var(--optc-text); }
+/* El mockup no lleva ícono cuadrado antes del texto en las filas de
+   acceso ("Abrir tablero →"), solo texto + flecha — se oculta acá. */
+.cp-optc .cp-notif-acceso-ic{ display:none; }
+.cp-optc .cp-acceso-icon{ clip-path:none; background:var(--optc-text); color:var(--optc-bg); }
 .cp-optc .cp-acceso-cta{ font-family:var(--optc-font-mono); color:var(--violet); }
 .cp-optc .cp-acceso-head h4{ font-family:var(--optc-font-mono); color:var(--optc-text); }
 
@@ -5084,7 +5088,7 @@
 .cp-optc .ct-rail{ background-image:none; }
 .cp-optc .ct-track{ background:none; }
 .cp-optc .ct-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
-.cp-optc .ct-eyebrow .hex{ background:var(--violet); }
+.cp-optc .ct-eyebrow .hex{ background:var(--optc-text); }
 .cp-optc .ct-etapa-name{ font-family:var(--optc-font-display); font-weight:400; letter-spacing:.01em; color:var(--optc-text); }
 .cp-optc .ct-etapa-range{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
 .cp-optc .ct-progress-txt{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
@@ -5107,14 +5111,14 @@
 .cp-optc .ct-det-flab{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .ct-det-fval{ font-family:var(--optc-font-body); color:var(--optc-text); }
 .cp-optc .ct-empty{ color:var(--optc-muted); }
-.cp-optc .ct-empty .hex{ background:var(--violet); }
+.cp-optc .ct-empty .hex{ background:var(--optc-text); }
 
 /* ===================================================================
    OPCIÓN C — CalendarioProyecto
 =================================================================== */
 .cp-optc .cal-wrap{ background:var(--optc-bg); border:1px solid var(--optc-line); }
 .cp-optc .cal-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
-.cp-optc .cal-title .hex{ background:var(--violet); }
+.cp-optc .cal-title .hex{ background:var(--optc-text); }
 .cp-optc .cal-navbtn{ border:1px solid var(--optc-line); color:var(--optc-muted); border-radius:0; }
 .cp-optc .cal-navbtn:hover{ border-color:var(--violet); color:var(--violet); }
 .cp-optc .cal-dow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
