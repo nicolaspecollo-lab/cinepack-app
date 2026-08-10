@@ -288,7 +288,7 @@ export default function DepartmentDashboard({
   return (
     <div className="view active" style={{ "--acc": accVar } as React.CSSProperties}>
       {headerMounted && createPortal(headerControls, document.getElementById("cp-header-controls")!)}
-      <div className="wtabs">
+      <div className="wtabs cp-optc">
         <div className="cp-wdept-label">
           <span className="hex" />
           <span>{nombre}</span>

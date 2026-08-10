@@ -243,6 +243,30 @@
 .cp-menu-dept.active:hover{ background:var(--lime); color:var(--bg); }
 
 /* ===================================================================
+   OPCIÓN C — topbar. Usa violeta fijo como acento del propio chrome de
+   la app (no el --acc dinámico por departamento, que sigue aplicando
+   dentro de cada workspace: wtabs, tarjetas, etc).
+=================================================================== */
+.cp-optc.cp-topbar{ background:var(--optc-bg); border-bottom:1px solid var(--optc-line); }
+.cp-optc .cp-logo{ font-family:var(--optc-font-display); font-weight:400; letter-spacing:.02em; color:var(--optc-text); }
+.cp-optc .cp-proj{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-left:1px solid var(--optc-line); }
+.cp-optc .cp-topbar-theme-btn{ border:1px solid var(--optc-line); background:var(--optc-bg); color:var(--optc-muted); border-radius:0; }
+.cp-optc .cp-topbar-theme-btn:hover{ border-color:#C98AF2; color:#C98AF2; }
+.cp-optc .cp-menu-btn{ border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text); font-family:var(--optc-font-mono); font-weight:500; }
+.cp-optc .cp-menu-btn:hover{ border-color:#C98AF2; color:#C98AF2; }
+.cp-optc .cp-menu-btn .hex{ background:currentColor; }
+.cp-optc .cp-menu-drop{ background:var(--optc-bg); border:1px solid var(--optc-line); border-top:1px solid var(--optc-line); box-shadow:0 24px 60px rgba(20,21,26,.14); border-radius:0; }
+.cp-optc .cp-menu-section{ font-family:var(--optc-font-mono); color:#C98AF2; border-bottom:1px solid var(--optc-line-soft); }
+.cp-optc .cp-menu-item{ font-family:var(--optc-font-body); color:var(--optc-text); border-bottom:1px solid var(--optc-line-soft); }
+.cp-optc .cp-menu-item:hover{ background:#C98AF2; color:var(--optc-text); }
+.cp-optc .cp-menu-item .muted{ color:var(--optc-muted); font-family:var(--optc-font-mono); }
+.cp-optc .cp-menu-div{ background:var(--optc-line); }
+.cp-optc .cp-menu-dept{ border-bottom:1px solid var(--optc-line-soft); }
+.cp-optc .cp-menu-dept:hover{ background:#C98AF2; color:var(--optc-text); }
+.cp-optc .cp-menu-dept.active{ color:#C98AF2; border-left-color:#C98AF2; }
+.cp-optc .cp-menu-dept.active:hover{ background:#C98AF2; color:var(--optc-text); }
+
+/* ===================================================================
    AUTH — login / registro
 =================================================================== */
 .cp-auth-wrap{
