@@ -149,6 +149,16 @@
 .cp-dash a{ color:inherit; }
 .cp-dash .hex{ clip-path: polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%); }
 
+/* OPCIÓN C — todo ".hex" decorativo (bullet antes de un título de tarjeta)
+   pasa a ser el isotipo real en vez del rombo genérico de color, igual
+   que ya hacía CicloTimeline con .cp-iso. Conserva el color que cada
+   .hex ya traía (background inline o de su propia regla) vía mask. */
+.cp-optc .hex{
+  clip-path:none;
+  -webkit-mask:url(/iso-cinepack.png) center/contain no-repeat;
+  mask:url(/iso-cinepack.png) center/contain no-repeat;
+}
+
 /* ===================================================================
    TOPBAR — barra superior compartida por todos los workspaces
 =================================================================== */
