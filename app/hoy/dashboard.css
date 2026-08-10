@@ -116,9 +116,9 @@
 .cp-dash .cp-wuser-avatar-icon{
   background:var(--acc); color:var(--bg);
   display:flex; align-items:center; justify-content:center;
-  padding:5px; box-sizing:border-box;
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:9px; letter-spacing:.02em;
+  box-sizing:border-box;
 }
-.cp-dash .cp-wuser-avatar-icon svg{ width:100%; height:100%; }
 .cp-dash .cp-wuser-info{ display:flex; flex-direction:column; line-height:1.3; }
 .cp-dash .cp-wuser-info b{
   font-family:'Poppins',sans-serif; font-size:10px; font-weight:700; color:var(--text);
@@ -133,15 +133,28 @@
    var(--acc), dinámico por departamento (igual que en el resto de la
    app) — acá solo cambia tipografía, fondo y el patrón de fondo.
 =================================================================== */
-.cp-optc.wtabs{ background-image:none; background:var(--optc-bg); border-bottom:1px solid var(--optc-line); }
-.cp-optc .cp-wdept-label{ border-right:1px solid var(--optc-line); }
-.cp-optc .cp-wdept-label span:last-child{ font-family:var(--optc-font-mono); }
-.cp-optc .wtab{ font-family:var(--optc-font-mono); font-weight:600; letter-spacing:.04em; color:var(--optc-muted); }
+.cp-optc.wtabs{ background-image:none; background:var(--optc-bg); border-bottom:1px solid var(--optc-line); min-height:44px; }
+.cp-optc .cp-wdept-label{ border-right:1px solid var(--optc-line); padding:0 16px; gap:8px; }
+.cp-optc .cp-wdept-label span:last-child{ font-family:var(--optc-font-mono); font-size:9px; letter-spacing:.06em; }
+.cp-optc .cp-wdept-mono{
+  width:20px; height:20px; flex:none; box-sizing:border-box;
+  border:1.3px solid var(--optc-text); background:var(--acc); color:var(--optc-text);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--optc-font-mono); font-size:8px; font-weight:700;
+}
+.cp-optc .wtab{ font-family:var(--optc-font-display); font-weight:400; font-size:10px; letter-spacing:.04em; color:var(--optc-muted); padding:0 14px; }
 .cp-optc .wtab:hover{ color:var(--optc-text); }
-.cp-optc .wtab-badge{ border-radius:0; color:var(--optc-bg); }
-.cp-optc .cp-wuser-block{ border-left:1px solid var(--optc-line); }
-.cp-optc .cp-wuser-info b{ font-family:var(--optc-font-body); font-weight:600; color:var(--optc-text); }
-.cp-optc .cp-wuser-info span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .wtab.active{ color:var(--optc-text); }
+.cp-optc .wtab-badge{ border-radius:0; color:var(--optc-bg); font-family:var(--optc-font-mono); }
+.cp-optc .cp-wuser-block{ border-left:1px solid var(--optc-line); padding:0 16px; }
+.cp-optc .cp-wuser-avatar,
+.cp-optc .cp-wuser-avatar-icon{
+  width:22px; height:22px; border-radius:0;
+  border:1.3px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text);
+  font-family:var(--optc-font-mono); font-size:8px; font-weight:700;
+}
+.cp-optc .cp-wuser-info b{ font-family:var(--optc-font-display); font-weight:400; font-size:10.5px; color:var(--optc-text); }
+.cp-optc .cp-wuser-info span{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-size:9px; text-transform:uppercase; letter-spacing:.03em; }
 .cp-optc .cp-header-back-btn{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-right:1px solid var(--optc-line); }
 
 .cp-dash .tpanel{ display:none; flex-direction:column; flex:1; }

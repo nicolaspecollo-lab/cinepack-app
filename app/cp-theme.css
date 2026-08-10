@@ -257,14 +257,31 @@
    la app (no el --acc dinámico por departamento, que sigue aplicando
    dentro de cada workspace: wtabs, tarjetas, etc).
 =================================================================== */
-.cp-optc.cp-topbar{ background:var(--optc-bg); border-bottom:1px solid var(--optc-line); }
-.cp-optc .cp-logo{ font-family:var(--optc-font-display); font-weight:400; letter-spacing:.02em; color:var(--optc-text); }
-.cp-optc .cp-proj{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-left:1px solid var(--optc-line); }
-.cp-optc .cp-topbar-theme-btn{ border:1px solid var(--optc-line); background:var(--optc-bg); color:var(--optc-muted); border-radius:0; }
+.cp-optc.cp-topbar{
+  background:var(--optc-bg); border-bottom:2px solid var(--optc-text);
+  padding:12px 22px; gap:14px;
+}
+.cp-optc.cp-topbar.cp-optc-hexbg{ background-color:var(--optc-bg); }
+.cp-optc .cp-logo{
+  font-family:var(--optc-font-display); font-weight:400; font-size:13px;
+  letter-spacing:.02em; color:var(--optc-text); gap:8px; text-transform:uppercase;
+}
+.cp-optc .cp-logo-mark{ width:15px; height:auto; display:block; flex:none; }
+.cp-optc .cp-proj{ font-family:var(--optc-font-mono); font-size:11px; color:var(--optc-muted); border-left:1px solid var(--optc-line); padding-left:14px; text-transform:uppercase; }
+.cp-optc .cp-topbar-theme-btn{
+  width:26px; height:26px; border:1px solid var(--optc-line); background:var(--optc-bg);
+  color:var(--optc-muted); border-radius:0; font-size:11px;
+}
 .cp-optc .cp-topbar-theme-btn:hover{ border-color:#C98AF2; color:#C98AF2; }
-.cp-optc .cp-menu-btn{ border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text); font-family:var(--optc-font-mono); font-weight:500; }
+.cp-optc .cp-topbar-actions{ gap:10px; }
+.cp-optc .cp-topbar-secondary{ gap:10px; }
+.cp-optc .cp-menu-btn{
+  border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text);
+  font-family:var(--optc-font-mono); font-weight:500; font-size:9.5px; letter-spacing:.06em;
+  text-transform:uppercase; padding:5px 10px; gap:6px;
+}
 .cp-optc .cp-menu-btn:hover{ border-color:#C98AF2; color:#C98AF2; }
-.cp-optc .cp-menu-btn .hex{ background:currentColor; }
+.cp-optc .cp-menu-btn .hex{ background:currentColor; width:9px; height:9px; }
 .cp-optc .cp-menu-drop{ background:var(--optc-bg); border:1px solid var(--optc-line); border-top:1px solid var(--optc-line); box-shadow:0 24px 60px rgba(20,21,26,.14); border-radius:0; }
 .cp-optc .cp-menu-section{ font-family:var(--optc-font-mono); color:#C98AF2; border-bottom:1px solid var(--optc-line-soft); }
 .cp-optc .cp-menu-item{ font-family:var(--optc-font-body); color:var(--optc-text); border-bottom:1px solid var(--optc-line-soft); }
@@ -275,19 +292,6 @@
 .cp-optc .cp-menu-dept:hover{ background:#C98AF2; color:var(--optc-text); }
 .cp-optc .cp-menu-dept.active{ color:#C98AF2; border-left-color:#C98AF2; }
 .cp-optc .cp-menu-dept.active:hover{ background:#C98AF2; color:var(--optc-text); }
-
-/* Barra de búsqueda del topbar — visual, todavía sin función real
-   (no hay backend de búsqueda implementado). Queda lista para
-   conectarse cuando se construya esa funcionalidad. */
-.cp-optc-search{
-  flex:1; max-width:280px; margin-left:14px;
-  border:1px solid var(--optc-line); background:var(--optc-bg); color:var(--optc-text);
-  font-family:var(--optc-font-mono); font-size:10.5px; padding:7px 10px; border-radius:0;
-  opacity:1;
-}
-.cp-optc-search::placeholder{ color:var(--optc-muted); }
-.cp-optc-search:disabled{ opacity:1; cursor:default; }
-@media (max-width:640px){ .cp-optc-search{ display:none; } }
 
 /* ===================================================================
    AUTH — login / registro
@@ -403,6 +407,7 @@
 
 @media (max-width: 640px){
   .cp-topbar{ padding:12px 16px; }
+  .cp-optc.cp-topbar{ padding:12px 16px; gap:10px; }
   .authcard{ padding:28px 22px; }
   .cp-projects{ padding:18px 16px 28px; }
 

@@ -290,7 +290,7 @@ export default function DepartmentDashboard({
       {headerMounted && createPortal(headerControls, document.getElementById("cp-header-controls")!)}
       <div className="wtabs cp-optc">
         <div className="cp-wdept-label">
-          <span className="hex" />
+          <span className="cp-wdept-mono">{nombre.slice(0, 2).toUpperCase()}</span>
           <span>{nombre}</span>
         </div>
         <div className="cp-wuser-block">
@@ -298,7 +298,7 @@ export default function DepartmentDashboard({
             <img src={avatarUrl} alt="" className="cp-wuser-avatar" />
           ) : (
             <span className="cp-wuser-avatar cp-wuser-avatar-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+              {fullName.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("")}
             </span>
           )}
           <div className="cp-wuser-info">

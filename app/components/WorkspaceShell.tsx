@@ -116,10 +116,12 @@ export default function WorkspaceShell({
 
   return (
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-      <header className="cp-topbar cp-optc">
-        <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
+      <header className="cp-topbar cp-optc cp-optc-hexbg">
+        <Link href="/proyectos" className="cp-logo">
+          <img src="/iso-cinepack.png" alt="" className="cp-logo-mark" />
+          <span>CINE PACK</span>
+        </Link>
         <span className="cp-proj">{proyecto}</span>
-        <input className="cp-optc-search" type="text" placeholder="buscar o Cmd+K…" disabled />
         <div className="cp-topbar-break" aria-hidden="true"></div>
         <div className="cp-spacer"></div>
         <div className="cp-topbar-actions">
