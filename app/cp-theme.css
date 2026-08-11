@@ -602,3 +602,55 @@
   transition:background .15s ease, color .15s ease;
 }
 .cp-addbtn:hover{ background:var(--acc, var(--lime)); color:var(--bg); }
+
+/* ===================================================================
+   OPCIÓN C — páginas iniciales (Mis proyectos, toggle/selector de
+   tema, próximamente/soon-box). Bloque al final del archivo a
+   propósito, para ganar por orden de aparición sin depender de
+   especificidad — mismo criterio que el resto de las secciones ya
+   migradas.
+=================================================================== */
+.cp-optc .cp-projects{ padding:24px var(--gutter) 36px; }
+.cp-optc .cp-project-card{
+  background:var(--optc-bg); border:1px solid var(--optc-text); border-radius:0;
+  transition:transform .15s ease, border-color .15s ease;
+}
+.cp-optc .cp-project-card:hover{ border-color:var(--violet); transform:translateY(-2px); }
+.cp-optc .cp-project-card h3{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cp-project-card .tag{ font-family:var(--optc-font-mono); color:var(--violet); }
+.cp-optc .cp-project-card p{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+
+.cp-optc .soon-box{ border:1px dashed var(--optc-text); color:var(--optc-muted); }
+.cp-optc .soon-box .hex{ background:var(--optc-text); }
+.cp-optc .soon-box h4{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .soon-box p{ font-family:var(--optc-font-body); }
+
+.cp-optc .cp-theme-toggle{
+  border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text);
+  font-family:var(--optc-font-mono); font-weight:500; text-transform:uppercase; border-radius:0;
+}
+.cp-optc .cp-theme-toggle:hover{ background:#C98AF2; border-color:#C98AF2; color:var(--optc-text); }
+.cp-optc .cp-theme-toggle .hex{ background:currentColor; }
+
+.cp-optc .cp-theme-chooser-card{ background:var(--optc-bg); border:1px solid var(--optc-text); border-radius:0; box-shadow:0 30px 80px rgba(20,21,26,.25); }
+.cp-optc .cp-theme-chooser-card > .hex{ background:var(--optc-text); }
+.cp-optc .cp-theme-chooser-card h3{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
+.cp-optc .cp-theme-chooser-card p{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cp-theme-option{ border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); font-family:var(--optc-font-mono); text-transform:uppercase; }
+.cp-optc .cp-theme-option:hover{ border-color:#C98AF2; transform:translateY(-2px); }
+.cp-optc .cp-theme-option-preview{ border:1px solid var(--optc-text); }
+
+.cp-optc .afield{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .afield input,
+.cp-optc .afield select,
+.cp-optc .afield textarea{
+  font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text);
+}
+.cp-optc .afield input:focus,
+.cp-optc .afield select:focus,
+.cp-optc .afield textarea:focus{ border-color:var(--violet); }
+.cp-optc .abtn{
+  font-family:var(--optc-font-mono); text-transform:uppercase; background:var(--optc-line-soft);
+  color:var(--optc-text); border:1px solid var(--optc-text); border-radius:0;
+}
+.cp-optc .abtn:hover{ background:#C98AF2; border-color:#C98AF2; }

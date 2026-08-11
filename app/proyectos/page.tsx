@@ -63,10 +63,13 @@ export default function ProyectosPage() {
   }
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <ThemeChooser onChoose={setTheme} />
-      <header className="cp-topbar">
-        <div className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></div>
+      <header className="cp-topbar cp-optc cp-optc-hexbg">
+        <div className="cp-logo">
+          <span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} />
+          <span>CINE PACK</span>
+        </div>
         <span className="cp-proj">{t("selectProject")}</span>
         <div className="cp-spacer"></div>
         {isAdmin && (
