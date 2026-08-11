@@ -11,7 +11,6 @@ import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
 import PlantillaCuadro from "./PlantillaCuadro";
-import Hcard from "./Hcard";
 import { asegurarTareasPersonales } from "./tareasPersonales";
 
 // Plantillas de cuadro con vista propia (no la grilla genérica de HerramientaPanel).
@@ -33,27 +32,6 @@ function personalToHerramienta(pt: PersonalTool): Herramienta {
   const plantilla = PLANTILLAS_DOCUMENTO.find((p) => p.id === pt.plantilla_id);
   return { id: pt.id, nombre: pt.titulo, tipo: pt.tipo, estiloDoc: plantilla?.estiloDoc };
 }
-
-const TIPO_TAG_KEY: Record<Herramienta["tipo"], string> = {
-  tabla: "tipoTabla",
-  nota: "tipoDoc",
-  checklist: "tipoChecklist",
-  ficha: "tipoFicha",
-  galeria: "tipoGaleria",
-  accesos: "tipoAccesos",
-  registro: "tipoRegistro",
-};
-
-// Ícono del sello hexagonal según el tipo de herramienta — ver Hcard.tsx.
-const TIPO_ICON: Record<Herramienta["tipo"], React.ComponentProps<typeof Icon>["name"]> = {
-  tabla: "table",
-  nota: "file-text",
-  checklist: "checklist",
-  ficha: "id-card",
-  galeria: "image",
-  accesos: "key",
-  registro: "bell",
-};
 
 const openKey = (dept: string, seccion: string) => `cinepack-open-tool-${dept}-${seccion}`;
 const openPersonalKey = (dept: string) => `cinepack-open-personal-${dept}`;
@@ -81,15 +59,12 @@ export default function HerramientasPanel({
   isAdmin?: boolean;
 }) {
   const t = useTranslations("hp");
-  const tNav = useTranslations("nav");
   const tEsp = useTranslations("espacio");
   const nombreDe = useNombreHerramienta();
   const esModuloBeta = MODULOS_BETA_ACTIVOS.includes(departamento);
   const bloqueado = !esModuloBeta && !isAdmin;
-  const proximamente = !esModuloBeta;
   const [abierta, setAbierta] = useState<Herramienta | null>(null);
   const [vista, setVista] = useState<"tabla" | "personajes">("tabla");
-  const [conteos, setConteos] = useState<Record<string, number>>({});
   const [ocultas, setOcultas] = useState<Set<string>>(new Set());
   const [personalTools, setPersonalTools] = useState<PersonalTool[]>([]);
   const [abiertaPersonal, setAbiertaPersonal] = useState<PersonalTool | null>(null);
@@ -120,25 +95,6 @@ export default function HerramientasPanel({
       if (!projectId) return;
       const supabase = createClient();
 
-      // Conteos de filas para herramientas estáticas
-      const allTools = [
-        ...deptTools(departamento),
-        ...cargoGroups(departamento).flatMap((g) => g.tools),
-      ];
-      const ids = allTools.map((h) => h.id);
-      if (ids.length > 0) {
-        const { data } = await supabase
-          .from("herramienta_filas")
-          .select("herramienta_id")
-          .eq("project_id", projectId)
-          .in("herramienta_id", ids);
-        if (data) {
-          const c: Record<string, number> = {};
-          for (const r of data) c[r.herramienta_id] = (c[r.herramienta_id] ?? 0) + 1;
-          setConteos(c);
-        }
-      }
-
       // Herramientas ocultadas por la cabeza del departamento (ver /control-depto)
       const { data: ocultasData } = await supabase
         .from("herramienta_visibilidad")
@@ -163,17 +119,15 @@ export default function HerramientasPanel({
   function abrir(h: Herramienta) {
     if (bloqueado) return;
     setAbierta(h);
+    setAbiertaPersonal(null);
+    setCreandoEspacio(false);
     localStorage.setItem(openKey(departamento, seccion), h.id);
-  }
-
-  function cerrar() {
-    setAbierta(null);
-    setVista("tabla");
-    localStorage.removeItem(openKey(departamento, seccion));
   }
 
   function abrirPersonal(pt: PersonalTool) {
     setAbiertaPersonal(pt);
+    setAbierta(null);
+    setCreandoEspacio(false);
     localStorage.setItem(openPersonalKey(departamento), pt.id);
   }
 
@@ -213,6 +167,42 @@ export default function HerramientasPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seccion, departamento, ocultas]);
 
+  // Exclusivas: herramientas COMPARTIDAS del depto (editables por cualquiera),
+  // las de SU cargo, y — si es admin — las de los demás cargos (supervisión).
+  const compartidasEditables = seccion === "cargo" ? deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos") : [];
+  const miGrupo = seccion === "cargo" && cargo ? cargoGroups(departamento).find((g) => g.cargo === cargo) : undefined;
+  const misCargoTools = seccion === "cargo" ? (miGrupo?.tools ?? []).filter((h) => !ocultas.has(h.id)) : [];
+  const otrosCargoGrupos =
+    seccion === "cargo" && isAdmin
+      ? cargoGroups(departamento)
+          .filter((g) => g.cargo !== cargo)
+          .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id)) }))
+          .filter((g) => g.tools.length > 0)
+      : [];
+  // Igual que Departamento: se aplana todo en una sola barra de sub-pestañas,
+  // deduplicada por id (una herramienta puede ser compartida Y de tu cargo).
+  const cargoSubTools =
+    seccion === "cargo"
+      ? Array.from(
+          new Map(
+            [...compartidasEditables, ...misCargoTools, ...otrosCargoGrupos.flatMap((g) => g.tools)].map((h) => [h.id, h])
+          ).values()
+        )
+      : [];
+
+  function abrirCreador() {
+    setCreandoEspacio(true);
+    setAbierta(null);
+    setAbiertaPersonal(null);
+  }
+
+  useEffect(() => {
+    if (seccion !== "cargo" || abierta || abiertaPersonal || creandoEspacio) return;
+    if (personalTools.length > 0) { abrirPersonal(personalTools[0]); return; }
+    if (cargoSubTools.length > 0) abrir(cargoSubTools[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seccion, departamento, ocultas, personalTools]);
+
   // Restaura la herramienta que estaba abierta en esta pestaña (Departamento/Exclusivas)
   // al volver a ella, leyendo de localStorage por departamento + seccion.
   useEffect(() => {
@@ -241,13 +231,56 @@ export default function HerramientasPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departamento, seccion, personalTools]);
 
+  // Barra de sub-pestañas de Exclusivas: personales primero (con "Tareas"
+  // siempre de primera, ver arriba), después el toggle "+ Espacio de
+  // trabajo", después las herramientas estáticas — mismo patrón que
+  // Departamento/Generales, reusa .gen-subtabs/.gen-subtab.
+  const cargoSubtabsBar = (
+    <div className="gen-subtabs">
+      {personalTools.map((pt) => (
+        <button
+          key={`p-${pt.id}`}
+          className={`gen-subtab ${abiertaPersonal?.id === pt.id ? "on" : ""}`}
+          onClick={() => abrirPersonal(pt)}
+        >
+          {pt.titulo}
+        </button>
+      ))}
+      <button className={`gen-subtab ${creandoEspacio ? "on" : ""}`} onClick={abrirCreador}>
+        + {t("workspaceCardTitle")}
+      </button>
+      {cargoSubTools.map((h) => (
+        <button
+          key={h.id}
+          className={`gen-subtab ${abierta?.id === h.id ? "on" : ""}`}
+          onClick={() => abrir(h)}
+        >
+          {nombreDe(h)}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (seccion === "cargo" && creandoEspacio) {
+    return (
+      <div className="hp-open">
+        {cargoSubtabsBar}
+        <EspacioTrabajoCreator
+          departamento={departamento}
+          fullName={fullName}
+          onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
+        />
+      </div>
+    );
+  }
+
   // Personal tool abierta
   if (abiertaPersonal) {
     const h = personalToHerramienta(abiertaPersonal);
     return (
       <div className="hp-open">
+        {cargoSubtabsBar}
         <div className="hp-open-head">
-          <button className="btn" onClick={cerrarPersonal}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
           <h3 className="hp-open-title-edit">
             <span className="hex"></span>
             <input
@@ -293,30 +326,21 @@ export default function HerramientasPanel({
     return (
       <div className="hp-open">
         {seccion === "departamento" ? (
-          <>
-            <div className="gen-subtabs">
-              {deptSubTools.map((h) => (
-                <button
-                  key={h.id}
-                  className={`gen-subtab ${h.id === abierta.id ? "on" : ""}`}
-                  onClick={() => setAbierta(h)}
-                >
-                  {nombreDe(h)}
-                </button>
-              ))}
-            </div>
-            <div className="hp-open-head-tabs" id="hp-open-head-tabs" />
-          </>
-        ) : (
-          <div className="hp-open-head">
-            <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
-            <h3><span className="hex"></span> {nombreDe(abierta)}</h3>
-            {/* HerramientaPanel porta acá el toggle Tablero/Tabla/Archivos —
-                antes vivía debajo del hint, en su propia fila, dejando todo el
-                lado derecho de esta cabecera vacío. */}
-            <div className="hp-open-head-tabs" id="hp-open-head-tabs" />
+          <div className="gen-subtabs">
+            {deptSubTools.map((h) => (
+              <button
+                key={h.id}
+                className={`gen-subtab ${h.id === abierta.id ? "on" : ""}`}
+                onClick={() => setAbierta(h)}
+              >
+                {nombreDe(h)}
+              </button>
+            ))}
           </div>
+        ) : (
+          cargoSubtabsBar
         )}
+        <div className="hp-open-head-tabs" id="hp-open-head-tabs" />
         {esCasting && (
           <div className="dsubtabs">
             <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
@@ -354,113 +378,15 @@ export default function HerramientasPanel({
     );
   }
 
-  // seccion === "cargo" (Exclusivas): el espacio EDITABLE del usuario. Incluye
-  // (1) las herramientas COMPARTIDAS del departamento —editables por cualquier
-  // integrante—, (2) las de SU cargo y (3) sus herramientas personales. Las de
-  // OTROS cargos siguen viéndose en modo visionado en la pestaña Departamento.
-  const compartidasEditables = deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos");
-  const miGrupo = cargo ? cargoGroups(departamento).find((g) => g.cargo === cargo) : undefined;
-  const misCargoTools = (miGrupo?.tools ?? []).filter((h) => !ocultas.has(h.id));
-  // Un admin (super_admin/is_admin) supervisa TODO el departamento, no solo
-  // su propio cargo — sin este bypass quedaba encerrado en las herramientas
-  // de un único cargo y todo lo de los demás cargos (Tesorería, Legal,
-  // Administración, etc.) le aparecía en modo solo-lectura para siempre,
-  // sin ningún camino para editarlas. Se muestran agrupadas por cargo,
-  // igual que en la vista "Departamento", pero acá SÍ son editables
-  // (heredan editable={seccion==="cargo"} del panel).
-  const otrosCargoGrupos = isAdmin
-    ? cargoGroups(departamento)
-        .filter((g) => g.cargo !== cargo)
-        .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id)) }))
-        .filter((g) => g.tools.length > 0)
-    : [];
-  if (compartidasEditables.length === 0 && misCargoTools.length === 0 && otrosCargoGrupos.length === 0 && personalTools.length === 0 && !creandoEspacio) {
-    return (
-      <div className="hp-index">
-        <div className="soon-box">
-          <span className="hex"></span>
-          <h4>{t("noExclusiveTools")}</h4>
-          <p>{t("noExclusiveToolsDesc")}</p>
-        </div>
-      </div>
-    );
-  }
-
+  // seccion === "cargo" (Exclusivas), sin nada visible todavía (o cargando):
+  // única situación en la que no hay una pestaña abierta.
   return (
-    <div className="hp-index hp-index-cols">
-      {creandoEspacio && (
-        <EspacioTrabajoCreator
-          departamento={departamento}
-          fullName={fullName}
-          onCreated={async () => { setCreandoEspacio(false); await recargarPersonalTools(); }}
-        />
-      )}
-      <section className="hp-group hp-group-personal">
-        <span className="hp-group-label">
-          <span className="hex" style={{ width: "8px", height: "7px" }} />
-          {t("myTools")}
-          <span className="hp-mine">{t("personalBadge")}</span>
-        </span>
-        <div className="hp-cards">
-          <Hcard
-            icon="layout"
-            title={t("workspaceCardTitle")}
-            desc={t("workspaceCardDesc")}
-            onClick={() => setCreandoEspacio((v) => !v)}
-            footer={<span className="hcard-badge">{creandoEspacio ? t("closeWorkspace") : t("openWorkspace")}</span>}
-          />
-          {personalTools.map((pt) => (
-              <Hcard
-                key={pt.id}
-                icon={pt.tipo === "tabla" ? "table" : "file-text"}
-                title={pt.titulo}
-                personal
-                onClick={() => abrirPersonal(pt)}
-                footer={<span className="hcard-badge">{pt.tipo === "tabla" ? tEsp("typeTable") : tEsp("typeDoc")}</span>}
-              />
-            ))}
-        </div>
-      </section>
-      {compartidasEditables.length > 0 && (
-        <section className="hp-group">
-          <span className="hp-group-label">
-            <span className="hex" style={{ width: "8px", height: "7px" }} />
-            {t("sharedGroup")}
-          </span>
-          <div className="hp-cards">
-            {compartidasEditables.map((h) => (
-              <ToolCard key={`shared-edit-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
-            ))}
-          </div>
-        </section>
-      )}
-      {misCargoTools.length > 0 && (
-        <section className="hp-group">
-          <span className="hp-group-label">
-            <span className="hex" style={{ width: "8px", height: "7px" }} />
-            {cargo}
-            <span className="hp-mine">{t("yourRole")}</span>
-          </span>
-          <div className="hp-cards">
-            {misCargoTools.map((h) => (
-              <ToolCard key={`mine-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
-            ))}
-          </div>
-        </section>
-      )}
-      {otrosCargoGrupos.map((g) => (
-        <section className="hp-group" key={`admin-${g.cargo}`}>
-          <span className="hp-group-label">
-            <span className="hex" style={{ width: "8px", height: "7px" }} />
-            {g.cargo}
-          </span>
-          <div className="hp-cards">
-            {g.tools.map((h) => (
-              <ToolCard key={`admin-${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
-            ))}
-          </div>
-        </section>
-      ))}
+    <div className="hp-index">
+      <div className="soon-box">
+        <span className="hex"></span>
+        <h4>{t("noExclusiveTools")}</h4>
+        <p>{t("noExclusiveToolsDesc")}</p>
+      </div>
     </div>
   );
 }
@@ -480,46 +406,5 @@ function EspacioTrabajoCreator({
     <div style={{ marginBottom: 4 }}>
       <EspacioTrabajoPanel departamento={departamento} fullName={fullName} onCreated={onCreated} flush />
     </div>
-  );
-}
-
-function ToolCard({
-  h,
-  onClick,
-  conteo,
-  bloqueada,
-  proximamente,
-}: {
-  h: Herramienta;
-  onClick: () => void;
-  cargo?: boolean;
-  conteo?: number;
-  bloqueada?: boolean;
-  proximamente?: boolean;
-}) {
-  const t = useTranslations("hp");
-  const nombreDe = useNombreHerramienta();
-  const unidad = t(h.tipo === "checklist" ? "unitItems" : h.tipo === "galeria" ? "unitPhotos" : "unitRows");
-  return (
-    <Hcard
-      icon={TIPO_ICON[h.tipo]}
-      title={nombreDe(h)}
-      desc={h.hint}
-      locked={bloqueada}
-      soonLabel={(bloqueada || proximamente) ? t("comingSoon") : undefined}
-      onClick={onClick}
-      footerSplit
-      footer={
-        <>
-          <span className="hcard-tipo-tag">{t(TIPO_TAG_KEY[h.tipo])}</span>
-          {conteo != null && conteo > 0 && (
-            <span className="hcard-count">{conteo} {unidad}</span>
-          )}
-          {(conteo == null || conteo === 0) && h.tipo === "tabla" && (
-            <span className="hcard-badge">{t("emptyBadge")}</span>
-          )}
-        </>
-      }
-    />
   );
 }
