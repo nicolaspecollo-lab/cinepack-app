@@ -1570,7 +1570,11 @@
 .cp-optc .cp-semaforo-item,
 .cp-optc .cp-contratos-list li,
 .cp-optc .cp-share-list li{ font-family:var(--optc-font-body); }
-.cp-optc .cp-share-form input{ font-family:var(--optc-font-body); border-radius:0; border:1px solid var(--optc-line); background:var(--optc-bg); color:var(--optc-text); }
+.cp-optc .cp-share-form input{
+  font-family:var(--optc-font-body); border-radius:0; -webkit-appearance:none; appearance:none;
+  border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text);
+}
+.cp-optc .cp-share-form input:focus{ outline:none; border-color:var(--violet); }
 
 /* Sub-bloque "Avance de la etapa: X" dentro de la tarjeta de avance del
    proyecto, y previsualización numérica compartida (tareas / financiación). */
@@ -5293,7 +5297,7 @@
 .cp-optc .cal-seg-btn:hover{ border-color:var(--violet); color:var(--optc-text); }
 .cp-optc .cal-field span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .cal-field input,
-.cp-optc .cal-field textarea{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-line); color:var(--optc-text); border-radius:0; }
+.cp-optc .cal-field textarea{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
 .cp-optc .cal-field input:focus,
 .cp-optc .cal-field textarea:focus{ border-color:var(--violet); }
 .cp-optc .cal-field-hint{ font-family:var(--optc-font-body); color:var(--optc-muted); }
