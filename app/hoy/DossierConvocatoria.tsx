@@ -65,7 +65,7 @@ export default function DossierConvocatoria({
   }
 
   const contenido = (
-    <div className="dsr-overlay" onClick={onClose}>
+    <div className="dsr-overlay cp-optc" onClick={onClose}>
       <div className="dsr-panel" style={{ borderTopColor: color }} onClick={(e) => e.stopPropagation()}>
         <div className="dsr-top">
           <span className="dsr-eyebrow"><span className="hex" style={{ background: color }} /> {t("dossierTitle")}</span>

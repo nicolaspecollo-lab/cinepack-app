@@ -40,10 +40,14 @@
   --optc-muted:#5b5e66;
   --optc-line:#E2E2E2;
   --optc-line-soft:#EAEAEA;
+  /* patrón de hexágonos entrelazados — mismo que .cp-optc-hexbg, como
+     variable para poder reusarlo en cabeceras de tarjetas sin repetir
+     el data-uri completo cada vez. */
+  --optc-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2314151A%27%20stroke-opacity%3D%270.07%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
 }
 
 .cp-optc-hexbg{
-  background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2314151A%27%20stroke-opacity%3D%270.07%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
+  background-image:var(--optc-hexbg-img);
   background-size:45px 34.2946px;
   background-repeat:repeat;
 }

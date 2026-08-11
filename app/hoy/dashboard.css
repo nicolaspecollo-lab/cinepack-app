@@ -5133,6 +5133,7 @@
 }
 .cp-optc .ct-rail{ background-image:none; }
 .cp-optc .ct-track{ background:none; }
+.cp-optc .ctln-head{ background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; background-repeat:repeat; margin:0 -18px; padding:14px 18px 8px; }
 .cp-optc .ct-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
 .cp-optc .ct-eyebrow .hex{ background:var(--optc-text); }
 .cp-optc .ct-etapa-name{ font-family:var(--optc-font-display); font-weight:400; letter-spacing:.01em; color:var(--optc-text); }
@@ -5164,6 +5165,7 @@
    OPCIÓN C — CalendarioProyecto
 =================================================================== */
 .cp-optc .cal-wrap{ background:var(--optc-bg); border:1px solid var(--optc-line); }
+.cp-optc .cal-head{ background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; background-repeat:repeat; margin:-16px -18px 4px; padding:16px 18px 8px; }
 .cp-optc .cal-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
 .cp-optc .cal-title .hex{ background:var(--optc-text); }
 .cp-optc .cal-navbtn{ border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
@@ -5262,6 +5264,55 @@
 .cp-dash .dsr-enlace{ display:inline-block; margin-top:8px; font-size:12.5px; font-weight:600; color:var(--acc); text-decoration:none; }
 .cp-dash .dsr-enlace:hover{ text-decoration:underline; }
 .cp-dash .dsr-form{ padding:15px 16px; border-bottom:1px solid var(--line); border-top:3px solid var(--acc); }
+
+/* ===================================================================
+   OPCIÓN C — Dossier de convocatoria (overlay). Se porta con
+   createPortal directo a .cp-dash, fuera del árbol de .tpanel, así
+   que necesita su propia clase .cp-optc en el JSX (ver
+   DossierConvocatoria.tsx) para heredar el resto de estas reglas.
+=================================================================== */
+.cp-optc.dsr-overlay{ background:rgba(20,21,26,.5); }
+.cp-optc .dsr-panel{ background:var(--optc-bg); border:1px solid var(--optc-line); border-top:3px solid var(--optc-text); box-shadow:0 30px 80px rgba(20,21,26,.25); }
+.cp-optc .dsr-top{ border-bottom:1px solid var(--optc-line); background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; background-repeat:repeat; }
+.cp-optc .dsr-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; letter-spacing:.1em; }
+.cp-optc .dsr-close{ border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); border-radius:0; }
+.cp-optc .dsr-close:hover{ background:var(--violet); border-color:var(--violet); }
+.cp-optc .dsr-head{ border-bottom:1px solid var(--optc-line); }
+.cp-optc .dsr-tipo{ font-family:var(--optc-font-mono); font-weight:600; letter-spacing:.06em; }
+.cp-optc .dsr-titulo{ font-family:var(--optc-font-display); font-weight:400; text-transform:uppercase; letter-spacing:.01em; color:var(--optc-text); }
+.cp-optc .dsr-fecha{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
+.cp-optc .dsr-enlace{ font-family:var(--optc-font-mono); color:var(--violet); }
+.cp-optc .dsr-meta-lab{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .dsr-meta-val{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .dsr-tab{ font-family:var(--optc-font-mono); font-weight:600; letter-spacing:.04em; border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); border-radius:0; }
+.cp-optc .dsr-tab:hover{ border-color:var(--violet); }
+.cp-optc .dsr-foot{ border-top:1px solid var(--optc-line); }
+.cp-optc .dsr-foot-note{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .dsr-foot-note .hex{ background:var(--optc-text); }
+.cp-optc .dsr-form{ background:var(--optc-bg); border-bottom:1px solid var(--optc-line); border-top:3px solid var(--optc-text); }
+.cp-optc .cal-seg-btn{ font-family:var(--optc-font-mono); font-weight:600; letter-spacing:.04em; border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); }
+.cp-optc .cal-seg-btn:hover{ border-color:var(--violet); color:var(--optc-text); }
+.cp-optc .cal-field span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cal-field input,
+.cp-optc .cal-field textarea{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-line); color:var(--optc-text); border-radius:0; }
+.cp-optc .cal-field input:focus,
+.cp-optc .cal-field textarea:focus{ border-color:var(--violet); }
+.cp-optc .cal-field-hint{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cal-form-tlabel{ font-family:var(--optc-font-mono); color:var(--optc-muted); text-transform:uppercase; }
+
+/* Carpeta navegable (Bases/Entregas/Recibidos del dossier, y Archivo) */
+.cp-optc .cn-crumb{ font-family:var(--optc-font-mono); color:var(--violet); }
+.cp-optc .cn-crumb-sep{ color:var(--optc-muted); }
+.cp-optc .cn-err{ font-family:var(--optc-font-body); color:var(--optc-text); border-color:var(--optc-line); }
+.cp-optc .cn-empty{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cn-vacia{ color:var(--optc-muted); }
+.cp-optc .cn-vacia .hex{ background:var(--optc-text); }
+.cp-optc .cn-vacia p{ font-family:var(--optc-font-body); }
+.cp-optc .cn-item{ border-color:var(--optc-line); }
+.cp-optc .cn-item:hover{ border-color:var(--optc-text); }
+.cp-optc .cn-open{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cn-folder .cn-open{ color:var(--violet); }
+.cp-optc .cn-del{ background:var(--optc-bg); border-color:var(--optc-line); color:var(--optc-muted); }
 
 @media (max-width:700px){
   .cp-dash .dsr-overlay{ padding:0; }
