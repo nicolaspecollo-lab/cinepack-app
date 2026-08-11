@@ -158,6 +158,41 @@
 .cp-optc .cp-wuser-info span{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-size:9px; text-transform:uppercase; letter-spacing:.03em; }
 .cp-optc .cp-header-back-btn{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-right:1px solid var(--optc-line); }
 
+/* ===================================================================
+   OPCIÓN C — Comunicados / Consultas (shell .comn-* compartido). El
+   acento de cada tarjeta sigue siendo var(--com-acc) (color del
+   departamento emisor, dinámico) — el "panal de esquina" (Biblia
+   §10.13) se mantiene, solo cambia a qué color se desvanece.
+=================================================================== */
+.cp-optc .comn-card,
+.cp-optc .comn-pub-card{ background:var(--optc-bg); border:1px solid var(--optc-text); border-left:3px solid var(--com-acc, var(--violet)); border-radius:0; }
+.cp-optc .comn-hexfade{ background:linear-gradient(225deg, transparent 0%, var(--optc-bg) 55%); }
+.cp-optc .comn-pub-card .comn-hexfade{ background:linear-gradient(225deg, transparent 0%, var(--optc-bg) 45%); }
+.cp-optc .comn-title{ font-family:var(--optc-font-display); font-weight:400; text-transform:uppercase; letter-spacing:.01em; color:var(--optc-text); }
+.cp-optc .comn-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .comn-meta b{ color:var(--optc-text); font-weight:600; }
+.cp-optc .comn-text{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .comn-empty{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .comn-foot-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .comn-adjunto{ font-family:var(--optc-font-mono); color:var(--violet); }
+.cp-optc .comn-attach-img,
+.cp-optc .comn-attach-pdf{ background:var(--optc-bg); border:1px solid var(--optc-line); }
+.cp-optc .comn-attach-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .comn-attach-size,
+.cp-optc .comn-file-size{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .comn-pub-title,
+.cp-optc .comn-pub-msg{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .comn-pub-title:focus,
+.cp-optc .comn-pub-msg:focus{ border-color:var(--violet); }
+.cp-optc .comn-dropzone{ border:1px solid var(--optc-text); background:var(--optc-line-soft); }
+.cp-optc .comn-dropzone:hover{ border-color:var(--violet); }
+.cp-optc .comn-dropzone-hex{ background:var(--optc-bg); color:var(--optc-text); }
+.cp-optc .comn-dropzone-text b{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .comn-dropzone-text span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .comn-file-chip{ background:var(--optc-bg); border:1px solid var(--optc-line); color:var(--violet); }
+.cp-optc .comn-file-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .comn-file-close{ color:var(--optc-muted); }
+
 .cp-dash .tpanel{ display:none; flex-direction:column; flex:1; }
 .cp-dash .tpanel.active{ display:flex; }
 
