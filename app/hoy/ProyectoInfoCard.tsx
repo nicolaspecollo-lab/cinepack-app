@@ -18,11 +18,22 @@ export default function ProyectoInfoCard() {
       const projectId = localStorage.getItem("cinepack-proyecto-id");
       if (!projectId) return;
       const supabase = createClient();
-      const { data } = await supabase
+      let { data, error } = await supabase
         .from("proyectos")
         .select("nombre, titulo_internacional, escrito_por, dirigido_por, producido_por")
         .eq("id", projectId)
         .single();
+      // Si la migración de titulo_internacional todavía no corrió en esta
+      // base, la columna no existe y la query de arriba falla entera —
+      // reintenta sin ese campo para no perder el resto de la tarjeta.
+      if (error) {
+        const retry = await supabase
+          .from("proyectos")
+          .select("nombre, escrito_por, dirigido_por, producido_por")
+          .eq("id", projectId)
+          .single();
+        data = retry.data ? { ...retry.data, titulo_internacional: null } : null;
+      }
       if (data) {
         setCreditos({
           nombre: data.nombre,

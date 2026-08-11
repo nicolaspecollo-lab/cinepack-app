@@ -1537,7 +1537,7 @@
 .cp-optc .hp-check-bar.pulso-bar.pulso-bar-sm span{ background:var(--violet); }
 .cp-optc .pulso-bar-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-size:9.5px; }
 
-.cp-optc .cp-pulso-mini-stat b{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .tcard .cp-pulso-mini-stat b{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
 .cp-optc .cp-pulso-mini-stat span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .cp-pulso-etapa-sub{ border-top:1px solid var(--optc-line-soft); }
 .cp-optc .cp-pulso-etapa-sub-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
