@@ -1497,10 +1497,15 @@
    No usar var(--acc) del tema oscuro: acá el acento es fijo (violeta).
 =================================================================== */
 .cp-optc.pulso{ background:var(--optc-bg); }
+/* Grilla de Tareas/Notificaciones/Avance/Equipo: en el mockup las tarjetas
+   van pegadas, separadas por una línea fina (gap:1px con fondo de línea
+   detrás), no con aire entre ellas como en el resto de la app. */
+.cp-optc .pulso-grid{ gap:1px; background:var(--optc-line); border:1px solid var(--optc-line); }
 .cp-optc .tcard{
   background:var(--optc-bg); border:1px solid var(--optc-line); border-top:1px solid var(--optc-line);
   border-radius:0; box-shadow:none; padding:16px 17px;
 }
+.cp-optc .pulso-grid .tcard{ border:none; }
 .cp-optc .tcard:hover{ background:var(--optc-bg); }
 .cp-optc .tcard h4{
   font-family:var(--optc-font-mono); font-weight:600; font-size:10px;
