@@ -451,6 +451,12 @@
 .cp-optc .dept-chip:hover{ border-color:var(--violet); background:var(--optc-line-soft); }
 .cp-optc .dept-chip.active{ background:var(--optc-line-soft); border-color:var(--violet); }
 .cp-optc .dept-chip.active::before{ background:var(--violet); }
+
+.cp-optc .aconsent{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .aconsent input[type="checkbox"]{ accent-color:var(--violet); }
+.cp-optc .aconsent-required::after{ color:var(--rose); }
+.cp-optc .aconsent a{ color:var(--optc-text); }
+.cp-optc .aconsent a:hover{ color:var(--violet); }
 .aforgot:hover{ color:var(--lime); }
 .abtn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--lime); color:#0D0D12;
