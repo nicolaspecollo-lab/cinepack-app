@@ -5692,3 +5692,57 @@
   .cp-dash .hp-etb-row{ flex-wrap:wrap; }
   .cp-dash .hp-etb-row-cell, .cp-dash .hp-etb-row-money{ text-align:left; }
 }
+
+/* ===================================================================
+   OPCIÓN C — Archivo (ArchivosPanel.tsx). No usa el patrón Hcard/
+   sub-pestañas de Generales/Departamentos/Exclusivas — es un
+   navegador de carpetas y archivos, se queda con su propia estructura,
+   solo cambia tipografía/color/bordes al sistema nuevo.
+=================================================================== */
+.cp-optc .arc-head{ border-bottom:1px solid var(--optc-line); background:var(--optc-bg); }
+.cp-optc .arc-head-title{ font-family:var(--optc-font-mono); color:var(--optc-text); font-weight:600; }
+.cp-optc .arc-head-title .hex{ background:var(--optc-text); }
+.cp-optc .arc-back{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .arc-back:hover{ color:var(--optc-text); }
+.cp-optc .arc-btn-outline{
+  font-family:var(--optc-font-mono); border:1px solid var(--optc-text); color:var(--optc-text);
+  background:var(--optc-line-soft); text-transform:uppercase;
+}
+.cp-optc .arc-btn-outline:hover{ background:var(--violet); border-color:var(--violet); }
+.cp-optc .arc-btn-acc{
+  font-family:var(--optc-font-mono); background:var(--optc-line-soft); color:var(--optc-text);
+  border:1px solid var(--optc-text); text-transform:uppercase;
+}
+.cp-optc .arc-btn-acc:hover{ background:var(--violet); border-color:var(--violet); }
+.cp-optc .arc-btn{ font-family:var(--optc-font-mono); border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); text-transform:uppercase; }
+.cp-optc .arc-btn:hover{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
+.cp-optc .arc-btn.arc-btn-del:hover{ background:var(--rose); border-color:var(--rose); color:var(--optc-text); }
+.cp-optc .arc-nueva-input{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .arc-folder-card{ background:var(--optc-bg); border:1px solid var(--optc-text); }
+.cp-optc .arc-folder-card:hover{ border-color:var(--violet); }
+.cp-optc .arc-folder-name{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .arc-folder-count{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .arc-folder-auto{ border-color:var(--violet); }
+.cp-optc .arc-folder-auto:hover{ border-color:var(--violet); }
+.cp-optc .arc-auto-title{ font-family:var(--optc-font-mono); color:var(--violet); }
+.cp-optc .arc-depto-switch{ background:var(--optc-line-soft); border-bottom:1px solid var(--optc-line); }
+.cp-optc .arc-depto-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .arc-depto-select{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .arc-depto-readonly{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-color:var(--optc-line); }
+.cp-optc .arc-bc-btn{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .arc-bc-btn:hover{ color:var(--violet); }
+.cp-optc .arc-bc-current{ font-family:var(--optc-font-mono); color:var(--optc-text); }
+.cp-optc .arc-bc-sep{ color:var(--optc-muted); }
+.cp-optc .arc-error{ font-family:var(--optc-font-body); }
+.cp-optc .arc-dropzone{ border-color:var(--optc-text); color:var(--optc-text); }
+.cp-optc .arc-dropzone .hex{ background:var(--optc-text); }
+.cp-optc .arc-dropzone:hover{ border-color:var(--violet); }
+.cp-optc .arc-drop-sub{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .arc-files-list{ border:1px solid var(--optc-text); }
+.cp-optc .arc-file-row{ border-bottom:1px solid var(--optc-line-soft); }
+.cp-optc .arc-file-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .arc-file-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .arc-icon-btn{ border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); }
+.cp-optc .arc-icon-btn:hover{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
+.cp-optc .arc-icon-btn.danger{ border-color:var(--optc-text); color:var(--rose); }
+.cp-optc .arc-icon-btn.danger:hover{ background:var(--rose); border-color:var(--rose); color:var(--optc-text); }
