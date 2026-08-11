@@ -1550,9 +1550,20 @@
 .cp-optc .cp-activity-list li{ background:var(--optc-bg); border-bottom:1px solid var(--optc-line-soft); font-family:var(--optc-font-body); color:var(--optc-text); }
 .cp-optc .cp-activity-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 
-.cp-optc .btn{ font-family:var(--optc-font-mono); border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text); border-radius:0; }
-.cp-optc .btn:hover{ border-color:var(--violet); color:var(--violet); }
-.cp-optc .btn.acc{ background:var(--violet); color:var(--optc-text); border-color:var(--violet); }
+/* Norma de botones Opción C: sin color por defecto (fondo apenas más
+   gris que la tarjeta, texto negro) — el color solo aparece al pasar
+   el mouse o al enfocar/clickear. Vale para todos los botones, incluidos
+   los que antes eran "acc" (violeta sólido permanente). */
+.cp-optc .btn{
+  font-family:var(--optc-font-mono); border:1px solid transparent;
+  background:var(--optc-line-soft); color:var(--optc-text); border-radius:0;
+  transition:background .12s, color .12s, border-color .12s;
+}
+.cp-optc .btn:hover,
+.cp-optc .btn:focus-visible{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
+.cp-optc .btn.acc{ background:var(--optc-line-soft); color:var(--optc-text); border-color:transparent; }
+.cp-optc .btn.acc:hover,
+.cp-optc .btn.acc:focus-visible{ background:var(--violet); border-color:var(--violet); }
 
 .cp-optc .cp-semaforo-item,
 .cp-optc .cp-contratos-list li,
@@ -5088,6 +5099,27 @@
 .cp-dash .ct-mark-plate{ -webkit-mask:url(/iso-solid.png) center/contain no-repeat; mask:url(/iso-solid.png) center/contain no-repeat; }
 
 /* ===================================================================
+   OPCIÓN C — ModoRodajePanel (Cuenta atrás / Día de rodaje). No estaba
+   contemplado en el mockup original; se adapta acá con el mismo
+   lenguaje visual (blanco, borde negro, Archivo Black + JetBrains
+   Mono, acento violeta puntual) en vez de la banda con degradado y
+   color de depto de la app vieja.
+=================================================================== */
+.cp-optc .rodaje-banner{
+  background:var(--optc-bg); border:1px solid var(--optc-text);
+  border-radius:0; background-image:none;
+}
+.cp-optc .rodaje-live{
+  font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600;
+}
+.cp-optc .rodaje-live .hex{ background:var(--optc-text); }
+.cp-optc .rodaje-day{ font-family:var(--optc-font-display); font-weight:400; font-size:1.7rem; color:var(--optc-text); }
+.cp-optc .rodaje-day small{ font-family:var(--optc-font-mono); font-weight:400; color:var(--optc-muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
+.cp-optc .rodaje-fecha{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .rodaje-item{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .rodaje-item span{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+/* ===================================================================
    OPCIÓN C — CicloTimeline. Reemplaza el fondo hexagonal verde por el
    patrón estirado blanco/negro, y tipografía por el sistema nuevo.
    El isotipo real (.cp-iso, mask de iso-cinepack.png) ya se usaba acá
@@ -5105,8 +5137,9 @@
 .cp-optc .ct-etapa-range{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
 .cp-optc .ct-progress-txt{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .ct-progress-bar{ background:var(--optc-line-soft); }
-.cp-optc .ct-zoom-btn{ border:1px solid var(--optc-line); color:var(--optc-muted); background:var(--optc-bg); border-radius:0; }
-.cp-optc .ct-zoom-btn:hover:not(:disabled){ border-color:var(--violet); color:var(--violet); }
+.cp-optc .ct-zoom-btn{ border:1px solid transparent; color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
+.cp-optc .ct-zoom-btn:hover:not(:disabled),
+.cp-optc .ct-zoom-btn:focus-visible:not(:disabled){ background:var(--violet); color:var(--optc-text); }
 .cp-optc .ct-zoom-pct{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .ct-line{ background:var(--optc-line); }
 .cp-optc .ct-hoy-line{ background:var(--optc-text); }
@@ -5131,8 +5164,9 @@
 .cp-optc .cal-wrap{ background:var(--optc-bg); border:1px solid var(--optc-line); }
 .cp-optc .cal-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
 .cp-optc .cal-title .hex{ background:var(--optc-text); }
-.cp-optc .cal-navbtn{ border:1px solid var(--optc-line); color:var(--optc-muted); border-radius:0; }
-.cp-optc .cal-navbtn:hover{ border-color:var(--violet); color:var(--violet); }
+.cp-optc .cal-navbtn{ border:1px solid transparent; color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
+.cp-optc .cal-navbtn:hover,
+.cp-optc .cal-navbtn:focus-visible{ background:var(--violet); color:var(--optc-text); }
 .cp-optc .cal-dow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .cal-cell{ border-color:var(--optc-line-soft); }
 .cp-optc .cal-cell:hover{ background:var(--optc-line-soft); }
@@ -5152,10 +5186,15 @@
 .cp-optc .cal-form-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
 .cp-optc .cal-form-tlabel{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 
-.cp-optc .cp-btn{ font-family:var(--optc-font-mono); border-radius:0; border-color:var(--optc-text); color:var(--optc-text); background:var(--optc-bg); }
-.cp-optc .cp-btn:hover{ border-color:var(--violet); color:var(--violet); }
-.cp-optc .cp-btn-acc{ color:var(--violet); border-color:var(--violet); }
-.cp-optc .cp-btn-acc:hover{ background:var(--violet); color:var(--optc-text); }
+.cp-optc .cp-btn{
+  font-family:var(--optc-font-mono); border-radius:0; border:1px solid transparent;
+  color:var(--optc-text); background:var(--optc-line-soft); transition:background .12s,color .12s,border-color .12s;
+}
+.cp-optc .cp-btn:hover,
+.cp-optc .cp-btn:focus-visible{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
+.cp-optc .cp-btn-acc{ color:var(--optc-text); background:var(--optc-line-soft); border-color:transparent; }
+.cp-optc .cp-btn-acc:hover,
+.cp-optc .cp-btn-acc:focus-visible{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
 
 /* ===========================================================================
    DOSSIER DE CONVOCATORIA (overlay) + explorador de carpetas navegable
