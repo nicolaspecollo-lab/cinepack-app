@@ -50,7 +50,7 @@ export default function ControlDeptPage() {
 
   if (loading) {
     return (
-      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+      <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
           <h4>{t("loading")}</h4>
@@ -61,7 +61,7 @@ export default function ControlDeptPage() {
 
   if (!authorized) {
     return (
-      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+      <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
           <h4>{t("accessDeniedTitle")}</h4>
@@ -72,9 +72,9 @@ export default function ControlDeptPage() {
   }
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-      <header className="cp-topbar">
-        <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+      <header className="cp-topbar cp-optc cp-optc-hexbg">
+        <Link href="/proyectos" className="cp-logo"><span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} /><span>CINE PACK</span></Link>
         <span className="cp-proj">{t("controlOf", { dept: departamento })}</span>
         <div className="cp-spacer"></div>
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>

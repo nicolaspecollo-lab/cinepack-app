@@ -16,6 +16,22 @@
 
 .cp-dash .cp-admin-main{ flex:1; width:100%; padding:24px 30px 48px; box-sizing:border-box; position:relative; overflow:hidden; }
 
+/* ===================================================================
+   OPCIÓN C — shell del panel admin de sitio (nav + main). El
+   contenido de cada una de las 9 sub-páginas (dashboard, proyectos,
+   usuarios, actividad, feedback, flags, soporte, gestión, desarrollo)
+   queda fuera de esta pasada — mismo criterio que los paneles
+   internos de Generales, cada una es su propio bloque grande.
+=================================================================== */
+.cp-optc .cp-admin-nav{ border-bottom:1px solid var(--optc-text); }
+.cp-optc .cp-admin-tab{ font-family:var(--optc-font-mono); font-weight:600; color:var(--optc-muted); }
+.cp-optc .cp-admin-tab:hover{ color:var(--optc-text); }
+.cp-optc .cp-admin-tab.active{ color:var(--optc-text); border-bottom-color:var(--optc-text); }
+.cp-optc .cp-admin-tab-biblia{ color:var(--violet); }
+.cp-optc .cp-admin-tab-biblia .hex{ background:var(--violet); }
+.cp-optc .cp-admin-tab-biblia:hover{ color:var(--violet); border-bottom-color:var(--violet); }
+.cp-optc .cp-admin-main{ background:var(--optc-bg); }
+
 @media (max-width: 640px){
   .cp-dash .cp-admin-tab-biblia{ margin-left:0; }
 }

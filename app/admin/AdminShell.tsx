@@ -29,10 +29,11 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   ];
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-      <header className="cp-topbar">
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+      <header className="cp-topbar cp-optc cp-optc-hexbg">
         <Link href="/proyectos" className="cp-logo">
-          <img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" />
+          <span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} />
+          <span>CINE PACK</span>
         </Link>
         <span className="cp-proj">{t("adminPanel")}</span>
         <div className="cp-spacer"></div>
