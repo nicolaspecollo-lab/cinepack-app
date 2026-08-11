@@ -61,7 +61,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`}>
       <div className="cp-auth-wrap">
         <div className="hexbg"></div>
         <div className="cp-theme-toggle-floating">
@@ -70,7 +70,7 @@ export default function LoginPage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           <div className="cp-auth-logo">
-            <img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" />
+            <span className="cp-logo-mark cp-iso" style={{ background: "#14151A", width: 32, height: 32 }} />
           </div>
 
           <div className="authcard">

@@ -654,3 +654,15 @@
   color:var(--optc-text); border:1px solid var(--optc-text); border-radius:0;
 }
 .cp-optc .abtn:hover{ background:#C98AF2; border-color:#C98AF2; }
+
+.cp-optc .hexbg{ background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; }
+.cp-optc .cp-auth-logo .eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-auth-logo .eyebrow .hex{ background:var(--optc-text); }
+.cp-optc .cp-auth-logo h1{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
+.cp-optc .authcard{ background:var(--optc-bg); border:1px solid var(--optc-text); box-shadow:0 30px 80px rgba(20,21,26,.25); }
+.cp-optc .atabs{ border-bottom:1px solid var(--optc-line); }
+.cp-optc .atab{ font-family:var(--optc-font-mono); color:var(--optc-muted); text-transform:uppercase; }
+.cp-optc .atab::after{ background:var(--violet); }
+.cp-optc .atab.active{ color:var(--optc-text); }
+.cp-optc .apanel h3{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
+.cp-optc .aswitch{ font-family:var(--optc-font-body); color:var(--optc-muted); }

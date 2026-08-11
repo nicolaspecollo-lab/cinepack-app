@@ -47,7 +47,7 @@ export default function RegisterPage() {
   }, [router, searchParams]);
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`}>
       <div className="cp-auth-wrap">
         <div className="hexbg"></div>
         <div className="cp-theme-toggle-floating">
