@@ -278,7 +278,10 @@
   letter-spacing:.02em; font-weight:400; font-size:15px; margin:0 0 2px;
   color:var(--optc-text);
 }
-.cp-optc .cp-creditos-list{ margin-top:6px; }
+.cp-optc .cp-creditos-intl{
+  font-family:var(--optc-font-mono); font-size:10px; color:var(--optc-muted); margin:0 0 12px;
+}
+.cp-optc .cp-creditos-intl + .cp-creditos-list{ margin-top:0; }
 .cp-optc .cp-creditos-list dt{
   font-family:var(--optc-font-mono); color:var(--optc-muted);
   font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;

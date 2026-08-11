@@ -47,6 +47,7 @@ export default function AdminPanel() {
   const [escritoPor, setEscritoPor] = useState<string[]>([]);
   const [dirigidoPor, setDirigidoPor] = useState<string[]>([]);
   const [producidoPor, setProducidoPor] = useState<string[]>([]);
+  const [tituloInternacional, setTituloInternacional] = useState("");
   const [savingCreditos, setSavingCreditos] = useState(false);
   const [creditosMsg, setCreditosMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -89,7 +90,7 @@ export default function AdminPanel() {
 
     const { data: proyectoExtra } = await supabase
       .from("proyectos")
-      .select("departamentos, escrito_por, dirigido_por, producido_por")
+      .select("departamentos, escrito_por, dirigido_por, producido_por, titulo_internacional")
       .eq("id", projectId)
       .single();
     if (proyectoExtra) {
@@ -97,6 +98,7 @@ export default function AdminPanel() {
       setEscritoPor((proyectoExtra.escrito_por as string[]) ?? []);
       setDirigidoPor((proyectoExtra.dirigido_por as string[]) ?? []);
       setProducidoPor((proyectoExtra.producido_por as string[]) ?? []);
+      setTituloInternacional((proyectoExtra.titulo_internacional as string | null) ?? "");
     }
 
     const { data: members } = await supabase
@@ -193,7 +195,7 @@ export default function AdminPanel() {
     const supabase = createClient();
     const { error } = await supabase
       .from("proyectos")
-      .update({ escrito_por: escritoPor, dirigido_por: dirigidoPor, producido_por: producidoPor })
+      .update({ escrito_por: escritoPor, dirigido_por: dirigidoPor, producido_por: producidoPor, titulo_internacional: tituloInternacional.trim() || null })
       .eq("id", proyectoId);
     setSavingCreditos(false);
     if (error) {
@@ -372,6 +374,10 @@ export default function AdminPanel() {
         <h3><span className="hex"></span>{t("creditsTitle")}</h3>
         <p className="asub">{t("creditsDesc")}</p>
         <form onSubmit={guardarCreditos}>
+          <label className="afield" style={{ maxWidth: "420px", marginBottom: "12px" }}>
+            <span>{t("internationalTitle")}</span>
+            <input type="text" value={tituloInternacional} onChange={(e) => setTituloInternacional(e.target.value)} placeholder={t("internationalTitlePh")} />
+          </label>
           <CreditosChips label={t("writtenBy")} placeholder={t("writtenByPh")} valores={escritoPor} onChange={setEscritoPor} addLabel={t("addCredit")} />
           <CreditosChips label={t("directedBy")} placeholder={t("directedByPh")} valores={dirigidoPor} onChange={setDirigidoPor} addLabel={t("addCredit")} />
           <CreditosChips label={t("producedBy")} placeholder={t("producedByPh")} valores={producidoPor} onChange={setProducidoPor} addLabel={t("addCredit")} />

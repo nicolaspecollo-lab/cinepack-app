@@ -25,6 +25,7 @@ export default function NuevoProyectoPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   const [nombre, setNombre] = useState("");
+  const [tituloInternacional, setTituloInternacional] = useState("");
   const [tipo, setTipo] = useState("");
   const [escritoPor, setEscritoPor] = useState<string[]>([]);
   const [dirigidoPor, setDirigidoPor] = useState<string[]>([]);
@@ -214,6 +215,7 @@ export default function NuevoProyectoPage() {
         escrito_por: escritoPor,
         dirigido_por: dirigidoPor,
         producido_por: producidoPor,
+        titulo_internacional: tituloInternacional.trim() || null,
       })
       .select("id")
       .single();
@@ -533,6 +535,13 @@ export default function NuevoProyectoPage() {
           <span className="label">{t("projectNameLabel")}</span>
           <label className="afield" style={{ maxWidth: "420px" }}>
             <input type="text" required value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder={t("projectNamePh")} />
+          </label>
+        </div>
+
+        <div className="cp-np-block">
+          <span className="label">{t("internationalTitleLabel")}</span>
+          <label className="afield" style={{ maxWidth: "420px" }}>
+            <input type="text" value={tituloInternacional} onChange={(e) => setTituloInternacional(e.target.value)} placeholder={t("internationalTitlePh")} />
           </label>
         </div>
 

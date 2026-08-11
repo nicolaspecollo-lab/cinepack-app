@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 
-type Creditos = { nombre: string; escrito_por: string[]; dirigido_por: string[]; producido_por: string[] };
+type Creditos = { nombre: string; titulo_internacional: string | null; escrito_por: string[]; dirigido_por: string[]; producido_por: string[] };
 
 // Tarjeta de info del proyecto (título + créditos): va primero en Pulso,
 // antes de CicloTimeline — por eso vive aparte de ProyectoPulsoPanel, que
@@ -20,12 +20,13 @@ export default function ProyectoInfoCard() {
       const supabase = createClient();
       const { data } = await supabase
         .from("proyectos")
-        .select("nombre, escrito_por, dirigido_por, producido_por")
+        .select("nombre, titulo_internacional, escrito_por, dirigido_por, producido_por")
         .eq("id", projectId)
         .single();
       if (data) {
         setCreditos({
           nombre: data.nombre,
+          titulo_internacional: data.titulo_internacional,
           escrito_por: (data.escrito_por as string[]) ?? [],
           dirigido_por: (data.dirigido_por as string[]) ?? [],
           producido_por: (data.producido_por as string[]) ?? [],
@@ -41,6 +42,9 @@ export default function ProyectoInfoCard() {
   return (
     <div className="tcard pulso-card cp-creditos-card cp-optc">
       <h4>{creditos.nombre}</h4>
+      {creditos.titulo_internacional && (
+        <div className="cp-creditos-intl">{t("internationalTitlePrefix").toUpperCase()}: &ldquo;{creditos.titulo_internacional}&rdquo;</div>
+      )}
       <dl className="cp-creditos-list">
         {creditos.dirigido_por.length > 0 && (
           <>
