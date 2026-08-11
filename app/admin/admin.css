@@ -212,3 +212,87 @@
   .cp-dash .cp-cm-folder-grid{ grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); }
   .cp-dash .cp-cm-tabs{ overflow-x:auto; max-width:100%; }
 }
+
+/* ===================================================================
+   OPCIÓN C — las 9-10 sub-páginas de /admin (Dashboard, Proyectos,
+   Usuarios, Actividad, Feedback, Flags, Soporte, Gestión, Desarrollo,
+   Festivales). Todas heredan .cp-optc de AdminShell (ya migrado), acá
+   solo hace falta cubrir sus clases propias. El acento fijo es
+   violeta — no hay "color de depto" en este contexto (es admin de
+   sitio, no de un proyecto), a diferencia del resto de la app.
+=================================================================== */
+.cp-optc .cp-admin-kpi{ background:var(--optc-bg); border:1px solid var(--optc-text); border-radius:0; }
+.cp-optc .cp-admin-kpi::after{ background:var(--violet); opacity:.12; }
+.cp-optc .cp-admin-kpi .num{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cp-admin-kpi .label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-admin-section h3{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
+.cp-optc table.cp-admin-table{ font-family:var(--optc-font-body); }
+.cp-optc table.cp-admin-table th{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-bottom:1px solid var(--optc-text); }
+.cp-optc table.cp-admin-table td{ border-bottom:1px solid var(--optc-line-soft); color:var(--optc-text); }
+.cp-optc table.cp-admin-table tr:hover td{ background:var(--optc-line-soft); }
+.cp-optc .cp-admin-empty{ font-family:var(--optc-font-body); color:var(--optc-muted); border:1px dashed var(--optc-text); }
+.cp-optc .cp-admin-err{ font-family:var(--optc-font-body); border:1px solid var(--rose); color:var(--rose); }
+.cp-optc .cp-admin-badge{ font-family:var(--optc-font-mono); border-radius:0; }
+.cp-optc .cp-admin-badge.ok{ background:var(--optc-line-soft); color:var(--optc-text); }
+.cp-optc .cp-admin-badge.warn{ background:var(--optc-line-soft); color:#B8860B; }
+.cp-optc .cp-admin-badge.pend{ background:var(--optc-line-soft); color:var(--rose); }
+.cp-optc .cp-admin-badge.muted{ background:var(--optc-line-soft); color:var(--optc-muted); }
+.cp-optc .cp-admin-flagrow{ background:var(--optc-bg); border:1px solid var(--optc-text); }
+.cp-optc .cp-admin-flagrow .key{ font-family:var(--optc-font-mono); color:var(--optc-text); }
+.cp-optc .cp-admin-flagrow .desc{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cp-admin-toggle{ border:1px solid var(--optc-text); background:var(--optc-line-soft); border-radius:0; }
+.cp-optc .cp-admin-toggle .knob{ background:var(--optc-muted); border-radius:0; }
+.cp-optc .cp-admin-toggle.on{ border-color:var(--violet); }
+.cp-optc .cp-admin-toggle.on .knob{ background:var(--violet); }
+
+.cp-optc .cp-chart-card{ background:var(--optc-bg); border:1px solid var(--optc-text); }
+.cp-optc .cp-chart-card h4{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-chart-card h4 .hex{ background:var(--violet); }
+.cp-optc .cp-chart-bar-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-chart-bar-track{ background:var(--optc-line-soft); border:1px solid var(--optc-line); }
+.cp-optc .cp-chart-bar-value{ font-family:var(--optc-font-mono); color:var(--optc-text); }
+.cp-optc .cp-chart-legend-row{ font-family:var(--optc-font-body); }
+.cp-optc .cp-chart-legend-row .lbl{ color:var(--optc-text); }
+.cp-optc .cp-chart-legend-row .pct{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+.cp-optc .cfilter{ font-family:var(--optc-font-mono); color:var(--optc-text); background:var(--optc-line-soft); border:1px solid var(--optc-text); text-transform:uppercase; }
+.cp-optc .cfilter:hover{ color:var(--optc-text); border-color:var(--violet); }
+.cp-optc .cfilter.active{ color:var(--optc-text); background:var(--violet); border-color:var(--violet); }
+.cp-optc .cons{ background:var(--optc-bg); border:1px solid var(--optc-text); border-left:3px solid var(--violet); }
+.cp-optc .cons-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cons-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cons-text{ font-family:var(--optc-font-body); color:var(--optc-text); }
+
+.cp-optc .cp-cm-entry-btn{ font-family:var(--optc-font-mono); border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); text-transform:uppercase; }
+.cp-optc .cp-cm-entry-btn:hover{ border-color:var(--violet); color:var(--violet); }
+.cp-optc .cp-cm-entry-btn .hex{ background:var(--violet); }
+.cp-optc .cp-cm-head .hex{ background:var(--violet); }
+.cp-optc .cp-cm-sub{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cp-cm-tabs{ background:var(--optc-bg); border:1px solid var(--optc-text); }
+.cp-optc .cp-cm-tab{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-right-color:var(--optc-line); text-transform:uppercase; }
+.cp-optc .cp-cm-tab:hover{ color:var(--optc-text); }
+.cp-optc .cp-cm-tab.active{ background:var(--violet); color:var(--optc-text); }
+.cp-optc .cp-cm-breadcrumb{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-cm-breadcrumb button:hover{ color:var(--violet); }
+.cp-optc .cp-cm-breadcrumb .current{ color:var(--optc-text); }
+.cp-optc .cp-cm-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-cm-folder-card{ border:1px solid var(--optc-text); background:var(--optc-bg); border-radius:0; }
+.cp-optc .cp-cm-folder-card:hover{ border-color:var(--violet); }
+.cp-optc .cp-cm-folder-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cp-cm-files{ border:1px solid var(--optc-text); border-radius:0; }
+.cp-optc .cp-cm-file-row{ border-bottom-color:var(--optc-line-soft); }
+.cp-optc .cp-cm-file-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cp-cm-file-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-cm-icon-btn{ border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); }
+.cp-optc .cp-cm-icon-btn:hover{ border-color:var(--violet); color:var(--violet); }
+.cp-optc .cp-cm-trash{ border-color:var(--rose); }
+.cp-optc .cp-cm-restore-btn{ font-family:var(--optc-font-mono); color:var(--optc-text); background:var(--optc-line-soft); border:1px solid var(--optc-text); text-transform:uppercase; }
+.cp-optc .cp-cm-delete-btn{ font-family:var(--optc-font-mono); color:var(--rose); border:1px solid var(--rose); text-transform:uppercase; }
+
+.cp-optc .cp-dev-depto{ background:var(--optc-bg); border:1px solid var(--optc-text); }
+.cp-optc .cp-dev-depto summary{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cp-dev-depto summary::before{ color:var(--optc-muted); }
+.cp-optc .cp-dev-count{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-dev-cargo-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-dev-row{ font-family:var(--optc-font-body); border-top-color:var(--optc-line-soft); color:var(--optc-text); }
+.cp-optc .cp-dev-row .fecha{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
