@@ -58,6 +58,10 @@ export default function CpSelect({
   const opts = options.map((o) => (typeof o === "string" ? { value: o, label: o } : o));
   const actual = opts.find((o) => o.value === value)?.label ?? "";
   const host = typeof document !== "undefined" ? (document.querySelector(".cp-dash") ?? document.body) : null;
+  // El menú se porta a .cp-dash, fuera del árbol del trigger — si el trigger
+  // vive dentro de una sección migrada a Opción C (.cp-optc), el portal no
+  // hereda esa clase solo. Se detecta acá y se suma a mano al portal.
+  const enOpcionC = !!wrapRef.current?.closest(".cp-optc");
 
   return (
     <div className="cdp-sel" ref={wrapRef}>
@@ -66,7 +70,7 @@ export default function CpSelect({
         <span className="cdp-sel-caret">▾</span>
       </button>
       {open && rect && host && createPortal(
-        <div className="cdp-sel-menu cdp-sel-menu-portal" ref={menuRef} style={{ top: rect.top, left: rect.left, width: Math.max(rect.width, 180) }}>
+        <div className={`cdp-sel-menu cdp-sel-menu-portal ${enOpcionC ? "cp-optc" : ""}`} ref={menuRef} style={{ top: rect.top, left: rect.left, width: Math.max(rect.width, 180) }}>
           <button type="button" className="cdp-sel-opt" onClick={() => { onChange(""); setOpen(false); }}>{placeholder}</button>
           {opts.map((o) => (
             <button type="button" key={o.value} className={`cdp-sel-opt ${o.value === value ? "on" : ""}`} onClick={() => { onChange(o.value); setOpen(false); }}>{o.label}</button>

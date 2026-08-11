@@ -5746,3 +5746,68 @@
 .cp-optc .arc-icon-btn:hover{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
 .cp-optc .arc-icon-btn.danger{ border-color:var(--optc-text); color:var(--rose); }
 .cp-optc .arc-icon-btn.danger:hover{ background:var(--rose); border-color:var(--rose); color:var(--optc-text); }
+
+/* ===================================================================
+   OPCIÓN C — CpSelect (desplegable compartido, usado en TODA la app,
+   no solo Control). El menú se porta a .cp-dash directo (fuera del
+   árbol del trigger) — CpSelect.tsx detecta si el trigger vive dentro
+   de .cp-optc y le suma esa clase a mano al div portaleado, por eso
+   acá va .cdp-sel-menu.cp-optc (compuesto), no ".cp-optc .cdp-sel-menu".
+=================================================================== */
+.cp-optc .cdp-sel-btn{ border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); font-family:var(--optc-font-body); border-radius:0; }
+.cp-optc .cdp-sel-btn:hover{ border-color:var(--violet); }
+.cp-optc .cdp-sel-ph{ color:var(--optc-muted); }
+.cp-optc .cdp-sel-caret{ color:var(--optc-muted); }
+.cdp-sel-menu.cp-optc{ background:var(--optc-bg); border:1px solid var(--optc-text); box-shadow:0 14px 34px rgba(20,21,26,.18); border-radius:0; }
+.cp-optc .cdp-sel-opt{ font-family:var(--optc-font-body); color:var(--optc-text); border-bottom-color:var(--optc-line-soft); }
+.cp-optc .cdp-sel-opt:hover{ background:var(--violet); color:var(--optc-text); }
+.cp-optc .cdp-sel-opt.on{ color:var(--violet); }
+.cp-optc .cdp-sel-opt.on:hover{ color:var(--optc-text); }
+
+/* ===================================================================
+   OPCIÓN C — Control: AdminPanel (Ejecutivo) + ControlDeptoPanel
+   (jefes de depto).
+=================================================================== */
+.cp-optc .apanel{ background:var(--optc-bg); border:1px solid var(--optc-text); border-radius:0; }
+.cp-optc .apanel h3{ font-family:var(--optc-font-display); font-weight:400; text-transform:uppercase; color:var(--optc-text); }
+.cp-optc .apanel h3 .hex{ background:var(--optc-text); }
+.cp-optc .asub{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .akpi{ background:var(--optc-line-soft); border:1px solid var(--optc-line); }
+.cp-optc .akpi-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .akpi-num{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .acargo-chip{ font-family:var(--optc-font-mono); border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text); border-radius:0; }
+.cp-optc .acargo-chip b{ color:var(--violet); }
+.cp-optc .alog-item{ font-family:var(--optc-font-body); background:var(--optc-line-soft); border-left-color:var(--violet); color:var(--optc-text); }
+.cp-optc .alog-item b{ font-family:var(--optc-font-display); font-weight:400; }
+.cp-optc .alog-detail{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .alog-empty,
+.cp-optc .acargo-empty{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+
+.cp-optc .cdp-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cdp-title .hex{ background:var(--optc-text); }
+.cp-optc .cdp-sub{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cdp-card{ background:var(--optc-bg); border:1px solid var(--optc-text); border-radius:0; }
+.cp-optc .cdp-h3{ font-family:var(--optc-font-mono); font-weight:600; }
+.cp-optc .cdp-count{ font-family:var(--optc-font-mono); color:var(--optc-text); border-color:var(--optc-line); }
+.cp-optc .cdp-muted{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cdp-checklist{ border-color:var(--optc-text); }
+.cp-optc .cdp-check{ font-family:var(--optc-font-body); background:var(--optc-bg); color:var(--optc-muted); }
+.cp-optc .cdp-check.ok{ color:var(--optc-text); }
+.cp-optc .cdp-check-box{ border:1px solid var(--optc-text); color:var(--optc-bg); border-radius:0; }
+.cp-optc .cdp-check.ok .cdp-check-box{ background:var(--violet); border-color:var(--violet); }
+.cp-optc .cdp-member{ background:var(--optc-bg); border:1px solid var(--optc-line); }
+.cp-optc .cdp-avatar{ border:1px solid var(--optc-line); background:var(--optc-line-soft); }
+.cp-optc .cdp-avatar .hex{ background:var(--optc-text); }
+.cp-optc .cdp-member-name{ font-family:var(--optc-font-body); font-weight:600; color:var(--optc-text); }
+.cp-optc .cdp-select{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); border-radius:0; }
+.cp-optc .cdp-select:focus{ border-color:var(--violet); }
+.cp-optc .cdp-shared-lbl{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cdp-chip{ font-family:var(--optc-font-body); background:var(--optc-line-soft); border:1px solid var(--optc-line); }
+.cp-optc .cdp-inline-form,
+.cp-optc .cdp-input{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); border-radius:0; }
+.cp-optc .cdp-input:focus{ border-color:var(--violet); }
+.cp-optc .cdp-err{ font-family:var(--optc-font-body); color:var(--rose); }
+.cp-optc .cdp-tool{ background:var(--optc-bg); border:1px solid var(--optc-line); }
+.cp-optc .cdp-tool-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cdp-tool-cargo{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cdp-jefe-badge{ font-family:var(--optc-font-mono); background:var(--violet); color:var(--optc-text); }

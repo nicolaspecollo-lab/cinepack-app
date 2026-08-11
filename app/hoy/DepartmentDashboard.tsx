@@ -373,7 +373,7 @@ export default function DepartmentDashboard({
       )}
 
       {tab === "admin" && puedeControl && (
-        <div className="tpanel active">
+        <div className="tpanel active cp-optc">
           {nombre === "Ejecutivo" ? <AdminPanel /> : <ControlDeptoPanel departamento={nombre} />}
         </div>
       )}
