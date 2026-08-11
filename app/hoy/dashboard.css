@@ -193,6 +193,29 @@
 .cp-optc .comn-file-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
 .cp-optc .comn-file-close{ color:var(--optc-muted); }
 
+/* Consultas — hilo de chat (cq-*), sobre el mismo shell .comn-* de arriba */
+.cp-optc .cq-flow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cq-flow b{ color:var(--optc-text); }
+.cp-optc .cq-pill{ font-family:var(--optc-font-mono); border-radius:0; }
+.cp-optc .cq-replies{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cq-bubble,
+.cp-optc .cq-bubble-resuelta{ font-family:var(--optc-font-body); background:var(--optc-line-soft); border-color:var(--optc-line); color:var(--optc-text); }
+.cp-optc .cq-bubble-me{ border-left-color:var(--violet); }
+.cp-optc .cq-bubble-head{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cq-bubble-head b{ color:var(--optc-text); }
+.cp-optc .cq-reply-input{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .cq-reply-input:focus{ border-color:var(--violet); }
+.cp-optc .cq-chip-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+/* Control segmentado genérico (cp-seg / cp-seg-cell) — usado en varias
+   herramientas además de Consultas; migrarlo acá lo deja listo para
+   todas las que se sumen después sin repetir el trabajo. */
+.cp-optc .cp-seg{ border:1px solid var(--optc-text); }
+.cp-optc .cp-seg-cell{ font-family:var(--optc-font-mono); color:var(--optc-muted); border-right-color:var(--optc-line); background:var(--optc-bg); }
+.cp-optc .cp-seg-cell:hover:not(:disabled){ color:var(--optc-text); background:var(--optc-line-soft); }
+.cp-optc .cp-seg-on{ background:var(--violet); color:var(--optc-text); }
+.cp-optc .cq-chip{ font-family:var(--optc-font-mono); }
+
 .cp-dash .tpanel{ display:none; flex-direction:column; flex:1; }
 .cp-dash .tpanel.active{ display:flex; }
 
