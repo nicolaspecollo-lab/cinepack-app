@@ -191,6 +191,28 @@ export default function HerramientasPanel({
     setAbiertaPersonal((prev) => (prev && prev.id === id ? { ...prev, titulo } : prev));
   }
 
+  // Departamento (solo lectura): igual que Generales, se listan TODAS las
+  // herramientas (compartidas + de cada cargo) como sub-pestañas siempre
+  // visibles, sin pantalla de índice — pedido explícito de Nicolás, mismo
+  // patrón ya aplicado en GeneralesPanel.tsx.
+  const deptSubTools =
+    seccion === "departamento"
+      ? Array.from(
+          new Map(
+            [
+              ...deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos"),
+              ...cargoGroups(departamento).flatMap((g) => g.tools.filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos")),
+            ].map((h) => [h.id, h]) // dedupe: una herramienta puede vivir en "compartidas" y en un cargo a la vez
+          ).values()
+        )
+      : [];
+
+  useEffect(() => {
+    if (seccion !== "departamento" || abierta) return;
+    if (deptSubTools.length > 0) setAbierta(deptSubTools[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seccion, departamento, ocultas]);
+
   // Restaura la herramienta que estaba abierta en esta pestaña (Departamento/Exclusivas)
   // al volver a ella, leyendo de localStorage por departamento + seccion.
   useEffect(() => {
@@ -270,14 +292,31 @@ export default function HerramientasPanel({
     const esCasting = abierta.id === "cast-candidatos";
     return (
       <div className="hp-open">
-        <div className="hp-open-head">
-          <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
-          <h3><span className="hex"></span> {nombreDe(abierta)}</h3>
-          {/* HerramientaPanel porta acá el toggle Tablero/Tabla/Archivos —
-              antes vivía debajo del hint, en su propia fila, dejando todo el
-              lado derecho de esta cabecera vacío. */}
-          <div className="hp-open-head-tabs" id="hp-open-head-tabs" />
-        </div>
+        {seccion === "departamento" ? (
+          <>
+            <div className="gen-subtabs">
+              {deptSubTools.map((h) => (
+                <button
+                  key={h.id}
+                  className={`gen-subtab ${h.id === abierta.id ? "on" : ""}`}
+                  onClick={() => setAbierta(h)}
+                >
+                  {nombreDe(h)}
+                </button>
+              ))}
+            </div>
+            <div className="hp-open-head-tabs" id="hp-open-head-tabs" />
+          </>
+        ) : (
+          <div className="hp-open-head">
+            <button className="btn" onClick={cerrar}><Icon name="arrow-left" size={14} /> {tNav("back")}</button>
+            <h3><span className="hex"></span> {nombreDe(abierta)}</h3>
+            {/* HerramientaPanel porta acá el toggle Tablero/Tabla/Archivos —
+                antes vivía debajo del hint, en su propia fila, dejando todo el
+                lado derecho de esta cabecera vacío. */}
+            <div className="hp-open-head-tabs" id="hp-open-head-tabs" />
+          </div>
+        )}
         {esCasting && (
           <div className="dsubtabs">
             <button className={`dsubtab ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
@@ -301,59 +340,16 @@ export default function HerramientasPanel({
   }
 
   if (seccion === "departamento") {
-    // Panorama completo del departamento (visionado): las herramientas
-    // compartidas + las de CADA cargo, subdivididas por cargo, para que
-    // cualquier integrante VEA todo. Solo lectura — la edición vive en
-    // Exclusivas (tu cargo).
-    const shared = deptTools(departamento).filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos");
-    const groups = cargoGroups(departamento)
-      .map((g) => ({ ...g, tools: g.tools.filter((h) => !ocultas.has(h.id) && h.tipo !== "accesos") }))
-      .filter((g) => g.tools.length > 0);
-    if (shared.length === 0 && groups.length === 0) {
-      return (
-        <div className="hp-index">
-          <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
-          <div className="soon-box">
-            <span className="hex"></span>
-            <h4>{t("noDeptTools")}</h4>
-            <p>{t("noDeptToolsDesc")}</p>
-          </div>
-        </div>
-      );
-    }
+    // Sin herramientas visibles (o todavía cargando ocultas/deptSubTools):
+    // única situación en la que Departamento no tiene una pestaña abierta.
     return (
-      <div className="hp-index hp-index-cols">
+      <div className="hp-index">
         <div className="hp-vista-note"><span className="hex"></span>{t("deptViewNote")}</div>
-        {shared.length > 0 && (
-          <section className="hp-group">
-            <span className="hp-group-label">
-              <span className="hex" style={{ width: "8px", height: "7px" }} />
-              {t("sharedGroup")}
-            </span>
-            <div className="hp-cards">
-              {shared.map((h) => (
-                <ToolCard key={`shared-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
-              ))}
-            </div>
-          </section>
-        )}
-        {groups.map((g) => {
-          const esMio = !!cargo && g.cargo === cargo;
-          return (
-            <section className="hp-group" key={g.cargo}>
-              <span className="hp-group-label">
-                <span className="hex" style={{ width: "8px", height: "7px" }} />
-                {g.cargo}
-                {esMio && <span className="hp-mine">{t("yourRole")}</span>}
-              </span>
-              <div className="hp-cards">
-                {g.tools.map((h) => (
-                  <ToolCard key={`${g.cargo}-${h.id}`} h={h} onClick={() => abrir(h)} conteo={conteos[h.id]} bloqueada={bloqueado} proximamente={proximamente} />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+        <div className="soon-box">
+          <span className="hex"></span>
+          <h4>{t("noDeptTools")}</h4>
+          <p>{t("noDeptToolsDesc")}</p>
+        </div>
       </div>
     );
   }

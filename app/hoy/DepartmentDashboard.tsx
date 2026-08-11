@@ -355,7 +355,7 @@ export default function DepartmentDashboard({
       )}
 
       {tab === "departamento" && (
-        <div className="tpanel active">
+        <div className="tpanel active cp-optc">
           <HerramientasPanel departamento={nombre} cargo={cargo} fullName={fullName} seccion="departamento" isAdmin={isAdmin} />
         </div>
       )}
