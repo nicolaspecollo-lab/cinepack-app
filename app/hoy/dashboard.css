@@ -1551,17 +1551,19 @@
 .cp-optc .cp-activity-meta{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 
 /* Norma de botones Opción C: sin color por defecto (fondo apenas más
-   gris que la tarjeta, texto negro) — el color solo aparece al pasar
-   el mouse o al enfocar/clickear. Vale para todos los botones, incluidos
-   los que antes eran "acc" (violeta sólido permanente). */
+   gris que la tarjeta, texto negro, contorno negro 1px, texto SIEMPRE
+   en mayúsculas) — el color solo aparece al pasar el mouse o al
+   enfocar/clickear. Vale para todos los botones, incluidos los que
+   antes eran "acc" (violeta sólido permanente). */
 .cp-optc .btn{
-  font-family:var(--optc-font-mono); border:1px solid transparent;
+  font-family:var(--optc-font-mono); border:1px solid var(--optc-text);
   background:var(--optc-line-soft); color:var(--optc-text); border-radius:0;
+  text-transform:uppercase; letter-spacing:.04em;
   transition:background .12s, color .12s, border-color .12s;
 }
 .cp-optc .btn:hover,
 .cp-optc .btn:focus-visible{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
-.cp-optc .btn.acc{ background:var(--optc-line-soft); color:var(--optc-text); border-color:transparent; }
+.cp-optc .btn.acc{ background:var(--optc-line-soft); color:var(--optc-text); border-color:var(--optc-text); }
 .cp-optc .btn.acc:hover,
 .cp-optc .btn.acc:focus-visible{ background:var(--violet); border-color:var(--violet); }
 
@@ -5137,7 +5139,7 @@
 .cp-optc .ct-etapa-range{ font-family:var(--optc-font-body); font-style:italic; color:var(--optc-muted); }
 .cp-optc .ct-progress-txt{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .ct-progress-bar{ background:var(--optc-line-soft); }
-.cp-optc .ct-zoom-btn{ border:1px solid transparent; color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
+.cp-optc .ct-zoom-btn{ border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
 .cp-optc .ct-zoom-btn:hover:not(:disabled),
 .cp-optc .ct-zoom-btn:focus-visible:not(:disabled){ background:var(--violet); color:var(--optc-text); }
 .cp-optc .ct-zoom-pct{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
@@ -5164,7 +5166,7 @@
 .cp-optc .cal-wrap{ background:var(--optc-bg); border:1px solid var(--optc-line); }
 .cp-optc .cal-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
 .cp-optc .cal-title .hex{ background:var(--optc-text); }
-.cp-optc .cal-navbtn{ border:1px solid transparent; color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
+.cp-optc .cal-navbtn{ border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
 .cp-optc .cal-navbtn:hover,
 .cp-optc .cal-navbtn:focus-visible{ background:var(--violet); color:var(--optc-text); }
 .cp-optc .cal-dow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
@@ -5187,12 +5189,13 @@
 .cp-optc .cal-form-tlabel{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 
 .cp-optc .cp-btn{
-  font-family:var(--optc-font-mono); border-radius:0; border:1px solid transparent;
-  color:var(--optc-text); background:var(--optc-line-soft); transition:background .12s,color .12s,border-color .12s;
+  font-family:var(--optc-font-mono); border-radius:0; border:1px solid var(--optc-text);
+  color:var(--optc-text); background:var(--optc-line-soft); text-transform:uppercase; letter-spacing:.04em;
+  transition:background .12s,color .12s,border-color .12s;
 }
 .cp-optc .cp-btn:hover,
 .cp-optc .cp-btn:focus-visible{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
-.cp-optc .cp-btn-acc{ color:var(--optc-text); background:var(--optc-line-soft); border-color:transparent; }
+.cp-optc .cp-btn-acc{ color:var(--optc-text); background:var(--optc-line-soft); border-color:var(--optc-text); }
 .cp-optc .cp-btn-acc:hover,
 .cp-optc .cp-btn-acc:focus-visible{ background:var(--violet); border-color:var(--violet); color:var(--optc-text); }
 
