@@ -74,19 +74,19 @@ export default function SugerenciasPage() {
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </header>
 
-      <div style={{ padding: "30px 30px 60px", width: "100%" }}>
-        <form onSubmit={handleSubmit} className="apanel" style={{ maxWidth: "640px" }}>
+      <div style={{ padding: "30px var(--gutter) 60px", width: "100%", flex: 1, display: "flex", boxSizing: "border-box" }}>
+        <form onSubmit={handleSubmit} className="apanel" style={{ width: "100%", flex: 1 }}>
           <h3>{t("formTitle")}</h3>
           <p className="asub">{t("formDesc")}</p>
 
-          <label className="afield">
+          <label className="afield" style={{ flex: 1 }}>
             <span>{t("fieldLabel")}</span>
             <textarea
               required
-              rows={6}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={t("placeholder")}
+              style={{ flex: 1, minHeight: "260px", resize: "vertical" }}
             />
           </label>
 
