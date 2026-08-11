@@ -408,6 +408,32 @@
 /* ===== Subpestañas dentro de DOCUMENTOS ===== */
 .cp-dash .gen{ display:flex; flex-direction:column; }
 .cp-dash .gen-body{ display:flex; flex-direction:column; }
+.cp-dash .gen-subtabs{ display:flex; align-items:stretch; gap:0; overflow-x:auto; border-bottom:1px solid var(--line); flex-shrink:0; }
+.cp-dash .gen-subtab{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; letter-spacing:0.04em;
+  color:var(--muted); background:none; border:none; border-bottom:2px solid transparent;
+  padding:12px 16px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:7px;
+  flex-shrink:0; transition:color .12s, border-color .12s;
+}
+.cp-dash .gen-subtab:hover{ color:var(--text); }
+.cp-dash .gen-subtab.on{ color:var(--acc); border-bottom-color:var(--acc); }
+.cp-dash .gen-subtab-n{
+  display:inline-flex; align-items:center; justify-content:center; min-width:16px; height:16px; padding:0 4px;
+  background:var(--acc); color:#101010; font-size:9px; font-weight:800; border-radius:0;
+}
+
+/* ===================================================================
+   OPCIÓN C — barra de sub-pestañas de Generales. Reemplaza el índice
+   de tarjetas Hcard (que quedó solo para Departamentos/Exclusivas):
+   acá todas las herramientas se listan siempre arriba, sin pantalla
+   intermedia — pedido explícito de Nicolás, viendo de nuevo el mockup
+   que ya se le había mostrado antes.
+=================================================================== */
+.cp-optc .gen-subtabs{ border-bottom:1px solid var(--optc-text); background:var(--optc-bg); }
+.cp-optc .gen-subtab{ font-family:var(--optc-font-mono); font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--optc-muted); }
+.cp-optc .gen-subtab:hover{ color:var(--optc-text); }
+.cp-optc .gen-subtab.on{ color:var(--optc-text); border-bottom-color:var(--optc-text); }
+.cp-optc .gen-subtab-n{ background:var(--violet); color:var(--optc-text); font-family:var(--optc-font-mono); border-radius:0; }
 .cp-dash .dsubtabs{ display:flex; flex-wrap:wrap; gap:8px; padding:18px 30px 0; }
 .cp-dash .dsubtab{
   font-family:'Poppins',sans-serif; font-weight:700; font-size:10.5px; text-transform:uppercase;

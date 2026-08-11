@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import ConsultasPanel from "./ConsultasPanel";
 import ComunicadosPanel from "./ComunicadosPanel";
 import GuionPanel from "./GuionPanel";
@@ -16,11 +15,8 @@ import HerramientaPanel from "./HerramientaPanel";
 import OrdenRodajePanel from "./OrdenRodajePanel";
 import CalendarioProyecto from "./CalendarioProyecto";
 import { GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
-import { ACCENTS } from "../constants";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
-import Icon from "../components/Icon";
-import Hcard from "./Hcard";
 
 // Las Herramientas Generales del mapa de trabajo, contenidas en una sola pestaña
 // que despliega sub-pestañas. Iguales para todo el proyecto.
@@ -46,25 +42,6 @@ const PROPIETARIOS: Partial<Record<Sub, string[] | null>> = {
   contactos:  ["Producción"],
   wrap:       ["Producción"],
   escena3d:   [],           // vista agregada, sin edición directa
-};
-
-// Ícono del sello hexagonal de cada herramienta general — ver Hcard.tsx.
-const ICON_POR_SUB: Record<Sub, React.ComponentProps<typeof Icon>["name"]> = {
-  comunicados: "message",
-  consultas: "message",
-  guion: "file-text",
-  guiontec: "film",
-  calendario: "calendar",
-  plan: "clock",
-  orden: "list",
-  escena3d: "cube",
-  espacio: "layout",
-  visionado: "image",
-  equipo: "users",
-  accesos: "key",
-  pipeline: "briefcase",
-  contactos: "phone",
-  wrap: "checklist",
 };
 
 function canEditSub(sub: Sub, departamento: string): boolean {
@@ -101,44 +78,6 @@ const SUBS: SubDef[] = [
   { id: "wrap",           label: "Checklist wrap",       desc: "Lista de control para el cierre del rodaje.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
 ];
 
-function deptColor(dept: string) {
-  return `var(--${ACCENTS[dept] ?? "lime"})`;
-}
-
-function DeptHexes({ label, depts }: { label: React.ReactNode; depts: string[] | null | "todos" }) {
-  const tG = useTranslations("generales");
-  if (depts === null) {
-    return (
-      <span className="hcard-perm-group">
-        <span className="hcard-perm-label">{label}</span>
-        <span className="hcard-badge">{tG("all")}</span>
-      </span>
-    );
-  }
-  if (depts === "todos") {
-    return (
-      <span className="hcard-perm-group">
-        <span className="hcard-perm-label">{label}</span>
-        <span className="hcard-badge">{tG("all")}</span>
-      </span>
-    );
-  }
-  if (depts.length === 0) return null;
-  return (
-    <span className="hcard-perm-group">
-      <span className="hcard-perm-label">{label}</span>
-      {depts.map((d) => (
-        <span
-          key={d}
-          className="hcard-dept-hex"
-          style={{ background: deptColor(d) }}
-          title={d}
-        />
-      ))}
-    </span>
-  );
-}
-
 export default function GeneralesPanel({
   departamento,
   cargo,
@@ -154,8 +93,7 @@ export default function GeneralesPanel({
 }) {
   const tG = useTranslations("generales");
   const subs = SUBS.filter((s) => !s.cond || s.cond(departamento));
-  const [sub, setSub] = useState<Sub | null>(null);
-  const [backMounted, setBackMounted] = useState(false);
+  const [sub, setSub] = useState<Sub>(jumpTo?.sub ?? subs[0]?.id ?? "comunicados");
   const [pendientesPorSub, setPendientesPorSub] = useState<Partial<Record<Sub, number>>>({});
 
   useEffect(() => {
@@ -180,48 +118,22 @@ export default function GeneralesPanel({
     })();
   }, [departamento, jumpTo]);
 
-  useEffect(() => {
-    setBackMounted(!!document.getElementById("cp-header-back"));
-  }, []);
-
   const ce = (s: Sub) => canEditSub(s, departamento);
-
-  if (sub === null) {
-    return (
-      <div className="hp-index">
-        <div>
-          <div className="hp-group-label hp-group-label-muted" style={{ marginBottom: "12px" }}>
-            {tG("sharedTools")}
-          </div>
-          <div className="hp-cards">
-            {subs.map((s) => (
-              <Hcard
-                key={s.id}
-                icon={ICON_POR_SUB[s.id]}
-                title={tG(`${s.id}.label`)}
-                desc={tG(`${s.id}.desc`)}
-                badgeCount={pendientesPorSub[s.id]}
-                onClick={() => setSub(s.id)}
-                footer={
-                  <>
-                    <DeptHexes label={<Icon name="pencil" size={11} />} depts={s.editores} />
-                    <DeptHexes label={<Icon name="eye" size={11} />} depts={s.visores} />
-                  </>
-                }
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="gen">
-      {backMounted && createPortal(
-        <button className="cp-header-back-btn" onClick={() => setSub(null)}><Icon name="arrow-left" size={14} /> {tG("back")}</button>,
-        document.getElementById("cp-header-back")!
-      )}
+      <div className="gen-subtabs">
+        {subs.map((s) => (
+          <button
+            key={s.id}
+            className={`gen-subtab ${s.id === sub ? "on" : ""}`}
+            onClick={() => setSub(s.id)}
+          >
+            {tG(`${s.id}.label`)}
+            {!!pendientesPorSub[s.id] && <span className="gen-subtab-n">{pendientesPorSub[s.id]}</span>}
+          </button>
+        ))}
+      </div>
 
       <div className="gen-body">
         {sub === "comunicados" && <ComunicadosPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
