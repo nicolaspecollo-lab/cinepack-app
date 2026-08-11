@@ -428,6 +428,29 @@
 .cp-optc .cp-team-row{ background:var(--optc-bg); border-bottom-color:var(--optc-line-soft); }
 .cp-optc .cp-team-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
 .cp-optc .cp-team-cargo{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+
+/* Gate de pago (packs) — chip-group/dept-chip viven en dashboard.css,
+   que esta página no importa; se define acá una base mínima propia
+   más el override de Opción C, para no depender de ese archivo. */
+.chip-group{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.dept-chip{
+  position:relative; overflow:hidden; border-radius:0; border:1px solid var(--line); color:var(--text);
+  background:var(--bg-2); padding:7px 14px 7px 17px; cursor:pointer; transition:all .15s ease;
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:0.02em;
+}
+.dept-chip::before{ content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--chip-acc); }
+.dept-chip:hover{ border-color:var(--chip-acc); background:var(--hl2); }
+.dept-chip.active{ background:var(--hl3); border-color:var(--chip-acc); }
+.dept-chip.active::before{ width:4px; }
+
+.cp-optc .dept-chip{
+  font-family:var(--optc-font-mono); text-transform:uppercase; color:var(--optc-text);
+  background:var(--optc-line-soft); border-color:var(--optc-text);
+}
+.cp-optc .dept-chip::before{ background:var(--optc-text); }
+.cp-optc .dept-chip:hover{ border-color:var(--violet); background:var(--optc-line-soft); }
+.cp-optc .dept-chip.active{ background:var(--optc-line-soft); border-color:var(--violet); }
+.cp-optc .dept-chip.active::before{ background:var(--violet); }
 .aforgot:hover{ color:var(--lime); }
 .abtn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--lime); color:#0D0D12;
