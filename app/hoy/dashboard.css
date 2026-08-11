@@ -5133,7 +5133,6 @@
 }
 .cp-optc .ct-rail{ background-image:none; }
 .cp-optc .ct-track{ background:none; }
-.cp-optc .ctln-head{ background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; background-repeat:repeat; margin:0 -18px; padding:14px 18px 8px; }
 .cp-optc .ct-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
 .cp-optc .ct-eyebrow .hex{ background:var(--optc-text); }
 .cp-optc .ct-etapa-name{ font-family:var(--optc-font-display); font-weight:400; letter-spacing:.01em; color:var(--optc-text); }
