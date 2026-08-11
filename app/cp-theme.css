@@ -65,6 +65,16 @@
   background-repeat:repeat;
 }
 
+/* Isotipo real como máscara CSS (tiñe iso-cinepack.png con el color que
+   traiga por background). Ya existía en dashboard.css (.cp-dash .cp-iso)
+   pero las páginas de login/perfil/proyectos no cargan ese archivo — sin
+   esto el logo se veía como un cuadrado negro sólido, sin la forma. */
+.cp-iso{
+  display:inline-block; flex-shrink:0;
+  -webkit-mask:url(/iso-cinepack.png) center/contain no-repeat;
+  mask:url(/iso-cinepack.png) center/contain no-repeat;
+}
+
 /* ===================================================================
    Tema visual compartido CINE PACK — login, registro, selección de
    proyecto y workspace de cada departamento.
