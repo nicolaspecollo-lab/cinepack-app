@@ -26,7 +26,7 @@ export default function PaisProvinciaField({
   return (
     <div className="afield afield-span2">
       <span>{label}</span>
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+      <div className="afield-select-row">
         <select
           required={required}
           value={pais}
@@ -34,7 +34,7 @@ export default function PaisProvinciaField({
             onChangePais(e.target.value);
             onChangeProvincia("");
           }}
-          style={{ flex: 1, minWidth: "160px", padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}
+          className="afield-select"
         >
           <option value="">{t("countryPh")}</option>
           {PAISES.map((p) => (
@@ -46,7 +46,8 @@ export default function PaisProvinciaField({
           value={provincia}
           onChange={(e) => onChangeProvincia(e.target.value)}
           disabled={!pais}
-          style={{ flex: 1, minWidth: "160px", padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px", opacity: pais ? 1 : 0.6 }}
+          className="afield-select"
+          style={{ opacity: pais ? 1 : 0.6 }}
         >
           <option value="">{pais ? t("provincePh") : t("chooseCountryFirst")}</option>
           {provincias.map((p) => (

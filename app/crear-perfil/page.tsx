@@ -112,7 +112,7 @@ export default function CrearPerfilPage() {
 
   if (loading) {
     return (
-      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`}>
+      <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
           <h4>{t("loading")}</h4>
@@ -122,9 +122,12 @@ export default function CrearPerfilPage() {
   }
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-      <header className="cp-topbar">
-        <span className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></span>
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+      <header className="cp-topbar cp-optc cp-optc-hexbg">
+        <span className="cp-logo">
+          <span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} />
+          <span>CINE PACK</span>
+        </span>
         <span className="cp-proj">{t("title")}</span>
         <div className="cp-spacer"></div>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
@@ -152,7 +155,7 @@ export default function CrearPerfilPage() {
                 required
                 value={cargo}
                 onChange={(e) => setCargo(e.target.value)}
-                style={{ padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}
+                className="afield-select"
               >
                 <option value="">{t("selectRole")}</option>
                 {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? []).map((c) => (

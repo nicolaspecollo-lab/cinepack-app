@@ -457,6 +457,12 @@
 .cp-optc .aconsent-required::after{ color:var(--rose); }
 .cp-optc .aconsent a{ color:var(--optc-text); }
 .cp-optc .aconsent a:hover{ color:var(--violet); }
+
+/* Selects planos compartidos por Perfil / Crear perfil / Crear proyecto
+   (país-provincia, cargo) — antes cada página los estilizaba inline. */
+.afield-select-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.afield-select{ flex:1; min-width:160px; padding:10px 12px; border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:4px; font-size:14px; }
+.cp-optc .afield-select{ font-family:var(--optc-font-body); border:1px solid var(--optc-text); background:var(--optc-bg); color:var(--optc-text); border-radius:0; }
 .aforgot:hover{ color:var(--lime); }
 .abtn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--lime); color:#0D0D12;
