@@ -40,7 +40,7 @@ export default function ProyectoInfoCard() {
 
   return (
     <div className="tcard pulso-card cp-creditos-card cp-optc">
-      <h4><span className="hex"></span>{creditos.nombre}</h4>
+      <h4>{creditos.nombre}</h4>
       <dl className="cp-creditos-list">
         {creditos.dirigido_por.length > 0 && (
           <>

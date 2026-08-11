@@ -271,17 +271,16 @@
 .cp-optc .cp-creditos-card{
   background:var(--optc-bg); color:var(--optc-text);
   border:1px solid var(--optc-line); border-radius:0;
-  padding:16px 18px; box-shadow:none; margin-bottom:14px;
+  padding:16px 18px; box-shadow:none; margin-bottom:16px;
 }
 .cp-optc .cp-creditos-card h4{
   font-family:var(--optc-font-display); text-transform:uppercase;
-  letter-spacing:.02em; font-weight:400; font-size:15px; margin:0 0 12px;
-  display:flex; align-items:center; gap:8px;
+  letter-spacing:.02em; font-weight:400; font-size:15px; margin:0 0 2px;
 }
-.cp-optc .cp-creditos-card h4 .hex{ width:11px; height:11px; background:var(--optc-text); flex:none; }
+.cp-optc .cp-creditos-list{ margin-top:6px; }
 .cp-optc .cp-creditos-list dt{
   font-family:var(--optc-font-mono); color:var(--optc-muted);
-  font-size:9.5px; letter-spacing:.06em;
+  font-size:9.5px; letter-spacing:.06em; text-transform:uppercase;
 }
 .cp-optc .cp-creditos-list dd{ font-family:var(--optc-font-body); color:var(--optc-text); font-size:12.5px; }
 
