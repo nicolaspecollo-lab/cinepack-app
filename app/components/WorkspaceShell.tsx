@@ -118,7 +118,7 @@ export default function WorkspaceShell({
     <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar cp-optc cp-optc-hexbg">
         <Link href="/proyectos" className="cp-logo">
-          <span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} />
+          <span className="cp-logo-mark cp-iso" />
           <span>CINE PACK</span>
         </Link>
         <span className="cp-proj">{proyecto}</span>

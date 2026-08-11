@@ -125,7 +125,7 @@ export default function CrearPerfilPage() {
     <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar cp-optc cp-optc-hexbg">
         <span className="cp-logo">
-          <span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} />
+          <span className="cp-logo-mark cp-iso" />
           <span>CINE PACK</span>
         </span>
         <span className="cp-proj">{t("title")}</span>

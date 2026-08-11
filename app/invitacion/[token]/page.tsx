@@ -222,7 +222,7 @@ export default function InvitacionPage() {
         <div className="hexbg"></div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
           <div className="cp-auth-logo">
-            <span className="cp-logo-mark cp-iso" style={{ background: "#14151A", width: 32, height: 32 }} />
+            <span className="cp-logo-mark cp-iso" style={{ width: 32, height: 32 }} />
             <span className="cp-auth-logo-word">CINE PACK</span>
           </div>
 

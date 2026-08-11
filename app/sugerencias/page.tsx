@@ -65,7 +65,7 @@ export default function SugerenciasPage() {
   return (
     <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
       <header className="cp-topbar cp-optc cp-optc-hexbg">
-        <Link href="/proyectos" className="cp-logo"><span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} /><span>CINE PACK</span></Link>
+        <Link href="/proyectos" className="cp-logo"><span className="cp-logo-mark cp-iso" /><span>CINE PACK</span></Link>
         <span className="cp-proj">{t("title")}</span>
         <div className="cp-spacer"></div>
         <Link href="/proyectos" className="cp-menu-btn" style={{ textDecoration: "none" }}>

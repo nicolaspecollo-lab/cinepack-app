@@ -67,7 +67,7 @@ export default function ProyectosPage() {
       <ThemeChooser onChoose={setTheme} />
       <header className="cp-topbar cp-optc cp-optc-hexbg">
         <div className="cp-logo">
-          <span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} />
+          <span className="cp-logo-mark cp-iso" />
           <span>CINE PACK</span>
         </div>
         <span className="cp-proj">{t("selectProject")}</span>

@@ -41,18 +41,30 @@
   --optc-font-display:'Archivo Black','Helvetica Neue',sans-serif;
   --optc-font-body:'Source Serif 4',Georgia,serif;
   --optc-font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+
+  /* Oscuro — DEFAULT. Pedido explícito: la industria del cine trabaja
+     mayormente de noche/en sala, el modo oscuro tiene que ser una
+     alternativa real, no un blanco fijo forzado. */
+  --optc-bg:#14151A;
+  --optc-text:#F4F4F6;
+  --optc-muted:#9a9da4;
+  --optc-line:#33343A;
+  --optc-line-soft:#1F2024;
+  /* Fondo 1 (topbar) y Fondo 2 (todo lo demás) — trazo claro sobre oscuro. */
+  --optc-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23F4F4F6%27%20stroke-opacity%3D%270.06%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
+  --optc-hexbg2-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(244,244,246,0.06)' stroke-width='1.5'/%3E%3C/svg%3E");
+}
+
+/* Claro — .cp-light, mismo mecanismo de toggle que ya tenía el resto
+   de la app (ver useTheme.ts / ThemeToggle). 3 clases, gana siempre
+   sobre .cp-optc solo (1 clase) sin depender del orden del archivo. */
+.cp-dash.cp-light.cp-optc{
   --optc-bg:#FFFFFF;
   --optc-text:#14151A;
   --optc-muted:#5b5e66;
   --optc-line:#E2E2E2;
   --optc-line-soft:#EAEAEA;
-  /* patrón de hexágonos entrelazados — mismo que .cp-optc-hexbg, como
-     variable para poder reusarlo en cabeceras de tarjetas sin repetir
-     el data-uri completo cada vez. */
   --optc-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2314151A%27%20stroke-opacity%3D%270.07%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
-  /* Fondo 2 — hexágonos grandes superpuestos (el que ya vivía detrás de
-     la línea de tiempo de CicloTimeline, recoloreado a negro sutil).
-     Único patrón permitido de acá en más fuera del topbar. */
   --optc-hexbg2-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(20,21,26,0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 
@@ -308,7 +320,7 @@
   font-family:var(--optc-font-display); font-weight:400; font-size:13px;
   letter-spacing:.02em; color:var(--optc-text); gap:8px; text-transform:uppercase;
 }
-.cp-optc .cp-logo-mark{ width:15px; height:15px; flex:none; }
+.cp-optc .cp-logo-mark{ width:15px; height:15px; flex:none; background:var(--optc-text); }
 .cp-optc .cp-proj{ font-family:var(--optc-font-mono); font-size:11px; color:var(--optc-muted); border-left:1px solid var(--optc-line); padding-left:14px; text-transform:uppercase; }
 .cp-optc .cp-topbar-theme-btn{
   width:26px; height:26px; border:1px solid var(--optc-text); background:var(--optc-line-soft);
