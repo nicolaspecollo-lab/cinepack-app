@@ -268,25 +268,12 @@ export default function PerfilPage() {
           <p className="asub">{t("dataDesc")}</p>
 
           <div className="afields-grid">
-            <div className="afield-span2" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div
-                style={{
-                  width: "72px",
-                  height: "72px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  background: "var(--hl3)",
-                  border: "1px solid var(--line)",
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+            <div className="afield-span2 perfil-avatar-row">
+              <div className="perfil-avatar">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt={t("photoAlt")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={avatarUrl} alt={t("photoAlt")} />
                 ) : (
-                  <span className="hex" style={{ width: "24px", height: "20px", background: "var(--lime)" }}></span>
+                  <span className="hex perfil-avatar-hex"></span>
                 )}
               </div>
               <label className="afield" style={{ flex: 1 }}>
@@ -345,12 +332,12 @@ export default function PerfilPage() {
 
             <div className="afield afield-span2">
               <span>{t("roles")}</span>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+              <div className="perfil-cargo-chips">
                 {cargos.length === 0 ? (
-                  <span style={{ fontSize: "13px", color: "var(--muted)" }}>{t("noRolesAssigned")}</span>
+                  <span className="perfil-cargo-empty">{t("noRolesAssigned")}</span>
                 ) : (
                   cargos.map((c) => (
-                    <div key={c} style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--hl3)", padding: "6px 10px", borderRadius: "4px", border: "1px solid var(--line)" }}>
+                    <div key={c} className="perfil-cargo-chip">
                       <span>{c}</span>
                       <button
                         type="button"
@@ -360,7 +347,7 @@ export default function PerfilPage() {
                           await supabase.from("user_roles").delete().eq("user_id", userId).eq("cargo", c);
                           setCargos((prev) => prev.filter((x) => x !== c));
                         }}
-                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--pink)" }}
+                        className="perfil-cargo-del"
                       >
                         ✕
                       </button>
@@ -368,10 +355,10 @@ export default function PerfilPage() {
                   ))
                 )}
               </div>
-              <div style={{ display: "flex", gap: "6px", alignItems: "flex-end" }}>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: "600", letterSpacing: "0.06em", textTransform: "uppercase" }}>{t("addRole")}</span>
-                  <select value={cargoNuevo} onChange={(e) => setCargoNuevo(e.target.value)} style={{ padding: "10px 12px", border: "1px solid var(--line)", background: "var(--bg)", color: "var(--text)", borderRadius: "4px", fontSize: "14px" }}>
+              <div className="perfil-cargo-add-row">
+                <div className="perfil-cargo-add-field">
+                  <span>{t("addRole")}</span>
+                  <select value={cargoNuevo} onChange={(e) => setCargoNuevo(e.target.value)} className="perfil-cargo-select">
                     <option value="">{t("selectRole")}</option>
                     {(JERARQUIA_POR_DEPARTAMENTO[departamento] ?? [])
                       .filter((c) => !cargos.includes(c))
@@ -390,7 +377,7 @@ export default function PerfilPage() {
                     setCargoNuevo("");
                   }}
                   disabled={!cargoNuevo}
-                  style={{ padding: "10px 12px", background: "var(--lime)", color: "var(--bg)", border: "none", borderRadius: "4px", cursor: cargoNuevo ? "pointer" : "default", opacity: cargoNuevo ? 1 : 0.5 }}
+                  className="perfil-cargo-addbtn"
                 >
                   +
                 </button>
