@@ -1529,8 +1529,12 @@
 .cp-optc .cp-acceso-head h4{ font-family:var(--optc-font-mono); color:var(--optc-text); }
 
 .cp-optc .hp-check-bar{ background:var(--optc-line-soft); border-radius:0; }
-.cp-optc .hp-check-bar span{ background:var(--optc-text); border-radius:0; }
-.cp-optc .hp-check-bar.pulso-bar-sm span{ background:var(--violet); }
+/* La barra general de avance del proyecto va en negro (sin color de
+   depto); solo la de "Avance de la etapa: X" queda en violeta —
+   igual que el mockup. Necesita .pulso-bar en el selector para ganarle
+   en especificidad a la regla vieja que usa var(--acc). */
+.cp-optc .hp-check-bar.pulso-bar span{ background:var(--optc-text); border-radius:0; }
+.cp-optc .hp-check-bar.pulso-bar.pulso-bar-sm span{ background:var(--violet); }
 .cp-optc .pulso-bar-label{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-size:9.5px; }
 
 .cp-optc .cp-pulso-mini-stat b{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
