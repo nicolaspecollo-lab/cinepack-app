@@ -303,7 +303,7 @@ export default function NuevoProyectoPage() {
 
   if (checking || !isAdmin) {
     return (
-      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+      <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
         <div className="soon-box" style={{ margin: "24px 30px" }}>
           <span className="hex"></span>
           <h4>{t("checkingAccess")}</h4>
@@ -314,9 +314,9 @@ export default function NuevoProyectoPage() {
 
   if (invites !== null) {
     return (
-      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-        <header className="cp-topbar">
-          <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
+      <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+        <header className="cp-topbar cp-optc cp-optc-hexbg">
+          <Link href="/proyectos" className="cp-logo"><span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} /><span>CINE PACK</span></Link>
           <span className="cp-proj">{t("projectCreated")}</span>
           <div className="cp-spacer"></div>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
@@ -410,9 +410,9 @@ export default function NuevoProyectoPage() {
   if (requierePago && !gateResuelto) {
     const packs = TIPOS_PROYECTO;
     return (
-      <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-        <header className="cp-topbar">
-          <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
+      <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+        <header className="cp-topbar cp-optc cp-optc-hexbg">
+          <Link href="/proyectos" className="cp-logo"><span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} /><span>CINE PACK</span></Link>
           <span className="cp-proj">{t("newProject")}</span>
           <div className="cp-spacer"></div>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
@@ -489,9 +489,9 @@ export default function NuevoProyectoPage() {
   }
 
   return (
-    <div className={`cp-dash ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
-      <header className="cp-topbar">
-        <Link href="/proyectos" className="cp-logo"><img src={theme === "light" ? "/logo-cp-light.png" : "/logo-cp-dark.png"} alt="CINE PACK" /></Link>
+    <div className={`cp-dash cp-optc ${theme === "light" ? "cp-light" : ""}`} style={{ flex: 1 }}>
+      <header className="cp-topbar cp-optc cp-optc-hexbg">
+        <Link href="/proyectos" className="cp-logo"><span className="cp-logo-mark cp-iso" style={{ background: "#14151A" }} /><span>CINE PACK</span></Link>
         <span className="cp-proj">{t("newProject")}</span>
         <div className="cp-spacer"></div>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />

@@ -399,6 +399,35 @@
   font-family:var(--optc-font-mono); text-transform:uppercase;
 }
 .cp-optc .perfil-cargo-addbtn:not(:disabled):hover{ background:#C98AF2; border-color:#C98AF2; }
+
+/* Crear proyecto */
+.cp-optc .cp-hero-content .eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-hero-content .eyebrow .hex{ background:var(--optc-text); }
+.cp-optc .cp-hero-content h2{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
+.cp-optc .cp-hero-content p{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cp-np-block > span.label{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
+.cp-optc .cp-onboarding-list{ border-color:var(--optc-text); }
+.cp-optc .cp-onboarding-item{ background:var(--optc-bg); border-bottom-color:var(--optc-line-soft); }
+.cp-optc .cp-onboarding-item .hex{ background:var(--optc-text); }
+.cp-optc .cp-onboarding-item b{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cp-onboarding-item p{ font-family:var(--optc-font-body); color:var(--optc-muted); }
+.cp-optc .cp-deptcard{ font-family:var(--optc-font-body); border:1px solid var(--optc-text); background:var(--optc-bg); border-radius:0; }
+.cp-optc .cp-deptcard .hex{ background:currentColor; }
+.cp-optc .cp-deptcustom input{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .cp-deptteam{ border:1px solid var(--optc-line); }
+.cp-optc .cp-deptteam h4{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
+.cp-optc .cp-deptteam h4 .hex{ background:currentColor; }
+.cp-optc .cp-personarow input{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .cp-select select{ font-family:var(--optc-font-body); background:var(--optc-bg); border:1px solid var(--optc-text); color:var(--optc-text); }
+.cp-optc .cp-select-arrow{ color:var(--optc-muted); }
+.cp-optc .cp-removebtn{ font-family:var(--optc-font-mono); border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); text-transform:uppercase; }
+.cp-optc .cp-removebtn:hover{ background:var(--rose); border-color:var(--rose); color:var(--optc-text); }
+.cp-optc .cp-email-wrap input{ font-family:var(--optc-font-body); }
+.cp-optc .cp-email-hint{ font-family:var(--optc-font-mono); }
+.cp-optc .cp-team-list{ border-color:var(--optc-text); }
+.cp-optc .cp-team-row{ background:var(--optc-bg); border-bottom-color:var(--optc-line-soft); }
+.cp-optc .cp-team-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
+.cp-optc .cp-team-cargo{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .aforgot:hover{ color:var(--lime); }
 .abtn{
   display:inline-flex; align-items:center; justify-content:center; gap:8px; background:var(--lime); color:#0D0D12;
