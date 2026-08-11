@@ -5219,7 +5219,7 @@
   background:var(--optc-bg); border:1px solid var(--optc-text);
   padding:16px 18px 0;
 }
-.cp-optc .ct-rail{ background-image:none; }
+.cp-optc .ct-rail{ background-image:var(--optc-hexbg2-img); background-size:120px 104px; background-repeat:repeat; }
 .cp-optc .ct-track{ background:none; }
 .cp-optc .ct-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
 .cp-optc .ct-eyebrow .hex{ background:var(--optc-text); }
@@ -5252,7 +5252,7 @@
    OPCIÓN C — CalendarioProyecto
 =================================================================== */
 .cp-optc .cal-wrap{ background:var(--optc-bg); border:1px solid var(--optc-text); }
-.cp-optc .cal-head{ background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; background-repeat:repeat; margin:-16px -18px 4px; padding:16px 18px 8px; }
+.cp-optc .cal-head{ background-image:var(--optc-hexbg2-img); background-size:120px 104px; background-repeat:repeat; margin:-16px -18px 4px; padding:16px 18px 8px; }
 .cp-optc .cal-title{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); }
 .cp-optc .cal-title .hex{ background:var(--optc-text); }
 .cp-optc .cal-navbtn{ border:1px solid var(--optc-text); color:var(--optc-text); background:var(--optc-line-soft); border-radius:0; transition:background .12s,color .12s; }
@@ -5360,7 +5360,7 @@
 =================================================================== */
 .cp-optc.dsr-overlay{ background:rgba(20,21,26,.5); }
 .cp-optc .dsr-panel{ background:var(--optc-bg); border:1px solid var(--optc-line); border-top:3px solid var(--optc-text); box-shadow:0 30px 80px rgba(20,21,26,.25); }
-.cp-optc .dsr-top{ border-bottom:1px solid var(--optc-line); background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; background-repeat:repeat; }
+.cp-optc .dsr-top{ border-bottom:1px solid var(--optc-line); background-image:var(--optc-hexbg2-img); background-size:120px 104px; background-repeat:repeat; }
 .cp-optc .dsr-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; letter-spacing:.1em; }
 .cp-optc .dsr-close{ border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text); border-radius:0; }
 .cp-optc .dsr-close:hover{ background:var(--violet); border-color:var(--violet); }

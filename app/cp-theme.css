@@ -44,6 +44,10 @@
      variable para poder reusarlo en cabeceras de tarjetas sin repetir
      el data-uri completo cada vez. */
   --optc-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2314151A%27%20stroke-opacity%3D%270.07%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
+  /* Fondo 2 — hexágonos grandes superpuestos (el que ya vivía detrás de
+     la línea de tiempo de CicloTimeline, recoloreado a negro sutil).
+     Único patrón permitido de acá en más fuera del topbar. */
+  --optc-hexbg2-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(20,21,26,0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
 }
 
 /* ===================================================================
@@ -763,7 +767,8 @@
 }
 .cp-optc .abtn:hover{ background:#C98AF2; border-color:#C98AF2; }
 
-.cp-optc .hexbg{ background-image:var(--optc-hexbg-img); background-size:45px 34.2946px; }
+.cp-dash.cp-optc .hexbg,
+.cp-dash.cp-light.cp-optc .hexbg{ background-image:var(--optc-hexbg2-img) !important; background-size:120px 104px !important; }
 .cp-optc .cp-auth-logo .eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .cp-auth-logo .eyebrow .hex{ background:var(--optc-text); }
 .cp-optc .cp-auth-logo h1{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
