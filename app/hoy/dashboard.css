@@ -273,9 +273,10 @@
   border:1px solid var(--optc-line); border-radius:0;
   padding:16px 18px; box-shadow:none; margin-bottom:16px;
 }
-.cp-optc .cp-creditos-card h4{
+.cp-optc .tcard.cp-creditos-card h4{
   font-family:var(--optc-font-display); text-transform:uppercase;
   letter-spacing:.02em; font-weight:400; font-size:15px; margin:0 0 2px;
+  color:var(--optc-text);
 }
 .cp-optc .cp-creditos-list{ margin-top:6px; }
 .cp-optc .cp-creditos-list dt{
