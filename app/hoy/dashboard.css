@@ -5219,8 +5219,8 @@
   background:var(--optc-bg); border:1px solid var(--optc-text);
   padding:16px 18px 0;
 }
-.cp-dash.cp-optc .ct-rail,
-.cp-dash.cp-light.cp-optc .ct-rail{ background-image:var(--optc-hexbg2-img) !important; background-size:120px 104px !important; background-repeat:repeat; }
+.cp-optc .ct-rail,
+.cp-optc.ct-rail{ background-image:var(--optc-hexbg2-img) !important; background-size:120px 104px !important; background-repeat:repeat; }
 .cp-optc .ct-track{ background:none; }
 .cp-optc .ct-eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); font-weight:600; }
 .cp-optc .ct-eyebrow .hex{ background:var(--optc-text); }

@@ -56,9 +56,17 @@
 }
 
 /* Claro — .cp-light, mismo mecanismo de toggle que ya tenía el resto
-   de la app (ver useTheme.ts / ThemeToggle). 3 clases, gana siempre
-   sobre .cp-optc solo (1 clase) sin depender del orden del archivo. */
-.cp-dash.cp-light.cp-optc{
+   de la app (ver useTheme.ts / ThemeToggle). Dos formas reales en el
+   código: páginas sueltas (login, perfil...) tienen .cp-dash, .cp-light
+   Y .cp-optc en el MISMO div raíz → hace falta el selector compuesto.
+   El workspace con pestañas (WorkspaceShell) tiene .cp-light en la
+   raíz pero .cp-optc recién en el topbar/cada tpanel, ADENTRO → hace
+   falta el selector descendiente. Un compuesto solo NUNCA matchea el
+   segundo caso (exige las 3 clases en un único elemento) — bug real
+   que dejaba Pulso y el resto del workspace sin reaccionar al toggle
+   de tema, aunque sí funcionaba en las páginas sueltas. */
+.cp-dash.cp-light.cp-optc,
+.cp-dash.cp-light .cp-optc{
   --optc-bg:#FFFFFF;
   --optc-text:#14151A;
   --optc-muted:#5b5e66;
@@ -796,8 +804,8 @@
 }
 .cp-optc .abtn:hover{ background:#C98AF2; border-color:#C98AF2; }
 
-.cp-dash.cp-optc .hexbg,
-.cp-dash.cp-light.cp-optc .hexbg{ background-image:var(--optc-hexbg2-img) !important; background-size:120px 104px !important; }
+.cp-optc .hexbg,
+.cp-optc.hexbg{ background-image:var(--optc-hexbg2-img) !important; background-size:120px 104px !important; }
 .cp-optc .cp-auth-logo .eyebrow{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .cp-auth-logo .eyebrow .hex{ background:var(--optc-text); }
 .cp-optc .cp-auth-logo h1{ font-family:var(--optc-font-display); font-weight:400; color:var(--optc-text); text-transform:uppercase; }
