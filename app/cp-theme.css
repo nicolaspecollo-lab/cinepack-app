@@ -50,9 +50,21 @@
   --optc-muted:#9a9da4;
   --optc-line:#33343A;
   --optc-line-soft:#1F2024;
+  /* Topbar invertido respecto al resto de la app (pedido explícito, mismo
+     efecto que gustó en la demo web: chrome oscuro sobre suite clara, o
+     viceversa). Se recalculan en cada bloque de tema para que sigan
+     siendo siempre lo opuesto al fondo del momento. */
+  --optc-topbar-bg:#FFFFFF;
+  --optc-topbar-text:#14151A;
+  --optc-topbar-muted:#5b5e66;
+  --optc-topbar-line:#E2E2E2;
+  --optc-topbar-line-soft:#EAEAEA;
   /* Fondo 1 (topbar) y Fondo 2 (todo lo demás) — trazo claro sobre oscuro. */
   --optc-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23F4F4F6%27%20stroke-opacity%3D%270.06%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
   --optc-hexbg2-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(244,244,246,0.06)' stroke-width='1.5'/%3E%3C/svg%3E");
+  /* Trazo oscuro: es el mismo patrón de --optc-hexbg-img pero para el
+     topbar invertido (fondo claro en este modo oscuro). */
+  --optc-topbar-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2314151A%27%20stroke-opacity%3D%270.07%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Claro — .cp-light, mismo mecanismo de toggle que ya tenía el resto
@@ -72,8 +84,16 @@
   --optc-muted:#5b5e66;
   --optc-line:#E2E2E2;
   --optc-line-soft:#EAEAEA;
+  --optc-topbar-bg:#14151A;
+  --optc-topbar-text:#F4F4F6;
+  --optc-topbar-muted:#9a9da4;
+  --optc-topbar-line:#33343A;
+  --optc-topbar-line-soft:#1F2024;
   --optc-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%2314151A%27%20stroke-opacity%3D%270.07%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
   --optc-hexbg2-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'%3E%3Cpolygon points='30,0 90,0 120,52 90,104 30,104 0,52' fill='none' stroke='rgba(20,21,26,0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
+  /* Trazo claro: mismo patrón que --optc-hexbg-img del modo oscuro, para
+     el topbar invertido (fondo oscuro en este modo claro). */
+  --optc-topbar-hexbg-img:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2745%27%20height%3D%2734.2946%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23F4F4F6%27%20stroke-opacity%3D%270.06%27%20stroke-width%3D%271%27%3E%3Cpolygon%20points%3D%277.50%2C17.15%2015.00%2C0.00%200.00%2C0.00%200.00%2C17.15%27/%3E%3Cpolygon%20points%3D%277.50%2C17.15%200.00%2C17.15%200.00%2C34.29%2015.00%2C34.29%27/%3E%3Cpolygon%20points%3D%2715.00%2C34.29%2030.00%2C34.29%2037.50%2C17.15%2030.00%2C0.00%2015.00%2C0.00%207.50%2C17.15%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2045.00%2C17.15%2045.00%2C0.00%2030.00%2C0.00%27/%3E%3Cpolygon%20points%3D%2737.50%2C17.15%2030.00%2C34.29%2045.00%2C34.29%2045.00%2C17.15%27/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* ===================================================================
@@ -96,7 +116,9 @@
 .cp-optc input[type="radio"]{ accent-color:var(--violet); }
 
 .cp-optc-hexbg{
-  background-image:var(--optc-hexbg-img);
+  /* Se usa siempre sobre .cp-topbar (ver AdminShell, WorkspaceShell, etc.),
+     así que toma el patrón invertido del topbar, no el del fondo general. */
+  background-image:var(--optc-topbar-hexbg-img);
   background-size:45px 34.2946px;
   background-repeat:repeat;
 }
@@ -321,30 +343,30 @@
    dentro de cada workspace: wtabs, tarjetas, etc).
 =================================================================== */
 .cp-optc.cp-topbar{
-  background-color:var(--optc-bg); border-bottom:2px solid var(--optc-text);
+  background-color:var(--optc-topbar-bg); border-bottom:2px solid var(--optc-topbar-text);
   padding:12px 22px; gap:14px;
 }
 .cp-optc .cp-logo{
   font-family:var(--optc-font-display); font-weight:400; font-size:13px;
-  letter-spacing:.02em; color:var(--optc-text); gap:8px; text-transform:uppercase;
+  letter-spacing:.02em; color:var(--optc-topbar-text); gap:4px; text-transform:uppercase;
 }
-.cp-optc .cp-logo-mark{ width:15px; height:15px; flex:none; background:var(--optc-text); }
-.cp-optc .cp-proj{ font-family:var(--optc-font-mono); font-size:11px; color:var(--optc-muted); border-left:1px solid var(--optc-line); padding-left:14px; text-transform:uppercase; }
+.cp-optc .cp-logo-mark{ width:15px; height:15px; flex:none; background:var(--optc-topbar-text); }
+.cp-optc .cp-proj{ font-family:var(--optc-font-mono); font-size:11px; color:var(--optc-topbar-muted); border-left:1px solid var(--optc-topbar-line); padding-left:14px; text-transform:uppercase; }
 .cp-optc .cp-topbar-theme-btn{
-  width:26px; height:26px; border:1px solid var(--optc-text); background:var(--optc-line-soft);
-  color:var(--optc-text); border-radius:0; font-size:11px; transition:background .12s,color .12s;
+  width:26px; height:26px; border:1px solid var(--optc-topbar-text); background:var(--optc-topbar-line-soft);
+  color:var(--optc-topbar-text); border-radius:0; font-size:11px; transition:background .12s,color .12s;
 }
 .cp-optc .cp-topbar-theme-btn:hover,
-.cp-optc .cp-topbar-theme-btn:focus-visible{ background:#C98AF2; color:var(--optc-text); }
+.cp-optc .cp-topbar-theme-btn:focus-visible{ background:#C98AF2; color:var(--optc-topbar-text); }
 .cp-optc .cp-topbar-actions{ gap:10px; }
 .cp-optc .cp-topbar-secondary{ gap:10px; }
 .cp-optc .cp-menu-btn{
-  border:1px solid var(--optc-text); background:var(--optc-line-soft); color:var(--optc-text);
+  border:1px solid var(--optc-topbar-text); background:var(--optc-topbar-line-soft); color:var(--optc-topbar-text);
   font-family:var(--optc-font-mono); font-weight:500; font-size:9.5px; letter-spacing:.06em;
   text-transform:uppercase; padding:5px 10px; gap:6px; transition:background .12s,color .12s;
 }
 .cp-optc .cp-menu-btn:hover,
-.cp-optc .cp-menu-btn:focus-visible{ background:#C98AF2; color:var(--optc-text); }
+.cp-optc .cp-menu-btn:focus-visible{ background:#C98AF2; color:var(--optc-topbar-text); }
 .cp-optc .cp-menu-btn .hex{ background:currentColor; width:9px; height:9px; }
 .cp-optc .cp-menu-drop{ background:var(--optc-bg); border:1px solid var(--optc-line); border-top:1px solid var(--optc-line); box-shadow:0 24px 60px rgba(20,21,26,.14); border-radius:0; }
 .cp-optc .cp-menu-section{ font-family:var(--optc-font-mono); color:#C98AF2; border-bottom:1px solid var(--optc-line-soft); }
