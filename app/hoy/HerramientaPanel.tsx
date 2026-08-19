@@ -171,6 +171,17 @@ export default function HerramientaPanel({
 // trabajo" aparte para armar la que quiera. Antes esto se mantenía a mano
 // en una lista (SIN_VISTA_TABLA_IDS); ahora se deriva directo de si existe
 // tablero, así no hay que acordarse de sumar cada id nuevo a dos lugares.
+//
+// Excepción puntual (06-ago-2026, reporte real de un colaborador: "me perdí
+// en Plan de financiación, ya no veo la manera de verlo en lista"). El
+// kanban por estado (FinanciacionPipeline) es la vista principal correcta,
+// pero esta herramienta tiene 10 columnas por fila (fuente, organismo,
+// importe, 2 fechas, condiciones, documento) y varias filas activas a la
+// vez — un productor gestionando varias ayudas/inversores necesita poder
+// escanearlas todas de un vistazo, algo que el kanban con tarjetas
+// condensadas no resuelve bien. Se le devuelve la Tabla como excepción
+// explícita, no una vuelta atrás de la regla general.
+const TABLA_ALTERNATIVA_FORZADA_IDS = new Set(["ej-plan-financiacion"]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
 // TablaTool genérico. Centralizado acá para no arrastrar una cadena de
@@ -594,7 +605,7 @@ function HerramientaData({
   const extraCampos: Columna[] = filas[0]?.datos?._extra ? JSON.parse(filas[0].datos._extra) : [];
   const esTabla = herramienta.tipo === "tabla";
   const tieneTablero = esTabla && tablaTieneVistaBespoke(herramienta.id);
-  const tieneVistaTabla = !tieneTablero;
+  const tieneVistaTabla = !tieneTablero || TABLA_ALTERNATIVA_FORZADA_IDS.has(herramienta.id);
 
   return (
     <div className="hp">
