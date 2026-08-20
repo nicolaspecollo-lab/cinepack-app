@@ -48,6 +48,7 @@ export default function AdminPanel() {
   const [dirigidoPor, setDirigidoPor] = useState<string[]>([]);
   const [producidoPor, setProducidoPor] = useState<string[]>([]);
   const [tituloInternacional, setTituloInternacional] = useState("");
+  const [genero, setGenero] = useState("");
   const [savingCreditos, setSavingCreditos] = useState(false);
   const [creditosMsg, setCreditosMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -88,17 +89,29 @@ export default function AdminPanel() {
       setFechasCiclo(fechasCicloDesdeFila(proyecto));
     }
 
-    const { data: proyectoExtra } = await supabase
+    // "genero" es una columna nueva (migración 20260813000000) — si todavía
+    // no se corrió en este entorno, se reintenta sin ella para no romper el
+    // resto del panel (créditos, departamentos) mientras tanto.
+    let { data: proyectoExtra } = await supabase
       .from("proyectos")
-      .select("departamentos, escrito_por, dirigido_por, producido_por, titulo_internacional")
+      .select("departamentos, escrito_por, dirigido_por, producido_por, titulo_internacional, genero")
       .eq("id", projectId)
       .single();
+    if (!proyectoExtra) {
+      const fallback = await supabase
+        .from("proyectos")
+        .select("departamentos, escrito_por, dirigido_por, producido_por, titulo_internacional")
+        .eq("id", projectId)
+        .single();
+      proyectoExtra = fallback.data as typeof proyectoExtra;
+    }
     if (proyectoExtra) {
       setDepartamentosProyecto(proyectoExtra.departamentos ?? []);
       setEscritoPor((proyectoExtra.escrito_por as string[]) ?? []);
       setDirigidoPor((proyectoExtra.dirigido_por as string[]) ?? []);
       setProducidoPor((proyectoExtra.producido_por as string[]) ?? []);
       setTituloInternacional((proyectoExtra.titulo_internacional as string | null) ?? "");
+      setGenero(((proyectoExtra as { genero?: string | null }).genero) ?? "");
     }
 
     const { data: members } = await supabase
@@ -193,10 +206,19 @@ export default function AdminPanel() {
     setSavingCreditos(true);
     setCreditosMsg(null);
     const supabase = createClient();
-    const { error } = await supabase
+    let { error } = await supabase
       .from("proyectos")
-      .update({ escrito_por: escritoPor, dirigido_por: dirigidoPor, producido_por: producidoPor, titulo_internacional: tituloInternacional.trim() || null })
+      .update({ escrito_por: escritoPor, dirigido_por: dirigidoPor, producido_por: producidoPor, titulo_internacional: tituloInternacional.trim() || null, genero: genero.trim() || null })
       .eq("id", proyectoId);
+    if (error) {
+      // Reintento sin "genero" por si la migración 20260813000000 todavía
+      // no se corrió en este entorno — no debe bloquear el resto de los créditos.
+      const retry = await supabase
+        .from("proyectos")
+        .update({ escrito_por: escritoPor, dirigido_por: dirigidoPor, producido_por: producidoPor, titulo_internacional: tituloInternacional.trim() || null })
+        .eq("id", proyectoId);
+      error = retry.error;
+    }
     setSavingCreditos(false);
     if (error) {
       setCreditosMsg({ type: "err", text: error.message });
@@ -377,6 +399,10 @@ export default function AdminPanel() {
           <label className="afield" style={{ maxWidth: "420px", marginBottom: "12px" }}>
             <span>{t("internationalTitle")}</span>
             <input type="text" value={tituloInternacional} onChange={(e) => setTituloInternacional(e.target.value)} placeholder={t("internationalTitlePh")} />
+          </label>
+          <label className="afield" style={{ maxWidth: "420px", marginBottom: "12px" }}>
+            <span>{t("genre")}</span>
+            <input type="text" value={genero} onChange={(e) => setGenero(e.target.value)} placeholder={t("genrePh")} />
           </label>
           <CreditosChips label={t("writtenBy")} placeholder={t("writtenByPh")} valores={escritoPor} onChange={setEscritoPor} addLabel={t("addCredit")} />
           <CreditosChips label={t("directedBy")} placeholder={t("directedByPh")} valores={dirigidoPor} onChange={setDirigidoPor} addLabel={t("addCredit")} />

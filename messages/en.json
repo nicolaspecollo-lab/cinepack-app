@@ -1344,6 +1344,8 @@
     "creditsDesc": "Shown in the Pulse, visible to the whole team.",
     "internationalTitle": "International title",
     "internationalTitlePh": "E.g. High Tide",
+    "genre": "Genre",
+    "genrePh": "E.g. Drama",
     "writtenBy": "Written by",
     "writtenByPh": "Writer's name",
     "directedBy": "Directed by",

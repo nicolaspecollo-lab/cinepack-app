@@ -181,7 +181,11 @@ export default function HerramientaPanel({
 // escanearlas todas de un vistazo, algo que el kanban con tarjetas
 // condensadas no resuelve bien. Se le devuelve la Tabla como excepción
 // explícita, no una vuelta atrás de la regla general.
-const TABLA_ALTERNATIVA_FORZADA_IDS = new Set(["ej-plan-financiacion"]);
+// Presupuesto (06-ago-2026): mismo criterio — 16 columnas por línea de
+// gasto, Nicolás pidió explícitamente poder entrar a la Tabla genérica para
+// usar sus funciones clásicas (agregar columnas propias, colores de celda y
+// de texto) sobre el mismo dato del tablero, sin que sean dos fuentes.
+const TABLA_ALTERNATIVA_FORZADA_IDS = new Set(["ej-plan-financiacion", "ej-presupuesto-costos"]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
 // TablaTool genérico. Centralizado acá para no arrastrar una cadena de
@@ -3862,24 +3866,123 @@ function pcDescargarBlob(nombreArchivo: string, blob: Blob) {
   URL.revokeObjectURL(url);
 }
 
+// ---- Datos fijos del proyecto + isotipo, para el encabezado de TODO
+// ---- exportable (no solo Presupuesto) — pedido explícito: nunca mencionar
+// "CINE PACK" por nombre en el documento en sí, solo el isotipo como sello
+// de agua sutil. El isotipo (public/iso-cinepack.png) ya es blanco sobre
+// transparente, pensado para fondos oscuros — funciona igual como marca de
+// agua clara sobre un PDF blanco si se le baja la opacidad.
+type DatosProyectoExport = {
+  nombre: string;
+  tipoGenero: string;
+  productores: string;
+  director: string;
+  autores: string;
+};
+async function pcCargarDatosProyecto(): Promise<DatosProyectoExport> {
+  const projectId = localStorage.getItem("cinepack-proyecto-id");
+  const vacio: DatosProyectoExport = { nombre: "", tipoGenero: "", productores: "", director: "", autores: "" };
+  if (!projectId) return vacio;
+  const supabase = createClient();
+  // "genero" es columna nueva (migración 20260813000000); si todavía no se
+  // corrió acá, se reintenta sin ella para no romper el export entero.
+  let { data } = await supabase
+    .from("proyectos")
+    .select("nombre, tipo, genero, escrito_por, dirigido_por, producido_por")
+    .eq("id", projectId)
+    .single();
+  if (!data) {
+    const fallback = await supabase
+      .from("proyectos")
+      .select("nombre, tipo, escrito_por, dirigido_por, producido_por")
+      .eq("id", projectId)
+      .single();
+    data = fallback.data as typeof data;
+  }
+  if (!data) return vacio;
+  const tipoGenero = [data.tipo, (data as { genero?: string | null }).genero].filter(Boolean).join(" - ");
+  return {
+    nombre: data.nombre ?? "",
+    tipoGenero,
+    productores: ((data.producido_por as string[]) ?? []).join(", "),
+    director: ((data.dirigido_por as string[]) ?? []).join(", "),
+    autores: ((data.escrito_por as string[]) ?? []).join(", "),
+  };
+}
+let pcIsotipoCache: string | null = null;
+async function pcCargarIsotipoBase64(): Promise<string | null> {
+  if (pcIsotipoCache) return pcIsotipoCache;
+  try {
+    const res = await fetch("/iso-cinepack.png");
+    const blob = await res.blob();
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    pcIsotipoCache = base64;
+    return base64;
+  } catch {
+    return null;
+  }
+}
+
 // Resumen por capítulo en PDF — lo que se presenta a un fondo, no la tabla
 // completa (esa va en el Excel). Mismo criterio que la hoja RESUMEN del
-// Modelo 3a: un capítulo por línea, con su total.
+// Modelo 3a: un capítulo por línea, con su total. Encabezado con los datos
+// fijos del proyecto + isotipo como sello de agua en la esquina.
 async function exportarPresupuestoPDF(filas: Fila[]) {
-  const { default: jsPDF } = await import("jspdf");
+  const [{ default: jsPDF }, datos, isotipo] = await Promise.all([
+    import("jspdf"), pcCargarDatosProyecto(), pcCargarIsotipoBase64(),
+  ]);
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const marginLeft = 20, marginRight = 190, pageBottom = 280;
-  let y = 25;
 
+  function marcaDeAgua() {
+    if (!isotipo) return;
+    const withGState = doc as unknown as { setGState: (g: unknown) => void; GState: new (o: object) => unknown };
+    if (typeof withGState.setGState === "function") {
+      withGState.setGState(new withGState.GState({ opacity: 0.06 }));
+    }
+    doc.addImage(isotipo, "PNG", 130, 230, 60, 60);
+    if (typeof withGState.setGState === "function") {
+      withGState.setGState(new withGState.GState({ opacity: 1 }));
+    }
+  }
+  function encabezadoProyecto(): number {
+    let yy = 20;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(datos.nombre || "Presupuesto", marginLeft, yy);
+    yy += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(110);
+    const lineas = [
+      datos.tipoGenero,
+      datos.director && `Dirección: ${datos.director}`,
+      datos.autores && `Guion: ${datos.autores}`,
+      datos.productores && `Producción: ${datos.productores}`,
+    ].filter(Boolean) as string[];
+    for (const l of lineas) { doc.text(l, marginLeft, yy); yy += 4.5; }
+    doc.setTextColor(0);
+    doc.setDrawColor(210);
+    doc.line(marginLeft, yy + 2, marginRight, yy + 2);
+    return yy + 10;
+  }
+
+  marcaDeAgua();
+  let y = encabezadoProyecto();
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
+  doc.setFontSize(13);
   doc.text("Presupuesto — resumen por capítulo", marginLeft, y);
-  y += 12;
+  y += 10;
 
   const porCapitulo = pcRollupPor(filas, "capitulo");
   doc.setFontSize(10);
   for (const [nombre, g] of porCapitulo) {
-    if (y > pageBottom) { doc.addPage(); y = 25; }
+    if (y > pageBottom) { doc.addPage(); marcaDeAgua(); y = 25; }
     doc.setFont("helvetica", "bold");
     doc.text(nombre, marginLeft, y);
     doc.text(ejMoney(g.total), marginRight, y, { align: "right" });
@@ -3902,49 +4005,92 @@ async function exportarPresupuestoPDF(filas: Fila[]) {
   doc.text("Coste total", marginLeft, y);
   doc.text(ejMoney(costeTotal), marginRight, y, { align: "right" });
 
-  doc.save("presupuesto-resumen.pdf");
+  const slug = (datos.nombre || "presupuesto").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
+  doc.save(`${slug}-presupuesto-resumen.pdf`);
 }
 
 // Tabla completa en Excel, fila por fila, con fórmulas SUMA reales
 // integradas al resumen por capítulo — si se edita una línea en el Excel
 // descargado, el total del capítulo y el gran total se recalculan solos.
+// Encabezado con los datos fijos del proyecto + isotipo en la esquina.
 async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
-  const ExcelJS = (await import("exceljs")).default;
+  const [ExcelJSMod, datos, isotipo] = await Promise.all([
+    import("exceljs"), pcCargarDatosProyecto(), pcCargarIsotipoBase64(),
+  ]);
+  const ExcelJS = ExcelJSMod.default;
   const wb = new ExcelJS.Workbook();
+  let imageId: number | null = null;
+  if (isotipo) {
+    imageId = wb.addImage({ base64: isotipo, extension: "png" });
+  }
+
+  // Devuelve la próxima fila libre después del bloque de encabezado — así
+  // el resto de la hoja no depende de un offset fijo (la cantidad de
+  // líneas de encabezado varía según qué datos del proyecto están cargados).
+  function ponerEncabezado(ws: InstanceType<typeof ExcelJS.Workbook>["worksheets"][number], colFinal: string): number {
+    ws.mergeCells(`A1:${colFinal}1`);
+    ws.getCell("A1").value = datos.nombre || "Presupuesto";
+    ws.getCell("A1").font = { bold: true, size: 14 };
+    const lineas = [
+      datos.tipoGenero,
+      datos.director && `Dirección: ${datos.director}`,
+      datos.autores && `Guion: ${datos.autores}`,
+      datos.productores && `Producción: ${datos.productores}`,
+    ].filter(Boolean) as string[];
+    lineas.forEach((l, i) => {
+      const fila = 2 + i;
+      ws.mergeCells(`A${fila}:${colFinal}${fila}`);
+      ws.getCell(`A${fila}`).value = l;
+      ws.getCell(`A${fila}`).font = { color: { argb: "FF6B6B6B" }, size: 9 };
+    });
+    if (imageId !== null) {
+      ws.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 70, height: 70 }, editAs: "oneCell" });
+    }
+    return 2 + lineas.length + 1; // fila en blanco después del bloque
+  }
 
   const detalle = wb.addWorksheet("Detalle");
+  const filaDespuesEncabezadoDetalle = ponerEncabezado(detalle, "N");
   const cabeceras = ["Capítulo", "Subgrupo", "Concepto", "Departamento", "Cargo", "Etapa", "Tipo de gasto", "Base sin IVA", "IVA", "Total", "Comprometido", "Real", "Responsable", "Comentario"];
-  detalle.addRow(cabeceras);
-  detalle.getRow(1).font = { bold: true };
+  detalle.getRow(filaDespuesEncabezadoDetalle).values = cabeceras;
+  detalle.getRow(filaDespuesEncabezadoDetalle).font = { bold: true };
 
   const filasOrdenadas = [...filas].sort((a, b) => (a.datos?.capitulo ?? "").localeCompare(b.datos?.capitulo ?? ""));
-  filasOrdenadas.forEach((f) => {
+  const filaDetalleIni = filaDespuesEncabezadoDetalle + 1;
+  filasOrdenadas.forEach((f, i) => {
     const d = f.datos ?? {};
-    detalle.addRow([
+    detalle.getRow(filaDetalleIni + i).values = [
       d.capitulo ?? "", d.subgrupo ?? "", d.concepto ?? "", d.departamento ?? "", d.cargo ?? "", d.etapa ?? "",
       d.tipo_gasto ?? "", ejNum(d.base_sin_iva) || null, ejNum(d.iva) || null, ejNum(d.total) || 0,
       ejNum(d.comprometido) || null, ejNum(d.real) || null, d.responsable ?? "", d.comentario ?? "",
-    ]);
+    ];
   });
   detalle.columns.forEach((c) => { c.width = 18; });
   detalle.getColumn(3).width = 34;
   detalle.getColumn(14).width = 34;
 
   const resumen = wb.addWorksheet("Resumen por capítulo");
-  resumen.addRow(["Capítulo", "Total"]).font = { bold: true };
+  const filaDespuesEncabezadoResumen = ponerEncabezado(resumen, "B");
+  resumen.getRow(filaDespuesEncabezadoResumen).values = ["Capítulo", "Total"];
+  resumen.getRow(filaDespuesEncabezadoResumen).font = { bold: true };
   const nFilas = filasOrdenadas.length;
+  const filaCapInicio = filaDespuesEncabezadoResumen + 1;
   CAPITULOS_PRESUPUESTO_EXPORT.forEach((cap, i) => {
     // SUMIF sobre la hoja Detalle: se recalcula solo si se edita una fila.
-    const formula = `SUMIF(Detalle!A2:A${nFilas + 1},A${i + 2},Detalle!J2:J${nFilas + 1})`;
-    resumen.addRow([cap, { formula }]);
+    const formula = nFilas > 0
+      ? `SUMIF(Detalle!A${filaDetalleIni}:A${filaDetalleIni + nFilas - 1},A${filaCapInicio + i},Detalle!J${filaDetalleIni}:J${filaDetalleIni + nFilas - 1})`
+      : "0";
+    resumen.getRow(filaCapInicio + i).values = [cap, { formula }];
   });
-  const filaTotal = CAPITULOS_PRESUPUESTO_EXPORT.length + 2;
-  resumen.addRow(["Coste total", { formula: `SUM(B2:B${filaTotal - 1})` }]).font = { bold: true };
+  const filaTotal = filaCapInicio + CAPITULOS_PRESUPUESTO_EXPORT.length;
+  resumen.getRow(filaTotal).values = ["Coste total", { formula: `SUM(B${filaCapInicio}:B${filaTotal - 1})` }];
+  resumen.getRow(filaTotal).font = { bold: true };
   resumen.getColumn(1).width = 55;
   resumen.getColumn(2).width = 16;
 
   const buffer = await wb.xlsx.writeBuffer();
-  pcDescargarBlob("presupuesto.xlsx", new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  const slug = (datos.nombre || "presupuesto").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
+  pcDescargarBlob(`${slug}-presupuesto.xlsx`, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
 }
 
 const PC_VISTAS = [
