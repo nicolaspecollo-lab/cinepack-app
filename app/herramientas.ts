@@ -59,18 +59,56 @@ const ACCESOS: Herramienta = {
 // de presupuestación real (Movie Magic Budgeting, EP), la MISMA data —
 // un chart of accounts con presupuestado/real— vista con 3 agrupamientos
 // distintos, nunca 3 fuentes separadas que haya que mantener sincronizadas.
+export const CAPITULOS_PRESUPUESTO = [
+  "Cap. 01. Guión y música",
+  "Cap. 02. Personal artístico",
+  "Cap. 03. Equipo técnico",
+  "Cap. 04. Escenografía",
+  "Cap. 05. Estudios de rodaje/sonido y varios de producción",
+  "Cap. 06. Maquinaria de rodaje y transportes",
+  "Cap. 07. Viajes, hoteles y comidas",
+  "Cap. 08. Película virgen",
+  "Cap. 09. Laboratorio",
+  "Cap. 10. Seguros",
+  "Cap. 11. Gastos generales",
+  "Cap. 12. Gastos de explotación, comercial y financieros",
+];
+export const DEPARTAMENTOS_PRESUPUESTO = [
+  "Ejecutivo", "Producción", "Dirección", "Guion", "Fotografía", "Arte",
+  "Casting", "Reparto", "Sonido", "Postproducción", "Sostenibilidad",
+  "Marketing", "Difusión", "Distribución",
+];
+export const ETAPAS_PRESUPUESTO = [
+  "Desarrollo", "Financiación", "Preproducción", "Producción", "Postproducción", "Distribución",
+];
 const presupuestoCostos: Herramienta = {
   id: "ej-presupuesto-costos",
-  nombre: "Presupuesto y costos",
+  nombre: "Presupuesto",
   tipo: "tabla",
-  hint: "Una sola tabla de partidas con 3 vistas: top sheet (por capítulo), por departamento y cost report (detalle con desvío). Estado y desvío se calculan solos.",
+  // Estructura calcada del Modelo 3a (ICIB/ICAA): 12 capítulos oficiales de
+  // presupuesto de producción audiovisual, con reparto por coproductora y
+  // desglose de IVA en conceptos de alquiler/servicio. Agrupable también por
+  // departamento/cargo/etapa (mismo dato, otra vista) sin duplicar filas.
+  // "total" es la columna madre: si se cargan base_sin_iva + iva, se
+  // recalcula sola; si no aplica (ej. un sueldo), se carga directo.
+  hint: "El presupuesto estimado de la producción, capítulo por capítulo — con reparto por coproductora y desglose de IVA. Seguimiento de comprometido/real incluido.",
   columnas: [
-    { key: "capitulo", label: "Capítulo / Departamento" },
-    { key: "partida", label: "Partida" },
-    { key: "presupuestado", label: "Presupuestado", tipo: "money" as const },
+    { key: "capitulo", label: "Capítulo", tipo: "estado", opciones: CAPITULOS_PRESUPUESTO },
+    { key: "subgrupo", label: "Subgrupo" },
+    { key: "concepto", label: "Concepto" },
+    { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO },
+    { key: "cargo", label: "Cargo" },
+    { key: "etapa", label: "Etapa", tipo: "estado", opciones: ETAPAS_PRESUPUESTO },
+    { key: "tipo_gasto", label: "Tipo de gasto", tipo: "estado", opciones: ["Estándar", "Alquiler / servicio"] },
+    { key: "base_sin_iva", label: "Base sin IVA", tipo: "money" as const },
+    { key: "iva", label: "IVA", tipo: "money" as const },
+    { key: "total", label: "Total", tipo: "money" as const },
+    { key: "reparto", label: "Reparto por productora", tipo: "repetible", sub: [
+      { key: "productora", label: "Productora / Coproductora" },
+      { key: "monto", label: "Monto", tipo: "money" as const },
+    ]},
     { key: "comprometido", label: "Comprometido", tipo: "money" as const },
     { key: "real", label: "Real a la fecha", tipo: "money" as const },
-    { key: "limite_alerta", label: "Límite de alerta", tipo: "money" as const },
     { key: "responsable", label: "Responsable" },
     { key: "comentario", label: "Comentario", tipo: "largo" },
     { key: "doc", label: "Documento", tipo: "archivo" as const },

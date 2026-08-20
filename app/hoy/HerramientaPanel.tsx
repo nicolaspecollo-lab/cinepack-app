@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
-import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS } from "../herramientas";
+import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
 import Icon from "../components/Icon";
@@ -3593,78 +3593,366 @@ function PresupuestoBoard({
   );
 }
 
-// ---- Presupuesto y costos: 3 vistas sobre UNA sola tabla de partidas ----
-// Antes eran 3 herramientas separadas (top sheet, por departamento, cost
-// report) que había que cargar 3 veces con el mismo dato. En presupuestación
-// real (Movie Magic Budgeting, EP) son 3 lecturas del MISMO chart of
-// accounts. Acá: "capitulo" agrupa las partidas; Top sheet y Por
-// departamento muestran el mismo agrupamiento con distinto encuadre
-// (financiero vs. control de gasto), Cost report es el detalle editable
-// fila por fila (reutiliza PresupuestoBoard, ya construido para esto).
-function pcRollup(filas: Fila[]) {
-  const map = new Map<string, { presupuestado: number; comprometido: number; real: number; limite: number }>();
+// ---- Presupuesto: estructura Modelo 3a (ICIB/ICAA), una sola tabla de ----
+// ---- líneas de gasto, agrupable por capítulo/departamento/cargo/etapa. ----
+// Antes eran 3 vistas fijas (top sheet, por depto, cost report) sobre un
+// esquema plano. Ahora "capitulo" son los 12 capítulos oficiales de
+// presupuesto de producción audiovisual (mismo chart of accounts que pide
+// el ICIB para presentar a un fondo), y la misma fila se puede agrupar por
+// cualquiera de los 4 ejes sin duplicar el dato — "agrupar por" en vez de
+// 4 tablas.
+function repartoDe(f: Fila): Record<string, string>[] {
+  return parseArr<Record<string, string>>(f.datos?.reparto);
+}
+const PC_AGRUPADORES = [
+  { key: "capitulo" as const, label: "Capítulo" },
+  { key: "departamento" as const, label: "Departamento" },
+  { key: "cargo" as const, label: "Cargo" },
+  { key: "etapa" as const, label: "Etapa" },
+];
+type PcAgrupador = (typeof PC_AGRUPADORES)[number]["key"];
+
+function pcRollupPor(filas: Fila[], campo: PcAgrupador) {
+  const map = new Map<string, { total: number; comprometido: number; real: number }>();
   for (const f of filas) {
-    const key = f.datos?.capitulo?.trim() || "Sin capítulo";
-    const cur = map.get(key) ?? { presupuestado: 0, comprometido: 0, real: 0, limite: 0 };
-    cur.presupuestado += ejNum(f.datos?.presupuestado);
+    const key = f.datos?.[campo]?.trim() || "Sin asignar";
+    const cur = map.get(key) ?? { total: 0, comprometido: 0, real: 0 };
+    cur.total += ejNum(f.datos?.total);
     cur.comprometido += ejNum(f.datos?.comprometido);
     cur.real += ejNum(f.datos?.real);
-    cur.limite += ejNum(f.datos?.limite_alerta);
     map.set(key, cur);
   }
-  return [...map.entries()].sort((a, b) => b[1].presupuestado - a[1].presupuestado);
+  return [...map.entries()].sort((a, b) => b[1].total - a[1].total);
 }
 
-function PresupuestoCostosRollup({ filas, modo }: { filas: Fila[]; modo: "topsheet" | "depto" }) {
-  const grupos = pcRollup(filas);
-  const totalPresup = grupos.reduce((s, [, g]) => s + g.presupuestado, 0);
-  const totalReal = grupos.reduce((s, [, g]) => s + g.real, 0);
+function PresupuestoRollup({ filas, campo }: { filas: Fila[]; campo: PcAgrupador }) {
+  const grupos = pcRollupPor(filas, campo);
+  const totalGeneral = grupos.reduce((s, [, g]) => s + g.total, 0);
+  const realGeneral = grupos.reduce((s, [, g]) => s + g.real, 0);
 
   return (
     <div className="hp-pc-rollup">
       {grupos.map(([nombre, g]) => {
-        const pct = g.presupuestado > 0 ? (g.real / g.presupuestado) * 100 : 0;
-        const superoLimite = modo === "depto" && g.limite > 0 && g.real >= g.limite;
-        const tono = pct > 100 ? "bad" : pct >= 90 || superoLimite ? "warn" : "ok";
-        const disponible = g.presupuestado - g.real;
+        const pct = g.total > 0 ? (g.real / g.total) * 100 : 0;
+        const tono = pct > 100 ? "bad" : pct >= 90 ? "warn" : "ok";
         return (
           <div className={`hp-pre-header tono-${tono}`} key={nombre}>
-            <div className="hp-pre-h-item hp-pc-h-nombre">
-              <span className="hp-pre-h-val">{nombre}</span>
-              {modo === "depto" && superoLimite && <span className="hp-pc-limite-warn">Superó el límite de alerta ({ejMoney(g.limite)})</span>}
-            </div>
-            {modo === "topsheet" ? (
-              <>
-                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Presupuestado</span><span className="hp-pre-h-val">{ejMoney(g.presupuestado)}</span></div>
-                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Comprometido</span><span className="hp-pre-h-val">{ejMoney(g.comprometido)}</span></div>
-                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Real</span><span className="hp-pre-h-val">{ejMoney(g.real)}</span></div>
-              </>
-            ) : (
-              <>
-                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Asignado</span><span className="hp-pre-h-val">{ejMoney(g.presupuestado)}</span></div>
-                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Gastado</span><span className="hp-pre-h-val">{ejMoney(g.real)}</span></div>
-                <div className="hp-pre-h-item"><span className="hp-pre-h-label">Disponible</span><span className={`hp-pre-h-val tono-${disponible < 0 ? "bad" : "ok"}`}>{ejMoney(disponible)}</span></div>
-              </>
-            )}
+            <div className="hp-pre-h-item hp-pc-h-nombre"><span className="hp-pre-h-val">{nombre}</span></div>
+            <div className="hp-pre-h-item"><span className="hp-pre-h-label">Total</span><span className="hp-pre-h-val">{ejMoney(g.total)}</span></div>
+            <div className="hp-pre-h-item"><span className="hp-pre-h-label">Comprometido</span><span className="hp-pre-h-val">{ejMoney(g.comprometido)}</span></div>
+            <div className="hp-pre-h-item"><span className="hp-pre-h-label">Real</span><span className="hp-pre-h-val">{ejMoney(g.real)}</span></div>
             <div className="hp-pre-h-gauge">
               <div className="hp-pre-h-bar"><div className={`hp-pre-bar-fill tono-${tono}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
-              <span className={`hp-pre-pct tono-${tono}`}>{g.presupuestado > 0 ? `${Math.round(pct)}%` : "—"}</span>
+              <span className={`hp-pre-pct tono-${tono}`}>{g.total > 0 ? `${Math.round(pct)}%` : "—"}</span>
             </div>
           </div>
         );
       })}
       <div className="hp-pc-total">
         <span>Total</span>
-        <span>{ejMoney(totalPresup)} presupuestado · {ejMoney(totalReal)} real</span>
+        <span>{ejMoney(totalGeneral)} presupuestado · {ejMoney(realGeneral)} real</span>
       </div>
     </div>
   );
 }
 
+// ---- Resumen con topes, como la hoja RESUMEN_FINAL del Modelo 3a ----
+// Coste de realización = capítulos 1-10. Coste total = + cap. 11 y 12. Los
+// 4 topes son aproximados por palabra clave en concepto/subgrupo/cargo (el
+// Excel oficial los ata a líneas de cuenta fijas; acá el subgrupo es texto
+// libre, así que se busca la mención literal en vez de un número de cuenta).
+function pcMatch(f: Fila, kws: string[]): boolean {
+  const texto = `${f.datos?.subgrupo ?? ""} ${f.datos?.concepto ?? ""} ${f.datos?.cargo ?? ""}`.toLowerCase();
+  return kws.some((k) => texto.includes(k));
+}
+function PresupuestoResumenCaps({ filas }: { filas: Fila[] }) {
+  const capNum = (f: Fila) => parseInt((f.datos?.capitulo ?? "").match(/Cap\. (\d+)/)?.[1] ?? "0", 10);
+  const totalDe = (fs: Fila[]) => fs.reduce((s, f) => s + ejNum(f.datos?.total), 0);
+  const cap1a10 = filas.filter((f) => capNum(f) >= 1 && capNum(f) <= 10);
+  const cap11 = filas.filter((f) => capNum(f) === 11);
+  const cap12 = filas.filter((f) => capNum(f) === 12);
+  const costeRealizacion = totalDe(cap1a10);
+  const costeTotal = costeRealizacion + totalDe(cap11) + totalDe(cap12);
+
+  const productorEj = totalDe(filas.filter((f) => pcMatch(f, ["productor ejecutivo"])));
+  const gastosGenerales = totalDe(cap11);
+  const publicidad = totalDe(cap12.filter((f) => pcMatch(f, ["publicidad", "trayler", "trailer", "making"])));
+  const intereses = totalDe(cap12.filter((f) => pcMatch(f, ["interes"])));
+
+  const topes = [
+    { label: "Productor ejecutivo", valor: productorEj, tope: 0.05, base: costeRealizacion },
+    { label: "Gastos generales (cap. 11)", valor: gastosGenerales, tope: 0.07, base: costeRealizacion },
+    { label: "Publicidad (cap. 12)", valor: publicidad, tope: 0.4, base: costeRealizacion },
+    { label: "Intereses pasivos (cap. 12)", valor: intereses, tope: 0.2, base: costeRealizacion },
+  ];
+
+  return (
+    <div className="hp-pc-caps">
+      <div className="hp-pc-caps-tot">
+        <span><span className="hp-pc-caps-l">Coste de realización</span><span className="hp-pc-caps-v">{ejMoney(costeRealizacion)}</span></span>
+        <span><span className="hp-pc-caps-l">Coste total</span><span className="hp-pc-caps-v">{ejMoney(costeTotal)}</span></span>
+      </div>
+      <div className="hp-pc-caps-list">
+        {topes.map((tp) => {
+          const limite = tp.base * tp.tope;
+          const pasado = tp.base > 0 && tp.valor > limite;
+          const pct = tp.base > 0 ? (tp.valor / tp.base) * 100 : 0;
+          return (
+            <div className={`hp-pc-cap-item${pasado ? " tono-bad" : ""}`} key={tp.label}>
+              <span className="hp-pc-cap-l">{tp.label} <span className="hp-pc-cap-tope">· tope {Math.round(tp.tope * 100)}%</span></span>
+              <span className="hp-pc-cap-v">{ejMoney(tp.valor)} <span className="hp-pc-cap-pct">· {pct.toFixed(1)}%</span></span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- Detalle: editor de línea con desglose de IVA y reparto por productora ----
+function PresupuestoLinea({
+  f, columnas, editable, departamento, herramientaId, onGuardar, onBorrar,
+}: {
+  f: Fila; columnas: Columna[]; editable: boolean; departamento: string; herramientaId: string;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const v = (k: string) => f.datos?.[k] ?? "";
+  const col = (k: string) => columnas.find((c) => c.key === k);
+  const esAlquiler = v("tipo_gasto") === "Alquiler / servicio";
+
+  function set(k: string, val: string) {
+    onGuardar(f.id, { ...f.datos, [k]: val }, f);
+  }
+  function setIva(k: "base_sin_iva" | "iva", val: string) {
+    const base = k === "base_sin_iva" ? ejNum(val) : ejNum(v("base_sin_iva"));
+    const iva = k === "iva" ? ejNum(val) : ejNum(v("iva"));
+    onGuardar(f.id, { ...f.datos, [k]: val, total: String(base + iva) }, f);
+  }
+  const colArchivo = col("doc");
+  const reparto = repartoDe(f);
+
+  return (
+    <div className="hp-pc-linea">
+      <div className="hp-pc-linea-top">
+        <div className="hp-pc-linea-titulo">
+          <input defaultValue={v("concepto")} placeholder={col("concepto")?.label} readOnly={!editable} onBlur={(e) => set("concepto", e.target.value)} />
+          <input className="hp-pc-linea-sub" defaultValue={v("subgrupo")} placeholder={col("subgrupo")?.label} readOnly={!editable} onBlur={(e) => set("subgrupo", e.target.value)} />
+        </div>
+        {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+      </div>
+
+      <div className="hp-pc-linea-grid">
+        <label className="hp-pc-field"><span>{col("capitulo")?.label}</span>
+          <select value={v("capitulo")} disabled={!editable} onChange={(e) => set("capitulo", e.target.value)}>
+            <option value="">—</option>
+            {(col("capitulo")?.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </label>
+        <label className="hp-pc-field"><span>{col("departamento")?.label}</span>
+          <select value={v("departamento")} disabled={!editable} onChange={(e) => set("departamento", e.target.value)}>
+            <option value="">—</option>
+            {(col("departamento")?.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </label>
+        <label className="hp-pc-field"><span>{col("cargo")?.label}</span>
+          <input defaultValue={v("cargo")} readOnly={!editable} onBlur={(e) => set("cargo", e.target.value)} />
+        </label>
+        <label className="hp-pc-field"><span>{col("etapa")?.label}</span>
+          <select value={v("etapa")} disabled={!editable} onChange={(e) => set("etapa", e.target.value)}>
+            <option value="">—</option>
+            {(col("etapa")?.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div className="hp-pc-linea-money">
+        <label className="hp-pc-field hp-pc-tipo-gasto">
+          <span>{col("tipo_gasto")?.label}</span>
+          <EstadoSeg valor={v("tipo_gasto") || "Estándar"} opciones={col("tipo_gasto")?.opciones ?? []} onPick={(nv) => set("tipo_gasto", nv)} editable={editable} chip />
+        </label>
+        {esAlquiler && (
+          <>
+            <label className="hp-pc-field"><span>{col("base_sin_iva")?.label}</span>
+              <input type="number" defaultValue={v("base_sin_iva")} readOnly={!editable} placeholder="0" onBlur={(e) => setIva("base_sin_iva", e.target.value)} />
+            </label>
+            <label className="hp-pc-field"><span>{col("iva")?.label}</span>
+              <input type="number" defaultValue={v("iva")} readOnly={!editable} placeholder="0" onBlur={(e) => setIva("iva", e.target.value)} />
+            </label>
+          </>
+        )}
+        <label className="hp-pc-field hp-pc-total-field"><span>{col("total")?.label}</span>
+          <input type="number" defaultValue={v("total")} readOnly={!editable || esAlquiler} placeholder="0" onBlur={(e) => set("total", e.target.value)} />
+        </label>
+        <label className="hp-pc-field"><span>{col("comprometido")?.label}</span>
+          <input type="number" defaultValue={v("comprometido")} readOnly={!editable} placeholder="0" onBlur={(e) => set("comprometido", e.target.value)} />
+        </label>
+        <label className="hp-pc-field"><span>{col("real")?.label}</span>
+          <input type="number" defaultValue={v("real")} readOnly={!editable} placeholder="0" onBlur={(e) => set("real", e.target.value)} />
+        </label>
+      </div>
+
+      <div className="hp-pc-reparto">
+        <span className="hp-pc-reparto-lbl">{col("reparto")?.label}</span>
+        {reparto.map((r, idx) => (
+          <div className="hp-pc-reparto-row" key={idx}>
+            <input
+              defaultValue={r.productora}
+              placeholder="Productora / Coproductora"
+              readOnly={!editable}
+              onBlur={(e) => {
+                const next = repartoDe(f).map((x, i) => (i === idx ? { ...x, productora: e.target.value } : x));
+                onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
+              }}
+            />
+            <input
+              type="number"
+              defaultValue={r.monto}
+              placeholder="Monto"
+              readOnly={!editable}
+              onBlur={(e) => {
+                const next = repartoDe(f).map((x, i) => (i === idx ? { ...x, monto: e.target.value } : x));
+                onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
+              }}
+            />
+            {editable && (
+              <button className="hp-del" onClick={() => {
+                const next = repartoDe(f).filter((_, i) => i !== idx);
+                onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
+              }}>✕</button>
+            )}
+          </div>
+        ))}
+        {editable && (
+          <button className="btn" onClick={() => {
+            const next = [...repartoDe(f), { productora: "", monto: "" }];
+            onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
+          }}>+ Agregar productora</button>
+        )}
+      </div>
+
+      <div className="hp-pc-linea-foot">
+        <label className="hp-pc-field"><span>{col("responsable")?.label}</span>
+          <input defaultValue={v("responsable")} readOnly={!editable} onBlur={(e) => set("responsable", e.target.value)} />
+        </label>
+        <textarea className="hp-pc-comentario" defaultValue={v("comentario")} placeholder={col("comentario")?.label} readOnly={!editable} rows={1} onBlur={(e) => set("comentario", e.target.value)} />
+        {colArchivo && (
+          <ArchivoCell
+            path={v("doc")}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            filaId={f.id}
+            colKey="doc"
+            onSave={(val) => set("doc", val)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function pcDescargarBlob(nombreArchivo: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreArchivo;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Resumen por capítulo en PDF — lo que se presenta a un fondo, no la tabla
+// completa (esa va en el Excel). Mismo criterio que la hoja RESUMEN del
+// Modelo 3a: un capítulo por línea, con su total.
+async function exportarPresupuestoPDF(filas: Fila[]) {
+  const { default: jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const marginLeft = 20, marginRight = 190, pageBottom = 280;
+  let y = 25;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.text("Presupuesto — resumen por capítulo", marginLeft, y);
+  y += 12;
+
+  const porCapitulo = pcRollupPor(filas, "capitulo");
+  doc.setFontSize(10);
+  for (const [nombre, g] of porCapitulo) {
+    if (y > pageBottom) { doc.addPage(); y = 25; }
+    doc.setFont("helvetica", "bold");
+    doc.text(nombre, marginLeft, y);
+    doc.text(ejMoney(g.total), marginRight, y, { align: "right" });
+    y += 7;
+  }
+
+  y += 3;
+  doc.setDrawColor(180);
+  doc.line(marginLeft, y, marginRight, y);
+  y += 8;
+
+  const capNum = (nombre: string) => parseInt(nombre.match(/Cap\. (\d+)/)?.[1] ?? "0", 10);
+  const cap1a10 = porCapitulo.filter(([n]) => capNum(n) >= 1 && capNum(n) <= 10).reduce((s, [, g]) => s + g.total, 0);
+  const costeTotal = porCapitulo.reduce((s, [, g]) => s + g.total, 0);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Coste de realización (cap. 1-10)", marginLeft, y);
+  doc.text(ejMoney(cap1a10), marginRight, y, { align: "right" });
+  y += 8;
+  doc.text("Coste total", marginLeft, y);
+  doc.text(ejMoney(costeTotal), marginRight, y, { align: "right" });
+
+  doc.save("presupuesto-resumen.pdf");
+}
+
+// Tabla completa en Excel, fila por fila, con fórmulas SUMA reales
+// integradas al resumen por capítulo — si se edita una línea en el Excel
+// descargado, el total del capítulo y el gran total se recalculan solos.
+async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
+  const ExcelJS = (await import("exceljs")).default;
+  const wb = new ExcelJS.Workbook();
+
+  const detalle = wb.addWorksheet("Detalle");
+  const cabeceras = ["Capítulo", "Subgrupo", "Concepto", "Departamento", "Cargo", "Etapa", "Tipo de gasto", "Base sin IVA", "IVA", "Total", "Comprometido", "Real", "Responsable", "Comentario"];
+  detalle.addRow(cabeceras);
+  detalle.getRow(1).font = { bold: true };
+
+  const filasOrdenadas = [...filas].sort((a, b) => (a.datos?.capitulo ?? "").localeCompare(b.datos?.capitulo ?? ""));
+  filasOrdenadas.forEach((f) => {
+    const d = f.datos ?? {};
+    detalle.addRow([
+      d.capitulo ?? "", d.subgrupo ?? "", d.concepto ?? "", d.departamento ?? "", d.cargo ?? "", d.etapa ?? "",
+      d.tipo_gasto ?? "", ejNum(d.base_sin_iva) || null, ejNum(d.iva) || null, ejNum(d.total) || 0,
+      ejNum(d.comprometido) || null, ejNum(d.real) || null, d.responsable ?? "", d.comentario ?? "",
+    ]);
+  });
+  detalle.columns.forEach((c) => { c.width = 18; });
+  detalle.getColumn(3).width = 34;
+  detalle.getColumn(14).width = 34;
+
+  const resumen = wb.addWorksheet("Resumen por capítulo");
+  resumen.addRow(["Capítulo", "Total"]).font = { bold: true };
+  const nFilas = filasOrdenadas.length;
+  CAPITULOS_PRESUPUESTO_EXPORT.forEach((cap, i) => {
+    // SUMIF sobre la hoja Detalle: se recalcula solo si se edita una fila.
+    const formula = `SUMIF(Detalle!A2:A${nFilas + 1},A${i + 2},Detalle!J2:J${nFilas + 1})`;
+    resumen.addRow([cap, { formula }]);
+  });
+  const filaTotal = CAPITULOS_PRESUPUESTO_EXPORT.length + 2;
+  resumen.addRow(["Coste total", { formula: `SUM(B2:B${filaTotal - 1})` }]).font = { bold: true };
+  resumen.getColumn(1).width = 55;
+  resumen.getColumn(2).width = 16;
+
+  const buffer = await wb.xlsx.writeBuffer();
+  pcDescargarBlob("presupuesto.xlsx", new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+}
+
 const PC_VISTAS = [
-  { key: "topsheet" as const, label: "Top sheet" },
-  { key: "depto" as const, label: "Por departamento" },
-  { key: "costreport" as const, label: "Cost report" },
+  { key: "detalle" as const, label: "Detalle" },
+  { key: "capitulo" as const, label: "Por capítulo" },
+  { key: "departamento" as const, label: "Por departamento" },
+  { key: "cargo" as const, label: "Por cargo" },
+  { key: "etapa" as const, label: "Por etapa" },
 ];
 
 export function PresupuestoCostosBoard({
@@ -3687,7 +3975,8 @@ export function PresupuestoCostosBoard({
   onBorrar: (id: string) => void;
 }) {
   const t = useTranslations("hp");
-  const [vista, setVista] = useState<"topsheet" | "depto" | "costreport">("topsheet");
+  const [vista, setVista] = useState<(typeof PC_VISTAS)[number]["key"]>("detalle");
+  const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
 
   if (filas.length === 0) {
     return (
@@ -3699,26 +3988,55 @@ export function PresupuestoCostosBoard({
     );
   }
 
+  async function exportarPDF() {
+    setExportando("pdf");
+    try {
+      await exportarPresupuestoPDF(filas);
+    } finally {
+      setExportando(null);
+    }
+  }
+  async function exportarExcel() {
+    setExportando("excel");
+    try {
+      await exportarPresupuestoExcel(filas, columnas);
+    } finally {
+      setExportando(null);
+    }
+  }
+
   return (
     <div className="hp-pc">
-      <div className="hp-etb-filtros hp-pc-vistas">
-        {PC_VISTAS.map((v) => (
-          <button key={v.key} className={`hp-etb-fchip${vista === v.key ? " on" : ""}`} onClick={() => setVista(v.key)}>{v.label}</button>
-        ))}
+      <PresupuestoResumenCaps filas={filas} />
+      <div className="hp-pc-toolbar">
+        <div className="hp-etb-filtros hp-pc-vistas">
+          {PC_VISTAS.map((v) => (
+            <button key={v.key} className={`hp-etb-fchip${vista === v.key ? " on" : ""}`} onClick={() => setVista(v.key)}>{v.label}</button>
+          ))}
+        </div>
+        <div className="hp-pc-exports">
+          <button className="btn" disabled={exportando !== null} onClick={exportarPDF}>{exportando === "pdf" ? t("exporting") : t("exportPdfResumen")}</button>
+          <button className="btn" disabled={exportando !== null} onClick={exportarExcel}>{exportando === "excel" ? t("exporting") : t("exportExcelTabla")}</button>
+        </div>
       </div>
-      {vista === "costreport" ? (
-        <PresupuestoBoard
-          columnas={columnas}
-          filas={filas}
-          editable={editable}
-          departamento={departamento}
-          herramientaId={herramientaId}
-          onCrear={onCrear}
-          onGuardar={onGuardar}
-          onBorrar={onBorrar}
-        />
+      {vista === "detalle" ? (
+        <div className="hp-pc-lineas">
+          {filas.map((f) => (
+            <PresupuestoLinea
+              key={f.id}
+              f={f}
+              columnas={columnas}
+              editable={editable}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              onGuardar={onGuardar}
+              onBorrar={onBorrar}
+            />
+          ))}
+          {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button></div>}
+        </div>
       ) : (
-        <PresupuestoCostosRollup filas={filas} modo={vista} />
+        <PresupuestoRollup filas={filas} campo={vista} />
       )}
     </div>
   );
@@ -7927,10 +8245,10 @@ const EJ_PLAN_LOCACIONES_JORNADA: Ejemplo[] = [
   { dia: "3", fecha: "2026-07-14", locacion: "Faro de Punta Alta", direccion: "Camino del Faro s/n", hora_llegada: "05:30", hora_inicio: "06:00", hora_fin: "19:30", escenas: "1, 3", notas_logistica: "Sin señal, llevar walkies. Parking limitado a 6 vehículos.", permiso_doc: "" },
 ];
 const EJ_PRESUPUESTO_COSTOS: Ejemplo[] = [
-  { capitulo: "Arte", partida: "Alquiler de decorados", presupuestado: "45000", comprometido: "45000", real: "38200", limite_alerta: "43000", responsable: "Marta Gil" },
-  { capitulo: "Arte", partida: "Materiales y construcción", presupuestado: "18000", comprometido: "16500", real: "17200", responsable: "Marta Gil" },
-  { capitulo: "Sonido", partida: "Equipo de grabación", presupuestado: "22000", comprometido: "22000", real: "24100", limite_alerta: "21000", responsable: "Kepa Aguirre", comentario: "Se sumó un boom extra no previsto." },
-  { capitulo: "Cámara", partida: "Alquiler de cámara y ópticas", presupuestado: "38000", comprometido: "38000", real: "36500", responsable: "Diego Aramburu" },
+  { capitulo: "Cap. 03. Equipo técnico", subgrupo: "03.01 Dirección", concepto: "Director de fotografía", departamento: "Fotografía", cargo: "Director de fotografía", etapa: "Producción", tipo_gasto: "Estándar", total: "38000", comprometido: "38000", real: "36500", responsable: "Diego Aramburu" },
+  { capitulo: "Cap. 04. Escenografía", subgrupo: "04.01 Decorados y escenarios", concepto: "Alquiler de interiores naturales", departamento: "Arte", cargo: "Director de arte", etapa: "Producción", tipo_gasto: "Alquiler / servicio", base_sin_iva: "37190", iva: "7810", total: "45000", comprometido: "45000", real: "38200", responsable: "Marta Gil", reparto: JSON.stringify([{ productora: "Productora", monto: "30000" }, { productora: "Coproductora 1", monto: "15000" }]) },
+  { capitulo: "Cap. 06. Maquinaria de rodaje y transportes", subgrupo: "06.01 Maquinaria y elementos de rodaje", concepto: "Equipo de sonido principal (alquiler)", departamento: "Sonido", cargo: "Jefe de sonido", etapa: "Producción", tipo_gasto: "Alquiler / servicio", base_sin_iva: "19008", iva: "3992", total: "23000", comprometido: "22000", real: "24100", responsable: "Kepa Aguirre", comentario: "Se sumó un boom extra no previsto." },
+  { capitulo: "Cap. 11. Gastos generales", subgrupo: "11.01 Generales", concepto: "Alquiler de oficina", departamento: "Ejecutivo", cargo: "Producción ejecutiva", etapa: "Desarrollo", tipo_gasto: "Alquiler / servicio", base_sin_iva: "1652", iva: "348", total: "2000", comprometido: "2000", real: "2000", responsable: "Nicolás Pecollo" },
 ];
 const EJ_PLAN_REESCRITURA: Ejemplo[] = [
   { tipo_registro: "Pase", nombre: "Pase de estructura", estado_pase: "En curso", version_origen: "v4.0", version_destino: "v5.0", fecha_entrega: "2026-08-30", objetivo: "Resolver la caída del segundo acto señalada en el informe de Laura Sanz." },
