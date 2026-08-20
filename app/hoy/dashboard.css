@@ -3256,6 +3256,9 @@
 .cp-dash .hp-pc-cap-tope, .cp-dash .hp-pc-cap-pct{ color:var(--muted); font-size:var(--fs-xs); }
 .cp-dash .hp-pc-cap-item.tono-bad .hp-pc-cap-tope, .cp-dash .hp-pc-cap-item.tono-bad .hp-pc-cap-pct{ color:var(--rose); }
 
+/* Presupuesto: vista Tabla con pestañas por capítulo (estilo libro ICIB) */
+.cp-dash .hp-pc-tab-resumen{ display:flex; flex-direction:column; gap:var(--sp-3); padding-bottom:var(--sp-3); }
+
 /* Presupuesto: toolbar (vistas + exportar) */
 .cp-dash .hp-pc-toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-2); }
 .cp-dash .hp-pc-toolbar .hp-pc-vistas{ padding:0; }

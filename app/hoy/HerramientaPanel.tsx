@@ -799,7 +799,11 @@ function HerramientaData({
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "ej-presupuesto-costos" && (
-        <VistaConEjemplos ejemplos={EJ_PRESUPUESTO_COSTOS} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        // El Tablero es solo visualización desde ago-2026 — la carga real de
+        // conceptos/montos vive en la vista Tabla (pestañas por capítulo, ver
+        // PresupuestoTablaTabs). editable forzado a false acá, sin importar
+        // el rol: por eso también no ofrece "comenzar con este ejemplo".
+        <VistaConEjemplos ejemplos={EJ_PRESUPUESTO_COSTOS} filas={filas} editable={false} onCrear={crearFila}>{(fs, ed) => (
         <PresupuestoCostosBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
@@ -1384,7 +1388,34 @@ function HerramientaData({
         </>
       )}
 
-      {esTabla && vista === "tabla" && (
+      {esTabla && vista === "tabla" && herramienta.id === "ej-presupuesto-costos" && (
+        <PresupuestoTablaTabs
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          fullName={fullName}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          herramientaNombre={herramienta.nombre}
+          onCrearConDatos={(datos) => crearFila(datos)}
+          onDuplicar={(f) => {
+            const datos = { ...f.datos };
+            delete datos._pulso_evt_presentacion;
+            delete datos._pulso_evt_resolucion;
+            crearFila(datos);
+          }}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+          onAgregarColumna={agregarColumnaExtra}
+          onImportarCSV={async (rows) => {
+            for (const datos of rows) await crearFila(datos);
+          }}
+          moneda={meta?.datos?._moneda}
+          onCambiarMoneda={cambiarMoneda}
+        />
+      )}
+
+      {esTabla && vista === "tabla" && herramienta.id !== "ej-presupuesto-costos" && (
         <TablaTool
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
@@ -3727,9 +3758,15 @@ function PresupuestoLinea({
   const esAlquiler = v("tipo_gasto") === "Alquiler / servicio";
 
   function set(k: string, val: string) {
+    // Un input readOnly (fila fantasma / sin permiso) sigue disparando
+    // onBlur al perder foco aunque el valor no haya cambiado — sin este
+    // guard, eso intenta guardar el id fantasma "__ej_N" (no es un uuid
+    // real) y Supabase lo rechaza.
+    if (!editable) return;
     onGuardar(f.id, { ...f.datos, [k]: val }, f);
   }
   function setIva(k: "base_sin_iva" | "iva", val: string) {
+    if (!editable) return;
     const base = k === "base_sin_iva" ? ejNum(val) : ejNum(v("base_sin_iva"));
     const iva = k === "iva" ? ejNum(val) : ejNum(v("iva"));
     onGuardar(f.id, { ...f.datos, [k]: val, total: String(base + iva) }, f);
@@ -3806,6 +3843,7 @@ function PresupuestoLinea({
               placeholder="Productora / Coproductora"
               readOnly={!editable}
               onBlur={(e) => {
+                if (!editable) return;
                 const next = repartoDe(f).map((x, i) => (i === idx ? { ...x, productora: e.target.value } : x));
                 onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
               }}
@@ -3816,6 +3854,7 @@ function PresupuestoLinea({
               placeholder="Monto"
               readOnly={!editable}
               onBlur={(e) => {
+                if (!editable) return;
                 const next = repartoDe(f).map((x, i) => (i === idx ? { ...x, monto: e.target.value } : x));
                 onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
               }}
@@ -4183,6 +4222,121 @@ export function PresupuestoCostosBoard({
         </div>
       ) : (
         <PresupuestoRollup filas={filas} campo={vista} />
+      )}
+    </div>
+  );
+}
+
+// ---- Presupuesto — vista "Tabla", como el libro de Excel del ICIB: una
+// pestaña Resumen (solo lectura) + una pestaña por capítulo, cada una con la
+// TablaTool completa filtrada a ese capítulo (columnas propias, colores,
+// exportar CSV, todo el poder de TablaTool) para no cargar todo en una sola
+// grilla de 16 columnas. El Tablero (tarjetas) quedó como visualización; acá
+// vive la carga real de conceptos y montos.
+const PC_TAB_SIN_CAPITULO = "__sin_capitulo__";
+
+function pcCapCorto(c: string): string {
+  return c.match(/Cap\. \d+/)?.[0] ?? c;
+}
+
+function PresupuestoTablaTabs({
+  columnas,
+  filas,
+  editable,
+  fullName,
+  departamento,
+  herramientaId,
+  herramientaNombre,
+  onCrearConDatos,
+  onDuplicar,
+  onGuardar,
+  onBorrar,
+  onAgregarColumna,
+  onImportarCSV,
+  moneda,
+  onCambiarMoneda,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  fullName: string;
+  departamento: string;
+  herramientaId: string;
+  herramientaNombre: string;
+  onCrearConDatos: (datos: Record<string, string>) => void;
+  onDuplicar?: (fila: Fila) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+  onAgregarColumna: (label: string, tipo?: ColTipo) => void;
+  onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
+  moneda?: string;
+  onCambiarMoneda?: (v: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [tab, setTab] = useState<string>("resumen");
+  const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
+
+  const sinCapitulo = filas.filter((f) => !(f.datos?.capitulo ?? "").trim());
+
+  async function exportarPDF() {
+    setExportando("pdf");
+    try { await exportarPresupuestoPDF(filas); } finally { setExportando(null); }
+  }
+  async function exportarExcel() {
+    setExportando("excel");
+    try { await exportarPresupuestoExcel(filas, columnas); } finally { setExportando(null); }
+  }
+
+  const filasTab = tab === PC_TAB_SIN_CAPITULO
+    ? sinCapitulo
+    : filas.filter((f) => (f.datos?.capitulo ?? "") === tab);
+  const columnasTab = columnas.filter((c) => c.key !== "capitulo");
+
+  return (
+    <div className="hp-pc">
+      <div className="hp-pc-toolbar">
+        <div className="hp-etb-filtros hp-pc-vistas">
+          <button className={`hp-etb-fchip${tab === "resumen" ? " on" : ""}`} onClick={() => setTab("resumen")}>Resumen</button>
+          {sinCapitulo.length > 0 && (
+            <button className={`hp-etb-fchip${tab === PC_TAB_SIN_CAPITULO ? " on" : ""}`} onClick={() => setTab(PC_TAB_SIN_CAPITULO)}>
+              Sin capítulo · {sinCapitulo.length}
+            </button>
+          )}
+          {CAPITULOS_PRESUPUESTO_EXPORT.map((c) => (
+            <button key={c} className={`hp-etb-fchip${tab === c ? " on" : ""}`} onClick={() => setTab(c)} title={c}>
+              {pcCapCorto(c)}
+            </button>
+          ))}
+        </div>
+        <div className="hp-pc-exports">
+          <button className="btn" disabled={exportando !== null} onClick={exportarPDF}>{exportando === "pdf" ? t("exporting") : t("exportPdfResumen")}</button>
+          <button className="btn" disabled={exportando !== null} onClick={exportarExcel}>{exportando === "excel" ? t("exporting") : t("exportExcelTabla")}</button>
+        </div>
+      </div>
+
+      {tab === "resumen" ? (
+        <div className="hp-pc-tab-resumen">
+          <PresupuestoResumenCaps filas={filas} />
+          <PresupuestoRollup filas={filas} campo="capitulo" />
+        </div>
+      ) : (
+        <TablaTool
+          columnas={columnasTab}
+          filas={filasTab}
+          editable={editable}
+          fullName={fullName}
+          departamento={departamento}
+          herramientaId={herramientaId}
+          herramientaNombre={herramientaNombre}
+          onCrear={() => onCrearConDatos(tab === PC_TAB_SIN_CAPITULO ? {} : { capitulo: tab })}
+          onDuplicar={onDuplicar}
+          onGuardar={onGuardar}
+          onBorrar={onBorrar}
+          onAgregarColumna={onAgregarColumna}
+          onImportarCSV={onImportarCSV}
+          moneda={moneda}
+          onCambiarMoneda={onCambiarMoneda}
+        />
       )}
     </div>
   );
