@@ -1319,11 +1319,13 @@
 .cp-dash table.hp-table{ table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:12px; }
 .cp-dash table.hp-table th{
   text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted);
-  padding:9px 8px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--hl1);
+  padding:9px 8px; border-bottom:1px solid var(--line); border-right:1px solid var(--line); white-space:nowrap; background:var(--hl1);
   position:sticky; top:0; z-index:1;
 }
+.cp-dash table.hp-table th:first-child{ border-left:1px solid var(--line); }
 .cp-dash table.hp-table th.hp-th-acciones{ text-align:center; }
-.cp-dash table.hp-table td{ border-bottom:1px solid var(--line); padding:0; vertical-align:top; }
+.cp-dash table.hp-table td{ border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:0; vertical-align:top; }
+.cp-dash table.hp-table td:first-child{ border-left:1px solid var(--line); }
 /* El ancho base de cada columna lo da el <col> del colgroup (anchoDefectoCol
    en HerramientaPanel.tsx), NO un min-width en la celda. El min acá es solo
    28px para que el usuario pueda arrastrar una columna hasta casi colapsarla
@@ -1469,7 +1471,7 @@
 .cp-dash .hp-tb-trigger.open{ background:var(--hl3); color:var(--text); }
 .cp-dash .hp-tb-trigger svg:last-child{ opacity:0.6; }
 .cp-dash .hp-tb-menu{
-  position:absolute; top:calc(100% + 5px); left:0; z-index:30;
+  position:absolute; top:calc(100% + 5px); left:0; z-index:900;
   background:var(--bg-2); border:1px solid var(--line); box-shadow:0 8px 24px var(--shadow);
   padding:8px; animation:fadein var(--dur);
 }
@@ -1834,9 +1836,21 @@
 .cp-dash .hp-tabla-empty p{ color:var(--text); font-size:13px; margin:0; }
 .cp-dash .hp-tabla-empty-hint{ color:var(--muted) !important; font-size:12px !important; max-width:440px; line-height:1.6; }
 .cp-dash .hp-tabla-empty .hp-actions{ margin-top:4px; }
-.cp-dash .hp-tabla-empty-row td{
-  text-align:center; padding:32px 20px; color:var(--muted); font-size:13px;
-  display:flex; flex-direction:column; align-items:center; gap:10px;
+/* La celda del mensaje vacío usa colSpan para ocupar todo el ancho de la
+   tabla — pero display:flex directo en un <td> con colSpan hace que Chrome
+   recalcule el ancho de la celda solo a partir de la PRIMERA columna
+   abarcada (36px, el ancho del checkbox) en vez de sumar las 17 columnas
+   reales: el colSpan quedaba "roto" visualmente aunque el atributo HTML
+   fuera correcto. El flex tiene que vivir en un div interno, no en el <td>
+   mismo, para que la celda siga participando del layout de tabla normal. */
+.cp-dash .hp-tabla-empty-row td{ text-align:center; padding:0; color:var(--muted); font-size:13px; }
+/* sticky con left+right y margin-inline:auto: centra el aviso en la parte
+   VISIBLE del scroll horizontal, no en el centro geométrico de la celda
+   completa (que con muchas columnas puede ser 2-3x más ancha que la
+   pantalla y dejar el aviso fuera de vista sin scrollear). */
+.cp-dash .hp-tabla-empty-inner{
+  display:flex; flex-direction:column; align-items:center; gap:10px; padding:32px 20px;
+  position:sticky; left:50%; transform:translateX(-50%); width:max-content;
 }
 .cp-dash .hp-tabla-empty-row .hex{ width:20px; height:17px; background:var(--acc); }
 .cp-dash .hp-tabla-empty-row .btn{ margin-top:2px; }
@@ -2123,7 +2137,7 @@
    completa ya queda fijo por flex-shrink:0 en su propio overlay, sticky ahí
    no hace falta (ver override más abajo). */
 .cp-dash .hp-tabla-toolbar{
-  display:flex; align-items:center; gap:6px; padding:8px 10px;
+  display:flex; align-items:center; gap:6px; padding:7px 10px;
   background:var(--bg-2); border-bottom:1px solid var(--line); flex-wrap:nowrap; flex-shrink:0;
   position:sticky; top:0; z-index:10;
   overflow-x:auto; overflow-y:hidden;
@@ -2131,7 +2145,15 @@
 /* En desktop entra todo en una sola fila; si en una pantalla angosta no
    entrara, scrollea horizontal dentro del propio toolbar en vez de partirse
    en 2 líneas (que tapaban la tabla). En móvil (ver @640px) se vuelve a
-   permitir el wrap: ahí el toolbar entero ya se apila distinto. */
+   permitir el wrap: ahí el toolbar entero ya se apila distinto.
+   flex-shrink:0 en cada control es lo que hace que funcione: sin esto, el
+   texto de un botón como "Agregar fila" se apretaba antes de que el
+   contenedor empezara a scrollear, y el label envolvía a 2 líneas — un
+   botón "gigante" comparado con sus vecinos no era una cuestión de tamaño
+   sino de que le faltaba este freno. */
+.cp-dash .hp-tabla-toolbar > .btn,
+.cp-dash .hp-tabla-toolbar > .tm-wrap,
+.cp-dash .hp-tabla-toolbar > .hp-newcol{ flex-shrink:0; white-space:nowrap; }
 .hp-tabla-fullscreen .hp-tabla-toolbar{ position:static; }
 .cp-dash .hp-tabla-search-wrap{ flex:1; min-width:130px; max-width:240px; }
 .cp-dash .hp-tabla-search{
@@ -2658,11 +2680,10 @@
   padding:0 4px; background:var(--acc); color:var(--bg); font-size:9px; font-weight:800; border-radius:0;
 }
 .cp-dash .tm-menu{
-  position:absolute; top:calc(100% + 5px); left:0; z-index:40; min-width:180px;
+  position:fixed; z-index:900; min-width:180px;
   background:var(--bg-2); border:1px solid var(--line); box-shadow:0 10px 28px var(--shadow);
   padding:6px; animation:fadein var(--dur); max-height:60vh; overflow-y:auto;
 }
-.cp-dash .tm-menu-right{ left:auto; right:0; }
 .cp-dash .tm-section{ display:flex; flex-direction:column; gap:2px; }
 .cp-dash .tm-section-bordered{ border-top:1px solid var(--line); margin-top:6px; padding-top:6px; }
 .cp-dash .tm-section-title{ font-size:9.5px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:4px 8px 2px; }
@@ -3256,8 +3277,35 @@
 .cp-dash .hp-pc-cap-tope, .cp-dash .hp-pc-cap-pct{ color:var(--muted); font-size:var(--fs-xs); }
 .cp-dash .hp-pc-cap-item.tono-bad .hp-pc-cap-tope, .cp-dash .hp-pc-cap-item.tono-bad .hp-pc-cap-pct{ color:var(--rose); }
 
-/* Presupuesto: vista Tabla con pestañas por capítulo (estilo libro ICIB) */
-.cp-dash .hp-pc-tab-resumen{ display:flex; flex-direction:column; gap:var(--sp-3); padding-bottom:var(--sp-3); }
+/* Presupuesto: vista Tabla con pestañas por capítulo (estilo libro ICIB).
+   .hp-pc-tabbed cancela el padding lateral de .hp-pc — acá cada franja
+   (pestañas, resumen, TablaTool) pone su propio margen, para que la tabla
+   llegue al mismo ancho que cualquier otra vista Tabla del catálogo, no un
+   gutter extra de encima. Mismo lenguaje visual que .gen-subtabs (línea
+   activa subrayada) en vez de los chips de filtro genéricos — acá son
+   pestañas de verdad, no un filtro. */
+.cp-dash .hp-pc-tabbed{ padding-left:0; padding-right:0; }
+.cp-dash .hp-pc-captabs{
+  display:flex; align-items:stretch; border-bottom:1px solid var(--line); background:var(--bg-2);
+}
+.cp-dash .hp-pc-captabs-scroll{ display:flex; align-items:stretch; overflow-x:auto; flex:1; min-width:0; padding-left:calc(var(--gutter) - 13px); }
+.cp-dash .hp-pc-captab{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;
+  color:var(--muted); background:none; border:none; border-bottom:2px solid transparent;
+  padding:11px 13px; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;
+  flex-shrink:0; transition:color .12s, border-color .12s;
+}
+.cp-dash .hp-pc-captab:hover{ color:var(--text); }
+.cp-dash .hp-pc-captab.on{ color:var(--acc); border-bottom-color:var(--acc); }
+.cp-dash .hp-pc-captab-n{
+  display:inline-flex; align-items:center; justify-content:center; min-width:15px; height:15px; padding:0 4px;
+  background:var(--acc); color:#101010; font-size:9px; font-weight:800;
+}
+.cp-dash .hp-pc-captabs .hp-pc-exports{
+  flex-shrink:0; align-items:center; padding:0 var(--gutter) 0 12px; margin-left:4px; border-left:1px solid var(--line);
+}
+.cp-dash .hp-pc-tab-resumen{ display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-3) 0; }
+.cp-dash .hp-pc-tab-resumen .hp-pc-rollup{ margin:0 var(--gutter); padding-bottom:0; }
 
 /* Presupuesto: toolbar (vistas + exportar) */
 .cp-dash .hp-pc-toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-2); }

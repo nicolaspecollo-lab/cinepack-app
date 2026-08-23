@@ -624,7 +624,13 @@ function HerramientaData({
           <button onClick={() => setError(null)}>✕</button>
         </div>
       )}
-      {herramienta.hint && <p className="hp-hint">{herramienta.hint}</p>}
+      {/* En Presupuesto, la vista Tabla es superficie de trabajo (carga real
+          de conceptos/montos): el hint ya se explica en el Tablero, y acá
+          solo resta altura para que la grilla empiece más arriba — pedido
+          explícito de Nicolás. */}
+      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && (
+        <p className="hp-hint">{herramienta.hint}</p>
+      )}
 
       {esTabla && (() => {
         const tabs = (
@@ -1824,13 +1830,58 @@ function RichToolbar({ className = "", inline = false }: { className?: string; i
   const cmd = (c: string, v?: string) => document.execCommand(c, false, v);
   const barRef = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<null | "color" | "format">(null);
+  // Solo hace falta en modo `inline`: ahí este toolbar vive dentro de
+  // .hp-tabla-toolbar, que tiene overflow-x:auto (y por espec de CSS eso
+  // fuerza overflow-y a un valor no-visible también) — un popover `absolute`
+  // ahí quedaba recortado. Igual que en ToolMenu.tsx: se porta a fixed,
+  // dentro del .cp-dash más cercano para seguir heredando el tema.
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [portalEl, setPortalEl] = useState<Element | null>(null);
+
+  function openMenu(e: React.MouseEvent<HTMLButtonElement>, name: "color" | "format") {
+    e.preventDefault();
+    if (menu === name) { setMenu(null); return; }
+    if (inline) {
+      const r = e.currentTarget.getBoundingClientRect();
+      setPos({ top: r.bottom + 5, left: r.left });
+      setPortalEl(e.currentTarget.closest(".cp-dash") ?? document.body);
+    }
+    setMenu(name);
+  }
 
   useEffect(() => {
     if (!menu) return;
-    function onDown(e: MouseEvent) { if (barRef.current && !barRef.current.contains(e.target as Node)) setMenu(null); }
+    function onDown(e: MouseEvent) {
+      const t = e.target as Node;
+      if (barRef.current?.contains(t)) return;
+      if (inline && (e.target as HTMLElement).closest?.(".hp-tb-menu")) return;
+      setMenu(null);
+    }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [menu]);
+  }, [menu, inline]);
+
+  const colorMenu = (
+    <div className="hp-tb-menu hp-tb-swatches" style={inline && pos ? { position: "fixed", top: pos.top, left: pos.left } : undefined}>
+      {CELL_TEXT_COLORS.map((c) => (
+        <button key={c} type="button" title={c} style={{ background: c }}
+          onMouseDown={(e) => { e.preventDefault(); cmd("foreColor", c); setMenu(null); }} />
+      ))}
+    </div>
+  );
+  const formatMenu = (
+    <div className="hp-tb-menu hp-tb-sizes" style={inline && pos ? { position: "fixed", top: pos.top, left: pos.left } : undefined}>
+      <span className="tm-section-title">{t("textSize")}</span>
+      {([["2", t("sizeSmall")], ["3", t("sizeNormal")], ["4", t("sizeLarge")], ["5", t("sizeXLarge")]] as const).map(([size, label]) => (
+        <button key={size} type="button" onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); setMenu(null); }}>{label}</button>
+      ))}
+      <span className="tm-section-title" style={{ marginTop: 4 }}>{t("fontLabel")}</span>
+      {CELL_FONTS.map((f) => (
+        <button key={f.label} type="button" style={{ fontFamily: f.value }}
+          onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); setMenu(null); }}>{f.label}</button>
+      ))}
+    </div>
+  );
 
   const content = (
     <>
@@ -1842,36 +1893,17 @@ function RichToolbar({ className = "", inline = false }: { className?: string; i
       <div className="hp-tb-group">
         <div className="hp-tb-pop">
           <button type="button" className={`hp-tb-trigger${menu === "color" ? " open" : ""}`} title={t("textColor")}
-            onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "color" ? null : "color"); }}>
+            onMouseDown={(e) => openMenu(e, "color")}>
             <Icon name="text-color" /><Icon name="chevron-down" size={9} />
           </button>
-          {menu === "color" && (
-            <div className="hp-tb-menu hp-tb-swatches">
-              {CELL_TEXT_COLORS.map((c) => (
-                <button key={c} type="button" title={c} style={{ background: c }}
-                  onMouseDown={(e) => { e.preventDefault(); cmd("foreColor", c); setMenu(null); }} />
-              ))}
-            </div>
-          )}
+          {menu === "color" && (inline ? (portalEl && createPortal(colorMenu, portalEl)) : colorMenu)}
         </div>
         <div className="hp-tb-pop">
           <button type="button" className={`hp-tb-trigger${menu === "format" ? " open" : ""}`} title={t("textSize")}
-            onMouseDown={(e) => { e.preventDefault(); setMenu(menu === "format" ? null : "format"); }}>
+            onMouseDown={(e) => openMenu(e, "format")}>
             <Icon name="type" /><Icon name="chevron-down" size={9} />
           </button>
-          {menu === "format" && (
-            <div className="hp-tb-menu hp-tb-sizes">
-              <span className="tm-section-title">{t("textSize")}</span>
-              {([["2", t("sizeSmall")], ["3", t("sizeNormal")], ["4", t("sizeLarge")], ["5", t("sizeXLarge")]] as const).map(([size, label]) => (
-                <button key={size} type="button" onMouseDown={(e) => { e.preventDefault(); cmd("fontSize", size); setMenu(null); }}>{label}</button>
-              ))}
-              <span className="tm-section-title" style={{ marginTop: 4 }}>{t("fontLabel")}</span>
-              {CELL_FONTS.map((f) => (
-                <button key={f.label} type="button" style={{ fontFamily: f.value }}
-                  onMouseDown={(e) => { e.preventDefault(); cmd("fontName", f.value); setMenu(null); }}>{f.label}</button>
-              ))}
-            </div>
-          )}
+          {menu === "format" && (inline ? (portalEl && createPortal(formatMenu, portalEl)) : formatMenu)}
         </div>
       </div>
     </>
@@ -4293,17 +4325,17 @@ function PresupuestoTablaTabs({
   const columnasTab = columnas.filter((c) => c.key !== "capitulo");
 
   return (
-    <div className="hp-pc">
-      <div className="hp-pc-toolbar">
-        <div className="hp-etb-filtros hp-pc-vistas">
-          <button className={`hp-etb-fchip${tab === "resumen" ? " on" : ""}`} onClick={() => setTab("resumen")}>Resumen</button>
+    <div className="hp-pc hp-pc-tabbed">
+      <div className="hp-pc-captabs">
+        <div className="hp-pc-captabs-scroll">
+          <button className={`hp-pc-captab${tab === "resumen" ? " on" : ""}`} onClick={() => setTab("resumen")}>Resumen</button>
           {sinCapitulo.length > 0 && (
-            <button className={`hp-etb-fchip${tab === PC_TAB_SIN_CAPITULO ? " on" : ""}`} onClick={() => setTab(PC_TAB_SIN_CAPITULO)}>
-              Sin capítulo · {sinCapitulo.length}
+            <button className={`hp-pc-captab${tab === PC_TAB_SIN_CAPITULO ? " on" : ""}`} onClick={() => setTab(PC_TAB_SIN_CAPITULO)}>
+              Sin capítulo <span className="hp-pc-captab-n">{sinCapitulo.length}</span>
             </button>
           )}
           {CAPITULOS_PRESUPUESTO_EXPORT.map((c) => (
-            <button key={c} className={`hp-etb-fchip${tab === c ? " on" : ""}`} onClick={() => setTab(c)} title={c}>
+            <button key={c} className={`hp-pc-captab${tab === c ? " on" : ""}`} onClick={() => setTab(c)} title={c}>
               {pcCapCorto(c)}
             </button>
           ))}
@@ -7661,11 +7693,13 @@ export function TablaTool({
               {filasPagina.length === 0 && (
                 <tr className="hp-tabla-empty-row">
                   <td colSpan={colSpanVacio}>
-                    <span className="hex"></span>
-                    {t("emptyTitle")}
-                    {editable && (
-                      <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
-                    )}
+                    <div className="hp-tabla-empty-inner">
+                      <span className="hex"></span>
+                      {t("emptyTitle")}
+                      {editable && (
+                        <button className="btn acc" onClick={onCrear}>{t("addFirstRow")}</button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}
