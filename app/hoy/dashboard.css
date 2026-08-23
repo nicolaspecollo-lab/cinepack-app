@@ -1867,6 +1867,10 @@
 .cp-dash .hp-archivo-empty{ color:var(--muted); font-size:12px; }
 .cp-dash .hp-archivo-up{ font-size:10px; font-family:'Poppins',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border:1px solid var(--line); background:none; color:var(--muted); padding:5px 9px; cursor:pointer; border-radius:0; white-space:nowrap; }
 .cp-dash .hp-archivo-up:hover{ color:var(--acc); border-color:var(--acc); }
+.cp-dash .hp-archivo-toggle{ font-size:10px; font-family:'Poppins',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; border:1px solid var(--line); background:none; color:var(--muted); padding:5px 9px; cursor:pointer; white-space:nowrap; }
+.cp-dash .hp-archivo-toggle:hover{ color:var(--acc); border-color:var(--acc); }
+.cp-dash .hp-archivo-close{ border:none; background:none; color:var(--muted); font-size:11px; cursor:pointer; padding:0 4px; }
+.cp-dash .hp-archivo-close:hover{ color:var(--rose); }
 .cp-dash .hp-gimg-up{ align-self:flex-start; }
 .cp-dash .hp-link-edit{ display:flex; align-items:center; gap:6px; }
 .cp-dash .hp-link-ext{ font-size:11.5px; color:var(--acc); text-decoration:none; white-space:nowrap; }
@@ -3265,18 +3269,6 @@
 .cp-dash .hp-pc-limite-warn{ font-size:10px; color:var(--amber); }
 .cp-dash .hp-pc-total{ display:flex; justify-content:space-between; padding:var(--sp-2) var(--sp-3); font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--muted); border-top:1px solid var(--line); margin-top:4px; }
 
-/* Presupuesto: resumen con topes (RESUMEN_FINAL del Modelo 3a) */
-.cp-dash .hp-pc-caps{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); margin:0 var(--gutter) var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); }
-.cp-dash .hp-pc-caps-tot{ display:flex; gap:var(--sp-4); flex-wrap:wrap; }
-.cp-dash .hp-pc-caps-tot > span{ display:flex; flex-direction:column; gap:2px; }
-.cp-dash .hp-pc-caps-l{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
-.cp-dash .hp-pc-caps-v{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-lg); color:var(--text); }
-.cp-dash .hp-pc-caps-list{ display:flex; flex-direction:column; gap:4px; border-top:1px solid var(--line); padding-top:var(--sp-2); }
-.cp-dash .hp-pc-cap-item{ display:flex; justify-content:space-between; font-size:var(--fs-sm); color:var(--text); }
-.cp-dash .hp-pc-cap-item.tono-bad{ color:var(--rose); }
-.cp-dash .hp-pc-cap-tope, .cp-dash .hp-pc-cap-pct{ color:var(--muted); font-size:var(--fs-xs); }
-.cp-dash .hp-pc-cap-item.tono-bad .hp-pc-cap-tope, .cp-dash .hp-pc-cap-item.tono-bad .hp-pc-cap-pct{ color:var(--rose); }
-
 /* Presupuesto: vista Tabla con pestañas por capítulo (estilo libro ICIB).
    .hp-pc-tabbed cancela el padding lateral de .hp-pc — acá cada franja
    (pestañas, resumen, TablaTool) pone su propio margen, para que la tabla
@@ -3305,42 +3297,7 @@
   flex-shrink:0; align-items:center; padding:0 var(--gutter) 0 12px; margin-left:4px; border-left:1px solid var(--line);
 }
 .cp-dash .hp-pc-tab-resumen{ display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-3) 0; }
-.cp-dash .hp-pc-tab-resumen .hp-pc-rollup{ margin:0 var(--gutter); padding-bottom:0; }
-
-/* Presupuesto: toolbar (vistas + exportar) */
-.cp-dash .hp-pc-toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-2); }
-.cp-dash .hp-pc-toolbar .hp-pc-vistas{ padding:0; }
-.cp-dash .hp-pc-exports{ display:flex; gap:8px; }
-
-/* Presupuesto: editor de línea (detalle) */
-.cp-dash .hp-pc-lineas{ display:flex; flex-direction:column; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-3); }
-.cp-dash .hp-pc-linea{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); }
-.cp-dash .hp-pc-linea-top{ display:flex; align-items:flex-start; gap:var(--sp-2); }
-.cp-dash .hp-pc-linea-titulo{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
-.cp-dash .hp-pc-linea-titulo input{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-base); color:var(--text); background:none; border:none; padding:0; width:100%; }
-.cp-dash .hp-pc-linea-titulo input:focus{ outline:none; }
-.cp-dash .hp-pc-linea-sub{ font-size:var(--fs-sm) !important; font-weight:400 !important; color:var(--muted) !important; }
-.cp-dash .hp-pc-linea-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--sp-2); }
-.cp-dash .hp-pc-field{ display:flex; flex-direction:column; gap:2px; }
-.cp-dash .hp-pc-field > span{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
-.cp-dash .hp-pc-field input, .cp-dash .hp-pc-field select{
-  font-size:var(--fs-sm); color:var(--text); background:var(--bg); border:1px solid var(--line);
-  padding:6px 8px; border-radius:0; font-family:inherit; width:100%;
-}
-.cp-dash .hp-pc-field input:focus, .cp-dash .hp-pc-field select:focus{ outline:none; border-color:var(--acc); }
-.cp-dash .hp-pc-linea-money{ display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:flex-end; }
-.cp-dash .hp-pc-linea-money .hp-pc-field{ min-width:110px; }
-.cp-dash .hp-pc-tipo-gasto{ min-width:180px; }
-.cp-dash .hp-pc-total-field input{ font-weight:700; }
-.cp-dash .hp-pc-reparto{ border-top:1px solid var(--line); padding-top:var(--sp-2); display:flex; flex-direction:column; gap:6px; }
-.cp-dash .hp-pc-reparto-lbl{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
-.cp-dash .hp-pc-reparto-row{ display:grid; grid-template-columns:1fr 140px auto; gap:8px; }
-.cp-dash .hp-pc-reparto-row input{ font-size:var(--fs-sm); color:var(--text); background:var(--bg); border:1px solid var(--line); padding:6px 8px; border-radius:0; }
-.cp-dash .hp-pc-reparto-row input:focus{ outline:none; border-color:var(--acc); }
-.cp-dash .hp-pc-linea-foot{ display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:flex-end; border-top:1px solid var(--line); padding-top:var(--sp-2); }
-.cp-dash .hp-pc-linea-foot .hp-pc-field{ min-width:160px; }
-.cp-dash .hp-pc-comentario{ flex:1; min-width:200px; font-size:var(--fs-sm); color:var(--text); background:var(--bg); border:1px solid var(--line); padding:6px 8px; border-radius:0; resize:vertical; font-family:inherit; }
-.cp-dash .hp-pc-comentario:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-pc-sembrando{ padding:40px var(--gutter); color:var(--muted); font-size:12px; text-align:center; }
 
 /* Cashflow */
 .cp-dash .hp-cf-list{ display:flex; flex-direction:column; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-3); }

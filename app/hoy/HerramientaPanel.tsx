@@ -181,11 +181,12 @@ export default function HerramientaPanel({
 // escanearlas todas de un vistazo, algo que el kanban con tarjetas
 // condensadas no resuelve bien. Se le devuelve la Tabla como excepción
 // explícita, no una vuelta atrás de la regla general.
-// Presupuesto (06-ago-2026): mismo criterio — 16 columnas por línea de
-// gasto, Nicolás pidió explícitamente poder entrar a la Tabla genérica para
-// usar sus funciones clásicas (agregar columnas propias, colores de celda y
-// de texto) sobre el mismo dato del tablero, sin que sean dos fuentes.
-const TABLA_ALTERNATIVA_FORZADA_IDS = new Set(["ej-plan-financiacion", "ej-presupuesto-costos"]);
+// Presupuesto (06 a 23-ago-2026) pasó por acá con el mismo criterio, pero el
+// 23-ago Nicolás pidió eliminar directamente el Tablero de esta herramienta
+// (la Tabla con pestañas por capítulo, ver PresupuestoTablaTabs, ya cubre
+// resumen + detalle) — no tiene "tablero" del que ser alternativa, así que
+// salió del set entero, no solo de la excepción.
+const TABLA_ALTERNATIVA_FORZADA_IDS = new Set(["ej-plan-financiacion"]);
 
 // ¿Esta herramienta tipo "tabla" tiene una vista a medida? Si no, cae al
 // TablaTool genérico. Centralizado acá para no arrastrar una cadena de
@@ -209,7 +210,6 @@ function tablaTieneVistaBespoke(id: string): boolean {
     DOC_STATUS_IDS.has(id) ||
     id === "ej-pagos-nominas" ||
     id === "ej-gestion-documental" ||
-    id === "ej-presupuesto-costos" ||
     ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
@@ -804,25 +804,6 @@ function HerramientaData({
         )}</VistaConEjemplos>
       )}
 
-      {herramienta.tipo === "tabla" && herramienta.id === "ej-presupuesto-costos" && (
-        // El Tablero es solo visualización desde ago-2026 — la carga real de
-        // conceptos/montos vive en la vista Tabla (pestañas por capítulo, ver
-        // PresupuestoTablaTabs). editable forzado a false acá, sin importar
-        // el rol: por eso también no ofrece "comenzar con este ejemplo".
-        <VistaConEjemplos ejemplos={EJ_PRESUPUESTO_COSTOS} filas={filas} editable={false} onCrear={crearFila}>{(fs, ed) => (
-        <PresupuestoCostosBoard
-          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={fs}
-          editable={ed}
-          departamento={departamento}
-          herramientaId={herramienta.id}
-          onCrear={() => crearFila({})}
-          onGuardar={guardarFila}
-          onBorrar={borrarFila}
-        />
-        )}</VistaConEjemplos>
-      )}
-
       {herramienta.tipo === "tabla" && CASHFLOW_IDS.has(herramienta.id) && (
         <VistaConEjemplos ejemplos={EJ_CASHFLOW} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <CashflowChart
@@ -1403,7 +1384,7 @@ function HerramientaData({
           departamento={departamento}
           herramientaId={herramienta.id}
           herramientaNombre={herramienta.nombre}
-          onCrearConDatos={(datos) => crearFila(datos)}
+          onCrearConDatos={async (datos) => { await crearFila(datos); }}
           onDuplicar={(f) => {
             const datos = { ...f.datos };
             delete datos._pulso_evt_presentacion;
@@ -1581,6 +1562,13 @@ function ArchivoCell({
   const esEnlace = /^https?:\/\//i.test(path);
   const [modo, setModo] = useState<"archivo" | "enlace">(esEnlace ? "enlace" : "archivo");
   const fileName = !esEnlace && path ? path.split("/").pop()?.replace(/^\d+-/, "") ?? path : "";
+  // El seg "Subir archivo/Pegar enlace" + el botón de subida quedaban
+  // SIEMPRE visibles en toda celda editable, aunque nadie la esté tocando —
+  // eso solo (77px) empujaba el alto de la fila entera muy por encima del
+  // resto de las celdas (36px), en cualquier tabla con columna de archivo,
+  // no solo acá. Ahora arranca colapsado detrás de un botón chico y se
+  // abre/cierra bajo demanda, igual que "agregar columna" en el toolbar.
+  const [abierto, setAbierto] = useState(false);
 
   async function subir(file: File) {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -1595,6 +1583,7 @@ function ArchivoCell({
       setErr(t("uploadError", { msg: error.message }));
       return;
     }
+    setAbierto(false);
     onSave(p);
   }
 
@@ -1622,11 +1611,17 @@ function ArchivoCell({
       ) : (
         <span className="hp-archivo-empty">—</span>
       )}
-      {editable && (
+      {editable && !abierto && (
+        <button type="button" className="hp-archivo-toggle" onClick={() => setAbierto(true)}>
+          {path ? t("change") : t("upload")}
+        </button>
+      )}
+      {editable && abierto && (
         <div className="hp-archivo-edit">
           <div className="cp-seg cp-seg-chip">
             <button type="button" className={`cp-seg-cell${modo === "archivo" ? " cp-seg-on" : ""}`} onClick={() => setModo("archivo")}>{t("uploadFile")}</button>
             <button type="button" className={`cp-seg-cell${modo === "enlace" ? " cp-seg-on" : ""}`} onClick={() => setModo("enlace")}>{t("pasteLink")}</button>
+            <button type="button" className="hp-archivo-close" onClick={() => setAbierto(false)} title={t("cancel")}>✕</button>
           </div>
           {modo === "archivo" ? (
             <label className="hp-archivo-up">
@@ -1650,7 +1645,7 @@ function ArchivoCell({
               defaultValue={esEnlace ? path : ""}
               onBlur={(e) => {
                 const v = e.target.value.trim();
-                if (v) onSave(v);
+                if (v) { onSave(v); setAbierto(false); }
               }}
             />
           )}
@@ -3668,9 +3663,6 @@ function PresupuestoBoard({
 // el ICIB para presentar a un fondo), y la misma fila se puede agrupar por
 // cualquiera de los 4 ejes sin duplicar el dato — "agrupar por" en vez de
 // 4 tablas.
-function repartoDe(f: Fila): Record<string, string>[] {
-  return parseArr<Record<string, string>>(f.datos?.reparto);
-}
 const PC_AGRUPADORES = [
   { key: "capitulo" as const, label: "Capítulo" },
   { key: "departamento" as const, label: "Departamento" },
@@ -3718,211 +3710,6 @@ function PresupuestoRollup({ filas, campo }: { filas: Fila[]; campo: PcAgrupador
       <div className="hp-pc-total">
         <span>Total</span>
         <span>{ejMoney(totalGeneral)} presupuestado · {ejMoney(realGeneral)} real</span>
-      </div>
-    </div>
-  );
-}
-
-// ---- Resumen con topes, como la hoja RESUMEN_FINAL del Modelo 3a ----
-// Coste de realización = capítulos 1-10. Coste total = + cap. 11 y 12. Los
-// 4 topes son aproximados por palabra clave en concepto/subgrupo/cargo (el
-// Excel oficial los ata a líneas de cuenta fijas; acá el subgrupo es texto
-// libre, así que se busca la mención literal en vez de un número de cuenta).
-function pcMatch(f: Fila, kws: string[]): boolean {
-  const texto = `${f.datos?.subgrupo ?? ""} ${f.datos?.concepto ?? ""} ${f.datos?.cargo ?? ""}`.toLowerCase();
-  return kws.some((k) => texto.includes(k));
-}
-function PresupuestoResumenCaps({ filas }: { filas: Fila[] }) {
-  const capNum = (f: Fila) => parseInt((f.datos?.capitulo ?? "").match(/Cap\. (\d+)/)?.[1] ?? "0", 10);
-  const totalDe = (fs: Fila[]) => fs.reduce((s, f) => s + ejNum(f.datos?.total), 0);
-  const cap1a10 = filas.filter((f) => capNum(f) >= 1 && capNum(f) <= 10);
-  const cap11 = filas.filter((f) => capNum(f) === 11);
-  const cap12 = filas.filter((f) => capNum(f) === 12);
-  const costeRealizacion = totalDe(cap1a10);
-  const costeTotal = costeRealizacion + totalDe(cap11) + totalDe(cap12);
-
-  const productorEj = totalDe(filas.filter((f) => pcMatch(f, ["productor ejecutivo"])));
-  const gastosGenerales = totalDe(cap11);
-  const publicidad = totalDe(cap12.filter((f) => pcMatch(f, ["publicidad", "trayler", "trailer", "making"])));
-  const intereses = totalDe(cap12.filter((f) => pcMatch(f, ["interes"])));
-
-  const topes = [
-    { label: "Productor ejecutivo", valor: productorEj, tope: 0.05, base: costeRealizacion },
-    { label: "Gastos generales (cap. 11)", valor: gastosGenerales, tope: 0.07, base: costeRealizacion },
-    { label: "Publicidad (cap. 12)", valor: publicidad, tope: 0.4, base: costeRealizacion },
-    { label: "Intereses pasivos (cap. 12)", valor: intereses, tope: 0.2, base: costeRealizacion },
-  ];
-
-  return (
-    <div className="hp-pc-caps">
-      <div className="hp-pc-caps-tot">
-        <span><span className="hp-pc-caps-l">Coste de realización</span><span className="hp-pc-caps-v">{ejMoney(costeRealizacion)}</span></span>
-        <span><span className="hp-pc-caps-l">Coste total</span><span className="hp-pc-caps-v">{ejMoney(costeTotal)}</span></span>
-      </div>
-      <div className="hp-pc-caps-list">
-        {topes.map((tp) => {
-          const limite = tp.base * tp.tope;
-          const pasado = tp.base > 0 && tp.valor > limite;
-          const pct = tp.base > 0 ? (tp.valor / tp.base) * 100 : 0;
-          return (
-            <div className={`hp-pc-cap-item${pasado ? " tono-bad" : ""}`} key={tp.label}>
-              <span className="hp-pc-cap-l">{tp.label} <span className="hp-pc-cap-tope">· tope {Math.round(tp.tope * 100)}%</span></span>
-              <span className="hp-pc-cap-v">{ejMoney(tp.valor)} <span className="hp-pc-cap-pct">· {pct.toFixed(1)}%</span></span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ---- Detalle: editor de línea con desglose de IVA y reparto por productora ----
-function PresupuestoLinea({
-  f, columnas, editable, departamento, herramientaId, onGuardar, onBorrar,
-}: {
-  f: Fila; columnas: Columna[]; editable: boolean; departamento: string; herramientaId: string;
-  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
-  onBorrar: (id: string) => void;
-}) {
-  const t = useTranslations("hp");
-  const v = (k: string) => f.datos?.[k] ?? "";
-  const col = (k: string) => columnas.find((c) => c.key === k);
-  const esAlquiler = v("tipo_gasto") === "Alquiler / servicio";
-
-  function set(k: string, val: string) {
-    // Un input readOnly (fila fantasma / sin permiso) sigue disparando
-    // onBlur al perder foco aunque el valor no haya cambiado — sin este
-    // guard, eso intenta guardar el id fantasma "__ej_N" (no es un uuid
-    // real) y Supabase lo rechaza.
-    if (!editable) return;
-    onGuardar(f.id, { ...f.datos, [k]: val }, f);
-  }
-  function setIva(k: "base_sin_iva" | "iva", val: string) {
-    if (!editable) return;
-    const base = k === "base_sin_iva" ? ejNum(val) : ejNum(v("base_sin_iva"));
-    const iva = k === "iva" ? ejNum(val) : ejNum(v("iva"));
-    onGuardar(f.id, { ...f.datos, [k]: val, total: String(base + iva) }, f);
-  }
-  const colArchivo = col("doc");
-  const reparto = repartoDe(f);
-
-  return (
-    <div className="hp-pc-linea">
-      <div className="hp-pc-linea-top">
-        <div className="hp-pc-linea-titulo">
-          <input defaultValue={v("concepto")} placeholder={col("concepto")?.label} readOnly={!editable} onBlur={(e) => set("concepto", e.target.value)} />
-          <input className="hp-pc-linea-sub" defaultValue={v("subgrupo")} placeholder={col("subgrupo")?.label} readOnly={!editable} onBlur={(e) => set("subgrupo", e.target.value)} />
-        </div>
-        {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
-      </div>
-
-      <div className="hp-pc-linea-grid">
-        <label className="hp-pc-field"><span>{col("capitulo")?.label}</span>
-          <select value={v("capitulo")} disabled={!editable} onChange={(e) => set("capitulo", e.target.value)}>
-            <option value="">—</option>
-            {(col("capitulo")?.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </label>
-        <label className="hp-pc-field"><span>{col("departamento")?.label}</span>
-          <select value={v("departamento")} disabled={!editable} onChange={(e) => set("departamento", e.target.value)}>
-            <option value="">—</option>
-            {(col("departamento")?.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </label>
-        <label className="hp-pc-field"><span>{col("cargo")?.label}</span>
-          <input defaultValue={v("cargo")} readOnly={!editable} onBlur={(e) => set("cargo", e.target.value)} />
-        </label>
-        <label className="hp-pc-field"><span>{col("etapa")?.label}</span>
-          <select value={v("etapa")} disabled={!editable} onChange={(e) => set("etapa", e.target.value)}>
-            <option value="">—</option>
-            {(col("etapa")?.opciones ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
-          </select>
-        </label>
-      </div>
-
-      <div className="hp-pc-linea-money">
-        <label className="hp-pc-field hp-pc-tipo-gasto">
-          <span>{col("tipo_gasto")?.label}</span>
-          <EstadoSeg valor={v("tipo_gasto") || "Estándar"} opciones={col("tipo_gasto")?.opciones ?? []} onPick={(nv) => set("tipo_gasto", nv)} editable={editable} chip />
-        </label>
-        {esAlquiler && (
-          <>
-            <label className="hp-pc-field"><span>{col("base_sin_iva")?.label}</span>
-              <input type="number" defaultValue={v("base_sin_iva")} readOnly={!editable} placeholder="0" onBlur={(e) => setIva("base_sin_iva", e.target.value)} />
-            </label>
-            <label className="hp-pc-field"><span>{col("iva")?.label}</span>
-              <input type="number" defaultValue={v("iva")} readOnly={!editable} placeholder="0" onBlur={(e) => setIva("iva", e.target.value)} />
-            </label>
-          </>
-        )}
-        <label className="hp-pc-field hp-pc-total-field"><span>{col("total")?.label}</span>
-          <input type="number" defaultValue={v("total")} readOnly={!editable || esAlquiler} placeholder="0" onBlur={(e) => set("total", e.target.value)} />
-        </label>
-        <label className="hp-pc-field"><span>{col("comprometido")?.label}</span>
-          <input type="number" defaultValue={v("comprometido")} readOnly={!editable} placeholder="0" onBlur={(e) => set("comprometido", e.target.value)} />
-        </label>
-        <label className="hp-pc-field"><span>{col("real")?.label}</span>
-          <input type="number" defaultValue={v("real")} readOnly={!editable} placeholder="0" onBlur={(e) => set("real", e.target.value)} />
-        </label>
-      </div>
-
-      <div className="hp-pc-reparto">
-        <span className="hp-pc-reparto-lbl">{col("reparto")?.label}</span>
-        {reparto.map((r, idx) => (
-          <div className="hp-pc-reparto-row" key={idx}>
-            <input
-              defaultValue={r.productora}
-              placeholder="Productora / Coproductora"
-              readOnly={!editable}
-              onBlur={(e) => {
-                if (!editable) return;
-                const next = repartoDe(f).map((x, i) => (i === idx ? { ...x, productora: e.target.value } : x));
-                onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
-              }}
-            />
-            <input
-              type="number"
-              defaultValue={r.monto}
-              placeholder="Monto"
-              readOnly={!editable}
-              onBlur={(e) => {
-                if (!editable) return;
-                const next = repartoDe(f).map((x, i) => (i === idx ? { ...x, monto: e.target.value } : x));
-                onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
-              }}
-            />
-            {editable && (
-              <button className="hp-del" onClick={() => {
-                const next = repartoDe(f).filter((_, i) => i !== idx);
-                onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
-              }}>✕</button>
-            )}
-          </div>
-        ))}
-        {editable && (
-          <button className="btn" onClick={() => {
-            const next = [...repartoDe(f), { productora: "", monto: "" }];
-            onGuardar(f.id, { ...f.datos, reparto: JSON.stringify(next) }, f);
-          }}>+ Agregar productora</button>
-        )}
-      </div>
-
-      <div className="hp-pc-linea-foot">
-        <label className="hp-pc-field"><span>{col("responsable")?.label}</span>
-          <input defaultValue={v("responsable")} readOnly={!editable} onBlur={(e) => set("responsable", e.target.value)} />
-        </label>
-        <textarea className="hp-pc-comentario" defaultValue={v("comentario")} placeholder={col("comentario")?.label} readOnly={!editable} rows={1} onBlur={(e) => set("comentario", e.target.value)} />
-        {colArchivo && (
-          <ArchivoCell
-            path={v("doc")}
-            editable={editable}
-            departamento={departamento}
-            herramientaId={herramientaId}
-            filaId={f.id}
-            colKey="doc"
-            onSave={(val) => set("doc", val)}
-          />
-        )}
       </div>
     </div>
   );
@@ -4164,107 +3951,12 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
   pcDescargarBlob(`${slug}-presupuesto.xlsx`, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
 }
 
-const PC_VISTAS = [
-  { key: "detalle" as const, label: "Detalle" },
-  { key: "capitulo" as const, label: "Por capítulo" },
-  { key: "departamento" as const, label: "Por departamento" },
-  { key: "cargo" as const, label: "Por cargo" },
-  { key: "etapa" as const, label: "Por etapa" },
-];
-
-export function PresupuestoCostosBoard({
-  columnas,
-  filas,
-  editable,
-  departamento,
-  herramientaId,
-  onCrear,
-  onGuardar,
-  onBorrar,
-}: {
-  columnas: Columna[];
-  filas: Fila[];
-  editable: boolean;
-  departamento: string;
-  herramientaId: string;
-  onCrear: () => void;
-  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
-  onBorrar: (id: string) => void;
-}) {
-  const t = useTranslations("hp");
-  const [vista, setVista] = useState<(typeof PC_VISTAS)[number]["key"]>("detalle");
-  const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
-
-  if (filas.length === 0) {
-    return (
-      <div className="hp-tabla-empty">
-        <span className="hex"></span>
-        <p>{t("emptyTitle")}</p>
-        {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addFirstRow")}</button>}
-      </div>
-    );
-  }
-
-  async function exportarPDF() {
-    setExportando("pdf");
-    try {
-      await exportarPresupuestoPDF(filas);
-    } finally {
-      setExportando(null);
-    }
-  }
-  async function exportarExcel() {
-    setExportando("excel");
-    try {
-      await exportarPresupuestoExcel(filas, columnas);
-    } finally {
-      setExportando(null);
-    }
-  }
-
-  return (
-    <div className="hp-pc">
-      <PresupuestoResumenCaps filas={filas} />
-      <div className="hp-pc-toolbar">
-        <div className="hp-etb-filtros hp-pc-vistas">
-          {PC_VISTAS.map((v) => (
-            <button key={v.key} className={`hp-etb-fchip${vista === v.key ? " on" : ""}`} onClick={() => setVista(v.key)}>{v.label}</button>
-          ))}
-        </div>
-        <div className="hp-pc-exports">
-          <button className="btn" disabled={exportando !== null} onClick={exportarPDF}>{exportando === "pdf" ? t("exporting") : t("exportPdfResumen")}</button>
-          <button className="btn" disabled={exportando !== null} onClick={exportarExcel}>{exportando === "excel" ? t("exporting") : t("exportExcelTabla")}</button>
-        </div>
-      </div>
-      {vista === "detalle" ? (
-        <div className="hp-pc-lineas">
-          {filas.map((f) => (
-            <PresupuestoLinea
-              key={f.id}
-              f={f}
-              columnas={columnas}
-              editable={editable}
-              departamento={departamento}
-              herramientaId={herramientaId}
-              onGuardar={onGuardar}
-              onBorrar={onBorrar}
-            />
-          ))}
-          {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button></div>}
-        </div>
-      ) : (
-        <PresupuestoRollup filas={filas} campo={vista} />
-      )}
-    </div>
-  );
-}
-
 // ---- Presupuesto — vista "Tabla", como el libro de Excel del ICIB: una
-// pestaña Resumen (solo lectura) + una pestaña por capítulo, cada una con la
-// TablaTool completa filtrada a ese capítulo (columnas propias, colores,
-// exportar CSV, todo el poder de TablaTool) para no cargar todo en una sola
-// grilla de 16 columnas. El Tablero (tarjetas) quedó como visualización; acá
-// vive la carga real de conceptos y montos.
+// pestaña Resumen + una pestaña por capítulo, cada una con la TablaTool
+// completa filtrada a ese capítulo (columnas propias, colores, exportar CSV,
+// todo el poder de TablaTool) para no cargar todo en una sola grilla de 16
+// columnas. Es la ÚNICA vista de esta herramienta (23-ago-2026: se sacó el
+// Tablero — con Resumen adentro de acá no tenía sentido tener las dos).
 const PC_TAB_SIN_CAPITULO = "__sin_capitulo__";
 
 function pcCapCorto(c: string): string {
@@ -4295,7 +3987,7 @@ function PresupuestoTablaTabs({
   departamento: string;
   herramientaId: string;
   herramientaNombre: string;
-  onCrearConDatos: (datos: Record<string, string>) => void;
+  onCrearConDatos: (datos: Record<string, string>) => Promise<void>;
   onDuplicar?: (fila: Fila) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
@@ -4307,6 +3999,7 @@ function PresupuestoTablaTabs({
   const t = useTranslations("hp");
   const [tab, setTab] = useState<string>("resumen");
   const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
+  const [sembrando, setSembrando] = useState(false);
 
   const sinCapitulo = filas.filter((f) => !(f.datos?.capitulo ?? "").trim());
 
@@ -4323,6 +4016,30 @@ function PresupuestoTablaTabs({
     ? sinCapitulo
     : filas.filter((f) => (f.datos?.capitulo ?? "") === tab);
   const columnasTab = columnas.filter((c) => c.key !== "capitulo");
+
+  // Al entrar por primera vez a un capítulo vacío, se precargan filas en
+  // blanco para llenar la pantalla — Nicolás pidió explícitamente que el
+  // cliente NUNCA vea el CTA de "agregar primera fila" ("es ridículo, no se
+  // ve profesional"). Se siembran filas REALES (mismo crearFila de siempre,
+  // con capitulo ya cargado) en vez de un mecanismo de filas fantasma nuevo,
+  // para reusar guardar/borrar tal cual ya funcionan. seededRef evita
+  // re-sembrar dos veces la misma pestaña en esta sesión, y respeta que el
+  // usuario borre todo a propósito sin que vuelva a llenarse solo.
+  const seededRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (tab === "resumen" || tab === PC_TAB_SIN_CAPITULO) return;
+    if (!editable || filasTab.length > 0 || seededRef.current.has(tab)) return;
+    seededRef.current.add(tab);
+    const SEED_ROWS = 20;
+    (async () => {
+      setSembrando(true);
+      for (let i = 0; i < SEED_ROWS; i++) {
+        await onCrearConDatos({ capitulo: tab });
+      }
+      setSembrando(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   return (
     <div className="hp-pc hp-pc-tabbed">
@@ -4348,9 +4065,10 @@ function PresupuestoTablaTabs({
 
       {tab === "resumen" ? (
         <div className="hp-pc-tab-resumen">
-          <PresupuestoResumenCaps filas={filas} />
           <PresupuestoRollup filas={filas} campo="capitulo" />
         </div>
+      ) : sembrando ? (
+        <div className="hp-pc-sembrando">Preparando filas…</div>
       ) : (
         <TablaTool
           columnas={columnasTab}
@@ -8577,12 +8295,6 @@ const EJ_PLAN_SEMANA: Ejemplo[] = [
 ];
 const EJ_PLAN_LOCACIONES_JORNADA: Ejemplo[] = [
   { dia: "3", fecha: "2026-07-14", locacion: "Faro de Punta Alta", direccion: "Camino del Faro s/n", hora_llegada: "05:30", hora_inicio: "06:00", hora_fin: "19:30", escenas: "1, 3", notas_logistica: "Sin señal, llevar walkies. Parking limitado a 6 vehículos.", permiso_doc: "" },
-];
-const EJ_PRESUPUESTO_COSTOS: Ejemplo[] = [
-  { capitulo: "Cap. 03. Equipo técnico", subgrupo: "03.01 Dirección", concepto: "Director de fotografía", departamento: "Fotografía", cargo: "Director de fotografía", etapa: "Producción", tipo_gasto: "Estándar", total: "38000", comprometido: "38000", real: "36500", responsable: "Diego Aramburu" },
-  { capitulo: "Cap. 04. Escenografía", subgrupo: "04.01 Decorados y escenarios", concepto: "Alquiler de interiores naturales", departamento: "Arte", cargo: "Director de arte", etapa: "Producción", tipo_gasto: "Alquiler / servicio", base_sin_iva: "37190", iva: "7810", total: "45000", comprometido: "45000", real: "38200", responsable: "Marta Gil", reparto: JSON.stringify([{ productora: "Productora", monto: "30000" }, { productora: "Coproductora 1", monto: "15000" }]) },
-  { capitulo: "Cap. 06. Maquinaria de rodaje y transportes", subgrupo: "06.01 Maquinaria y elementos de rodaje", concepto: "Equipo de sonido principal (alquiler)", departamento: "Sonido", cargo: "Jefe de sonido", etapa: "Producción", tipo_gasto: "Alquiler / servicio", base_sin_iva: "19008", iva: "3992", total: "23000", comprometido: "22000", real: "24100", responsable: "Kepa Aguirre", comentario: "Se sumó un boom extra no previsto." },
-  { capitulo: "Cap. 11. Gastos generales", subgrupo: "11.01 Generales", concepto: "Alquiler de oficina", departamento: "Ejecutivo", cargo: "Producción ejecutiva", etapa: "Desarrollo", tipo_gasto: "Alquiler / servicio", base_sin_iva: "1652", iva: "348", total: "2000", comprometido: "2000", real: "2000", responsable: "Nicolás Pecollo" },
 ];
 const EJ_PLAN_REESCRITURA: Ejemplo[] = [
   { tipo_registro: "Pase", nombre: "Pase de estructura", estado_pase: "En curso", version_origen: "v4.0", version_destino: "v5.0", fecha_entrega: "2026-08-30", objetivo: "Resolver la caída del segundo acto señalada en el informe de Laura Sanz." },
