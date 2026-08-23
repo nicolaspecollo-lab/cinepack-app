@@ -3260,13 +3260,27 @@
 .cp-dash .hp-pre-nota{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm); color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; }
 .cp-dash .hp-pre-nota:focus{ outline:none; border-color:var(--acc); color:var(--text); }
 
-/* Presupuesto y costos: 3 vistas sobre la misma tabla de partidas */
+/* Presupuesto — Resumen: grilla de tarjetas por capítulo, estilo propio de
+   esta ronda de rediseño (bordes finos, sin radius, sin la barra de color
+   gruesa a la izquierda que traía de la versión vieja de Ejecutivo — Nicolás
+   la marcó como "grotesca"). Grid responsive de verdad: auto-fill decide
+   cuántas entran por fila según el ancho disponible, en vez de una lista
+   apilada de una columna que desperdicia el ancho completo. */
 .cp-dash .hp-pc{ padding-left:var(--gutter); padding-right:var(--gutter); }
-.cp-dash .hp-pc .hp-pre-list, .cp-dash .hp-pc .hp-pre-header{ padding-left:0; padding-right:0; }
-.cp-dash .hp-pc-vistas{ padding:0 0 var(--sp-3); }
-.cp-dash .hp-pc-rollup{ display:flex; flex-direction:column; gap:var(--sp-2); padding-bottom:var(--sp-3); }
-.cp-dash .hp-pc-h-nombre{ min-width:140px; }
-.cp-dash .hp-pc-limite-warn{ font-size:10px; color:var(--amber); }
+.cp-dash .hp-pc-rollup{ display:flex; flex-direction:column; gap:var(--sp-3); padding-bottom:var(--sp-3); }
+.cp-dash .hp-pc-rollup-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:var(--sp-2); }
+.cp-dash .hp-pc-rollup-card{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); min-width:0; }
+.cp-dash .hp-pc-rollup-card-top{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); }
+.cp-dash .hp-pc-rollup-card-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-dash .hp-pc-rollup-card-figs{ display:flex; gap:var(--sp-3); flex-wrap:wrap; }
+.cp-dash .hp-pc-rollup-fig{ display:flex; flex-direction:column; gap:1px; }
+.cp-dash .hp-pc-rollup-fig-label{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+.cp-dash .hp-pc-rollup-fig-val{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-sm); color:var(--text); font-variant-numeric:tabular-nums; }
+.cp-dash .hp-pc-rollup-bar{ height:4px; background:var(--hl2); overflow:hidden; }
+.cp-dash .hp-pc-rollup-bar-fill{ height:100%; transition:width var(--dur); background:var(--muted); }
+.cp-dash .hp-pc-rollup-bar-fill.tono-ok{ background:var(--lime); }
+.cp-dash .hp-pc-rollup-bar-fill.tono-warn{ background:var(--amber); }
+.cp-dash .hp-pc-rollup-bar-fill.tono-bad{ background:var(--rose); }
 .cp-dash .hp-pc-total{ display:flex; justify-content:space-between; padding:var(--sp-2) var(--sp-3); font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--muted); border-top:1px solid var(--line); margin-top:4px; }
 
 /* Presupuesto: vista Tabla con pestañas por capítulo (estilo libro ICIB).

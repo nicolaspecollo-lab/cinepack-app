@@ -3747,22 +3747,26 @@ function PresupuestoRollup({ filas, campo }: { filas: Fila[]; campo: PcAgrupador
 
   return (
     <div className="hp-pc-rollup">
-      {grupos.map(([nombre, g]) => {
-        const pct = g.total > 0 ? (g.real / g.total) * 100 : 0;
-        const tono = pct > 100 ? "bad" : pct >= 90 ? "warn" : "ok";
-        return (
-          <div className={`hp-pre-header tono-${tono}`} key={nombre}>
-            <div className="hp-pre-h-item hp-pc-h-nombre"><span className="hp-pre-h-val">{nombre}</span></div>
-            <div className="hp-pre-h-item"><span className="hp-pre-h-label">Total</span><span className="hp-pre-h-val">{ejMoney(g.total)}</span></div>
-            <div className="hp-pre-h-item"><span className="hp-pre-h-label">Comprometido</span><span className="hp-pre-h-val">{ejMoney(g.comprometido)}</span></div>
-            <div className="hp-pre-h-item"><span className="hp-pre-h-label">Real</span><span className="hp-pre-h-val">{ejMoney(g.real)}</span></div>
-            <div className="hp-pre-h-gauge">
-              <div className="hp-pre-h-bar"><div className={`hp-pre-bar-fill tono-${tono}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
-              <span className={`hp-pre-pct tono-${tono}`}>{g.total > 0 ? `${Math.round(pct)}%` : "—"}</span>
+      <div className="hp-pc-rollup-grid">
+        {grupos.map(([nombre, g]) => {
+          const pct = g.total > 0 ? (g.real / g.total) * 100 : 0;
+          const tono = pct > 100 ? "bad" : pct >= 90 ? "warn" : "ok";
+          return (
+            <div className="hp-pc-rollup-card" key={nombre}>
+              <div className="hp-pc-rollup-card-top">
+                <span className="hp-pc-rollup-card-nombre">{nombre}</span>
+                <span className={`hp-stats-pill tono-${tono}`}>{g.total > 0 ? `${Math.round(pct)}%` : "—"}</span>
+              </div>
+              <div className="hp-pc-rollup-card-figs">
+                <div className="hp-pc-rollup-fig"><span className="hp-pc-rollup-fig-label">Total</span><span className="hp-pc-rollup-fig-val">{ejMoney(g.total)}</span></div>
+                <div className="hp-pc-rollup-fig"><span className="hp-pc-rollup-fig-label">Comprometido</span><span className="hp-pc-rollup-fig-val">{ejMoney(g.comprometido)}</span></div>
+                <div className="hp-pc-rollup-fig"><span className="hp-pc-rollup-fig-label">Real</span><span className="hp-pc-rollup-fig-val">{ejMoney(g.real)}</span></div>
+              </div>
+              <div className="hp-pc-rollup-bar"><div className={`hp-pc-rollup-bar-fill tono-${tono}`} style={{ width: `${Math.min(100, pct)}%` }} /></div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
       <div className="hp-pc-total">
         <span>Total</span>
         <span>{ejMoney(totalGeneral)} presupuestado · {ejMoney(realGeneral)} real</span>
