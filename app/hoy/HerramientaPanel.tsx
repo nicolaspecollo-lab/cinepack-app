@@ -607,6 +607,7 @@ function HerramientaData({
   }, [meta]);
   const varianteActivaPresupuesto = meta?.datos?._presupuesto_activo || "principal";
   const [variantePresupuesto, setVariantePresupuesto] = useState("principal");
+  const nombreVarianteActualPresupuesto = variantesPresupuesto.find((v) => v.id === variantePresupuesto)?.nombre ?? "Presupuesto";
 
   async function guardarVariantesPresupuesto(nuevas: { id: string; nombre: string }[]) {
     if (meta) await guardarFila(meta.id, { ...meta.datos, _presupuestos: JSON.stringify(nuevas) });
@@ -742,7 +743,65 @@ function HerramientaData({
         <p className="hp-hint">{herramienta.hint}</p>
       )}
 
-      {esTabla && (() => {
+      {esTabla && herramienta.id === "ej-presupuesto-costos" && (
+        // Barra propia de Presupuesto: el selector de "Presupuesto
+        // alternativo" (antes su propia fila suelta, a la izquierda, con otro
+        // alto/estilo) se suma acá como un botón más, en la MISMA fila que
+        // Tabla/Archivos y con el mismo ancho de banda completo — pedido
+        // explícito tras la captura donde quedaban descuadrados. No se porta
+        // a la cabecera como el resto de herramientas: necesita ser una fila
+        // propia de ancho completo, no compartir espacio comprimido con el
+        // título "← Volver".
+        <div className="hp-pc-toolrow">
+          <ToolMenu label={nombreVarianteActualPresupuesto} icon="layout" width={260}>
+            {(close) => (
+              <>
+                <div className="tm-section">
+                  {variantesPresupuesto.map((v) => (
+                    <button
+                      key={v.id}
+                      className={`tm-item${v.id === variantePresupuesto ? " active" : ""}`}
+                      onClick={() => { setVariantePresupuesto(v.id); close(); }}
+                    >
+                      {v.id === variantePresupuesto && <Icon name="check" size={13} />}
+                      <span>{v.nombre}</span>
+                      {v.id === varianteActivaPresupuesto && <span className="hp-pc-variante-activa">Activo</span>}
+                    </button>
+                  ))}
+                </div>
+                {editable && (
+                  <div className="tm-section tm-section-bordered">
+                    <button className="tm-item" onClick={() => { agregarVariantePresupuesto(); close(); }}>
+                      <Icon name="plus" size={13} /><span>Nuevo presupuesto alternativo</span>
+                    </button>
+                    {variantePresupuesto !== varianteActivaPresupuesto && (
+                      <button className="tm-item" onClick={() => { marcarVarianteActivaPresupuesto(variantePresupuesto); close(); }}>
+                        <span>Marcar como activo</span>
+                      </button>
+                    )}
+                    {variantePresupuesto !== "principal" && (
+                      <button className="tm-item" onClick={() => { eliminarVariantePresupuesto(variantePresupuesto); close(); }}>
+                        <Icon name="trash" size={13} /><span>Eliminar este presupuesto</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </ToolMenu>
+          {variantePresupuesto !== "principal" && <span className="hp-pc-variante-badge">Alternativo</span>}
+          {tieneVistaTabla && (
+            <button className={`hp-pc-toolrow-btn ${vista === "tabla" ? "active" : ""}`} onClick={() => setVista("tabla")}>
+              <Icon name="table" size={12} /> {t("viewTable")}
+            </button>
+          )}
+          <button className={`hp-pc-toolrow-btn ${vista === "archivos" ? "active" : ""}`} onClick={() => setVista("archivos")}>
+            <Icon name="folder" size={12} /> {t("viewFiles")}
+          </button>
+        </div>
+      )}
+
+      {esTabla && herramienta.id !== "ej-presupuesto-costos" && (() => {
         const tabs = (
           <div className="dsubtabs hp-view-tabs">
             {tieneTablero && (
@@ -1515,11 +1574,6 @@ function HerramientaData({
           onRenombrarCapitulo={renombrarCapituloPresupuesto}
           variantes={variantesPresupuesto}
           varianteActual={variantePresupuesto}
-          varianteActivaId={varianteActivaPresupuesto}
-          onCambiarVariante={setVariantePresupuesto}
-          onAgregarVariante={agregarVariantePresupuesto}
-          onMarcarVarianteActiva={marcarVarianteActivaPresupuesto}
-          onEliminarVariante={eliminarVariantePresupuesto}
         />
       )}
 
@@ -1860,6 +1914,7 @@ function Celda({
           value={valor}
           options={col.opciones ?? []}
           placeholder="—"
+          permitirLibre={col.libre}
           onChange={(v) => { onChange(v); onCommit(); }}
         />
       </div>
@@ -3792,6 +3847,31 @@ const PC_AGRUPADORES = [
 ];
 type PcAgrupador = (typeof PC_AGRUPADORES)[number]["key"];
 
+// Número de capítulo a partir de "Cap. 03. Equipo técnico" → 3. Se reusa acá
+// y en los exports (PDF/Excel) para que "Capítulo" ordene siempre del 1 al
+// último número, en vez de por total descendente como el resto de agrupadores.
+function pcCapNum(nombre: string): number {
+  return parseInt(nombre.match(/Cap\. (\d+)/)?.[1] ?? "999999", 10);
+}
+
+// Orden por defecto de las filas DENTRO de un capítulo del Presupuesto: las
+// completadas (concepto cargado) primero, las en blanco al final — y entre
+// las completadas, agrupadas por subgrupo consecutivo ("Dirección" todo
+// junto, "Fotografía" todo junto...) en vez de mezcladas según el orden de
+// creación/edición. Vive acá (no en TablaTool) porque es específico del
+// modelo de datos de Presupuesto (concepto/subgrupo); se pasa como
+// `ordenPersonalizado` para reemplazar el orden manual por defecto de
+// TablaTool (basado en `orden`/`_orden` de arrastre), que mezclaba las filas
+// según cuándo se sembraron o se completaron, no según su contenido.
+function pcOrdenFilaCapitulo(a: Fila, b: Fila): number {
+  const va = !(a.datos?.concepto ?? "").trim();
+  const vb = !(b.datos?.concepto ?? "").trim();
+  if (va !== vb) return va ? 1 : -1;
+  const sa = (a.datos?.subgrupo ?? "").trim();
+  const sb = (b.datos?.subgrupo ?? "").trim();
+  return sa.localeCompare(sb, "es", { numeric: true }) || (a.orden ?? 0) - (b.orden ?? 0);
+}
+
 function pcRollupPor(filas: Fila[], campo: PcAgrupador) {
   const map = new Map<string, { total: number; comprometido: number; real: number }>();
   for (const f of filas) {
@@ -3802,18 +3882,29 @@ function pcRollupPor(filas: Fila[], campo: PcAgrupador) {
     cur.real += ejNum(f.datos?.real);
     map.set(key, cur);
   }
-  return [...map.entries()].sort((a, b) => b[1].total - a[1].total);
+  const entries = [...map.entries()];
+  if (campo === "capitulo") {
+    entries.sort((a, b) => pcCapNum(a[0]) - pcCapNum(b[0]) || a[0].localeCompare(b[0]));
+  } else {
+    entries.sort((a, b) => b[1].total - a[1].total);
+  }
+  return entries;
 }
 
 function PresupuestoRollup({ filas, campo }: { filas: Fila[]; campo: PcAgrupador }) {
   const grupos = pcRollupPor(filas, campo);
+  // "Sin asignar" son filas huérfanas de versiones anteriores del modelo de
+  // datos (sin el campo agrupado) — Nicolás pidió sacar la tarjeta del todo,
+  // no solo ocultarla condicionalmente. Se saca solo de la GRILLA: el total
+  // general sigue sumando esas filas para no perder plata de vista en el "Total".
+  const gruposVisibles = grupos.filter(([nombre]) => nombre !== "Sin asignar");
   const totalGeneral = grupos.reduce((s, [, g]) => s + g.total, 0);
   const realGeneral = grupos.reduce((s, [, g]) => s + g.real, 0);
 
   return (
     <div className="hp-pc-rollup">
       <div className="hp-pc-rollup-grid">
-        {grupos.map(([nombre, g]) => {
+        {gruposVisibles.map(([nombre, g]) => {
           const pct = g.total > 0 ? (g.real / g.total) * 100 : 0;
           const tono = pct > 100 ? "bad" : pct >= 90 ? "warn" : "ok";
           return (
@@ -3969,9 +4060,13 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
   doc.text(`Presupuesto — resumen por capítulo${tituloVariante}`, marginLeft, y);
   y += 10;
 
+  // "Sin asignar" (filas huérfanas sin capítulo, de versiones anteriores del
+  // modelo de datos) no se imprime como bucket — mismo criterio que la tarjeta
+  // del Resumen en la app — pero su total SÍ entra en "Coste total" más abajo.
   const porCapitulo = pcRollupPor(filas, "capitulo");
+  const porCapituloVisible = porCapitulo.filter(([nombre]) => nombre !== "Sin asignar");
   doc.setFontSize(10);
-  for (const [nombre, g] of porCapitulo) {
+  for (const [nombre, g] of porCapituloVisible) {
     if (y > pageBottom) { doc.addPage(); marcaDeAgua(); y = 25; }
     doc.setFont("helvetica", "bold");
     doc.text(nombre, marginLeft, y);
@@ -3984,14 +4079,9 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
   doc.line(marginLeft, y, marginRight, y);
   y += 8;
 
-  const capNum = (nombre: string) => parseInt(nombre.match(/Cap\. (\d+)/)?.[1] ?? "0", 10);
-  const cap1a10 = porCapitulo.filter(([n]) => capNum(n) >= 1 && capNum(n) <= 10).reduce((s, [, g]) => s + g.total, 0);
   const costeTotal = porCapitulo.reduce((s, [, g]) => s + g.total, 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Coste de realización (cap. 1-10)", marginLeft, y);
-  doc.text(ejMoney(cap1a10), marginRight, y, { align: "right" });
-  y += 8;
   doc.text("Coste total", marginLeft, y);
   doc.text(ejMoney(costeTotal), marginRight, y, { align: "right" });
 
@@ -4057,7 +4147,10 @@ async function exportarPresupuestoExcel(filasTodas: Fila[], columnas: Columna[],
   detalle.getRow(filaDespuesEncabezadoDetalle).values = cabeceras;
   detalle.getRow(filaDespuesEncabezadoDetalle).font = { bold: true };
 
-  const filasOrdenadas = [...filas].sort((a, b) => (a.datos?.capitulo ?? "").localeCompare(b.datos?.capitulo ?? ""));
+  const filasOrdenadas = [...filas].sort((a, b) =>
+    (a.datos?.capitulo ?? "").localeCompare(b.datos?.capitulo ?? "") ||
+    (a.datos?.subgrupo ?? "").trim().localeCompare((b.datos?.subgrupo ?? "").trim(), "es", { numeric: true })
+  );
   const filaDetalleIni = filaDespuesEncabezadoDetalle + 1;
   filasOrdenadas.forEach((f, i) => {
     const d = f.datos ?? {};
@@ -4139,11 +4232,6 @@ function PresupuestoTablaTabs({
   onRenombrarCapitulo,
   variantes,
   varianteActual,
-  varianteActivaId,
-  onCambiarVariante,
-  onAgregarVariante,
-  onMarcarVarianteActiva,
-  onEliminarVariante,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -4166,11 +4254,6 @@ function PresupuestoTablaTabs({
   onRenombrarCapitulo: (cap: string) => void;
   variantes: { id: string; nombre: string }[];
   varianteActual: string;
-  varianteActivaId: string;
-  onCambiarVariante: (id: string) => void;
-  onAgregarVariante: () => void;
-  onMarcarVarianteActiva: (id: string) => void;
-  onEliminarVariante: (id: string) => void;
 }) {
   const t = useTranslations("hp");
   const [tab, setTab] = useState<string>("resumen");
@@ -4233,45 +4316,11 @@ function PresupuestoTablaTabs({
 
   return (
     <div className="hp-pc hp-pc-tabbed">
-      <div className="hp-pc-variantebar">
-        <ToolMenu label={nombreVarianteActual} icon="layout" width={260}>
-          {(close) => (
-            <>
-              <div className="tm-section">
-                {variantes.map((v) => (
-                  <button
-                    key={v.id}
-                    className={`tm-item${v.id === varianteActual ? " active" : ""}`}
-                    onClick={() => { onCambiarVariante(v.id); close(); }}
-                  >
-                    {v.id === varianteActual && <Icon name="check" size={13} />}
-                    <span>{v.nombre}</span>
-                    {v.id === varianteActivaId && <span className="hp-pc-variante-activa">Activo</span>}
-                  </button>
-                ))}
-              </div>
-              {editable && (
-                <div className="tm-section tm-section-bordered">
-                  <button className="tm-item" onClick={() => { onAgregarVariante(); close(); }}>
-                    <Icon name="plus" size={13} /><span>Nuevo presupuesto alternativo</span>
-                  </button>
-                  {varianteActual !== varianteActivaId && (
-                    <button className="tm-item" onClick={() => { onMarcarVarianteActiva(varianteActual); close(); }}>
-                      <span>Marcar como activo</span>
-                    </button>
-                  )}
-                  {varianteActual !== "principal" && (
-                    <button className="tm-item" onClick={() => { onEliminarVariante(varianteActual); close(); }}>
-                      <Icon name="trash" size={13} /><span>Eliminar este presupuesto</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </ToolMenu>
-        {varianteActual !== "principal" && <span className="hp-pc-variante-badge">Alternativo</span>}
-      </div>
+      {/* El selector de presupuesto alternativo (antes vivía acá, en su
+          propia fila) se subió a HerramientaPanel — ahora comparte fila con
+          Tabla/Archivos en .hp-pc-toolrow, ancho completo, mismo alto. Este
+          componente sigue recibiendo variantes/varianteActual/etc. porque los
+          usa igual para exportar (nombre en el título/archivo) y filtrar filas. */}
       <div className="hp-pc-captabs">
         <div className="hp-pc-captabs-scroll">
           <button className={`hp-pc-captab${tab === "resumen" ? " on" : ""}`} onClick={() => setTab("resumen")}>Resumen</button>
@@ -4325,6 +4374,7 @@ function PresupuestoTablaTabs({
               onImportarCSV={onImportarCSV}
               moneda={moneda}
               onCambiarMoneda={onCambiarMoneda}
+              ordenPersonalizado={pcOrdenFilaCapitulo}
             />
           )}
         </>
@@ -6893,6 +6943,7 @@ export function TablaTool({
   onImportarCSV,
   moneda,
   onCambiarMoneda,
+  ordenPersonalizado,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -6909,6 +6960,11 @@ export function TablaTool({
   onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
   moneda?: string;
   onCambiarMoneda?: (v: string) => void;
+  // Reemplaza el orden manual por defecto (por `orden`/`_orden` de arrastre)
+  // por un comparador propio del llamador — el arrastre queda desactivado
+  // mientras esté presente (si no, el drop quedaría deshecho en el próximo
+  // render al recalcularse este orden). Ver `pcOrdenFilaCapitulo` (Presupuesto).
+  ordenPersonalizado?: (a: Fila, b: Fila) => number;
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
@@ -7007,7 +7063,7 @@ export function TablaTool({
     // Orden base = orden manual persistido (efOrden), no el de llegada del
     // fetch. Si hay sortKey activo se re-ordena más abajo y este paso solo
     // importa como fallback.
-    let res = [...filas].sort((a, b) => efOrden(a) - efOrden(b));
+    let res = [...filas].sort(ordenPersonalizado ?? ((a, b) => efOrden(a) - efOrden(b)));
     if (busqueda.trim()) {
       const q = busqueda.trim().toLowerCase();
       res = res.filter(f => columnas.some(c => stripHtml(f.datos?.[c.key] ?? "").toLowerCase().includes(q)));
@@ -7051,7 +7107,7 @@ export function TablaTool({
       });
     }
     return res;
-  }, [filas, busqueda, filtros, sortKey, sortDir, sortKey2, sortDir2, columnas]);
+  }, [filas, busqueda, filtros, sortKey, sortDir, sortKey2, sortDir2, columnas, ordenPersonalizado]);
 
   const totalPaginas = Math.ceil(filasFiltradas.length / ITEMS_POR_PAG);
   const filasPagina = filasFiltradas.length > ITEMS_POR_PAG
@@ -7670,7 +7726,7 @@ export function TablaTool({
                 return (
                     <tr
                       key={f.id}
-                      draggable={editable}
+                      draggable={editable && !ordenPersonalizado}
                       onDragStart={e => onDragStart(e, f.id)}
                       onDragOver={e => onDragOver(e, f.id)}
                       onDrop={e => onDrop(e, f.id)}

@@ -22,6 +22,7 @@ export type Columna = {
   label: string;
   tipo?: ColTipo;     // por defecto "texto"
   opciones?: string[]; // para tipo "estado" (dropdown) o "chips" (multi-selección)
+  libre?: boolean;     // tipo "estado": además de las opciones, permite escribir un valor propio ("Otro...")
   sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
 };
 
@@ -96,7 +97,7 @@ const presupuestoCostos: Herramienta = {
     { key: "capitulo", label: "Capítulo", tipo: "estado", opciones: CAPITULOS_PRESUPUESTO },
     { key: "subgrupo", label: "Subgrupo" },
     { key: "concepto", label: "Concepto" },
-    { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO },
+    { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO, libre: true },
     { key: "cargo", label: "Cargo" },
     { key: "periodo_contratacion", label: "Período de contratación" },
     { key: "etapa", label: "Etapa", tipo: "estado", opciones: ETAPAS_PRESUPUESTO },

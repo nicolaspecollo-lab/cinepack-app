@@ -2297,6 +2297,28 @@
   box-shadow:inset 0 0 0 999px rgba(159,232,112,0.14), 2px 0 4px rgba(0,0,0,0.15);
 }
 
+/* Freeze columna de acciones (Eliminar fila, duplicar, color) — en tablas
+   anchas (ej. Presupuesto, 16 columnas) el botón de borrar quedaba solo
+   alcanzable scrolleando hasta el final; ahora, igual que la primera columna,
+   queda siempre visible en el borde derecho. */
+.cp-dash .hp-table .hp-th-acciones,
+.cp-dash .hp-table .hp-td-acciones{
+  position:sticky; right:0; z-index:2; background:var(--bg-2);
+  box-shadow:-2px 0 4px rgba(0,0,0,0.15);
+  isolation:isolate;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+}
+.cp-dash .hp-table thead .hp-th-acciones{ z-index:4; }
+.cp-dash .hp-table tbody tr:hover td.hp-td-acciones{
+  background:var(--bg-2);
+  box-shadow:inset 0 0 0 999px var(--hl1), -2px 0 4px rgba(0,0,0,0.15);
+}
+.cp-dash .hp-row-selected td.hp-td-acciones{
+  background:var(--bg-2) !important;
+  box-shadow:inset 0 0 0 999px rgba(159,232,112,0.06), -2px 0 4px rgba(0,0,0,0.15);
+}
+
 /* Resize handle en headers */
 /* overflow:hidden va en el .hp-th-inner (NO en el <th>): el th es
    position:sticky y ponerle overflow:hidden rompe el pegado en varios
@@ -3295,7 +3317,29 @@
    el ejecutivo puede tener varios escenarios del mismo proyecto (el real +
    una versión recortada para un premio con tope, por ejemplo) sin perder el
    trabajo de ninguno. */
-.cp-dash .hp-pc-variantebar{ display:flex; align-items:center; gap:8px; padding:8px var(--gutter); border-bottom:1px solid var(--line); }
+/* Barra de ancho completo con el selector de presupuesto alternativo + Tabla
+   + Archivos EN LA MISMA fila (antes el selector vivía suelto, en su propia
+   fila, con otro alto — quedaba descuadrado respecto a Tabla/Archivos que se
+   portaban a la cabecera). El trigger de ToolMenu (.tm-trigger, ya con borde
+   fino var(--line)) se estira igual que los otros dos botones para que los
+   tres compartan alto y ocupen el ancho entero de punta a punta. */
+.cp-dash .hp-pc-toolrow{ display:flex; align-items:stretch; gap:0; border-bottom:1px solid var(--line); }
+.cp-dash .hp-pc-toolrow .tm-wrap{ flex:1; min-width:0; }
+.cp-dash .hp-pc-toolrow .tm-trigger{
+  width:100%; height:100%; justify-content:center; border:none; border-right:1px solid var(--line);
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+  padding:12px 14px;
+}
+.cp-dash .hp-pc-toolrow-btn{
+  flex:1; min-width:0; display:flex; align-items:center; justify-content:center; gap:6px;
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--muted); background:none; border:none; border-right:1px solid var(--line);
+  padding:12px 14px; cursor:pointer; transition:all .15s ease;
+}
+.cp-dash .hp-pc-toolrow-btn:last-child{ border-right:none; }
+.cp-dash .hp-pc-toolrow-btn:hover{ color:var(--text); }
+.cp-dash .hp-pc-toolrow-btn.active{ color:#0D0D12; background:var(--acc); }
+.cp-dash .hp-pc-toolrow .hp-pc-variante-badge{ align-self:center; margin:0 10px; }
 .cp-dash .hp-pc-variante-badge{
   font-size:9.5px; font-weight:700; font-family:'Poppins',sans-serif; text-transform:uppercase; letter-spacing:0.06em;
   color:var(--amber); border:1px solid rgba(245,166,35,0.35); background:rgba(245,166,35,0.10); padding:3px 8px;
@@ -5089,6 +5133,14 @@
 .cp-dash .cdp-sel-opt:hover{ background:var(--acc); color:var(--bg); }
 .cp-dash .cdp-sel-opt.on{ color:var(--acc); font-weight:600; }
 .cp-dash .cdp-sel-opt.on:hover{ color:var(--bg); }
+.cp-dash .cdp-sel-opt-otro{ font-style:italic; color:var(--muted); flex-shrink:0; }
+.cp-dash .cdp-sel-opt-otro:hover{ color:var(--bg); }
+.cp-dash .cdp-sel-libre{ display:flex; gap:6px; padding:8px; flex-shrink:0; }
+.cp-dash .cdp-sel-libre-input{ flex:1; min-width:0; background:var(--bg); border:1px solid var(--line); color:var(--text);
+  font-size:12.5px; font-family:inherit; padding:6px 8px; }
+.cp-dash .cdp-sel-libre-input:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .cdp-sel-libre-ok{ appearance:none; background:var(--acc); color:var(--bg); border:none; font-weight:700;
+  font-size:11px; padding:0 10px; cursor:pointer; flex-shrink:0; }
 .cp-dash .cdp-jefe-badge{ font-family:'Poppins',sans-serif; font-weight:700; font-size:9px; letter-spacing:.08em;
   text-transform:uppercase; background:var(--acc); color:var(--bg); padding:2px 7px; margin-left:9px; }
 
