@@ -98,11 +98,13 @@ const presupuestoCostos: Herramienta = {
     { key: "concepto", label: "Concepto" },
     { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO },
     { key: "cargo", label: "Cargo" },
+    { key: "periodo_contratacion", label: "Período de contratación" },
     { key: "etapa", label: "Etapa", tipo: "estado", opciones: ETAPAS_PRESUPUESTO },
     { key: "tipo_gasto", label: "Tipo de gasto", tipo: "estado", opciones: ["Estándar", "Alquiler / servicio"] },
     { key: "base_sin_iva", label: "Base sin IVA", tipo: "money" as const },
     { key: "iva", label: "IVA", tipo: "money" as const },
     { key: "total", label: "Total", tipo: "money" as const },
+    { key: "cargas_sociales", label: "Cargas sociales", tipo: "money" as const },
     { key: "reparto", label: "Reparto por productora", tipo: "repetible", sub: [
       { key: "productora", label: "Productora / Coproductora" },
       { key: "monto", label: "Monto", tipo: "money" as const },

@@ -588,6 +588,58 @@ function HerramientaData({
     else await crearFila({ _moneda: v }, -1);
   }
 
+  // Lista de capítulos del Presupuesto: por defecto los 12 oficiales del
+  // ICIB, pero el productor puede agregar/quitar/renombrar los propios —
+  // se guarda en la fila meta (mismo patrón que _moneda/_extra) para que
+  // sea por proyecto, no un array fijo compartido por toda la app.
+  const capitulosPresupuesto = useMemo(() => {
+    const raw = meta?.datos?._capitulos;
+    if (!raw) return CAPITULOS_PRESUPUESTO_EXPORT;
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) && arr.length ? (arr as string[]) : CAPITULOS_PRESUPUESTO_EXPORT;
+    } catch {
+      return CAPITULOS_PRESUPUESTO_EXPORT;
+    }
+  }, [meta]);
+
+  async function cambiarCapitulosPresupuesto(nuevos: string[]) {
+    if (meta) await guardarFila(meta.id, { ...meta.datos, _capitulos: JSON.stringify(nuevos) });
+    else await crearFila({ _capitulos: JSON.stringify(nuevos) }, -1);
+  }
+
+  function agregarCapituloPresupuesto() {
+    const nombre = window.prompt("Nombre del nuevo capítulo (ej. Marketing digital):");
+    if (!nombre || !nombre.trim()) return;
+    const n = capitulosPresupuesto.length + 1;
+    const nuevo = `Cap. ${String(n).padStart(2, "0")}. ${nombre.trim()}`;
+    cambiarCapitulosPresupuesto([...capitulosPresupuesto, nuevo]);
+  }
+
+  async function quitarCapituloPresupuesto(cap: string) {
+    const tieneFilas = filas.some((f) => f.datos?.capitulo === cap);
+    if (tieneFilas) {
+      setError("Este capítulo todavía tiene filas cargadas — hay que vaciarlo antes de poder quitarlo.");
+      return;
+    }
+    if (!window.confirm(`¿Quitar "${cap}"? No se puede deshacer.`)) return;
+    await cambiarCapitulosPresupuesto(capitulosPresupuesto.filter((c) => c !== cap));
+  }
+
+  async function renombrarCapituloPresupuesto(cap: string) {
+    const prefijo = cap.match(/^Cap\. \d+\.\s*/)?.[0] ?? "";
+    const actual = cap.slice(prefijo.length);
+    const nuevoNombre = window.prompt("Nuevo nombre del capítulo:", actual);
+    if (!nuevoNombre || !nuevoNombre.trim() || nuevoNombre.trim() === actual) return;
+    const nuevo = `${prefijo}${nuevoNombre.trim()}`;
+    await cambiarCapitulosPresupuesto(capitulosPresupuesto.map((c) => (c === cap ? nuevo : c)));
+    for (const f of filas) {
+      if (f.datos?.capitulo === cap) {
+        await guardarFila(f.id, { ...f.datos, capitulo: nuevo }, f);
+      }
+    }
+  }
+
   async function agregarCampoExtra(label: string) {
     const f = filas[0] ?? (await asegurarSingle());
     if (!f) return;
@@ -1384,7 +1436,7 @@ function HerramientaData({
           departamento={departamento}
           herramientaId={herramienta.id}
           herramientaNombre={herramienta.nombre}
-          onCrearConDatos={async (datos) => { await crearFila(datos); }}
+          onCrearConDatos={async (datos) => !!(await crearFila(datos))}
           onDuplicar={(f) => {
             const datos = { ...f.datos };
             delete datos._pulso_evt_presentacion;
@@ -1399,6 +1451,10 @@ function HerramientaData({
           }}
           moneda={meta?.datos?._moneda}
           onCambiarMoneda={cambiarMoneda}
+          capitulos={capitulosPresupuesto}
+          onAgregarCapitulo={agregarCapituloPresupuesto}
+          onQuitarCapitulo={quitarCapituloPresupuesto}
+          onRenombrarCapitulo={renombrarCapituloPresupuesto}
         />
       )}
 
@@ -3871,7 +3927,7 @@ async function exportarPresupuestoPDF(filas: Fila[]) {
 // integradas al resumen por capítulo — si se edita una línea en el Excel
 // descargado, el total del capítulo y el gran total se recalculan solos.
 // Encabezado con los datos fijos del proyecto + isotipo en la esquina.
-async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
+async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[], capitulos: string[]) {
   const [ExcelJSMod, datos, isotipo] = await Promise.all([
     import("exceljs"), pcCargarDatosProyecto(), pcCargarIsotipoBase64(),
   ]);
@@ -3908,8 +3964,8 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
   }
 
   const detalle = wb.addWorksheet("Detalle");
-  const filaDespuesEncabezadoDetalle = ponerEncabezado(detalle, "N");
-  const cabeceras = ["Capítulo", "Subgrupo", "Concepto", "Departamento", "Cargo", "Etapa", "Tipo de gasto", "Base sin IVA", "IVA", "Total", "Comprometido", "Real", "Responsable", "Comentario"];
+  const filaDespuesEncabezadoDetalle = ponerEncabezado(detalle, "P");
+  const cabeceras = ["Capítulo", "Subgrupo", "Concepto", "Departamento", "Cargo", "Período de contratación", "Etapa", "Tipo de gasto", "Base sin IVA", "IVA", "Total", "Cargas sociales", "Comprometido", "Real", "Responsable", "Comentario"];
   detalle.getRow(filaDespuesEncabezadoDetalle).values = cabeceras;
   detalle.getRow(filaDespuesEncabezadoDetalle).font = { bold: true };
 
@@ -3918,14 +3974,14 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
   filasOrdenadas.forEach((f, i) => {
     const d = f.datos ?? {};
     detalle.getRow(filaDetalleIni + i).values = [
-      d.capitulo ?? "", d.subgrupo ?? "", d.concepto ?? "", d.departamento ?? "", d.cargo ?? "", d.etapa ?? "",
-      d.tipo_gasto ?? "", ejNum(d.base_sin_iva) || null, ejNum(d.iva) || null, ejNum(d.total) || 0,
+      d.capitulo ?? "", d.subgrupo ?? "", d.concepto ?? "", d.departamento ?? "", d.cargo ?? "", d.periodo_contratacion ?? "", d.etapa ?? "",
+      d.tipo_gasto ?? "", ejNum(d.base_sin_iva) || null, ejNum(d.iva) || null, ejNum(d.total) || 0, ejNum(d.cargas_sociales) || null,
       ejNum(d.comprometido) || null, ejNum(d.real) || null, d.responsable ?? "", d.comentario ?? "",
     ];
   });
   detalle.columns.forEach((c) => { c.width = 18; });
   detalle.getColumn(3).width = 34;
-  detalle.getColumn(14).width = 34;
+  detalle.getColumn(16).width = 34;
 
   const resumen = wb.addWorksheet("Resumen por capítulo");
   const filaDespuesEncabezadoResumen = ponerEncabezado(resumen, "B");
@@ -3933,14 +3989,17 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
   resumen.getRow(filaDespuesEncabezadoResumen).font = { bold: true };
   const nFilas = filasOrdenadas.length;
   const filaCapInicio = filaDespuesEncabezadoResumen + 1;
-  CAPITULOS_PRESUPUESTO_EXPORT.forEach((cap, i) => {
+  // Letra de columna de "Total" calculada, no hardcodeada — si se agrega o
+  // reordena una columna en cabeceras, el SUMIF sigue apuntando bien.
+  const totalColLetra = String.fromCharCode(65 + cabeceras.indexOf("Total"));
+  capitulos.forEach((cap, i) => {
     // SUMIF sobre la hoja Detalle: se recalcula solo si se edita una fila.
     const formula = nFilas > 0
-      ? `SUMIF(Detalle!A${filaDetalleIni}:A${filaDetalleIni + nFilas - 1},A${filaCapInicio + i},Detalle!J${filaDetalleIni}:J${filaDetalleIni + nFilas - 1})`
+      ? `SUMIF(Detalle!A${filaDetalleIni}:A${filaDetalleIni + nFilas - 1},A${filaCapInicio + i},Detalle!${totalColLetra}${filaDetalleIni}:${totalColLetra}${filaDetalleIni + nFilas - 1})`
       : "0";
     resumen.getRow(filaCapInicio + i).values = [cap, { formula }];
   });
-  const filaTotal = filaCapInicio + CAPITULOS_PRESUPUESTO_EXPORT.length;
+  const filaTotal = filaCapInicio + capitulos.length;
   resumen.getRow(filaTotal).values = ["Coste total", { formula: `SUM(B${filaCapInicio}:B${filaTotal - 1})` }];
   resumen.getRow(filaTotal).font = { bold: true };
   resumen.getColumn(1).width = 55;
@@ -3957,7 +4016,11 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[]) {
 // todo el poder de TablaTool) para no cargar todo en una sola grilla de 16
 // columnas. Es la ÚNICA vista de esta herramienta (23-ago-2026: se sacó el
 // Tablero — con Resumen adentro de acá no tenía sentido tener las dos).
-const PC_TAB_SIN_CAPITULO = "__sin_capitulo__";
+// Sin pestaña "Sin capítulo" (23-ago-2026, pedido explícito): con "capitulo"
+// ya no editable fila por fila (lo implica la pestaña), no debería poder
+// aparecer una fila huérfana de acá en más — filas legacy sin ese campo
+// quedan fuera de las pestañas pero SÍ se ven en el bucket "Sin asignar"
+// del rollup de Resumen, para no perderlas de vista del todo.
 
 function pcCapCorto(c: string): string {
   return c.match(/Cap\. \d+/)?.[0] ?? c;
@@ -3979,6 +4042,10 @@ function PresupuestoTablaTabs({
   onImportarCSV,
   moneda,
   onCambiarMoneda,
+  capitulos,
+  onAgregarCapitulo,
+  onQuitarCapitulo,
+  onRenombrarCapitulo,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -3987,7 +4054,7 @@ function PresupuestoTablaTabs({
   departamento: string;
   herramientaId: string;
   herramientaNombre: string;
-  onCrearConDatos: (datos: Record<string, string>) => Promise<void>;
+  onCrearConDatos: (datos: Record<string, string>) => Promise<boolean>;
   onDuplicar?: (fila: Fila) => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
@@ -3995,13 +4062,15 @@ function PresupuestoTablaTabs({
   onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
   moneda?: string;
   onCambiarMoneda?: (v: string) => void;
+  capitulos: string[];
+  onAgregarCapitulo: () => void;
+  onQuitarCapitulo: (cap: string) => void;
+  onRenombrarCapitulo: (cap: string) => void;
 }) {
   const t = useTranslations("hp");
   const [tab, setTab] = useState<string>("resumen");
   const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
   const [sembrando, setSembrando] = useState(false);
-
-  const sinCapitulo = filas.filter((f) => !(f.datos?.capitulo ?? "").trim());
 
   async function exportarPDF() {
     setExportando("pdf");
@@ -4009,53 +4078,61 @@ function PresupuestoTablaTabs({
   }
   async function exportarExcel() {
     setExportando("excel");
-    try { await exportarPresupuestoExcel(filas, columnas); } finally { setExportando(null); }
+    try { await exportarPresupuestoExcel(filas, columnas, capitulos); } finally { setExportando(null); }
   }
 
-  const filasTab = tab === PC_TAB_SIN_CAPITULO
-    ? sinCapitulo
-    : filas.filter((f) => (f.datos?.capitulo ?? "") === tab);
+  const filasTab = filas.filter((f) => (f.datos?.capitulo ?? "") === tab);
   const columnasTab = columnas.filter((c) => c.key !== "capitulo");
+  const SEED_ROWS = 20;
 
-  // Al entrar por primera vez a un capítulo vacío, se precargan filas en
-  // blanco para llenar la pantalla — Nicolás pidió explícitamente que el
-  // cliente NUNCA vea el CTA de "agregar primera fila" ("es ridículo, no se
-  // ve profesional"). Se siembran filas REALES (mismo crearFila de siempre,
-  // con capitulo ya cargado) en vez de un mecanismo de filas fantasma nuevo,
-  // para reusar guardar/borrar tal cual ya funcionan. seededRef evita
-  // re-sembrar dos veces la misma pestaña en esta sesión, y respeta que el
-  // usuario borre todo a propósito sin que vuelva a llenarse solo.
+  // Al entrar a un capítulo con menos de SEED_ROWS filas, se completa hasta
+  // llegar a SEED_ROWS con filas REALES en blanco (mismo crearFila de
+  // siempre, con capitulo ya cargado) — Nicolás pidió explícitamente que el
+  // cliente NUNCA vea el CTA de "agregar primera fila". "Top up" en vez de
+  // "solo si está en 0": si un intento anterior se cortó a mitad (ej. error
+  // de red) y quedó a medio sembrar, la próxima visita a la pestaña completa
+  // lo que falta en vez de quedar pegado para siempre. seededRef.add(tab)
+  // solo se marca cuando se llega de verdad a SEED_ROWS — así una visita
+  // fallida no bloquea el reintento en la siguiente visita — pero si el
+  // usuario borra todo a propósito después de llegar al tope, no se vuelve a
+  // sembrar sola (ref ya marcado, no se re-evalúa hasta cambiar de pestaña
+  // y volver).
   const seededRef = useRef<Set<string>>(new Set());
   useEffect(() => {
-    if (tab === "resumen" || tab === PC_TAB_SIN_CAPITULO) return;
-    if (!editable || filasTab.length > 0 || seededRef.current.has(tab)) return;
-    seededRef.current.add(tab);
-    const SEED_ROWS = 20;
+    if (tab === "resumen") return;
+    if (!editable || seededRef.current.has(tab)) return;
+    const faltan = SEED_ROWS - filasTab.length;
+    if (faltan <= 0) { seededRef.current.add(tab); return; }
     (async () => {
       setSembrando(true);
-      for (let i = 0; i < SEED_ROWS; i++) {
-        await onCrearConDatos({ capitulo: tab });
+      let creadas = 0;
+      for (let i = 0; i < faltan; i++) {
+        const ok = await onCrearConDatos({ capitulo: tab });
+        if (!ok) break;
+        creadas++;
       }
+      if (creadas >= faltan) seededRef.current.add(tab);
       setSembrando(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  const prefijoActual = tab.match(/^Cap\. \d+\.\s*/)?.[0] ?? "";
+  const nombreActual = tab.slice(prefijoActual.length);
 
   return (
     <div className="hp-pc hp-pc-tabbed">
       <div className="hp-pc-captabs">
         <div className="hp-pc-captabs-scroll">
           <button className={`hp-pc-captab${tab === "resumen" ? " on" : ""}`} onClick={() => setTab("resumen")}>Resumen</button>
-          {sinCapitulo.length > 0 && (
-            <button className={`hp-pc-captab${tab === PC_TAB_SIN_CAPITULO ? " on" : ""}`} onClick={() => setTab(PC_TAB_SIN_CAPITULO)}>
-              Sin capítulo <span className="hp-pc-captab-n">{sinCapitulo.length}</span>
-            </button>
-          )}
-          {CAPITULOS_PRESUPUESTO_EXPORT.map((c) => (
+          {capitulos.map((c) => (
             <button key={c} className={`hp-pc-captab${tab === c ? " on" : ""}`} onClick={() => setTab(c)} title={c}>
               {pcCapCorto(c)}
             </button>
           ))}
+          {editable && (
+            <button className="hp-pc-captab hp-pc-captab-add" onClick={onAgregarCapitulo} title="Agregar capítulo">+</button>
+          )}
         </div>
         <div className="hp-pc-exports">
           <button className="btn" disabled={exportando !== null} onClick={exportarPDF}>{exportando === "pdf" ? t("exporting") : t("exportPdfResumen")}</button>
@@ -4067,26 +4144,40 @@ function PresupuestoTablaTabs({
         <div className="hp-pc-tab-resumen">
           <PresupuestoRollup filas={filas} campo="capitulo" />
         </div>
-      ) : sembrando ? (
-        <div className="hp-pc-sembrando">Preparando filas…</div>
       ) : (
-        <TablaTool
-          columnas={columnasTab}
-          filas={filasTab}
-          editable={editable}
-          fullName={fullName}
-          departamento={departamento}
-          herramientaId={herramientaId}
-          herramientaNombre={herramientaNombre}
-          onCrear={() => onCrearConDatos(tab === PC_TAB_SIN_CAPITULO ? {} : { capitulo: tab })}
-          onDuplicar={onDuplicar}
-          onGuardar={onGuardar}
-          onBorrar={onBorrar}
-          onAgregarColumna={onAgregarColumna}
-          onImportarCSV={onImportarCSV}
-          moneda={moneda}
-          onCambiarMoneda={onCambiarMoneda}
-        />
+        <>
+          <div className="hp-pc-captab-header">
+            <span className="hp-pc-captab-header-nombre">{nombreActual || tab}</span>
+            {editable && (
+              <div className="hp-pc-captab-header-actions">
+                <button className="hp-pc-captab-header-btn" onClick={() => onRenombrarCapitulo(tab)}>Renombrar</button>
+                <button className="hp-pc-captab-header-btn" onClick={() => onQuitarCapitulo(tab)}>Quitar capítulo</button>
+              </div>
+            )}
+          </div>
+          {sembrando ? (
+            <div className="hp-pc-sembrando">Preparando filas…</div>
+          ) : (
+            <TablaTool
+              key={tab}
+              columnas={columnasTab}
+              filas={filasTab}
+              editable={editable}
+              fullName={fullName}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              herramientaNombre={herramientaNombre}
+              onCrear={() => onCrearConDatos({ capitulo: tab })}
+              onDuplicar={onDuplicar}
+              onGuardar={onGuardar}
+              onBorrar={onBorrar}
+              onAgregarColumna={onAgregarColumna}
+              onImportarCSV={onImportarCSV}
+              moneda={moneda}
+              onCambiarMoneda={onCambiarMoneda}
+            />
+          )}
+        </>
       )}
     </div>
   );

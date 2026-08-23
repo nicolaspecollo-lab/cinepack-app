@@ -3289,15 +3289,24 @@
 }
 .cp-dash .hp-pc-captab:hover{ color:var(--text); }
 .cp-dash .hp-pc-captab.on{ color:var(--acc); border-bottom-color:var(--acc); }
-.cp-dash .hp-pc-captab-n{
-  display:inline-flex; align-items:center; justify-content:center; min-width:15px; height:15px; padding:0 4px;
-  background:var(--acc); color:#101010; font-size:9px; font-weight:800;
-}
+.cp-dash .hp-pc-captab-add{ font-size:13px; font-weight:800; color:var(--muted); padding:11px 14px; }
+.cp-dash .hp-pc-captab-add:hover{ color:var(--acc); }
 .cp-dash .hp-pc-captabs .hp-pc-exports{
   flex-shrink:0; align-items:center; padding:0 var(--gutter) 0 12px; margin-left:4px; border-left:1px solid var(--line);
 }
 .cp-dash .hp-pc-tab-resumen{ display:flex; flex-direction:column; gap:var(--sp-3); padding:var(--sp-3) 0; }
 .cp-dash .hp-pc-sembrando{ padding:40px var(--gutter); color:var(--muted); font-size:12px; text-align:center; }
+.cp-dash .hp-pc-captab-header{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2);
+  padding:10px var(--gutter); border-bottom:1px solid var(--line); background:var(--bg-2);
+}
+.cp-dash .hp-pc-captab-header-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:13px; color:var(--text); }
+.cp-dash .hp-pc-captab-header-actions{ display:flex; gap:8px; flex-shrink:0; }
+.cp-dash .hp-pc-captab-header-btn{
+  font-size:10px; font-family:'Poppins',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+  border:1px solid var(--line); background:none; color:var(--muted); padding:5px 9px; cursor:pointer; white-space:nowrap;
+}
+.cp-dash .hp-pc-captab-header-btn:hover{ color:var(--acc); border-color:var(--acc); }
 
 /* Cashflow */
 .cp-dash .hp-cf-list{ display:flex; flex-direction:column; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-3); }
