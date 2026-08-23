@@ -588,12 +588,69 @@ function HerramientaData({
     else await crearFila({ _moneda: v }, -1);
   }
 
+  // Presupuestos alternativos (23-ago-2026): el ejecutivo puede necesitar un
+  // escenario paralelo del mismo proyecto — ej. el real, más una versión
+  // recortada para aplicar a un premio con tope de presupuesto — sin perder
+  // el trabajo del real. "principal" es implícito: cualquier fila sin
+  // _presupuesto pertenece ahí, así que proyectos existentes no necesitan
+  // migración. _presupuesto_activo marca cuál es "el oficial" del proyecto,
+  // para que futuras integraciones con otras herramientas sepan cuál leer.
+  const variantesPresupuesto = useMemo(() => {
+    const raw = meta?.datos?._presupuestos;
+    if (!raw) return [{ id: "principal", nombre: "Presupuesto" }];
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) && arr.length ? (arr as { id: string; nombre: string }[]) : [{ id: "principal", nombre: "Presupuesto" }];
+    } catch {
+      return [{ id: "principal", nombre: "Presupuesto" }];
+    }
+  }, [meta]);
+  const varianteActivaPresupuesto = meta?.datos?._presupuesto_activo || "principal";
+  const [variantePresupuesto, setVariantePresupuesto] = useState("principal");
+
+  async function guardarVariantesPresupuesto(nuevas: { id: string; nombre: string }[]) {
+    if (meta) await guardarFila(meta.id, { ...meta.datos, _presupuestos: JSON.stringify(nuevas) });
+    else await crearFila({ _presupuestos: JSON.stringify(nuevas) }, -1);
+  }
+
+  function agregarVariantePresupuesto() {
+    const n = variantesPresupuesto.length + 1;
+    const id = `alt-${Date.now()}`;
+    guardarVariantesPresupuesto([...variantesPresupuesto, { id, nombre: `Presupuesto alternativo ${n}` }]);
+    setVariantePresupuesto(id);
+  }
+
+  async function marcarVarianteActivaPresupuesto(id: string) {
+    if (meta) await guardarFila(meta.id, { ...meta.datos, _presupuesto_activo: id });
+    else await crearFila({ _presupuesto_activo: id }, -1);
+  }
+
+  async function eliminarVariantePresupuesto(id: string) {
+    if (id === "principal") return;
+    const tieneFilas = filas.some((f) => (f.datos?._presupuesto ?? "principal") === id);
+    if (tieneFilas) {
+      setError("Este presupuesto alternativo todavía tiene filas cargadas — hay que vaciarlo antes de poder eliminarlo.");
+      return;
+    }
+    if (!window.confirm("¿Eliminar este presupuesto alternativo? No se puede deshacer.")) return;
+    await guardarVariantesPresupuesto(variantesPresupuesto.filter((v) => v.id !== id));
+    if (varianteActivaPresupuesto === id) await marcarVarianteActivaPresupuesto("principal");
+    if (variantePresupuesto === id) setVariantePresupuesto("principal");
+  }
+
   // Lista de capítulos del Presupuesto: por defecto los 12 oficiales del
   // ICIB, pero el productor puede agregar/quitar/renombrar los propios —
   // se guarda en la fila meta (mismo patrón que _moneda/_extra) para que
   // sea por proyecto, no un array fijo compartido por toda la app.
+  // Independiente POR presupuesto alternativo (una versión recortada no
+  // necesariamente usa los mismos capítulos que la real): "principal" sigue
+  // en la clave _capitulos de siempre (compatibilidad con proyectos
+  // existentes), cada alternativo tiene la suya propia.
+  function capKeyPresupuesto(variante: string) {
+    return variante === "principal" ? "_capitulos" : `_capitulos__${variante}`;
+  }
   const capitulosPresupuesto = useMemo(() => {
-    const raw = meta?.datos?._capitulos;
+    const raw = meta?.datos?.[capKeyPresupuesto(variantePresupuesto)];
     if (!raw) return CAPITULOS_PRESUPUESTO_EXPORT;
     try {
       const arr = JSON.parse(raw);
@@ -601,11 +658,12 @@ function HerramientaData({
     } catch {
       return CAPITULOS_PRESUPUESTO_EXPORT;
     }
-  }, [meta]);
+  }, [meta, variantePresupuesto]);
 
   async function cambiarCapitulosPresupuesto(nuevos: string[]) {
-    if (meta) await guardarFila(meta.id, { ...meta.datos, _capitulos: JSON.stringify(nuevos) });
-    else await crearFila({ _capitulos: JSON.stringify(nuevos) }, -1);
+    const key = capKeyPresupuesto(variantePresupuesto);
+    if (meta) await guardarFila(meta.id, { ...meta.datos, [key]: JSON.stringify(nuevos) });
+    else await crearFila({ [key]: JSON.stringify(nuevos) }, -1);
   }
 
   function agregarCapituloPresupuesto() {
@@ -617,7 +675,7 @@ function HerramientaData({
   }
 
   async function quitarCapituloPresupuesto(cap: string) {
-    const tieneFilas = filas.some((f) => f.datos?.capitulo === cap);
+    const tieneFilas = filas.some((f) => f.datos?.capitulo === cap && (f.datos?._presupuesto ?? "principal") === variantePresupuesto);
     if (tieneFilas) {
       setError("Este capítulo todavía tiene filas cargadas — hay que vaciarlo antes de poder quitarlo.");
       return;
@@ -634,7 +692,7 @@ function HerramientaData({
     const nuevo = `${prefijo}${nuevoNombre.trim()}`;
     await cambiarCapitulosPresupuesto(capitulosPresupuesto.map((c) => (c === cap ? nuevo : c)));
     for (const f of filas) {
-      if (f.datos?.capitulo === cap) {
+      if (f.datos?.capitulo === cap && (f.datos?._presupuesto ?? "principal") === variantePresupuesto) {
         await guardarFila(f.id, { ...f.datos, capitulo: nuevo }, f);
       }
     }
@@ -1430,13 +1488,13 @@ function HerramientaData({
       {esTabla && vista === "tabla" && herramienta.id === "ej-presupuesto-costos" && (
         <PresupuestoTablaTabs
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
-          filas={filas}
+          filas={filas.filter((f) => (f.datos?._presupuesto ?? "principal") === variantePresupuesto)}
           editable={editable}
           fullName={fullName}
           departamento={departamento}
           herramientaId={herramienta.id}
           herramientaNombre={herramienta.nombre}
-          onCrearConDatos={async (datos) => !!(await crearFila(datos))}
+          onCrearConDatos={async (datos) => !!(await crearFila({ ...datos, _presupuesto: variantePresupuesto }))}
           onDuplicar={(f) => {
             const datos = { ...f.datos };
             delete datos._pulso_evt_presentacion;
@@ -1447,7 +1505,7 @@ function HerramientaData({
           onBorrar={borrarFila}
           onAgregarColumna={agregarColumnaExtra}
           onImportarCSV={async (rows) => {
-            for (const datos of rows) await crearFila(datos);
+            for (const datos of rows) await crearFila({ ...datos, _presupuesto: variantePresupuesto });
           }}
           moneda={meta?.datos?._moneda}
           onCambiarMoneda={cambiarMoneda}
@@ -1455,6 +1513,13 @@ function HerramientaData({
           onAgregarCapitulo={agregarCapituloPresupuesto}
           onQuitarCapitulo={quitarCapituloPresupuesto}
           onRenombrarCapitulo={renombrarCapituloPresupuesto}
+          variantes={variantesPresupuesto}
+          varianteActual={variantePresupuesto}
+          varianteActivaId={varianteActivaPresupuesto}
+          onCambiarVariante={setVariantePresupuesto}
+          onAgregarVariante={agregarVariantePresupuesto}
+          onMarcarVarianteActiva={marcarVarianteActivaPresupuesto}
+          onEliminarVariante={eliminarVariantePresupuesto}
         />
       )}
 
@@ -3850,7 +3915,13 @@ async function pcCargarIsotipoBase64(): Promise<string | null> {
 // completa (esa va en el Excel). Mismo criterio que la hoja RESUMEN del
 // Modelo 3a: un capítulo por línea, con su total. Encabezado con los datos
 // fijos del proyecto + isotipo como sello de agua en la esquina.
-async function exportarPresupuestoPDF(filas: Fila[]) {
+async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: string) {
+  // Nicolás: "quites los conceptos que están en 0" — filas seed/sin
+  // completar (total 0) no deberían aparecer en un documento que se manda a
+  // un fondo o mercado. Si TODAS las filas de un capítulo quedan en 0, ese
+  // capítulo directamente no aparece en el rollup (no queda un renglón "0 €"
+  // vacío).
+  const filas = filasTodas.filter((f) => ejNum(f.datos?.total) !== 0);
   const [{ default: jsPDF }, datos, isotipo] = await Promise.all([
     import("jspdf"), pcCargarDatosProyecto(), pcCargarIsotipoBase64(),
   ]);
@@ -3894,7 +3965,8 @@ async function exportarPresupuestoPDF(filas: Fila[]) {
   let y = encabezadoProyecto();
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
-  doc.text("Presupuesto — resumen por capítulo", marginLeft, y);
+  const tituloVariante = nombreVariante && nombreVariante !== "Presupuesto" ? ` (${nombreVariante})` : "";
+  doc.text(`Presupuesto — resumen por capítulo${tituloVariante}`, marginLeft, y);
   y += 10;
 
   const porCapitulo = pcRollupPor(filas, "capitulo");
@@ -3924,14 +3996,25 @@ async function exportarPresupuestoPDF(filas: Fila[]) {
   doc.text(ejMoney(costeTotal), marginRight, y, { align: "right" });
 
   const slug = (datos.nombre || "presupuesto").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
-  doc.save(`${slug}-presupuesto-resumen.pdf`);
+  // El nombre del presupuesto alternativo ya arranca con "Presupuesto..." —
+  // concatenar "-presupuesto" + su slug quedaba redundante
+  // ("...-presupuesto-presupuesto-alternativo-2-..."), así que el sufijo del
+  // archivo usa el slug del nombre de la variante directo, sin el prefijo.
+  const parteTipo = nombreVariante && nombreVariante !== "Presupuesto"
+    ? nombreVariante.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-")
+    : "presupuesto";
+  doc.save(`${slug}-${parteTipo}-resumen.pdf`);
 }
 
 // Tabla completa en Excel, fila por fila, con fórmulas SUMA reales
 // integradas al resumen por capítulo — si se edita una línea en el Excel
 // descargado, el total del capítulo y el gran total se recalculan solos.
 // Encabezado con los datos fijos del proyecto + isotipo en la esquina.
-async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[], capitulos: string[]) {
+async function exportarPresupuestoExcel(filasTodas: Fila[], columnas: Columna[], capitulos: string[], nombreVariante?: string) {
+  // Nicolás: "quiero que quites en la exportación todas las filas que están
+  // en blanco" — las filas sembradas que el productor nunca llegó a
+  // completar (total 0) no deben aparecer en el Excel que se manda afuera.
+  const filas = filasTodas.filter((f) => ejNum(f.datos?.total) !== 0);
   const [ExcelJSMod, datos, isotipo] = await Promise.all([
     import("exceljs"), pcCargarDatosProyecto(), pcCargarIsotipoBase64(),
   ]);
@@ -3947,7 +4030,8 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[], capi
   // líneas de encabezado varía según qué datos del proyecto están cargados).
   function ponerEncabezado(ws: InstanceType<typeof ExcelJS.Workbook>["worksheets"][number], colFinal: string): number {
     ws.mergeCells(`A1:${colFinal}1`);
-    ws.getCell("A1").value = datos.nombre || "Presupuesto";
+    const tituloVariante = nombreVariante && nombreVariante !== "Presupuesto" ? ` — ${nombreVariante}` : "";
+    ws.getCell("A1").value = (datos.nombre || "Presupuesto") + tituloVariante;
     ws.getCell("A1").font = { bold: true, size: 14 };
     const lineas = [
       datos.tipoGenero,
@@ -4011,7 +4095,10 @@ async function exportarPresupuestoExcel(filas: Fila[], columnas: Columna[], capi
 
   const buffer = await wb.xlsx.writeBuffer();
   const slug = (datos.nombre || "presupuesto").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
-  pcDescargarBlob(`${slug}-presupuesto.xlsx`, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  const parteTipo = nombreVariante && nombreVariante !== "Presupuesto"
+    ? nombreVariante.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-")
+    : "presupuesto";
+  pcDescargarBlob(`${slug}-${parteTipo}.xlsx`, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
 }
 
 // ---- Presupuesto — vista "Tabla", como el libro de Excel del ICIB: una
@@ -4050,6 +4137,13 @@ function PresupuestoTablaTabs({
   onAgregarCapitulo,
   onQuitarCapitulo,
   onRenombrarCapitulo,
+  variantes,
+  varianteActual,
+  varianteActivaId,
+  onCambiarVariante,
+  onAgregarVariante,
+  onMarcarVarianteActiva,
+  onEliminarVariante,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -4070,19 +4164,32 @@ function PresupuestoTablaTabs({
   onAgregarCapitulo: () => void;
   onQuitarCapitulo: (cap: string) => void;
   onRenombrarCapitulo: (cap: string) => void;
+  variantes: { id: string; nombre: string }[];
+  varianteActual: string;
+  varianteActivaId: string;
+  onCambiarVariante: (id: string) => void;
+  onAgregarVariante: () => void;
+  onMarcarVarianteActiva: (id: string) => void;
+  onEliminarVariante: (id: string) => void;
 }) {
   const t = useTranslations("hp");
   const [tab, setTab] = useState<string>("resumen");
   const [exportando, setExportando] = useState<"pdf" | "excel" | null>(null);
   const [sembrando, setSembrando] = useState(false);
+  const nombreVarianteActual = variantes.find((v) => v.id === varianteActual)?.nombre ?? "Presupuesto";
+
+  // Cada presupuesto alternativo tiene sus propios capítulos — al cambiar de
+  // presupuesto, la pestaña de capítulo que estaba abierta puede ya no
+  // existir en el nuevo. Vuelve a Resumen para no quedar en un estado raro.
+  useEffect(() => { setTab("resumen"); }, [varianteActual]);
 
   async function exportarPDF() {
     setExportando("pdf");
-    try { await exportarPresupuestoPDF(filas); } finally { setExportando(null); }
+    try { await exportarPresupuestoPDF(filas, nombreVarianteActual); } finally { setExportando(null); }
   }
   async function exportarExcel() {
     setExportando("excel");
-    try { await exportarPresupuestoExcel(filas, columnas, capitulos); } finally { setExportando(null); }
+    try { await exportarPresupuestoExcel(filas, columnas, capitulos, nombreVarianteActual); } finally { setExportando(null); }
   }
 
   const filasTab = filas.filter((f) => (f.datos?.capitulo ?? "") === tab);
@@ -4126,6 +4233,45 @@ function PresupuestoTablaTabs({
 
   return (
     <div className="hp-pc hp-pc-tabbed">
+      <div className="hp-pc-variantebar">
+        <ToolMenu label={nombreVarianteActual} icon="layout" width={260}>
+          {(close) => (
+            <>
+              <div className="tm-section">
+                {variantes.map((v) => (
+                  <button
+                    key={v.id}
+                    className={`tm-item${v.id === varianteActual ? " active" : ""}`}
+                    onClick={() => { onCambiarVariante(v.id); close(); }}
+                  >
+                    {v.id === varianteActual && <Icon name="check" size={13} />}
+                    <span>{v.nombre}</span>
+                    {v.id === varianteActivaId && <span className="hp-pc-variante-activa">Activo</span>}
+                  </button>
+                ))}
+              </div>
+              {editable && (
+                <div className="tm-section tm-section-bordered">
+                  <button className="tm-item" onClick={() => { onAgregarVariante(); close(); }}>
+                    <Icon name="plus" size={13} /><span>Nuevo presupuesto alternativo</span>
+                  </button>
+                  {varianteActual !== varianteActivaId && (
+                    <button className="tm-item" onClick={() => { onMarcarVarianteActiva(varianteActual); close(); }}>
+                      <span>Marcar como activo</span>
+                    </button>
+                  )}
+                  {varianteActual !== "principal" && (
+                    <button className="tm-item" onClick={() => { onEliminarVariante(varianteActual); close(); }}>
+                      <Icon name="trash" size={13} /><span>Eliminar este presupuesto</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </ToolMenu>
+        {varianteActual !== "principal" && <span className="hp-pc-variante-badge">Alternativo</span>}
+      </div>
       <div className="hp-pc-captabs">
         <div className="hp-pc-captabs-scroll">
           <button className={`hp-pc-captab${tab === "resumen" ? " on" : ""}`} onClick={() => setTab("resumen")}>Resumen</button>

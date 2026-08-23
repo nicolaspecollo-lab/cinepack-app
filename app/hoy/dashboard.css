@@ -3291,6 +3291,19 @@
    activa subrayada) en vez de los chips de filtro genéricos — acá son
    pestañas de verdad, no un filtro. */
 .cp-dash .hp-pc-tabbed{ padding-left:0; padding-right:0; }
+/* Presupuestos alternativos: selector arriba de las pestañas de capítulo —
+   el ejecutivo puede tener varios escenarios del mismo proyecto (el real +
+   una versión recortada para un premio con tope, por ejemplo) sin perder el
+   trabajo de ninguno. */
+.cp-dash .hp-pc-variantebar{ display:flex; align-items:center; gap:8px; padding:8px var(--gutter); border-bottom:1px solid var(--line); }
+.cp-dash .hp-pc-variante-badge{
+  font-size:9.5px; font-weight:700; font-family:'Poppins',sans-serif; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--amber); border:1px solid rgba(245,166,35,0.35); background:rgba(245,166,35,0.10); padding:3px 8px;
+}
+.cp-dash .hp-pc-variante-activa{
+  margin-left:auto; font-size:8.5px; font-weight:800; font-family:'Poppins',sans-serif; text-transform:uppercase; letter-spacing:0.05em;
+  color:var(--lime); border:1px solid rgba(159,232,112,0.35); background:rgba(159,232,112,0.10); padding:2px 6px; flex-shrink:0;
+}
 .cp-dash .hp-pc-captabs{
   display:flex; align-items:stretch; border-bottom:1px solid var(--line); background:var(--bg-2);
 }
