@@ -4065,13 +4065,42 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
   // del Resumen en la app — pero su total SÍ entra en "Coste total" más abajo.
   const porCapitulo = pcRollupPor(filas, "capitulo");
   const porCapituloVisible = porCapitulo.filter(([nombre]) => nombre !== "Sin asignar");
-  doc.setFontSize(10);
   for (const [nombre, g] of porCapituloVisible) {
     if (y > pageBottom) { doc.addPage(); marcaDeAgua(); y = 25; }
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
     doc.text(nombre, marginLeft, y);
     doc.text(ejMoney(g.total), marginRight, y, { align: "right" });
-    y += 7;
+    y += 5.5;
+
+    // Desglose por subgrupo debajo de cada capítulo — Nicolás: el resumen
+    // solo con el total por capítulo no alcanzaba para justificar el gasto
+    // ante un fondo, necesitaba verse de qué está compuesto. Agrupado por
+    // subgrupo (no fila por fila) para que el PDF siga siendo un resumen
+    // corto, no la tabla de detalle completa (esa es el Excel). Orden
+    // natural por el prefijo numérico del subgrupo ("02.01" antes de
+    // "02.03"), igual criterio que el orden de filas dentro de la tabla.
+    const porSubgrupo = new Map<string, number>();
+    for (const f of filas) {
+      if ((f.datos?.capitulo ?? "") !== nombre) continue;
+      const sg = (f.datos?.subgrupo ?? "").trim() || "Otros conceptos";
+      porSubgrupo.set(sg, (porSubgrupo.get(sg) ?? 0) + ejNum(f.datos?.total));
+    }
+    const subgruposOrdenados = [...porSubgrupo.entries()].sort((a, b) => a[0].localeCompare(b[0], "es", { numeric: true }));
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(120);
+    for (const [sg, total] of subgruposOrdenados) {
+      if (y > pageBottom) {
+        doc.addPage(); marcaDeAgua(); y = 25;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120);
+      }
+      doc.text(sg, marginLeft + 4, y);
+      doc.text(ejMoney(total), marginRight, y, { align: "right" });
+      y += 4.2;
+    }
+    doc.setTextColor(0);
+    y += 3.5;
   }
 
   y += 3;
