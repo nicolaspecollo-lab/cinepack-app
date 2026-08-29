@@ -46,7 +46,17 @@ export default function CpSelect({
       if (menuRef.current?.contains(t)) return;
       setOpen(false);
     };
-    const cerrar = () => setOpen(false);
+    // "scroll" en window con capture:true también recibe el scroll INTERNO
+    // del propio menú (el evento no burbujea a window, pero sí se ve en la
+    // fase de captura al pasar por él) — sin este chequeo, scrollear la
+    // lista de opciones cerraba el menú al instante, dando la sensación de
+    // una "imagen fija" que no reacciona al scroll. Solo cierra si el
+    // scroll pasó por fuera del menú (ej. la tabla de fondo, o la página).
+    const cerrar = (e: Event) => {
+      const t = e.target as Node;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
+    };
     document.addEventListener("mousedown", h);
     window.addEventListener("scroll", cerrar, true);
     window.addEventListener("resize", cerrar);
