@@ -4006,7 +4006,7 @@ async function pcCargarIsotipoBase64(): Promise<string | null> {
 // completa (esa va en el Excel). Mismo criterio que la hoja RESUMEN del
 // Modelo 3a: un capítulo por línea, con su total. Encabezado con los datos
 // fijos del proyecto + isotipo como sello de agua en la esquina.
-async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: string) {
+async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: string, modo: "subgrupo" | "concepto" = "subgrupo") {
   // Nicolás: "quites los conceptos que están en 0" — filas seed/sin
   // completar (total 0) no deberían aparecer en un documento que se manda a
   // un fondo o mercado. Si TODAS las filas de un capítulo quedan en 0, ese
@@ -4073,31 +4073,49 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
     doc.text(ejMoney(g.total), marginRight, y, { align: "right" });
     y += 5.5;
 
-    // Desglose por subgrupo debajo de cada capítulo — Nicolás: el resumen
-    // solo con el total por capítulo no alcanzaba para justificar el gasto
-    // ante un fondo, necesitaba verse de qué está compuesto. Agrupado por
-    // subgrupo (no fila por fila) para que el PDF siga siendo un resumen
-    // corto, no la tabla de detalle completa (esa es el Excel). Orden
-    // natural por el prefijo numérico del subgrupo ("02.01" antes de
-    // "02.03"), igual criterio que el orden de filas dentro de la tabla.
-    const porSubgrupo = new Map<string, number>();
-    for (const f of filas) {
-      if ((f.datos?.capitulo ?? "") !== nombre) continue;
-      const sg = (f.datos?.subgrupo ?? "").trim() || "Otros conceptos";
-      porSubgrupo.set(sg, (porSubgrupo.get(sg) ?? 0) + ejNum(f.datos?.total));
-    }
-    const subgruposOrdenados = [...porSubgrupo.entries()].sort((a, b) => a[0].localeCompare(b[0], "es", { numeric: true }));
+    // Desglose debajo de cada capítulo — Nicolás: el resumen solo con el
+    // total por capítulo no alcanzaba para justificar el gasto ante un
+    // fondo, necesitaba verse de qué está compuesto. Dos modos a elección
+    // del usuario (mismo botón, dos opciones): "subgrupo" agrupa (Dirección,
+    // Producción...) y mantiene el PDF corto; "concepto" lista cada línea
+    // (Director, Guionista...) para el máximo detalle, a costa de más
+    // páginas. Ninguno de los dos reemplaza al Excel (ahí sigue la tabla
+    // completa con IVA/comprometido/real desglosados).
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(120);
-    for (const [sg, total] of subgruposOrdenados) {
-      if (y > pageBottom) {
-        doc.addPage(); marcaDeAgua(); y = 25;
-        doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120);
+    if (modo === "subgrupo") {
+      const porSubgrupo = new Map<string, number>();
+      for (const f of filas) {
+        if ((f.datos?.capitulo ?? "") !== nombre) continue;
+        const sg = (f.datos?.subgrupo ?? "").trim() || "Otros conceptos";
+        porSubgrupo.set(sg, (porSubgrupo.get(sg) ?? 0) + ejNum(f.datos?.total));
       }
-      doc.text(sg, marginLeft + 4, y);
-      doc.text(ejMoney(total), marginRight, y, { align: "right" });
-      y += 4.2;
+      // Orden natural por el prefijo numérico del subgrupo ("02.01" antes de
+      // "02.03"), igual criterio que el orden de filas dentro de la tabla.
+      const subgruposOrdenados = [...porSubgrupo.entries()].sort((a, b) => a[0].localeCompare(b[0], "es", { numeric: true }));
+      for (const [sg, total] of subgruposOrdenados) {
+        if (y > pageBottom) {
+          doc.addPage(); marcaDeAgua(); y = 25;
+          doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120);
+        }
+        doc.text(sg, marginLeft + 4, y);
+        doc.text(ejMoney(total), marginRight, y, { align: "right" });
+        y += 4.2;
+      }
+    } else {
+      const filasCap = filas
+        .filter((f) => (f.datos?.capitulo ?? "") === nombre)
+        .sort((a, b) => (a.datos?.subgrupo ?? "").trim().localeCompare((b.datos?.subgrupo ?? "").trim(), "es", { numeric: true }));
+      for (const f of filasCap) {
+        if (y > pageBottom) {
+          doc.addPage(); marcaDeAgua(); y = 25;
+          doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120);
+        }
+        doc.text(f.datos?.concepto || "—", marginLeft + 4, y);
+        doc.text(ejMoney(ejNum(f.datos?.total)), marginRight, y, { align: "right" });
+        y += 4.2;
+      }
     }
     doc.setTextColor(0);
     y += 3.5;
@@ -4122,7 +4140,8 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
   const parteTipo = nombreVariante && nombreVariante !== "Presupuesto"
     ? nombreVariante.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-")
     : "presupuesto";
-  doc.save(`${slug}-${parteTipo}-resumen.pdf`);
+  const parteModo = modo === "concepto" ? "-por-conceptos" : "-por-subgrupos";
+  doc.save(`${slug}-${parteTipo}-resumen${parteModo}.pdf`);
 }
 
 // Tabla completa en Excel, fila por fila, con fórmulas SUMA reales
@@ -4295,9 +4314,9 @@ function PresupuestoTablaTabs({
   // existir en el nuevo. Vuelve a Resumen para no quedar en un estado raro.
   useEffect(() => { setTab("resumen"); }, [varianteActual]);
 
-  async function exportarPDF() {
+  async function exportarPDF(modo: "subgrupo" | "concepto") {
     setExportando("pdf");
-    try { await exportarPresupuestoPDF(filas, nombreVarianteActual); } finally { setExportando(null); }
+    try { await exportarPresupuestoPDF(filas, nombreVarianteActual, modo); } finally { setExportando(null); }
   }
   async function exportarExcel() {
     setExportando("excel");
@@ -4363,7 +4382,18 @@ function PresupuestoTablaTabs({
           )}
         </div>
         <div className="hp-pc-exports">
-          <button className="btn" disabled={exportando !== null} onClick={exportarPDF}>{exportando === "pdf" ? t("exporting") : t("exportPdfResumen")}</button>
+          <ToolMenu label={exportando === "pdf" ? t("exporting") : t("exportPdfResumen")} icon="download" width={220} align="right">
+            {(close) => (
+              <div className="tm-section">
+                <button className="tm-item" disabled={exportando !== null} onClick={() => { exportarPDF("subgrupo"); close(); }}>
+                  <span>Por subgrupos</span>
+                </button>
+                <button className="tm-item" disabled={exportando !== null} onClick={() => { exportarPDF("concepto"); close(); }}>
+                  <span>Por conceptos</span>
+                </button>
+              </div>
+            )}
+          </ToolMenu>
           <button className="btn" disabled={exportando !== null} onClick={exportarExcel}>{exportando === "excel" ? t("exporting") : t("exportExcelTabla")}</button>
         </div>
       </div>
