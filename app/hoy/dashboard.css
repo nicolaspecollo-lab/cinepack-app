@@ -2180,7 +2180,7 @@
   font-style:italic; color:var(--acc); border-right:1px solid var(--line);
 }
 .cp-dash .hp-fx-input{
-  flex:1; min-width:0; background:none; border:none; color:var(--text); padding:5px 8px 5px 0;
+  flex:1; min-width:0; background:none; border:none; color:var(--text); padding:5px 8px;
   font-size:12px; outline:none; font-family:'Courier New',monospace;
 }
 .cp-dash .hp-fx-input:disabled{ color:var(--muted); }
@@ -2230,11 +2230,19 @@
 .cp-dash .hp-row-selected{ outline:1px solid rgba(159,232,112,0.4); }
 
 /* Fila divisoria de grupo (ej. Departamento en Presupuesto) — mucho más baja
-   que una fila de datos, ajustada al texto, no editable ni arrastrable. */
+   que una fila de datos, ajustada al texto, no editable ni arrastrable. La
+   celda (<td>) abarca TODA la fila vía colSpan — si el texto viviera pegado
+   a su borde izquierdo (el de esa celda gigante), scrollear horizontal lo
+   escondería del todo. La etiqueta real es un <span> interno con
+   `position:sticky` (mismo mecanismo que las columnas congeladas) para que
+   quede siempre a la vista sea cual sea el scroll horizontal. */
 .cp-dash .hp-row-divisoria td{
-  padding:3px 10px 3px 18px; font-family:'Poppins',sans-serif; font-weight:700; font-size:10px;
+  padding:0; font-family:'Poppins',sans-serif; font-weight:700; font-size:10px;
   text-transform:uppercase; letter-spacing:0.06em; color:var(--muted);
   background:var(--bg-2); border-bottom:1px solid var(--line); border-top:1px solid var(--line);
+}
+.cp-dash .hp-row-divisoria-label{
+  position:sticky; display:inline-block; padding:3px 12px 3px 16px;
 }
 
 /* Celda de solo lectura (ej. código de orden calculado) — texto plano, sin

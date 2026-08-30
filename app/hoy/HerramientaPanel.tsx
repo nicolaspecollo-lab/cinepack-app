@@ -4525,6 +4525,7 @@ function PresupuestoTablaTabs({
               ocultarSeleccion
               referenciasEstiloExcel
               permitirFormulas
+              filasGlobales={filas}
             />
           )}
         </>
@@ -7093,41 +7094,56 @@ function excelCol(idx: number): string {
   return s;
 }
 
-// ---- Fórmulas estilo Excel (Fase 1: aritmética entre celdas + SUM/AVERAGE
-// sobre un rango) — TablaTool.permitirFormulas. Referencias tipo "E2": letra
-// de columna (según excelCol, 0-based) + número de fila (1-based, igual al
-// que se ve en la columna de número de fila de `referenciasEstiloExcel`).
+// ---- Fórmulas estilo Excel — TablaTool.permitirFormulas.
+// Fase 1: aritmética entre celdas + SUM/AVERAGE sobre un rango.
+// Fase 2: MIN/MAX sobre un rango + referencias a OTRO capítulo ("03!E5",
+// "sheet!celda" al estilo Excel — 03 es el número de capítulo, no una
+// pestaña de Excel real). Referencias tipo "E2": letra de columna (según
+// excelCol, 0-based) + número de fila (1-based, igual al que se ve en la
+// columna de número de fila de `referenciasEstiloExcel`).
 
-// "E2" → { col: 4, row: 1 } (0-based ambos). null si no matchea el patrón.
-function pcParseRef(ref: string): { col: number; row: number } | null {
-  const m = ref.match(/^([A-Za-z]+)(\d+)$/);
+// "E2" → col 4, row 1 (0-based). "03!E2" → mismo + sheet 3 (el capítulo).
+// null si no matchea ninguno de los dos patrones.
+function pcParseRef(ref: string): { col: number; row: number; sheet?: number } | null {
+  const m = ref.match(/^(?:(\d+)!)?([A-Za-z]+)(\d+)$/);
   if (!m) return null;
   let col = 0;
-  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
-  return { col: col - 1, row: parseInt(m[2], 10) - 1 };
+  for (const ch of m[2].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col: col - 1, row: parseInt(m[3], 10) - 1, sheet: m[1] !== undefined ? parseInt(m[1], 10) : undefined };
 }
 
-// Evalúa una fórmula ("=E2*3", "=SUM(E2:E5)") contra un resolver que da el
-// valor numérico de una celda (col, row 0-based). `resolver` es responsable
-// de manejar referencias circulares (recibe el mismo Set de "visitados" que
+// Evalúa una fórmula ("=E2*3", "=SUM(E2:E5)", "=03!E2*2") contra un resolver
+// que da el valor numérico de una celda (col, row 0-based; sheet = número de
+// capítulo si la referencia cruza a otro). `resolver` es responsable de
+// manejar referencias circulares (recibe el mismo Set de "visitados" que
 // arrancó la evaluación). Devuelve null si la fórmula es inválida o el
 // resultado no es un número finito — la celda muestra "¡ERROR!" en ese caso.
-function pcEvalFormula(formula: string, resolver: (col: number, row: number) => number): number | null {
+function pcEvalFormula(formula: string, resolver: (col: number, row: number, sheet?: number) => number): number | null {
   const expr = formula.trim().replace(/^=/, "");
   if (!expr) return null;
-  const conFunciones = expr.replace(/\b(SUM|AVERAGE)\(\s*([A-Za-z]+\d+)\s*:\s*([A-Za-z]+\d+)\s*\)/gi, (_m, fn, a, b) => {
+  const refRango = /(?:(\d+)!)?([A-Za-z]+\d+)\s*:\s*(?:\d+!)?([A-Za-z]+\d+)/.source;
+  const conFunciones = expr.replace(new RegExp(`\\b(SUM|AVERAGE|MIN|MAX)\\(\\s*${refRango}\\s*\\)`, "gi"), (_m, fnRaw, sheetStr, a, b) => {
+    const fn = String(fnRaw).toUpperCase();
+    const sheet = sheetStr !== undefined ? parseInt(sheetStr, 10) : undefined;
     const ra = pcParseRef(a), rb = pcParseRef(b);
     if (!ra || !rb) return "0";
     const c0 = Math.min(ra.col, rb.col), c1 = Math.max(ra.col, rb.col);
     const r0 = Math.min(ra.row, rb.row), r1 = Math.max(ra.row, rb.row);
     const vals: number[] = [];
-    for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) vals.push(resolver(c, r));
+    for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) vals.push(resolver(c, r, sheet));
+    if (!vals.length) return "0";
     const suma = vals.reduce((s, v) => s + v, 0);
-    return String(fn.toUpperCase() === "SUM" ? suma : (vals.length ? suma / vals.length : 0));
+    switch (fn) {
+      case "SUM": return String(suma);
+      case "AVERAGE": return String(suma / vals.length);
+      case "MIN": return String(Math.min(...vals));
+      case "MAX": return String(Math.max(...vals));
+      default: return "0";
+    }
   });
-  const conRefs = conFunciones.replace(/\b[A-Za-z]+\d+\b/g, (ref) => {
+  const conRefs = conFunciones.replace(/\b(?:\d+!)?[A-Za-z]+\d+\b/g, (ref) => {
     const r = pcParseRef(ref);
-    return r ? String(resolver(r.col, r.row)) : "0";
+    return r ? String(resolver(r.col, r.row, r.sheet)) : "0";
   });
   // Después de resolver funciones y referencias solo deberían quedar números
   // y operadores aritméticos — si queda cualquier otra cosa (una letra suelta,
@@ -7164,6 +7180,7 @@ export function TablaTool({
   ocultarSeleccion,
   referenciasEstiloExcel,
   permitirFormulas,
+  filasGlobales,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -7211,6 +7228,10 @@ export function TablaTool({
   // en columnas "money". Requiere `referenciasEstiloExcel` (las referencias
   // "E2" solo tienen sentido con las letras/números visibles).
   permitirFormulas?: boolean;
+  // Todas las filas del presupuesto (todos los capítulos, misma variante) —
+  // solo para resolver referencias de fórmula a OTRO capítulo ("03!E5",
+  // Fase 2). `filas` sigue siendo nada más que la pestaña/capítulo abierto.
+  filasGlobales?: Fila[];
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
@@ -7384,17 +7405,25 @@ export function TablaTool({
   // `referenciasEstiloExcel`. Si esa celda a su vez tiene una fórmula, se
   // evalúa recursivamente. `visitados` corta una referencia circular (A1
   // que depende de A1, directa o indirectamente) devolviendo 0 en vez de
-  // colgar el navegador.
-  function resolverCelda(col: number, row: number, visitados: Set<string> = new Set()): number {
-    const clave = `${col}:${row}`;
+  // colgar el navegador. `sheet` (Fase 2) referencia OTRO capítulo — se
+  // resuelve contra `filasGlobales` (todas las filas del presupuesto, no
+  // solo el capítulo abierto) en vez de `filasFiltradas` (la pestaña actual).
+  function resolverCelda(col: number, row: number, visitados: Set<string> = new Set(), sheet?: number): number {
+    const clave = `${sheet ?? "_"}:${col}:${row}`;
     if (visitados.has(clave)) return 0;
     visitados.add(clave);
+    let filasBase = filasFiltradas;
+    if (sheet !== undefined && filasGlobales) {
+      filasBase = filasGlobales
+        .filter((f) => pcCapNum(f.datos?.capitulo ?? "") === sheet)
+        .sort((a, b) => efOrden(a) - efOrden(b));
+    }
     const colObj = visibleCols[col];
-    const filaObj = filasFiltradas[row];
+    const filaObj = filasBase[row];
     if (!colObj || !filaObj) return 0;
     const raw = val(filaObj, colObj.key);
     if (raw.trim().startsWith("=")) {
-      const r = pcEvalFormula(raw, (c, r2) => resolverCelda(c, r2, visitados));
+      const r = pcEvalFormula(raw, (c, r2, s2) => resolverCelda(c, r2, visitados, s2));
       return r ?? 0;
     }
     return parseFloat(raw.replace(",", ".")) || 0;
@@ -8066,7 +8095,18 @@ export function TablaTool({
                   <Fragment key={f.id}>
                     {esInicioDeGrupo && (
                       <tr className="hp-row-divisoria">
-                        <td colSpan={colSpanDivisoria}>{valorGrupo || t("noStatus")}</td>
+                        <td colSpan={colSpanDivisoria}>
+                          {/* El <td> abarca TODA la fila (colSpan) — sin esto, al
+                              scrollear horizontal el texto (que vive en el extremo
+                              izquierdo de una celda gigante) se escondía por
+                              completo. El span queda pegado (sticky) al borde
+                              visible, con el mismo offset que las columnas
+                              congeladas (el ancho del gutter de número de fila,
+                              si está activo) para no quedar tapado por él. */}
+                          <span className="hp-row-divisoria-label" style={{ left: referenciasEstiloExcel ? GUTTER_W : 0 }}>
+                            {valorGrupo || t("noStatus")}
+                          </span>
+                        </td>
                       </tr>
                     )}
                     <tr
