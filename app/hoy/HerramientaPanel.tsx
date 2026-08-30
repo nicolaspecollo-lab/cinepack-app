@@ -4449,6 +4449,7 @@ function PresupuestoTablaTabs({
                 subgrupo: (_f, idx) => `${String(pcCapNum(tab)).padStart(2, "0")}.${String(idx + 1).padStart(2, "0")}`,
               }}
               agruparPor="departamento"
+              ocultarSeleccion
             />
           )}
         </>
@@ -7020,6 +7021,7 @@ export function TablaTool({
   columnasCongeladas = 1,
   valoresComputados,
   agruparPor,
+  ocultarSeleccion,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -7054,6 +7056,10 @@ export function TablaTool({
   // divisoria (más baja, ajustada al texto) cada vez que cambia el valor
   // respecto a la fila anterior — ej. Departamento en Presupuesto.
   agruparPor?: string;
+  // Saca la columna de checkbox (selección por fila + "eliminar seleccionadas")
+  // — Presupuesto no la necesita, ya tiene borrado por fila (columna de
+  // acciones, congelada) y no gana nada con selección múltiple acá.
+  ocultarSeleccion?: boolean;
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
@@ -7525,8 +7531,9 @@ export function TablaTool({
     );
   })();
 
+  const mostrarCheckbox = editable && !ocultarSeleccion;
   const colSpanVacio =
-    (editable ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
+    (mostrarCheckbox ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
 
   const contenido = (
     <>
@@ -7765,7 +7772,7 @@ export function TablaTool({
         <div className="hp-table-wrap" ref={wrapRef} style={expandida ? undefined : { maxHeight: wrapMaxH }}>
           <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef} style={{ width: totalAncho, minWidth: "100%" }}>
             <colgroup>
-              {editable && <col style={{width:36}} />}
+              {mostrarCheckbox && <col style={{width:36}} />}
               {visibleCols.map(c => (
                 <col key={c.key} data-ck={c.key} style={{width: colWidths[c.key] ?? anchoDefectoCol(c)}} />
               ))}
@@ -7774,7 +7781,7 @@ export function TablaTool({
             </colgroup>
             <thead>
               <tr>
-                {editable && (
+                {mostrarCheckbox && (
                   <th className="hp-th-check">
                     <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} title={t("selectAll")} />
                   </th>
@@ -7837,7 +7844,7 @@ export function TablaTool({
                 const valorGrupo = agruparPor ? (f.datos?.[agruparPor] ?? "").trim() : "";
                 const valorGrupoAnterior = agruparPor && rowIdx > 0 ? (filasPagina[rowIdx - 1].datos?.[agruparPor] ?? "").trim() : undefined;
                 const esInicioDeGrupo = !!agruparPor && valorGrupo !== valorGrupoAnterior;
-                const colSpanDivisoria = (editable ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
+                const colSpanDivisoria = (mostrarCheckbox ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
                 return (
                   <Fragment key={f.id}>
                     {esInicioDeGrupo && (
@@ -7858,7 +7865,7 @@ export function TablaTool({
                         draggingId === f.id ? "hp-row-dragging" : "",
                       ].filter(Boolean).join(" ")}
                     >
-                      {editable && (
+                      {mostrarCheckbox && (
                         <td className="hp-td-check">
                           <input type="checkbox" checked={isSelected} onChange={() => toggleFila(f.id)} />
                         </td>
