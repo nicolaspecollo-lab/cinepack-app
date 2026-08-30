@@ -4450,6 +4450,7 @@ function PresupuestoTablaTabs({
               }}
               agruparPor="departamento"
               ocultarSeleccion
+              referenciasEstiloExcel
             />
           )}
         </>
@@ -7002,6 +7003,22 @@ function anchoDefectoCol(c: Columna): number {
   }
 }
 
+// Ancho de la columna angosta de número de fila (`referenciasEstiloExcel`).
+const GUTTER_W = 26;
+
+// Letra de columna estilo Excel a partir de un índice 0-based: 0→A, 25→Z,
+// 26→AA... (conversión base-26 sin cero, igual que la numeración de Excel).
+function excelCol(idx: number): string {
+  let n = idx + 1;
+  let s = "";
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    s = String.fromCharCode(65 + rem) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
 export function TablaTool({
   columnas,
   filas,
@@ -7022,6 +7039,7 @@ export function TablaTool({
   valoresComputados,
   agruparPor,
   ocultarSeleccion,
+  referenciasEstiloExcel,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -7060,6 +7078,11 @@ export function TablaTool({
   // — Presupuesto no la necesita, ya tiene borrado por fila (columna de
   // acciones, congelada) y no gana nada con selección múltiple acá.
   ocultarSeleccion?: boolean;
+  // Suma, de forma sutil, una fila de letras de columna (A, B, C...) arriba
+  // de los encabezados y una columna angosta de número de fila a la
+  // izquierda — igual referencia que un Excel. Preparación para poder
+  // escribir fórmulas que referencien celdas ("=E2*3") más adelante.
+  referenciasEstiloExcel?: boolean;
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
@@ -7132,7 +7155,7 @@ export function TablaTool({
   function frozenLeftOf(idx: number): number {
     let left = 0;
     for (let i = 0; i < idx; i++) left += colWidths[visibleCols[i].key] ?? anchoDefectoCol(visibleCols[i]);
-    return left;
+    return referenciasEstiloExcel ? left + GUTTER_W : left;
   }
 
   // Ancho total de la tabla = suma de anchos de columna (los del usuario o el
@@ -7533,7 +7556,7 @@ export function TablaTool({
 
   const mostrarCheckbox = editable && !ocultarSeleccion;
   const colSpanVacio =
-    (mostrarCheckbox ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
+    (referenciasEstiloExcel ? 1 : 0) + (mostrarCheckbox ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
 
   const contenido = (
     <>
@@ -7772,6 +7795,7 @@ export function TablaTool({
         <div className="hp-table-wrap" ref={wrapRef} style={expandida ? undefined : { maxHeight: wrapMaxH }}>
           <table className={`hp-table${compacto ? " hp-tabla-compacta" : ""}`} ref={tableRef} style={{ width: totalAncho, minWidth: "100%" }}>
             <colgroup>
+              {referenciasEstiloExcel && <col style={{width:GUTTER_W}} />}
               {mostrarCheckbox && <col style={{width:36}} />}
               {visibleCols.map(c => (
                 <col key={c.key} data-ck={c.key} style={{width: colWidths[c.key] ?? anchoDefectoCol(c)}} />
@@ -7780,7 +7804,21 @@ export function TablaTool({
               {showLastEdit && <col style={{width:90}} />}
             </colgroup>
             <thead>
+              {referenciasEstiloExcel && (
+                <tr className="hp-tr-letters">
+                  <th className="hp-th-gutter" />
+                  {mostrarCheckbox && <th />}
+                  {visibleCols.map((c, ci) => (
+                    <th key={c.key} className={ci < columnasCongeladas ? "hp-th-frozen" : ""} style={ci < columnasCongeladas ? { left: frozenLeftOf(ci) } : undefined}>
+                      {excelCol(ci)}
+                    </th>
+                  ))}
+                  {editable && <th />}
+                  {showLastEdit && <th />}
+                </tr>
+              )}
               <tr>
+                {referenciasEstiloExcel && <th className="hp-th-gutter" />}
                 {mostrarCheckbox && (
                   <th className="hp-th-check">
                     <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} title={t("selectAll")} />
@@ -7844,7 +7882,7 @@ export function TablaTool({
                 const valorGrupo = agruparPor ? (f.datos?.[agruparPor] ?? "").trim() : "";
                 const valorGrupoAnterior = agruparPor && rowIdx > 0 ? (filasPagina[rowIdx - 1].datos?.[agruparPor] ?? "").trim() : undefined;
                 const esInicioDeGrupo = !!agruparPor && valorGrupo !== valorGrupoAnterior;
-                const colSpanDivisoria = (mostrarCheckbox ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
+                const colSpanDivisoria = (referenciasEstiloExcel ? 1 : 0) + (mostrarCheckbox ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
                 return (
                   <Fragment key={f.id}>
                     {esInicioDeGrupo && (
@@ -7865,6 +7903,7 @@ export function TablaTool({
                         draggingId === f.id ? "hp-row-dragging" : "",
                       ].filter(Boolean).join(" ")}
                     >
+                      {referenciasEstiloExcel && <td className="hp-td-gutter">{absIdx + 1}</td>}
                       {mostrarCheckbox && (
                         <td className="hp-td-check">
                           <input type="checkbox" checked={isSelected} onChange={() => toggleFila(f.id)} />

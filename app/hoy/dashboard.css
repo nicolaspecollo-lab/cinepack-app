@@ -2271,6 +2271,24 @@
   box-shadow:0 1px 0 var(--line);
 }
 
+/* Referencias estilo Excel (`TablaTool.referenciasEstiloExcel`) — fila de
+   letras de columna (A, B, C...) sutil, chica y muda, arriba del encabezado
+   real, más una columna angosta de número de fila a la izquierda. Preparado
+   para poder escribir fórmulas que referencien celdas más adelante (ej.
+   "=E2*3"), no es solo estético. */
+.cp-dash .hp-tr-letters th{
+  height:15px; padding:1px 2px; font-size:8.5px; font-weight:600; letter-spacing:0.02em;
+  color:var(--muted); text-align:center; top:0;
+}
+.cp-dash .hp-tr-letters + tr th{ top:16px; }
+.cp-dash .hp-th-gutter,
+.cp-dash .hp-td-gutter{
+  position:sticky; left:0; z-index:3; background:var(--bg-2); color:var(--muted);
+  text-align:center; font-size:9px; font-variant-numeric:tabular-nums;
+  border-right:1px solid var(--line); padding:0 2px;
+}
+.cp-dash thead .hp-th-gutter{ z-index:5; }
+
 /* Freeze de columnas iniciales (1 por defecto, o `columnasCongeladas` de
    TablaTool — Presupuesto usa 2, Subgrupo+Concepto). Cada columna congelada
    trae su propio `left` inline (offset acumulado de las congeladas
