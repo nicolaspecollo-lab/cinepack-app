@@ -1965,11 +1965,18 @@ function Celda({
     return <LinkCell valor={valor} editable={editable} onSave={onSave ?? (() => {})} />;
   }
   if (col.tipo === "estado") {
+    // `sinAcento`: columnas donde el color por valor ("tono") no comunica
+    // nada real — ej. Departamento/Etapa/Tipo de gasto de Presupuesto, cuyos
+    // valores no matchean ningún patrón de ok/warn/bad y quedaban con un
+    // celeste "info" que Nicolás describió como "advierte algo que no se
+    // entiende bien". Se fuerza "neutral" (sin fondo de color) en vez de
+    // dejar que `estadoTono` decida.
+    const tono = col.sinAcento ? "neutral" : estadoTono(valor);
     if (!editable) {
-      return <span className={`hp-cell-select-ro tono-${estadoTono(valor)}`}>{valor || "—"}</span>;
+      return <span className={`hp-cell-select-ro tono-${tono}`}>{valor || "—"}</span>;
     }
     return (
-      <div className={`hp-cell-cpselect tono-${estadoTono(valor)}`}>
+      <div className={`hp-cell-cpselect tono-${tono}`}>
         <CpSelect
           value={valor}
           options={col.opciones ?? []}
@@ -8163,7 +8170,7 @@ export function TablaTool({
                             {colIdx === 0 && (
                               <span className="hp-row-resizer" onMouseDown={e => startResizeRow(e, f.id)} title={t("dragToResizeRow")} />
                             )}
-                            {isNum && dataBarPct > 0 && (
+                            {isNum && dataBarPct > 0 && !c.sinAcento && (
                               <div className="hp-databar" style={{width: `${dataBarPct}%`}} />
                             )}
                             <div className="hp-cell-body" style={rowH ? {height: rowH - 2, maxHeight: rowH - 2} : undefined}>

@@ -24,6 +24,7 @@ export type Columna = {
   opciones?: string[]; // para tipo "estado" (dropdown) o "chips" (multi-selección)
   libre?: boolean;     // tipo "estado": además de las opciones, permite escribir un valor propio ("Otro...")
   soloLectura?: boolean; // la celda se muestra siempre como texto plano, nunca editable (ej. un código calculado)
+  sinAcento?: boolean;   // sin fondo de color por valor ("tono") ni data bar — para columnas donde ese acento no comunica nada real
   sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
 };
 
@@ -100,22 +101,22 @@ const presupuestoCostos: Herramienta = {
     // calculado solo — se recalcula en vivo según el orden real de las filas dentro del
     // capítulo, arrastre incluido. Nunca se edita a mano, por eso soloLectura.
     { key: "subgrupo", label: "Subgrupo", soloLectura: true },
-    { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO, libre: true },
+    { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO, libre: true, sinAcento: true },
     { key: "cargo", label: "Cargo" },
     { key: "concepto", label: "Concepto" },
     { key: "periodo_contratacion", label: "Período de contratación" },
-    { key: "etapa", label: "Etapa", tipo: "estado", opciones: ETAPAS_PRESUPUESTO },
-    { key: "tipo_gasto", label: "Tipo de gasto", tipo: "estado", opciones: ["Estándar", "Alquiler / servicio"] },
-    { key: "base_sin_iva", label: "Base sin IVA", tipo: "money" as const },
-    { key: "iva", label: "IVA", tipo: "money" as const },
-    { key: "total", label: "Total", tipo: "money" as const },
-    { key: "cargas_sociales", label: "Cargas sociales", tipo: "money" as const },
+    { key: "etapa", label: "Etapa", tipo: "estado", opciones: ETAPAS_PRESUPUESTO, sinAcento: true },
+    { key: "tipo_gasto", label: "Tipo de gasto", tipo: "estado", opciones: ["Estándar", "Alquiler / servicio"], sinAcento: true },
+    { key: "base_sin_iva", label: "Base sin IVA", tipo: "money" as const, sinAcento: true },
+    { key: "iva", label: "IVA", tipo: "money" as const, sinAcento: true },
+    { key: "total", label: "Total", tipo: "money" as const, sinAcento: true },
+    { key: "cargas_sociales", label: "Cargas sociales", tipo: "money" as const, sinAcento: true },
     { key: "reparto", label: "Reparto por productora", tipo: "repetible", sub: [
       { key: "productora", label: "Productora / Coproductora" },
       { key: "monto", label: "Monto", tipo: "money" as const },
     ]},
-    { key: "comprometido", label: "Comprometido", tipo: "money" as const },
-    { key: "real", label: "Real a la fecha", tipo: "money" as const },
+    { key: "comprometido", label: "Comprometido", tipo: "money" as const, sinAcento: true },
+    { key: "real", label: "Real a la fecha", tipo: "money" as const, sinAcento: true },
     { key: "responsable", label: "Responsable" },
     { key: "comentario", label: "Comentario", tipo: "largo" },
     { key: "doc", label: "Documento", tipo: "archivo" as const },
