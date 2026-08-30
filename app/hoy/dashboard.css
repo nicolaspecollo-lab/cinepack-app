@@ -2166,6 +2166,27 @@
   transition:border-color .15s;
 }
 .cp-dash .hp-tabla-search:focus{ border-color:var(--acc); }
+
+/* Barra "fx" (TablaTool.permitirFormulas) — reemplaza al buscador en tablas
+   donde no aporta nada (capítulos cortos de Presupuesto). Muestra/edita la
+   fórmula CRUDA de la celda con foco, igual que la barra de fórmulas real
+   de Excel — la celda misma solo muestra el resultado calculado. */
+.cp-dash .hp-fx-bar{
+  flex:1; min-width:200px; max-width:340px; display:flex; align-items:center; gap:6px;
+  background:var(--bg-2); border:1px solid var(--line);
+}
+.cp-dash .hp-fx-label{
+  flex-shrink:0; padding:0 8px; font-family:'Poppins',sans-serif; font-weight:700; font-size:10px;
+  font-style:italic; color:var(--acc); border-right:1px solid var(--line);
+}
+.cp-dash .hp-fx-input{
+  flex:1; min-width:0; background:none; border:none; color:var(--text); padding:5px 8px 5px 0;
+  font-size:12px; outline:none; font-family:'Courier New',monospace;
+}
+.cp-dash .hp-fx-input:disabled{ color:var(--muted); }
+/* Celda que contiene una fórmula (en vez de un monto cargado a mano) — un
+   tono levemente distinto para poder distinguirla de un vistazo. */
+.cp-dash .hp-cell-formula{ color:var(--acc); font-style:italic; }
 .cp-dash .hp-tabla-filter{
   background:var(--bg-2); border:1px solid var(--line); color:var(--text);
   padding:5px 8px; font-size:11px; cursor:pointer; font-family:'Poppins',sans-serif; font-weight:600;

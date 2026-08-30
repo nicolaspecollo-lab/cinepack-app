@@ -1865,6 +1865,56 @@ function LinkCell({
 }
 
 // ---- Celda editable ----
+// Celda "money" con soporte de fórmulas ("=E2*3", "=SUM(E2:E5)") — Presupuesto,
+// ver TablaTool.permitirFormulas. Mientras está enfocada muestra el texto crudo
+// de la fórmula (para poder seguir editándola, como en Excel); al perder foco
+// muestra el resultado calculado. Componente aparte (no una rama más de la
+// celda money genérica) porque necesita su propio estado de foco.
+function CeldaMoneyConFormula({
+  valor,
+  editable,
+  onChange,
+  onCommit,
+  moneda,
+  evaluar,
+  onFocusCelda,
+}: {
+  valor: string;
+  editable: boolean;
+  onChange: (v: string) => void;
+  onCommit: () => void;
+  moneda?: string;
+  evaluar: () => number | null;
+  onFocusCelda?: () => void;
+}) {
+  const [enfocado, setEnfocado] = useState(false);
+  const esFormula = valor.trim().startsWith("=");
+  const mostrado = !enfocado && esFormula
+    ? (() => { const v = evaluar(); return v === null ? "¡ERROR!" : String(Math.round(v * 100) / 100); })()
+    : valor;
+  return (
+    <div className="hp-money-wrap">
+      <input
+        className={`hp-cell-input hp-cell-money${esFormula ? " hp-cell-formula" : ""}`}
+        type="text"
+        inputMode="text"
+        value={mostrado}
+        readOnly={!editable}
+        onFocus={() => { setEnfocado(true); onFocusCelda?.(); }}
+        onChange={(e) => {
+          const v = e.target.value;
+          // "=" habilita modo fórmula: se deja pasar cualquier carácter (letras
+          // de columna, dos puntos de rango, paréntesis). Si no empieza con
+          // "=", sigue siendo un monto — mismo filtro numérico de siempre.
+          onChange(v.trim().startsWith("=") ? v : v.replace(/[^0-9.,]/g, ""));
+        }}
+        onBlur={() => { setEnfocado(false); onCommit(); }}
+      />
+      {simboloMoneda(moneda) && <span className="hp-money-suffix">{simboloMoneda(moneda)}</span>}
+    </div>
+  );
+}
+
 function Celda({
   col,
   valor,
@@ -1876,6 +1926,8 @@ function Celda({
   herramientaId,
   filaId,
   moneda,
+  evaluarFormula,
+  onFocusCelda,
 }: {
   col: Columna;
   valor: string;
@@ -1887,6 +1939,11 @@ function Celda({
   herramientaId?: string;
   filaId?: string;
   moneda?: string;
+  // Presente solo si esta celda puntual admite fórmulas ("=E2*3", "=SUM(E2:E5)")
+  // — evalúa la fórmula guardada en `valor` contra el resto de la tabla. Ver
+  // `pcEvalFormula`/`TablaTool.permitirFormulas`.
+  evaluarFormula?: () => number | null;
+  onFocusCelda?: () => void;
 }) {
   if (col.soloLectura) {
     return <span className="hp-cell-readonly">{valor || "—"}</span>;
@@ -1927,6 +1984,19 @@ function Celda({
     return <RichCell valor={valor} editable={editable} onChange={onChange} onCommit={onCommit} />;
   }
   if (col.tipo === "money") {
+    if (evaluarFormula) {
+      return (
+        <CeldaMoneyConFormula
+          valor={valor}
+          editable={editable}
+          onChange={onChange}
+          onCommit={onCommit}
+          moneda={moneda}
+          evaluar={evaluarFormula}
+          onFocusCelda={onFocusCelda}
+        />
+      );
+    }
     return (
       <div className="hp-money-wrap">
         <input
@@ -2088,18 +2158,21 @@ function RichToolbar({ className = "", inline = false }: { className?: string; i
 
 // Celda con soporte de autocomplete via datalist
 function CeldaConAutocomp({
-  col, valor, editable, onChange, onCommit, onSave, departamento, herramientaId, filaId, moneda,
+  col, valor, editable, onChange, onCommit, onSave, departamento, herramientaId, filaId, moneda, evaluarFormula, onFocusCelda,
 }: {
   col: Columna; valor: string; editable: boolean; onChange: (v: string) => void;
   onCommit: () => void; onSave?: (v: string) => void; departamento?: string;
   herramientaId?: string; filaId?: string; listId?: string; moneda?: string;
+  evaluarFormula?: () => number | null;
+  onFocusCelda?: () => void;
 }) {
   // texto y largo son rich text (RichCell); ya no hay autocomplete por datalist
   // (incompatible con contentEditable). El formato prima sobre la sugerencia.
   return (
     <Celda col={col} valor={valor} editable={editable} onChange={onChange}
       onCommit={onCommit} onSave={onSave} departamento={departamento}
-      herramientaId={herramientaId} filaId={filaId} moneda={moneda} />
+      herramientaId={herramientaId} filaId={filaId} moneda={moneda} evaluarFormula={evaluarFormula}
+      onFocusCelda={onFocusCelda} />
   );
 }
 
@@ -4451,6 +4524,7 @@ function PresupuestoTablaTabs({
               agruparPor="departamento"
               ocultarSeleccion
               referenciasEstiloExcel
+              permitirFormulas
             />
           )}
         </>
@@ -7019,6 +7093,55 @@ function excelCol(idx: number): string {
   return s;
 }
 
+// ---- Fórmulas estilo Excel (Fase 1: aritmética entre celdas + SUM/AVERAGE
+// sobre un rango) — TablaTool.permitirFormulas. Referencias tipo "E2": letra
+// de columna (según excelCol, 0-based) + número de fila (1-based, igual al
+// que se ve en la columna de número de fila de `referenciasEstiloExcel`).
+
+// "E2" → { col: 4, row: 1 } (0-based ambos). null si no matchea el patrón.
+function pcParseRef(ref: string): { col: number; row: number } | null {
+  const m = ref.match(/^([A-Za-z]+)(\d+)$/);
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { col: col - 1, row: parseInt(m[2], 10) - 1 };
+}
+
+// Evalúa una fórmula ("=E2*3", "=SUM(E2:E5)") contra un resolver que da el
+// valor numérico de una celda (col, row 0-based). `resolver` es responsable
+// de manejar referencias circulares (recibe el mismo Set de "visitados" que
+// arrancó la evaluación). Devuelve null si la fórmula es inválida o el
+// resultado no es un número finito — la celda muestra "¡ERROR!" en ese caso.
+function pcEvalFormula(formula: string, resolver: (col: number, row: number) => number): number | null {
+  const expr = formula.trim().replace(/^=/, "");
+  if (!expr) return null;
+  const conFunciones = expr.replace(/\b(SUM|AVERAGE)\(\s*([A-Za-z]+\d+)\s*:\s*([A-Za-z]+\d+)\s*\)/gi, (_m, fn, a, b) => {
+    const ra = pcParseRef(a), rb = pcParseRef(b);
+    if (!ra || !rb) return "0";
+    const c0 = Math.min(ra.col, rb.col), c1 = Math.max(ra.col, rb.col);
+    const r0 = Math.min(ra.row, rb.row), r1 = Math.max(ra.row, rb.row);
+    const vals: number[] = [];
+    for (let c = c0; c <= c1; c++) for (let r = r0; r <= r1; r++) vals.push(resolver(c, r));
+    const suma = vals.reduce((s, v) => s + v, 0);
+    return String(fn.toUpperCase() === "SUM" ? suma : (vals.length ? suma / vals.length : 0));
+  });
+  const conRefs = conFunciones.replace(/\b[A-Za-z]+\d+\b/g, (ref) => {
+    const r = pcParseRef(ref);
+    return r ? String(resolver(r.col, r.row)) : "0";
+  });
+  // Después de resolver funciones y referencias solo deberían quedar números
+  // y operadores aritméticos — si queda cualquier otra cosa (una letra suelta,
+  // un nombre de función mal escrito) se rechaza en vez de evaluarlo.
+  if (!/^[\d\s+\-*/().]*$/.test(conRefs)) return null;
+  try {
+    // eslint-disable-next-line no-new-func
+    const val = Function(`"use strict"; return (${conRefs});`)();
+    return typeof val === "number" && isFinite(val) ? val : null;
+  } catch {
+    return null;
+  }
+}
+
 export function TablaTool({
   columnas,
   filas,
@@ -7040,6 +7163,7 @@ export function TablaTool({
   agruparPor,
   ocultarSeleccion,
   referenciasEstiloExcel,
+  permitirFormulas,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -7083,10 +7207,18 @@ export function TablaTool({
   // izquierda — igual referencia que un Excel. Preparación para poder
   // escribir fórmulas que referencien celdas ("=E2*3") más adelante.
   referenciasEstiloExcel?: boolean;
+  // Fase 1 de fórmulas: aritmética entre celdas + SUM/AVERAGE sobre un rango,
+  // en columnas "money". Requiere `referenciasEstiloExcel` (las referencias
+  // "E2" solo tienen sentido con las letras/números visibles).
+  permitirFormulas?: boolean;
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
   const [draft, setDraft] = useState<Record<string, Record<string, string>>>({});
+  // Celda con foco actual, solo relevante con `permitirFormulas` — alimenta
+  // la barra "fx" que reemplaza al buscador (espacio muerto en Presupuesto:
+  // capítulos de ~20 filas, no hace falta buscar).
+  const [celdaFoco, setCeldaFoco] = useState<{ filaId: string; colKey: string } | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -7246,6 +7378,28 @@ export function TablaTool({
   function val(f: Fila, key: string) {
     return draft[f.id]?.[key] ?? f.datos?.[key] ?? "";
   }
+
+  // Resuelve el valor numérico de la celda (col, row) — ambos 0-based, misma
+  // referencia que ve el usuario en las letras/números de
+  // `referenciasEstiloExcel`. Si esa celda a su vez tiene una fórmula, se
+  // evalúa recursivamente. `visitados` corta una referencia circular (A1
+  // que depende de A1, directa o indirectamente) devolviendo 0 en vez de
+  // colgar el navegador.
+  function resolverCelda(col: number, row: number, visitados: Set<string> = new Set()): number {
+    const clave = `${col}:${row}`;
+    if (visitados.has(clave)) return 0;
+    visitados.add(clave);
+    const colObj = visibleCols[col];
+    const filaObj = filasFiltradas[row];
+    if (!colObj || !filaObj) return 0;
+    const raw = val(filaObj, colObj.key);
+    if (raw.trim().startsWith("=")) {
+      const r = pcEvalFormula(raw, (c, r2) => resolverCelda(c, r2, visitados));
+      return r ?? 0;
+    }
+    return parseFloat(raw.replace(",", ".")) || 0;
+  }
+
   function setVal(f: Fila, key: string, v: string) {
     setDraft((d) => ({ ...d, [f.id]: { ...f.datos, ...d[f.id], [key]: v } }));
   }
@@ -7569,13 +7723,38 @@ export function TablaTool({
 
       {/* ── Toolbar principal ────────────────────────────────────────── */}
       <div className="hp-tabla-toolbar" ref={toolbarRef}>
-        <input
-          className="hp-tabla-search"
-          type="search"
-          placeholder={t("search")}
-          value={busqueda}
-          onChange={e => { setBusqueda(e.target.value); setPagina(0); }}
-        />
+        {permitirFormulas ? (
+          // El buscador es espacio muerto acá (capítulos de ~20 filas, nadie
+          // busca) — se reemplaza por una barra "fx" al estilo Excel: muestra
+          // y deja editar la fórmula CRUDA de la celda con foco, en vez de
+          // tener que borrar el resultado calculado para volver a verla.
+          (() => {
+            const filaFoco = celdaFoco ? filas.find(f => f.id === celdaFoco.filaId) : undefined;
+            const valorFx = filaFoco && celdaFoco ? val(filaFoco, celdaFoco.colKey) : "";
+            return (
+              <div className="hp-fx-bar">
+                <span className="hp-fx-label">fx</span>
+                <input
+                  className="hp-fx-input"
+                  type="text"
+                  disabled={!filaFoco}
+                  placeholder="Hacé clic en una celda de importe para ver o editar su fórmula"
+                  value={valorFx}
+                  onChange={(e) => { if (filaFoco && celdaFoco) setVal(filaFoco, celdaFoco.colKey, e.target.value); }}
+                  onBlur={() => { if (filaFoco) commit(filaFoco); }}
+                />
+              </div>
+            );
+          })()
+        ) : (
+          <input
+            className="hp-tabla-search"
+            type="search"
+            placeholder={t("search")}
+            value={busqueda}
+            onChange={e => { setBusqueda(e.target.value); setPagina(0); }}
+          />
+        )}
         {/* Filtrar (selects por columna de estado, antes sueltos en el toolbar) */}
         {colsEstado.length > 0 && (
           <ToolMenu label={t("filter")} icon="filter" width={230}
@@ -7960,6 +8139,8 @@ export function TablaTool({
                                 filaId={f.id}
                                 listId={autocomplete[c.key] ? `dl-${herramientaId}-${c.key}` : undefined}
                                 moneda={moneda}
+                                evaluarFormula={permitirFormulas && c.tipo === "money" ? () => resolverCelda(colIdx, absIdx) : undefined}
+                                onFocusCelda={permitirFormulas ? () => setCeldaFoco({ filaId: f.id, colKey: c.key }) : undefined}
                               />
                             </div>
                           </td>
