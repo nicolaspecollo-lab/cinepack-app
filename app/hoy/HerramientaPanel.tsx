@@ -4098,15 +4098,20 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
       const filasCap = filas
         .filter((f) => (f.datos?.capitulo ?? "") === nombre)
         .sort((a, b) => efOrden(a) - efOrden(b));
-      for (const f of filasCap) {
+      // Mismo código "CC.NN" que se ve en la columna Subgrupo de la tabla —
+      // acá se recalcula igual (capítulo + posición 1-indexada dentro de él,
+      // según el orden real de las filas) para que el PDF permita ubicar
+      // cada línea en la tabla sin ambigüedad.
+      filasCap.forEach((f, i) => {
         if (y > pageBottom) {
           doc.addPage(); marcaDeAgua(); y = 25;
           doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120);
         }
-        doc.text(f.datos?.concepto || "—", marginLeft + 4, y);
+        const codigo = `${String(pcCapNum(nombre)).padStart(2, "0")}.${String(i + 1).padStart(2, "0")}`;
+        doc.text(`${codigo}   ${f.datos?.concepto || "—"}`, marginLeft + 4, y);
         doc.text(ejMoney(ejNum(f.datos?.total)), marginRight, y, { align: "right" });
         y += 4.2;
-      }
+      });
     }
     doc.setTextColor(0);
     y += 3.5;
