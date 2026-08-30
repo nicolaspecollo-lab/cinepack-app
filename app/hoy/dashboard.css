@@ -2208,6 +2208,18 @@
 .cp-dash .hp-row-selected td{ background:rgba(159,232,112,0.06) !important; }
 .cp-dash .hp-row-selected{ outline:1px solid rgba(159,232,112,0.4); }
 
+/* Fila divisoria de grupo (ej. Departamento en Presupuesto) — mucho más baja
+   que una fila de datos, ajustada al texto, no editable ni arrastrable. */
+.cp-dash .hp-row-divisoria td{
+  padding:3px 10px; font-family:'Poppins',sans-serif; font-weight:700; font-size:10px;
+  text-transform:uppercase; letter-spacing:0.06em; color:var(--muted);
+  background:var(--bg-2); border-bottom:1px solid var(--line); border-top:1px solid var(--line);
+}
+
+/* Celda de solo lectura (ej. código de orden calculado) — texto plano, sin
+   apariencia de control editable. */
+.cp-dash .hp-cell-readonly{ color:var(--muted); font-variant-numeric:tabular-nums; }
+
 /* --- Total num --- */
 .cp-dash .hp-total-num{
   text-align:right; font-weight:700; font-family:'Poppins',sans-serif;
@@ -2259,11 +2271,16 @@
   box-shadow:0 1px 0 var(--line);
 }
 
-/* Freeze primera columna */
+/* Freeze de columnas iniciales (1 por defecto, o `columnasCongeladas` de
+   TablaTool — Presupuesto usa 2, Subgrupo+Concepto). Cada columna congelada
+   trae su propio `left` inline (offset acumulado de las congeladas
+   anteriores, calculado en JS); acá solo el comportamiento común. La línea
+   divisoria (box-shadow) va solo en `.hp-td-frozen-edge`/`.hp-th-frozen-edge`
+   — la última congelada — no en cada una, si no se verían varias líneas
+   seguidas en el medio del bloque fijo. */
 .cp-dash .hp-table .hp-th-frozen,
 .cp-dash .hp-table .hp-td-frozen{
-  position:sticky; left:0; z-index:2; background:var(--bg-2);
-  box-shadow:2px 0 4px rgba(0,0,0,0.15);
+  position:sticky; z-index:2; background:var(--bg-2);
   /* Todo <td> del área hp-table es position:relative (para .hp-databar) —
      eso pone a Importe/otras celdas en el mismo nivel de apilado que la
      congelada en algunos motores (Safari en particular renderiza mal el
@@ -2276,6 +2293,10 @@
   transform:translateZ(0);
   -webkit-transform:translateZ(0);
 }
+.cp-dash .hp-table .hp-th-frozen-edge,
+.cp-dash .hp-table .hp-td-frozen-edge{
+  box-shadow:2px 0 4px rgba(0,0,0,0.15);
+}
 .cp-dash .hp-table thead .hp-th-frozen{ z-index:4; }
 /* Los estados de fila (hover/seleccionada/drag-over) pintan un color de
    overlay TRANSLÚCIDO (--hl1, rgba(255,255,255,0.02) etc.) pensado para
@@ -2283,19 +2304,15 @@
    en la columna congelada eso dejaba ver el contenido de las columnas
    scrolleadas por detrás. Fix: la celda congelada mantiene su fondo opaco
    var(--bg-2) siempre, y el tinte del estado se pinta ENCIMA con un
-   box-shadow inset (que sí compone sobre un fondo opaco sin transparentar). */
-.cp-dash .hp-table tbody tr:hover td.hp-td-frozen{
-  background:var(--bg-2);
-  box-shadow:inset 0 0 0 999px var(--hl1), 2px 0 4px rgba(0,0,0,0.15);
-}
-.cp-dash .hp-row-selected td.hp-td-frozen{
-  background:var(--bg-2) !important;
-  box-shadow:inset 0 0 0 999px rgba(159,232,112,0.06), 2px 0 4px rgba(0,0,0,0.15);
-}
-.cp-dash .hp-row-drag-over td.hp-td-frozen{
-  background:var(--bg-2) !important;
-  box-shadow:inset 0 0 0 999px rgba(159,232,112,0.14), 2px 0 4px rgba(0,0,0,0.15);
-}
+   box-shadow inset (que sí compone sobre un fondo opaco sin transparentar).
+   La línea divisoria se re-declara con el inset sumado solo en la última
+   congelada, para no perderla al pisar box-shadow. */
+.cp-dash .hp-table tbody tr:hover td.hp-td-frozen{ background:var(--bg-2); box-shadow:inset 0 0 0 999px var(--hl1); }
+.cp-dash .hp-table tbody tr:hover td.hp-td-frozen-edge{ box-shadow:inset 0 0 0 999px var(--hl1), 2px 0 4px rgba(0,0,0,0.15); }
+.cp-dash .hp-row-selected td.hp-td-frozen{ background:var(--bg-2) !important; box-shadow:inset 0 0 0 999px rgba(159,232,112,0.06); }
+.cp-dash .hp-row-selected td.hp-td-frozen-edge{ box-shadow:inset 0 0 0 999px rgba(159,232,112,0.06), 2px 0 4px rgba(0,0,0,0.15); }
+.cp-dash .hp-row-drag-over td.hp-td-frozen{ background:var(--bg-2) !important; box-shadow:inset 0 0 0 999px rgba(159,232,112,0.14); }
+.cp-dash .hp-row-drag-over td.hp-td-frozen-edge{ box-shadow:inset 0 0 0 999px rgba(159,232,112,0.14), 2px 0 4px rgba(0,0,0,0.15); }
 
 /* Freeze columna de acciones (Eliminar fila, duplicar, color) — en tablas
    anchas (ej. Presupuesto, 16 columnas) el botón de borrar quedaba solo

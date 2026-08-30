@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -1888,6 +1888,9 @@ function Celda({
   filaId?: string;
   moneda?: string;
 }) {
+  if (col.soloLectura) {
+    return <span className="hp-cell-readonly">{valor || "—"}</span>;
+  }
   if (col.tipo === "archivo") {
     return (
       <ArchivoCell
@@ -3854,23 +3857,6 @@ function pcCapNum(nombre: string): number {
   return parseInt(nombre.match(/Cap\. (\d+)/)?.[1] ?? "999999", 10);
 }
 
-// Orden por defecto de las filas DENTRO de un capítulo del Presupuesto: las
-// completadas (concepto cargado) primero, las en blanco al final — y entre
-// las completadas, agrupadas por subgrupo consecutivo ("Dirección" todo
-// junto, "Fotografía" todo junto...) en vez de mezcladas según el orden de
-// creación/edición. Vive acá (no en TablaTool) porque es específico del
-// modelo de datos de Presupuesto (concepto/subgrupo); se pasa como
-// `ordenPersonalizado` para reemplazar el orden manual por defecto de
-// TablaTool (basado en `orden`/`_orden` de arrastre), que mezclaba las filas
-// según cuándo se sembraron o se completaron, no según su contenido.
-function pcOrdenFilaCapitulo(a: Fila, b: Fila): number {
-  const va = !(a.datos?.concepto ?? "").trim();
-  const vb = !(b.datos?.concepto ?? "").trim();
-  if (va !== vb) return va ? 1 : -1;
-  const sa = (a.datos?.subgrupo ?? "").trim();
-  const sb = (b.datos?.subgrupo ?? "").trim();
-  return sa.localeCompare(sb, "es", { numeric: true }) || (a.orden ?? 0) - (b.orden ?? 0);
-}
 
 function pcRollupPor(filas: Fila[], campo: PcAgrupador) {
   const map = new Map<string, { total: number; comprometido: number; real: number }>();
@@ -4076,37 +4062,42 @@ async function exportarPresupuestoPDF(filasTodas: Fila[], nombreVariante?: strin
     // Desglose debajo de cada capítulo — Nicolás: el resumen solo con el
     // total por capítulo no alcanzaba para justificar el gasto ante un
     // fondo, necesitaba verse de qué está compuesto. Dos modos a elección
-    // del usuario (mismo botón, dos opciones): "subgrupo" agrupa (Dirección,
-    // Producción...) y mantiene el PDF corto; "concepto" lista cada línea
+    // del usuario (mismo botón, dos opciones): "subgrupo" agrupa por
+    // Departamento y mantiene el PDF corto; "concepto" lista cada línea
     // (Director, Guionista...) para el máximo detalle, a costa de más
     // páginas. Ninguno de los dos reemplaza al Excel (ahí sigue la tabla
     // completa con IVA/comprometido/real desglosados).
+    //
+    // "Subgrupo" dejó de ser una categoría (era texto libre tipo "03.01
+    // Dirección" compartido por varias filas) para pasar a ser un código de
+    // orden único por fila ("03.01", "03.02"...) — ya no sirve para agrupar.
+    // El agrupado de este modo usa ahora "Departamento", que es el campo que
+    // cumple ese rol en el nuevo modelo (mismo criterio que la fila
+    // divisoria de la tabla en pantalla).
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(120);
     if (modo === "subgrupo") {
-      const porSubgrupo = new Map<string, number>();
+      const porDepto = new Map<string, number>();
       for (const f of filas) {
         if ((f.datos?.capitulo ?? "") !== nombre) continue;
-        const sg = (f.datos?.subgrupo ?? "").trim() || "Otros conceptos";
-        porSubgrupo.set(sg, (porSubgrupo.get(sg) ?? 0) + ejNum(f.datos?.total));
+        const dep = (f.datos?.departamento ?? "").trim() || "Sin departamento";
+        porDepto.set(dep, (porDepto.get(dep) ?? 0) + ejNum(f.datos?.total));
       }
-      // Orden natural por el prefijo numérico del subgrupo ("02.01" antes de
-      // "02.03"), igual criterio que el orden de filas dentro de la tabla.
-      const subgruposOrdenados = [...porSubgrupo.entries()].sort((a, b) => a[0].localeCompare(b[0], "es", { numeric: true }));
-      for (const [sg, total] of subgruposOrdenados) {
+      const deptosOrdenados = [...porDepto.entries()].sort((a, b) => b[1] - a[1]);
+      for (const [dep, total] of deptosOrdenados) {
         if (y > pageBottom) {
           doc.addPage(); marcaDeAgua(); y = 25;
           doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120);
         }
-        doc.text(sg, marginLeft + 4, y);
+        doc.text(dep, marginLeft + 4, y);
         doc.text(ejMoney(total), marginRight, y, { align: "right" });
         y += 4.2;
       }
     } else {
       const filasCap = filas
         .filter((f) => (f.datos?.capitulo ?? "") === nombre)
-        .sort((a, b) => (a.datos?.subgrupo ?? "").trim().localeCompare((b.datos?.subgrupo ?? "").trim(), "es", { numeric: true }));
+        .sort((a, b) => efOrden(a) - efOrden(b));
       for (const f of filasCap) {
         if (y > pageBottom) {
           doc.addPage(); marcaDeAgua(); y = 25;
@@ -4195,15 +4186,25 @@ async function exportarPresupuestoExcel(filasTodas: Fila[], columnas: Columna[],
   detalle.getRow(filaDespuesEncabezadoDetalle).values = cabeceras;
   detalle.getRow(filaDespuesEncabezadoDetalle).font = { bold: true };
 
+  // "Subgrupo" ya no es texto libre — es el código de orden "CC.NN" (capítulo
+  // + posición dentro de él), igual que en la tabla de la app. Se ordena por
+  // capítulo y luego por el orden real de las filas (`efOrden`, el mismo que
+  // gobierna el arrastre), y el código se recalcula acá mismo con un
+  // contador que arranca de nuevo en cada capítulo.
   const filasOrdenadas = [...filas].sort((a, b) =>
-    (a.datos?.capitulo ?? "").localeCompare(b.datos?.capitulo ?? "") ||
-    (a.datos?.subgrupo ?? "").trim().localeCompare((b.datos?.subgrupo ?? "").trim(), "es", { numeric: true })
+    (a.datos?.capitulo ?? "").localeCompare(b.datos?.capitulo ?? "") || efOrden(a) - efOrden(b)
   );
   const filaDetalleIni = filaDespuesEncabezadoDetalle + 1;
+  let capContadorActual = "";
+  let contadorSubgrupo = 0;
   filasOrdenadas.forEach((f, i) => {
     const d = f.datos ?? {};
+    const cap = d.capitulo ?? "";
+    if (cap !== capContadorActual) { capContadorActual = cap; contadorSubgrupo = 0; }
+    contadorSubgrupo++;
+    const codigoSubgrupo = `${String(pcCapNum(cap)).padStart(2, "0")}.${String(contadorSubgrupo).padStart(2, "0")}`;
     detalle.getRow(filaDetalleIni + i).values = [
-      d.capitulo ?? "", d.subgrupo ?? "", d.concepto ?? "", d.departamento ?? "", d.cargo ?? "", d.periodo_contratacion ?? "", d.etapa ?? "",
+      cap, codigoSubgrupo, d.concepto ?? "", d.departamento ?? "", d.cargo ?? "", d.periodo_contratacion ?? "", d.etapa ?? "",
       d.tipo_gasto ?? "", ejNum(d.base_sin_iva) || null, ejNum(d.iva) || null, ejNum(d.total) || 0, ejNum(d.cargas_sociales) || null,
       ejNum(d.comprometido) || null, ejNum(d.real) || null, d.responsable ?? "", d.comentario ?? "",
     ];
@@ -4433,7 +4434,16 @@ function PresupuestoTablaTabs({
               onImportarCSV={onImportarCSV}
               moneda={moneda}
               onCambiarMoneda={onCambiarMoneda}
-              ordenPersonalizado={pcOrdenFilaCapitulo}
+              columnasCongeladas={2}
+              valoresComputados={{
+                // "Subgrupo" pasó a ser el código de orden "CC.NN" — capítulo
+                // (el de esta pestaña) + posición dentro de él, 1-indexado.
+                // Se recalcula solo con el orden real (arrastre incluido) —
+                // insertar/mover una fila renumera todas las siguientes sin
+                // tocar la base de datos.
+                subgrupo: (_f, idx) => `${String(pcCapNum(tab)).padStart(2, "0")}.${String(idx + 1).padStart(2, "0")}`,
+              }}
+              agruparPor="departamento"
             />
           )}
         </>
@@ -7002,7 +7012,9 @@ export function TablaTool({
   onImportarCSV,
   moneda,
   onCambiarMoneda,
-  ordenPersonalizado,
+  columnasCongeladas = 1,
+  valoresComputados,
+  agruparPor,
 }: {
   columnas: Columna[];
   filas: Fila[];
@@ -7019,11 +7031,24 @@ export function TablaTool({
   onImportarCSV?: (rows: Record<string, string>[]) => Promise<void>;
   moneda?: string;
   onCambiarMoneda?: (v: string) => void;
-  // Reemplaza el orden manual por defecto (por `orden`/`_orden` de arrastre)
-  // por un comparador propio del llamador — el arrastre queda desactivado
-  // mientras esté presente (si no, el drop quedaría deshecho en el próximo
-  // render al recalcularse este orden). Ver `pcOrdenFilaCapitulo` (Presupuesto).
-  ordenPersonalizado?: (a: Fila, b: Fila) => number;
+  // Cuántas columnas iniciales quedan fijas (position:sticky) al scrollear
+  // horizontalmente. Por defecto 1 (la primera); Presupuesto pasa 2 para no
+  // perder de vista con qué concepto/departamento está asociado el gasto al
+  // scrollear hacia las columnas de importe.
+  columnasCongeladas?: number;
+  // Valor de celda calculado en vivo a partir de la fila y su posición
+  // (índice dentro de `filasFiltradas`, ya con el orden real aplicado —
+  // arrastre incluido), en vez de leer `datos[key]`. Se usa para columnas
+  // como el código de Subgrupo de Presupuesto ("03.01"), que no se guardan
+  // como texto sino que dependen 100% del orden de las filas — así se
+  // recalculan solas ante cualquier arrastre, sin persistir nada ni
+  // arriesgarse a que el guardado de OTRA celda de la misma fila escriba un
+  // valor calculado como si fuera dato real.
+  valoresComputados?: Record<string, (f: Fila, idx: number) => string>;
+  // Nombre de columna por la que se agrupa visualmente con una fila
+  // divisoria (más baja, ajustada al texto) cada vez que cambia el valor
+  // respecto a la fila anterior — ej. Departamento en Presupuesto.
+  agruparPor?: string;
 }) {
   const t = useTranslations("hp");
   // ── Estados existentes ──────────────────────────────────────────────────
@@ -7090,6 +7115,15 @@ export function TablaTool({
   // Columnas visibles (sin ocultas)
   const visibleCols = useMemo(() => columnas.filter(c => !hiddenCols.has(c.key)), [columnas, hiddenCols]);
 
+  // Offset acumulado (px) de una columna congelada = suma de anchos de las
+  // congeladas anteriores — cada una necesita su propio `left` para apilarse
+  // una al lado de la otra en vez de superponerse todas en left:0.
+  function frozenLeftOf(idx: number): number {
+    let left = 0;
+    for (let i = 0; i < idx; i++) left += colWidths[visibleCols[i].key] ?? anchoDefectoCol(visibleCols[i]);
+    return left;
+  }
+
   // Ancho total de la tabla = suma de anchos de columna (los del usuario o el
   // default por tipo) + columnas fijas (check, acciones, editado). La tabla es
   // table-layout:fixed y se setea a este ancho: si supera el contenedor,
@@ -7122,7 +7156,7 @@ export function TablaTool({
     // Orden base = orden manual persistido (efOrden), no el de llegada del
     // fetch. Si hay sortKey activo se re-ordena más abajo y este paso solo
     // importa como fallback.
-    let res = [...filas].sort(ordenPersonalizado ?? ((a, b) => efOrden(a) - efOrden(b)));
+    let res = [...filas].sort((a, b) => efOrden(a) - efOrden(b));
     if (busqueda.trim()) {
       const q = busqueda.trim().toLowerCase();
       res = res.filter(f => columnas.some(c => stripHtml(f.datos?.[c.key] ?? "").toLowerCase().includes(q)));
@@ -7166,7 +7200,7 @@ export function TablaTool({
       });
     }
     return res;
-  }, [filas, busqueda, filtros, sortKey, sortDir, sortKey2, sortDir2, columnas, ordenPersonalizado]);
+  }, [filas, busqueda, filtros, sortKey, sortDir, sortKey2, sortDir2, columnas]);
 
   const totalPaginas = Math.ceil(filasFiltradas.length / ITEMS_POR_PAG);
   const filasPagina = filasFiltradas.length > ITEMS_POR_PAG
@@ -7740,13 +7774,17 @@ export function TablaTool({
                     <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} title={t("selectAll")} />
                   </th>
                 )}
-                {visibleCols.map((c, ci) => (
+                {visibleCols.map((c, ci) => {
+                  const esFrozenCol = ci < columnasCongeladas;
+                  const esFrozenEdge = ci === columnasCongeladas - 1;
+                  return (
                   <th
                     key={c.key}
-                    className={`hp-th-sortable${sortKey === c.key ? " hp-th-sorted" : ""}${ci === 0 ? " hp-th-frozen" : ""}`}
+                    className={`hp-th-sortable${sortKey === c.key ? " hp-th-sorted" : ""}${esFrozenCol ? " hp-th-frozen" : ""}${esFrozenEdge ? " hp-th-frozen-edge" : ""}`}
+                    style={esFrozenCol ? { left: frozenLeftOf(ci) } : undefined}
                   >
                     <div className="hp-th-inner">
-                      <span className="hp-th-label" onClick={() => toggleSort(c.key)} style={{cursor:"pointer",flex:1}}>
+                      <span className="hp-th-label" onClick={c.soloLectura ? undefined : () => toggleSort(c.key)} style={{cursor: c.soloLectura ? "default" : "pointer", flex:1}}>
                         {c.label}
                         {sortKey === c.key && (
                           <Icon name={sortDir === "asc" ? "chevron-up" : "chevron-down"} size={12} className="hp-th-sort-icon" />
@@ -7758,7 +7796,8 @@ export function TablaTool({
                       <span className="hp-col-resizer" onMouseDown={e => startResize(e, c.key)} />
                     </div>
                   </th>
-                ))}
+                  );
+                })}
                 {editable && <th className="hp-th-acciones">{t("rowActions")}</th>}
                 {showLastEdit && <th className="hp-th-edit">{t("editedCol")}</th>}
               </tr>
@@ -7782,10 +7821,27 @@ export function TablaTool({
                 const isSelected = seleccionadas.has(f.id);
                 const isDragOver = dragOverId === f.id;
                 const rowH = rowHeights[f.id];
+                const absIdx = pagina * ITEMS_POR_PAG + rowIdx;
+                // Fila divisoria: más baja, ajustada al texto, sin acciones —
+                // aparece arriba de la primera fila de cada tramo consecutivo
+                // con el mismo valor en `agruparPor` (ej. Departamento), para
+                // separar visualmente los conceptos de cada departamento sin
+                // necesidad de una columna de capítulo/depto repetida en cada
+                // fila. No se recalcula contra la página anterior (los
+                // capítulos de Presupuesto entran en una sola página).
+                const valorGrupo = agruparPor ? (f.datos?.[agruparPor] ?? "").trim() : "";
+                const valorGrupoAnterior = agruparPor && rowIdx > 0 ? (filasPagina[rowIdx - 1].datos?.[agruparPor] ?? "").trim() : undefined;
+                const esInicioDeGrupo = !!agruparPor && valorGrupo !== valorGrupoAnterior;
+                const colSpanDivisoria = (editable ? 1 : 0) + visibleCols.length + (editable ? 1 : 0) + (showLastEdit ? 1 : 0);
                 return (
+                  <Fragment key={f.id}>
+                    {esInicioDeGrupo && (
+                      <tr className="hp-row-divisoria">
+                        <td colSpan={colSpanDivisoria}>{valorGrupo || t("noStatus")}</td>
+                      </tr>
+                    )}
                     <tr
-                      key={f.id}
-                      draggable={editable && !ordenPersonalizado}
+                      draggable={editable}
                       onDragStart={e => onDragStart(e, f.id)}
                       onDragOver={e => onDragOver(e, f.id)}
                       onDrop={e => onDrop(e, f.id)}
@@ -7803,17 +7859,19 @@ export function TablaTool({
                         </td>
                       )}
                       {visibleCols.map((c, colIdx) => {
-                        const cellVal = val(f, c.key);
+                        const cellVal = valoresComputados?.[c.key] ? valoresComputados[c.key](f, absIdx) : val(f, c.key);
                         const isNum = c.tipo === "num" || c.tipo === "money";
                         const dataBarPct = isNum && maxVals[c.key]
                           ? Math.min(100, (parseFloat(cellVal || "0") || 0) / maxVals[c.key] * 100)
                           : 0;
-                        const esFrozen = colIdx === 0;
+                        const esFrozen = colIdx < columnasCongeladas;
+                        const esFrozenEdge = colIdx === columnasCongeladas - 1;
                         // La celda congelada tiene que quedar SIEMPRE opaca (si no, se
                         // transparenta y deja ver las columnas que scrollean por detrás
                         // — ver dashboard.css). El tinte de color de fila se pinta con
                         // box-shadow inset sobre ese fondo opaco en vez de reemplazar el
-                        // background.
+                        // background. La línea divisoria (2px) va solo en la última
+                        // congelada (esFrozenEdge), no en cada una.
                         return (
                           <td
                             key={c.key}
@@ -7822,13 +7880,17 @@ export function TablaTool({
                               c.tipo === "largo" ? "hp-td-largo" : "",
                               (c.tipo === "num" || c.tipo === "money") ? "hp-td-num" : "",
                               esFrozen ? "hp-td-frozen" : "",
+                              esFrozenEdge ? "hp-td-frozen-edge" : "",
                             ].filter(Boolean).join(" ")}
-                            style={esFrozen && rowColor
-                              ? {boxShadow: [`inset 0 0 0 999px ${rowColor}18`, "2px 0 4px rgba(0,0,0,0.15)"].join(", ")}
-                              : undefined}
+                            style={{
+                              ...(esFrozen ? { left: frozenLeftOf(colIdx) } : {}),
+                              ...(esFrozen && rowColor
+                                ? { boxShadow: [`inset 0 0 0 999px ${rowColor}18`, esFrozenEdge ? "2px 0 4px rgba(0,0,0,0.15)" : ""].filter(Boolean).join(", ") }
+                                : {}),
+                            }}
                             onKeyDown={e => handleCellKeyDown(e, rowIdx, colIdx)}
                           >
-                            {esFrozen && (
+                            {colIdx === 0 && (
                               <span className="hp-row-resizer" onMouseDown={e => startResizeRow(e, f.id)} title={t("dragToResizeRow")} />
                             )}
                             {isNum && dataBarPct > 0 && (
@@ -7882,6 +7944,7 @@ export function TablaTool({
                         </td>
                       )}
                     </tr>
+                  </Fragment>
                 );
               })}
             </tbody>

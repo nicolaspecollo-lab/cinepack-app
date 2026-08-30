@@ -23,6 +23,7 @@ export type Columna = {
   tipo?: ColTipo;     // por defecto "texto"
   opciones?: string[]; // para tipo "estado" (dropdown) o "chips" (multi-selección)
   libre?: boolean;     // tipo "estado": además de las opciones, permite escribir un valor propio ("Otro...")
+  soloLectura?: boolean; // la celda se muestra siempre como texto plano, nunca editable (ej. un código calculado)
   sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
 };
 
@@ -95,10 +96,13 @@ const presupuestoCostos: Herramienta = {
   hint: "El presupuesto estimado de la producción, capítulo por capítulo — con reparto por coproductora y desglose de IVA. Seguimiento de comprometido/real incluido.",
   columnas: [
     { key: "capitulo", label: "Capítulo", tipo: "estado", opciones: CAPITULOS_PRESUPUESTO },
-    { key: "subgrupo", label: "Subgrupo" },
-    { key: "concepto", label: "Concepto" },
+    // "Subgrupo" ya no es texto libre: es el código de orden "CC.NN" (capítulo.posición)
+    // calculado solo — se recalcula en vivo según el orden real de las filas dentro del
+    // capítulo, arrastre incluido. Nunca se edita a mano, por eso soloLectura.
+    { key: "subgrupo", label: "Subgrupo", soloLectura: true },
     { key: "departamento", label: "Departamento", tipo: "estado", opciones: DEPARTAMENTOS_PRESUPUESTO, libre: true },
     { key: "cargo", label: "Cargo" },
+    { key: "concepto", label: "Concepto" },
     { key: "periodo_contratacion", label: "Período de contratación" },
     { key: "etapa", label: "Etapa", tipo: "estado", opciones: ETAPAS_PRESUPUESTO },
     { key: "tipo_gasto", label: "Tipo de gasto", tipo: "estado", opciones: ["Estándar", "Alquiler / servicio"] },
