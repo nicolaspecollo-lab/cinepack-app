@@ -189,6 +189,7 @@
     "markDoneDue": "Mark as done",
     "members": "Members",
     "noTeam": "No team loaded.",
+    "addMember": "+ Add member",
     "cover": "Cover",
     "deleteCard": "Delete card"
   },

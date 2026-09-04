@@ -6,7 +6,6 @@
 // con su contenido en `datos`), así que comparten un único motor de datos.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
@@ -149,7 +148,7 @@ export function PlantillaCuadroView({ plantillaId, ...common }: ViewProps & { pl
 const KANBAN_COLS = [
   { key: "0", labelKey: "kanbanTodo", color: "var(--cyan)" },
   { key: "1", labelKey: "kanbanDoing", color: "var(--lime)" },
-  { key: "2", labelKey: "kanbanDone", color: "var(--rose)" },
+  { key: "2", labelKey: "kanbanDone", color: "var(--gold)" },
 ] as const;
 
 // Etiquetas = las 6 fases del proyecto (mismas que etapas/COLOR_ETAPA, para
@@ -228,6 +227,20 @@ function KanbanView({ rows, editable, addRow, patchRow, removeRow, miembros = []
 
   const cardAbierta = abierta ? rows.find((r) => r.id === abierta) : null;
 
+  // La tarjeta abierta ocupa toda la herramienta (no un modal flotante encima
+  // del tablero) — pedido explícito: se veía "cortado", como una ventanita
+  // aparte, en vez de una pantalla propia de la herramienta.
+  if (cardAbierta) {
+    return (
+      <KDetail row={cardAbierta} editable={editable} cols={KANBAN_COLS} colLabel={(k) => t(k)}
+        labelsCat={KLABELS} covers={KCOVERS}
+        miembros={miembros} tEt={tEt}
+        onClose={() => setAbierta(null)}
+        onPatch={(p) => patchRow(cardAbierta.id, p)}
+        onDelete={() => { removeRow(cardAbierta.id); setAbierta(null); }} />
+    );
+  }
+
   return (
     <div className={`pqk-board${dragId ? " pqk-dragging" : ""}`}>
       {KANBAN_COLS.map((col) => {
@@ -276,14 +289,6 @@ function KanbanView({ rows, editable, addRow, patchRow, removeRow, miembros = []
           </div>
         );
       })}
-      {cardAbierta && (
-        <KModal row={cardAbierta} editable={editable} cols={KANBAN_COLS} colLabel={(k) => t(k)}
-          labelsCat={KLABELS} covers={KCOVERS}
-          miembros={miembros} tEt={tEt}
-          onClose={() => setAbierta(null)}
-          onPatch={(p) => patchRow(cardAbierta.id, p)}
-          onDelete={() => { removeRow(cardAbierta.id); setAbierta(null); }} />
-      )}
     </div>
   );
 }
@@ -298,18 +303,25 @@ function KCard({ row, colColor, editable, labels, nombreLabel, colorLabel, due, 
   const ds = dueEstado(due);
   const chkDone = checklist.filter((i) => i.d).length;
   const mem = memberIds.map((id) => miembros.find((m) => m.id === id)).filter(Boolean) as KMiembro[];
+  // El isotipo toma el color de la carátula elegida (d.cover) — si la
+  // tarjeta no tiene carátula, cae al color de la columna, para que nunca
+  // quede sin ningún acento de color.
+  const isoColor = d.cover || colColor;
   return (
     <div className="pqk-card" data-id={row.id} draggable={editable}
       style={{ ["--cc" as string]: colColor }}
       onClick={onOpen}
       onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart(); }}
       onDragEnd={onDragEnd}>
-      <span className="pqk-card-corner" />
-      {d.cover && <div className="pqk-cover" style={{ background: d.cover }} />}
+      <span className="cp-iso pqk-iso" style={{ background: isoColor }} />
       <div className="pqk-card-body">
         {labels.length > 0 && (
           <div className="pqk-labels">
-            {labels.map((id) => <span key={id} className="pqk-label" style={{ background: colorLabel(id) }}>{nombreLabel(id)}</span>)}
+            {labels.map((id) => (
+              <span key={id} className="pqk-label" style={{ color: colorLabel(id), borderColor: colorLabel(id), background: `color-mix(in srgb, ${colorLabel(id)} 12%, transparent)` }}>
+                {nombreLabel(id)}
+              </span>
+            ))}
           </div>
         )}
         <div className="pqk-card-title">{d.texto || <span className="pqk-card-empty">—</span>}</div>
@@ -325,7 +337,11 @@ function KCard({ row, colColor, editable, labels, nombreLabel, colorLabel, due, 
           )}
           {mem.length > 0 && (
             <span className="pqk-members">
-              {mem.map((m) => <span key={m.id} className="pqk-av" style={{ background: m.color }} title={m.nombre}>{initials(m.nombre)}</span>)}
+              {mem.map((m) => (
+                <span key={m.id} className="pqk-av" style={{ background: `color-mix(in srgb, ${m.color} 30%, var(--bg-2))`, color: m.color }} title={m.nombre}>
+                  {initials(m.nombre)}
+                </span>
+              ))}
             </span>
           )}
         </div>
@@ -334,8 +350,12 @@ function KCard({ row, colColor, editable, labels, nombreLabel, colorLabel, due, 
   );
 }
 
-// ── Detalle de la tarjeta (modal a pantalla) ─────────────────────────────
-function KModal({ row, editable, cols, colLabel, labelsCat, covers, miembros, tEt, onClose, onPatch, onDelete }: {
+// ── Detalle de la tarjeta — pantalla propia de la herramienta ────────────
+// Antes era un modal flotante (createPortal + overlay) encima del tablero;
+// ahora reemplaza al tablero por completo mientras está abierta (ver el
+// `if (cardAbierta)` en KanbanView) — "que se abra en toda la herramienta",
+// pedido explícito, no una ventanita superpuesta.
+function KDetail({ row, editable, cols, colLabel, labelsCat, covers, miembros, tEt, onClose, onPatch, onDelete }: {
   row: Row; editable: boolean; cols: readonly { key: string; labelKey: string; color: string }[]; colLabel: (k: string) => string;
   labelsCat: readonly { id: string; etapa: boolean; color: string }[];
   covers: string[]; miembros: KMiembro[]; tEt: (k: string) => string;
@@ -350,40 +370,46 @@ function KModal({ row, editable, cols, colLabel, labelsCat, covers, miembros, tE
   const due = parseDue(d.due);
   const members = parseArr<string>(d.members);
   const [nuevoChk, setNuevoChk] = useState("");
+  const [agregandoMiembro, setAgregandoMiembro] = useState(false);
   const chkDone = checklist.filter((i) => i.d).length;
   const pct = checklist.length ? Math.round((chkDone / checklist.length) * 100) : 0;
+  const miembrosAsignados = members.map((id) => miembros.find((m) => m.id === id)).filter(Boolean) as KMiembro[];
+  const miembrosDisponibles = miembros.filter((m) => !members.includes(m.id));
 
   const toggleLabel = (id: string) => { const n = labels.includes(id) ? labels.filter((x) => x !== id) : [...labels, id]; onPatch({ labels: JSON.stringify(n) }); };
   const toggleMember = (id: string) => { const n = members.includes(id) ? members.filter((x) => x !== id) : [...members, id]; onPatch({ members: JSON.stringify(n) }); };
   const setChk = (next: Chk[]) => onPatch({ checklist: JSON.stringify(next) });
 
-  const host = typeof document !== "undefined" ? document.querySelector(".cp-dash") ?? document.body : null;
-  if (!host) return null;
+  return (
+    <div className="pqk-detail">
+      <div className="pqk-d-top">
+        <button className="pqk-back" onClick={onClose} title={tNav("back")}><Icon name="arrow-left" size={14} /></button>
+        <span className="pqk-d-crumb">{t("inColumn")} <b style={{ color: col.color }}>{colLabel(col.labelKey)}</b></span>
+      </div>
 
-  return createPortal(
-    <div className="pqk-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="pqk-modal" style={{ ["--cc" as string]: col.color }}>
-        <span className="pqk-modal-corner" />
-        <button className="pqk-close" onClick={onClose} title={tNav("back")}><Icon name="x" size={14} /></button>
+      <div className="pqk-d-grid">
         <div className="pqk-m-main">
-          <div className="pqk-m-eyebrow"><Icon name="columns" size={13} /> {t("inColumn")} <b style={{ color: col.color }}>{colLabel(col.labelKey)}</b></div>
           <textarea className="pqk-m-title" rows={1} defaultValue={d.texto ?? ""} readOnly={!editable}
             onInput={(e) => { const el = e.currentTarget; el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; }}
             onBlur={(e) => onPatch({ texto: e.target.value })} />
 
-          <div className="pqk-sec-h"><span className="hex" /> {t("labels")}</div>
+          <div className="pqk-sec-h">{t("labels")}</div>
           <div className="pqk-chip-row">
-            {labelsCat.map((l) => (
-              <button key={l.id} className={`pqk-mlabel${labels.includes(l.id) ? "" : " off"}`} style={{ background: l.color }}
-                disabled={!editable} onClick={() => toggleLabel(l.id)}>{l.etapa ? tEt(l.id) : t(`lbl_${l.id}`)}</button>
-            ))}
+            {labelsCat.map((l) => {
+              const on = labels.includes(l.id);
+              return (
+                <button key={l.id} className={`pqk-mlabel${on ? "" : " off"}`}
+                  style={on ? { color: l.color, borderColor: l.color, background: `color-mix(in srgb, ${l.color} 12%, transparent)` } : undefined}
+                  disabled={!editable} onClick={() => toggleLabel(l.id)}>{l.etapa ? tEt(l.id) : t(`lbl_${l.id}`)}</button>
+              );
+            })}
           </div>
 
-          <div className="pqk-sec-h"><span className="hex" /> {t("description")}</div>
+          <div className="pqk-sec-h">{t("description")}</div>
           <textarea className="pqk-desc" defaultValue={d.desc ?? ""} placeholder={t("descPlaceholder")} readOnly={!editable}
             onBlur={(e) => onPatch({ desc: e.target.value })} />
 
-          <div className="pqk-sec-h"><span className="hex" /> {t("checklist")} <span className="pqk-sec-pct">{pct}%</span></div>
+          <div className="pqk-sec-h">{t("checklist")} <span className="pqk-sec-pct">{pct}%</span></div>
           <div className="pqk-prog"><span style={{ width: `${pct}%` }} /></div>
           <div>
             {checklist.map((it, i) => (
@@ -436,13 +462,33 @@ function KModal({ row, editable, cols, colLabel, labelsCat, covers, miembros, tE
 
           <div className="pqk-side-h">{t("members")}</div>
           {miembros.length === 0 ? <p className="pqk-empty">{t("noTeam")}</p> : (
-            <div className="pqk-mem-row">
-              {miembros.map((m) => (
-                <button key={m.id} className={`pqk-mem${members.includes(m.id) ? "" : " off"}`} disabled={!editable} onClick={() => toggleMember(m.id)}>
-                  <span className="pqk-av" style={{ background: m.color }}>{initials(m.nombre)}</span><span>{m.nombre}</span>
-                </button>
-              ))}
-            </div>
+            <>
+              {miembrosAsignados.length > 0 && (
+                <div className="pqk-mem-assigned">
+                  {miembrosAsignados.map((m) => (
+                    <div key={m.id} className="pqk-mem-row-item">
+                      <span className="pqk-av" style={{ background: `color-mix(in srgb, ${m.color} 30%, var(--bg-2))`, color: m.color }}>{initials(m.nombre)}</span>
+                      <span className="pqk-mem-name">{m.nombre}</span>
+                      {editable && <button className="pqk-mem-rm" onClick={() => toggleMember(m.id)}><Icon name="x" size={11} /></button>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {editable && miembrosDisponibles.length > 0 && (
+                agregandoMiembro ? (
+                  <div className="pqk-mem-picker">
+                    {miembrosDisponibles.map((m) => (
+                      <button key={m.id} className="pqk-mem-pick-item" onClick={() => { toggleMember(m.id); if (miembrosDisponibles.length === 1) setAgregandoMiembro(false); }}>
+                        <span className="pqk-av" style={{ background: `color-mix(in srgb, ${m.color} 30%, var(--bg-2))`, color: m.color }}>{initials(m.nombre)}</span>
+                        {m.nombre}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button className="pqk-add-mem" onClick={() => setAgregandoMiembro(true)}>{t("addMember")}</button>
+                )
+              )}
+            </>
           )}
 
           <div className="pqk-side-h">{t("cover")}</div>
@@ -458,8 +504,7 @@ function KModal({ row, editable, cols, colLabel, labelsCat, covers, miembros, tE
           )}
         </div>
       </div>
-    </div>,
-    host
+    </div>
   );
 }
 
