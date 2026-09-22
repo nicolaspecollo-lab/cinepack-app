@@ -14,15 +14,20 @@ export default function HoyWorkspace({
   fullName,
   departamento,
   isAdmin,
+  puedeSimularRol,
   avatarUrl,
   cargo,
 }: {
   fullName: string;
   departamento: string;
   isAdmin: boolean;
+  // Habilita el selector de depto/cargo (igual que isAdmin) sin dar acceso
+  // de plataforma — para testers de QA (profiles.es_tester).
+  puedeSimularRol?: boolean;
   avatarUrl?: string | null;
   cargo?: string | null;
 }) {
+  const puedeSimular = isAdmin || !!puedeSimularRol;
   const [deptOverride, setDeptOverride] = useState<string | null>(null);
   const [cargoOverride, setCargoOverride] = useState<string | null>(null);
   const te = useTranslations("workspaceEstado");
@@ -60,14 +65,14 @@ export default function HoyWorkspace({
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!puedeSimular) return;
     const savedDept = localStorage.getItem(STORAGE_KEY);
     if (savedDept && DEPARTAMENTOS.includes(savedDept)) {
       setDeptOverride(savedDept);
       const savedCargo = localStorage.getItem(CARGO_STORAGE_KEY);
       if (savedCargo) setCargoOverride(savedCargo);
     }
-  }, [isAdmin]);
+  }, [puedeSimular]);
 
   function handleDeptChange(dept: string) {
     // Reset cargo override whenever department changes
@@ -87,9 +92,9 @@ export default function HoyWorkspace({
     setCargoOverride(c);
   }
 
-  const effectiveDept = isAdmin && deptOverride ? deptOverride : departamento;
+  const effectiveDept = puedeSimular && deptOverride ? deptOverride : departamento;
   const accent = ACCENTS[effectiveDept] ?? "lime";
-  const effectiveCargo = isAdmin && cargoOverride ? cargoOverride : cargo;
+  const effectiveCargo = puedeSimular && cargoOverride ? cargoOverride : cargo;
   const cargosForDept = JERARQUIA_POR_DEPARTAMENTO[effectiveDept] ?? [];
 
   if (acceso === "cargando") {
@@ -117,11 +122,11 @@ export default function HoyWorkspace({
     <WorkspaceShell
       fullName={fullName}
       departamento={effectiveDept}
-      isAdmin={isAdmin}
+      isAdmin={puedeSimular}
       homeDept={departamento}
       onDeptChange={handleDeptChange}
       cargoOverride={cargoOverride}
-      cargosDisponibles={isAdmin ? cargosForDept : []}
+      cargosDisponibles={puedeSimular ? cargosForDept : []}
       onCargoChange={handleCargoChange}
       avatarUrl={avatarUrl}
     >

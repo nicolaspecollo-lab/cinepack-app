@@ -13,11 +13,12 @@ export default async function HoyPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, departamento, is_admin, app_role, avatar_url, cargo, pais_residencia, provincia_residencia, pais_produccion, provincia_produccion")
+    .select("full_name, departamento, is_admin, app_role, avatar_url, cargo, es_tester, pais_residencia, provincia_residencia, pais_produccion, provincia_produccion")
     .eq("id", user.id)
     .single();
 
   const isSuperAdmin = !!profile?.is_admin || profile?.app_role === "super_admin";
+  const puedeSimularRol = isSuperAdmin || !!profile?.es_tester;
 
   if (
     profile && !isSuperAdmin &&
@@ -49,6 +50,7 @@ export default async function HoyPage() {
       fullName={profile.full_name}
       departamento={profile.departamento}
       isAdmin={isSuperAdmin}
+      puedeSimularRol={puedeSimularRol}
       avatarUrl={profile.avatar_url}
       cargo={profile.cargo}
     />
