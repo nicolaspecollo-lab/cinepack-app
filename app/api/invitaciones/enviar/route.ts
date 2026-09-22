@@ -156,9 +156,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Falta el token" }, { status: 400 });
   }
 
+  // Segunda puerta server-to-server: permite disparar el envío de una
+  // invitación ya creada sin sesión de navegador (automatizaciones propias).
+  // No otorga ningún permiso sobre datos — solo salta el chequeo de sesión;
+  // la invitación en sí ya requirió RLS de Ejecutivo/super_admin para crearse.
+  const secretHeader = req.headers.get("x-invitaciones-secret");
+  const secretOk =
+    !!process.env.INVITACIONES_ADMIN_SECRET &&
+    secretHeader === process.env.INVITACIONES_ADMIN_SECRET;
+
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) {
+  if (!auth.user && !secretOk) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
