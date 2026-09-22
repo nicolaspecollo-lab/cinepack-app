@@ -84,9 +84,9 @@ function emailHtml(inv: Invitacion, link: string) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="cp-bg-outer" bgcolor="#0D0D12" style="background:#0D0D12;padding:48px 20px;">
       <tr>
         <td align="center" class="cp-bg-outer" bgcolor="#0D0D12">
-          <table role="presentation" width="480" cellpadding="0" cellspacing="0" class="cp-bg-card" bgcolor="#16161D" style="max-width:480px;width:100%;background:#16161D;border:1px solid rgba(255,255,255,0.08);">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" class="cp-bg-card" bgcolor="#16161D" style="max-width:600px;width:100%;background:#16161D;border:1px solid rgba(255,255,255,0.08);">
             <tr>
-              <td align="center" class="cp-bg-card" bgcolor="#16161D" style="padding:34px 36px 26px 36px;text-align:center;background-color:#16161D;background-image:url('${HEXBG}');background-repeat:repeat;">
+              <td align="center" class="cp-bg-card" bgcolor="#16161D" background="${HEXBG}" style="padding:34px 36px 26px 36px;text-align:center;background-color:#16161D;background-image:url('${HEXBG}');background-repeat:repeat;">
                 <img src="cid:${LOGO_CID}" alt="CINE PACK" height="30" style="height:30px;width:auto;display:inline-block;" />
                 <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#8a8a95;margin-top:22px;">
                   Te han invitado a un proyecto
@@ -131,7 +131,7 @@ function emailHtml(inv: Invitacion, link: string) {
               </td>
             </tr>
           </table>
-          <table role="presentation" width="480" cellpadding="0" cellspacing="0" class="cp-bg-outer" bgcolor="#0D0D12" style="max-width:480px;width:100%;background:#0D0D12;">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" class="cp-bg-outer" bgcolor="#0D0D12" style="max-width:600px;width:100%;background:#0D0D12;">
             <tr>
               <td class="cp-bg-outer" bgcolor="#0D0D12" style="padding:20px 12px 0;text-align:center;background-color:#0D0D12;font-family:Helvetica,Arial,sans-serif;font-size:11px;color:#5a5a63;">
                 CINE PACK — gestión de producción audiovisual · cinepack.es
