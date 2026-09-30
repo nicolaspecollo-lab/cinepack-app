@@ -7,7 +7,6 @@ import { safeKey } from "../lib/storageKey";
 import { HERRAMIENTAS } from "../herramientas";
 import { DEPARTAMENTOS } from "../constants";
 import { TIPOS_EVENTO, type EventoTipo } from "./eventosCalendario";
-import * as pdfjsLib from "pdfjs-dist";
 
 type Archivo = {
   path: string;
@@ -277,6 +276,11 @@ export default function ArchivosPanel({ departamento, isAdmin }: { departamento:
   // la escala). Los PDF se renderizan a una imagen pequeña con pdfjs porque
   // el bucket "documentos" es privado: no existe URL pública servible.
   async function renderPdfThumbnail(path: string, scale: number): Promise<string | null> {
+    // Import dinámico: pdfjs-dist usa APIs de navegador que no existen en el
+    // render SSR de este client component (Next.js pre-renderiza una vez en
+    // Node), un import estático a nivel de módulo rompe ahí con
+    // "Object.defineProperty called on non-object".
+    const pdfjsLib = await import("pdfjs-dist");
     const supabase = createClient();
     const { data } = await supabase.storage.from(BUCKET).download(path);
     if (!data) return null;
