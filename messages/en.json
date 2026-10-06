@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
+    "loading": "Loading frequencies…",
+    "errNoProject": "No active project. Please sign in again.",
     "addFrequency": "Add frequency",
     "emptyTitle": "No frequencies yet",
     "emptyDesc": "Add a device to start planning the day's radio channel.",

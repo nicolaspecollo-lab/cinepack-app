@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",
+    "loading": "Cargando frecuencias…",
+    "errNoProject": "No hay proyecto activo. Vuelve a iniciar sesión.",
     "addFrequency": "Añadir frecuencia",
     "emptyTitle": "Sin frecuencias cargadas",
     "emptyDesc": "Añade un equipo para empezar a planificar el canal de radio de la jornada.",

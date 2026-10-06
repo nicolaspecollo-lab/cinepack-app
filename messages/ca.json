@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
+    "loading": "Carregant freqüències…",
+    "errNoProject": "No hi ha cap projecte actiu. Torna a iniciar la sessió.",
     "addFrequency": "Afegir freqüència",
     "emptyTitle": "Sense freqüències carregades",
     "emptyDesc": "Afegeix un equip per començar a planificar el canal de ràdio de la jornada.",

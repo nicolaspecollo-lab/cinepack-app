@@ -6,10 +6,12 @@ import type { FrecuenciaDatos, ResultadoInterferencia } from "./useConflictoFrec
 
 export default function FrecuenciaTable({
   filas,
+  editable = true,
   onEditar,
   onBorrar,
 }: {
   filas: Array<{ id: string; datos: FrecuenciaDatos; resultado: ResultadoInterferencia }>;
+  editable?: boolean;
   onEditar: (id: string) => void;
   onBorrar: (id: string) => void;
 }) {
@@ -35,7 +37,7 @@ export default function FrecuenciaTable({
             <th>{t("colDepartamento")}</th>
             <th>{t("colFrecuencia")}</th>
             <th>{t("colEstado")}</th>
-            <th style={{ textAlign: "right" }}>{t("colAcciones")}</th>
+            {editable && <th style={{ textAlign: "right" }}>{t("colAcciones")}</th>}
           </tr>
         </thead>
         <tbody>
@@ -62,14 +64,16 @@ export default function FrecuenciaTable({
                     <span className="pill p-warn" style={{ marginLeft: 6 }}>{t("approvalPending")}</span>
                   )}
                 </td>
-                <td style={{ textAlign: "right" }}>
-                  <button className="cp-btn" onClick={() => onEditar(id)} title={t("edit")}>
-                    <Icon name="pencil" size={12} />
-                  </button>
-                  <button className="cp-btn" onClick={() => onBorrar(id)} title={t("delete")} style={{ marginLeft: "6px" }}>
-                    <Icon name="trash" size={12} />
-                  </button>
-                </td>
+                {editable && (
+                  <td style={{ textAlign: "right" }}>
+                    <button className="cp-btn" onClick={() => onEditar(id)} title={t("edit")}>
+                      <Icon name="pencil" size={12} />
+                    </button>
+                    <button className="cp-btn" onClick={() => onBorrar(id)} title={t("delete")} style={{ marginLeft: "6px" }}>
+                      <Icon name="trash" size={12} />
+                    </button>
+                  </td>
+                )}
               </tr>
             );
           })}
