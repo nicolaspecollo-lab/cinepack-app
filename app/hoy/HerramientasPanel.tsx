@@ -6,6 +6,8 @@ import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
 import { MODULOS_BETA_ACTIVOS } from "../constants";
 import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
+import PlanFrecuenciasPanel from "./PlanFrecuenciasPanel";
+import { FRECUENCIAS_DEPARTAMENTO } from "./frecuenciasFilas";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
@@ -323,6 +325,7 @@ export default function HerramientasPanel({
 
   if (abierta) {
     const esCasting = abierta.id === "cast-candidatos";
+    const esFrecuencias = abierta.id === "son-plan-frecuencias";
     return (
       <div className="hp-open">
         {seccion === "departamento" ? (
@@ -356,6 +359,11 @@ export default function HerramientasPanel({
         )}
         {esCasting && vista === "personajes" ? (
           <CandidatosPorPersonajePanel departamento={departamento} />
+        ) : esFrecuencias ? (
+          <PlanFrecuenciasPanel
+            fullName={fullName}
+            editable={seccion === "cargo" && departamento === FRECUENCIAS_DEPARTAMENTO}
+          />
         ) : (
           <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} editable={seccion === "cargo"} />
         )}
