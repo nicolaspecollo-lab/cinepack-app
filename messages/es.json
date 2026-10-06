@@ -1010,6 +1010,10 @@
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",
+    "seeDetail": "Ver con qué choca",
+    "reasonIntermod": "Intermodulación de 3er orden",
+    "reasonSeparation": "Frecuencias demasiado próximas",
+    "conflictWith": "Equipos implicados:",
     "approve": "Aprobar",
     "approved": "Aprobada",
     "loading": "Cargando frecuencias…",

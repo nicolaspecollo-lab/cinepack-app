@@ -1010,6 +1010,10 @@
   },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
+    "seeDetail": "See what it clashes with",
+    "reasonIntermod": "Third-order intermodulation",
+    "reasonSeparation": "Frequencies too close together",
+    "conflictWith": "Devices involved:",
     "approve": "Approve",
     "approved": "Approved",
     "loading": "Loading frequencies…",

@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment, useState } from "react";
 import { useTranslations } from "next-intl";
 import Icon from "../components/Icon";
 import type { FrecuenciaDatos, ResultadoInterferencia } from "./useConflictoFrecuencias";
@@ -20,9 +21,12 @@ export default function FrecuenciaTable({
   onAprobar?: (id: string) => void;
 }) {
   const t = useTranslations("frecuencias");
+  // Fila cuyo detalle de conflicto está desplegado (solo una a la vez).
+  const [abiertoId, setAbiertoId] = useState<string | null>(null);
 
   // La columna de acciones existe si el usuario puede editar o aprobar.
   const hayAcciones = editable || puedeAprobar;
+  const numColumnas = hayAcciones ? 6 : 5;
 
   if (filas.length === 0) {
     return (
@@ -55,48 +59,102 @@ export default function FrecuenciaTable({
                 : resultado.nivel === "advertencia"
                 ? "fr-row-advertencia"
                 : undefined;
-            const pillClase = resultado.nivel === "ok" ? "p-ok" : "p-warn";
+            const pillClase =
+              resultado.nivel === "conflicto" ? "p-bad" : resultado.nivel === "advertencia" ? "p-warn" : "p-ok";
             const pillTexto =
               resultado.nivel === "conflicto" ? t("stateConflict") : resultado.nivel === "advertencia" ? t("stateWarning") : t("stateOk");
 
-            // Solo se aprueba lo pendiente y con una frecuencia ya asignada.
+            // Solo se aprueba lo pendiente, con frecuencia asignada y sin conflicto.
             const puedeAprobarFila =
-              puedeAprobar && !!onAprobar && datos.estado_aprobacion === "pendiente" && datos.frecuencia_mhz !== null;
+              puedeAprobar &&
+              !!onAprobar &&
+              datos.estado_aprobacion === "pendiente" &&
+              datos.frecuencia_mhz !== null &&
+              resultado.nivel !== "conflicto";
+
+            const tieneDetalle = resultado.nivel !== "ok";
+            const abierto = abiertoId === id;
 
             return (
-              <tr key={id} className={claseFila}>
-                <td className="mono">{datos.jornada}</td>
-                <td><b>{datos.equipo}</b></td>
-                <td>{datos.departamento_responsable}</td>
-                <td className="mono">{datos.frecuencia_mhz !== null ? `${datos.frecuencia_mhz} MHz` : t("pending")}</td>
-                <td>
-                  <span className={`pill ${pillClase}`}>{pillTexto}</span>
-                  {datos.estado_aprobacion === "pendiente" ? (
-                    <span className="pill p-warn" style={{ marginLeft: 6 }}>{t("approvalPending")}</span>
-                  ) : (
-                    <span className="pill p-ok" style={{ marginLeft: 6 }}>{t("approved")}</span>
-                  )}
-                </td>
-                {hayAcciones && (
-                  <td style={{ textAlign: "right" }}>
-                    {puedeAprobarFila && (
-                      <button className="cp-btn cp-btn-acc" onClick={() => onAprobar?.(id)} title={t("approve")} style={{ marginRight: "6px" }}>
-                        {t("approve")}
-                      </button>
+              <Fragment key={id}>
+                <tr className={claseFila}>
+                  <td className="mono">{datos.jornada}</td>
+                  <td><b>{datos.equipo}</b></td>
+                  <td>{datos.departamento_responsable}</td>
+                  <td className="mono">{datos.frecuencia_mhz !== null ? `${datos.frecuencia_mhz} MHz` : t("pending")}</td>
+                  <td>
+                    {tieneDetalle ? (
+                      <span
+                        className={`pill ${pillClase}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={abierto}
+                        title={t("seeDetail")}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setAbiertoId(abierto ? null : id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setAbiertoId(abierto ? null : id);
+                          }
+                        }}
+                      >
+                        {pillTexto}
+                      </span>
+                    ) : (
+                      <span className={`pill ${pillClase}`}>{pillTexto}</span>
                     )}
-                    {editable && (
-                      <>
-                        <button className="cp-btn" onClick={() => onEditar(id)} title={t("edit")}>
-                          <Icon name="pencil" size={12} />
-                        </button>
-                        <button className="cp-btn" onClick={() => onBorrar(id)} title={t("delete")} style={{ marginLeft: "6px" }}>
-                          <Icon name="trash" size={12} />
-                        </button>
-                      </>
+                    {datos.estado_aprobacion === "pendiente" ? (
+                      <span className="pill p-warn" style={{ marginLeft: 6 }}>{t("approvalPending")}</span>
+                    ) : (
+                      <span className="pill p-ok" style={{ marginLeft: 6 }}>{t("approved")}</span>
                     )}
                   </td>
+                  {hayAcciones && (
+                    <td style={{ textAlign: "right" }}>
+                      {puedeAprobarFila && (
+                        <button className="cp-btn cp-btn-acc" onClick={() => onAprobar?.(id)} title={t("approve")} style={{ marginRight: "6px" }}>
+                          {t("approve")}
+                        </button>
+                      )}
+                      {editable && (
+                        <>
+                          <button className="cp-btn" onClick={() => onEditar(id)} title={t("edit")}>
+                            <Icon name="pencil" size={12} />
+                          </button>
+                          <button className="cp-btn" onClick={() => onBorrar(id)} title={t("delete")} style={{ marginLeft: "6px" }}>
+                            <Icon name="trash" size={12} />
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  )}
+                </tr>
+
+                {abierto && tieneDetalle && (
+                  <tr>
+                    <td colSpan={numColumnas}>
+                      <div style={{ padding: "8px 4px" }}>
+                        <b>
+                          {resultado.motivo === "intermodulacion" ? t("reasonIntermod") : t("reasonSeparation")}
+                        </b>
+                        <div>{t("conflictWith")}</div>
+                        <ul style={{ margin: "4px 0 0 18px" }}>
+                          {(resultado.causadoPor ?? []).map((otroId) => {
+                            const otra = filas.find((f) => f.id === otroId);
+                            if (!otra) return null;
+                            return (
+                              <li key={otroId}>
+                                {otra.datos.equipo} · {otra.datos.frecuencia_mhz} MHz · {otra.datos.departamento_responsable}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
                 )}
-              </tr>
+              </Fragment>
             );
           })}
         </tbody>

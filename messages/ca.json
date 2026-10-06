@@ -1010,6 +1010,10 @@
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
+    "seeDetail": "Veure amb què xoca",
+    "reasonIntermod": "Intermodulació de 3r ordre",
+    "reasonSeparation": "Freqüències massa pròximes",
+    "conflictWith": "Equips implicats:",
     "approve": "Aprovar",
     "approved": "Aprovada",
     "loading": "Carregant freqüències…",
