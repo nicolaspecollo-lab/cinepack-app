@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",
+    "approve": "Aprobar",
+    "approved": "Aprobada",
     "loading": "Cargando frecuencias…",
     "errNoProject": "No hay proyecto activo. Vuelve a iniciar sesión.",
     "addFrequency": "Añadir frecuencia",

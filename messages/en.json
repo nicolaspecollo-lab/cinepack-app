@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
+    "approve": "Approve",
+    "approved": "Approved",
     "loading": "Loading frequencies…",
     "errNoProject": "No active project. Please sign in again.",
     "addFrequency": "Add frequency",

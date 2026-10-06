@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
+    "approve": "Aprovar",
+    "approved": "Aprovada",
     "loading": "Carregant freqüències…",
     "errNoProject": "No hi ha cap projecte actiu. Torna a iniciar la sessió.",
     "addFrequency": "Afegir freqüència",

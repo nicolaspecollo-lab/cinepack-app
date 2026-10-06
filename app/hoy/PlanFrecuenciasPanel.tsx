@@ -11,12 +11,14 @@ import FrecuenciaFormModal from "./FrecuenciaFormModal";
 export default function PlanFrecuenciasPanel({
   fullName,
   editable = false,
+  puedeAprobar = false,
 }: {
   fullName: string;
   editable?: boolean;
+  puedeAprobar?: boolean;
 }) {
   const t = useTranslations("frecuencias");
-  const { filas, loading, error, crear, editar, borrar } = useFrecuenciasFilas(fullName);
+  const { filas, loading, error, crear, editar, aprobar, borrar } = useFrecuenciasFilas(fullName);
   const filasConResultado = useConflictoFrecuencias(filas);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
@@ -64,8 +66,10 @@ export default function PlanFrecuenciasPanel({
         <FrecuenciaTable
           filas={filasConResultado}
           editable={editable}
+          puedeAprobar={puedeAprobar}
           onEditar={(id) => setEditandoId(id)}
           onBorrar={borrar}
+          onAprobar={aprobar}
         />
       )}
 

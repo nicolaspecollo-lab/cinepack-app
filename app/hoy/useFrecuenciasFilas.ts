@@ -14,8 +14,11 @@ import {
 // Código de error que el panel traduce con t(): el texto no vive en este archivo.
 export const ERROR_SIN_PROYECTO = "sin-proyecto";
 
+// Una intervención del historial de la fila (misma forma que en HerramientaPanel).
+type Intervencion = { accion: string; usuario: string; fecha: string };
+
 // Forma de la fila en herramienta_filas (solo las columnas que usamos).
-type FilaDB = { id: string; datos: DatosFila; orden: number };
+type FilaDB = { id: string; datos: DatosFila; orden: number; registro: Intervencion[] | null };
 
 export type FilaFrecuencia = { id: string; datos: FrecuenciaDatos };
 
@@ -35,7 +38,7 @@ export function useFrecuenciasFilas(fullName: string) {
     const supabase = createClient();
     const { data, error: err } = await supabase
       .from("herramienta_filas")
-      .select("id, datos, orden")
+      .select("id, datos, orden, registro")
       .eq("project_id", projectId)
       .eq("departamento", FRECUENCIAS_DEPARTAMENTO)
       .eq("herramienta_id", FRECUENCIAS_HERRAMIENTA_ID)
@@ -81,7 +84,7 @@ export function useFrecuenciasFilas(fullName: string) {
         autor_nombre: fullName,
         editor_nombre: fullName,
       })
-      .select("id, datos, orden")
+      .select("id, datos, orden, registro")
       .single();
     if (err) {
       setError(err.message);
@@ -110,6 +113,29 @@ export function useFrecuenciasFilas(fullName: string) {
     setError(null);
   }
 
+  // APROBACIÓN: solo cambia el estado y deja anotado quién lo hizo y cuándo.
+  // El permiso se controla en la pantalla (quién ve el botón), no aquí.
+  async function aprobar(id: string) {
+    const actual = filasDB.find((x) => x.id === id);
+    if (!actual) return;
+    const datos = { ...actual.datos, estado_aprobacion: "aprobada" };
+    const registro = [
+      ...(actual.registro ?? []),
+      { accion: "aprueba", usuario: fullName, fecha: new Date().toISOString() },
+    ];
+    const supabase = createClient();
+    const { error: err } = await supabase
+      .from("herramienta_filas")
+      .update({ datos, registro, editor_nombre: fullName, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
+    setError(null);
+  }
+
   // BORRAR: como `borrarFila`. Solo se quita de la pantalla si la base de datos lo aceptó.
   async function borrar(id: string) {
     const supabase = createClient();
@@ -129,5 +155,5 @@ export function useFrecuenciasFilas(fullName: string) {
     [filasDB]
   );
 
-  return { filas, loading, error, crear, editar, borrar };
+  return { filas, loading, error, crear, editar, aprobar, borrar };
 }
