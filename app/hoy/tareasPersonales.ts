@@ -33,7 +33,7 @@ export async function asegurarTareasPersonales(departamento: string): Promise<st
   let id = existentes?.[0]?.id ?? null;
 
   if (!id) {
-    const { data: nueva } = await supabase
+    const { data: nueva, error } = await supabase
       .from("personal_tools")
       .insert({
         project_id: projectId,
@@ -46,7 +46,22 @@ export async function asegurarTareasPersonales(departamento: string): Promise<st
       })
       .select("id")
       .single();
-    id = nueva?.id ?? null;
+    if (error?.code === "23505") {
+      // Otra llamada concurrente (React Strict Mode en dev, doble clic, etc.)
+      // ganó la carrera — el índice único personal_tools_tareas_unique
+      // rechazó esta inserción. Traemos el "Tareas" que sí quedó creado.
+      const { data: ganador } = await supabase
+        .from("personal_tools")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("owner_id", user.id)
+        .eq("departamento", departamento)
+        .eq("titulo", TAREAS_TITULO)
+        .single();
+      id = ganador?.id ?? null;
+    } else {
+      id = nueva?.id ?? null;
+    }
   }
 
   return id;
