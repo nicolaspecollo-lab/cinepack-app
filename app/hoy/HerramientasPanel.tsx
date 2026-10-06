@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { deptTools, cargoGroups, type Herramienta } from "../herramientas";
-import { MODULOS_BETA_ACTIVOS } from "../constants";
+import { MODULOS_BETA_ACTIVOS, JERARQUIA_POR_DEPARTAMENTO } from "../constants";
 import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
 import PlanFrecuenciasPanel from "./PlanFrecuenciasPanel";
@@ -64,6 +64,7 @@ export default function HerramientasPanel({
   const tEsp = useTranslations("espacio");
   const nombreDe = useNombreHerramienta();
   const esModuloBeta = MODULOS_BETA_ACTIVOS.includes(departamento);
+  const cargoJefe = JERARQUIA_POR_DEPARTAMENTO[departamento]?.[0];
   const bloqueado = !esModuloBeta && !isAdmin;
   const [abierta, setAbierta] = useState<Herramienta | null>(null);
   const [vista, setVista] = useState<"tabla" | "personajes">("tabla");
@@ -363,6 +364,11 @@ export default function HerramientasPanel({
           <PlanFrecuenciasPanel
             fullName={fullName}
             editable={seccion === "cargo" && departamento === FRECUENCIAS_DEPARTAMENTO}
+            puedeAprobar={
+              seccion === "cargo" &&
+              departamento === FRECUENCIAS_DEPARTAMENTO &&
+              (!!isAdmin || (!!cargo && cargo === cargoJefe))
+            }
           />
         ) : (
           <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} editable={seccion === "cargo"} />
