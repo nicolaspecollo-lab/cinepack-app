@@ -1068,6 +1068,21 @@ const planSonidoDirecto: Herramienta = {
     { key: "wildtrack", label: "Wildtracks a tomar" },
   ],
 };
+const planFrecuencias: Herramienta = {
+  id: "son-plan-frecuencias",
+  nombre: "Plan de frecuencias inalámbricas",
+  tipo: "tabla",
+  hint: "Frecuencia de cada equipo de radio por jornada. Sonido revisa y aprueba.",
+  columnas: [
+    { key: "jornada", label: "Jornada", tipo: "fecha" },
+    { key: "equipo", label: "Equipo" },
+    { key: "modelo_fabricante", label: "Modelo / fabricante" },
+    { key: "departamento_responsable", label: "Departamento" },
+    { key: "frecuencia_mhz", label: "Frecuencia (MHz)" },
+    { key: "estado_aprobacion", label: "Estado", tipo: "estado", opciones: ["pendiente", "aprobada"] },
+    { key: "notas", label: "Notas", tipo: "largo" },
+  ],
+};
 const listaMicros: Herramienta = {
   id: "son-lista-micros",
   nombre: "Lista de micrófonos por escena",
@@ -3367,7 +3382,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
 
   Sonido: {
     "Dirección de sonido": {
-      departamento: [planSonidoDirecto, listaMicros, inventarioSonido, reportesSonido, notasADR],
+      departamento: [planSonidoDirecto, listaMicros, planFrecuencias, inventarioSonido, reportesSonido, notasADR],
       cargo: [
         { id: "son-memoria", nombre: "Memoria de sonido", tipo: "nota", hint: "Criterios estéticos y decisiones técnicas." },
         sonMapaMicrosEscena,
@@ -3378,7 +3393,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       ],
     },
     "Microfonía": {
-      departamento: [planSonidoDirecto, listaMicros, inventarioSonido, reportesSonido],
+      departamento: [planSonidoDirecto, listaMicros, planFrecuencias, inventarioSonido, reportesSonido],
       cargo: [
         { id: "son-checklist-microfonia", nombre: "Checklist de microfonía por jornada", tipo: "checklist", hint: "Baterías, frecuencias, colocación." },
         {
