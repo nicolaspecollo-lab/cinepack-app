@@ -26,7 +26,8 @@ export default function FrecuenciaTable({
 
   // La columna de acciones existe si el usuario puede editar o aprobar.
   const hayAcciones = editable || puedeAprobar;
-  const numColumnas = hayAcciones ? 6 : 5;
+  // Jornada, Equipo, Tipo, Asignado a, Frecuencia, Reserva, Estado (+ Acciones).
+  const numColumnas = hayAcciones ? 8 : 7;
 
   if (filas.length === 0) {
     return (
@@ -45,8 +46,10 @@ export default function FrecuenciaTable({
           <tr>
             <th>{t("colJornada")}</th>
             <th>{t("colEquipo")}</th>
-            <th>{t("colDepartamento")}</th>
+            <th>{t("colTipo")}</th>
+            <th>{t("colAsignadoA")}</th>
             <th>{t("colFrecuencia")}</th>
+            <th>{t("colReserva")}</th>
             <th>{t("colEstado")}</th>
             {hayAcciones && <th style={{ textAlign: "right" }}>{t("colAcciones")}</th>}
           </tr>
@@ -80,8 +83,12 @@ export default function FrecuenciaTable({
                 <tr className={claseFila}>
                   <td className="mono">{datos.jornada}</td>
                   <td><b>{datos.equipo}</b></td>
-                  <td>{datos.departamento_responsable}</td>
+                  <td>{datos.tipo || "—"}</td>
+                  <td>{datos.asignado_a || "—"}</td>
                   <td className="mono">{datos.frecuencia_mhz !== null ? `${datos.frecuencia_mhz} MHz` : t("pending")}</td>
+                  <td className="mono">
+                    {datos.reserva_mhz !== null && datos.reserva_mhz !== undefined ? `${datos.reserva_mhz} MHz` : "—"}
+                  </td>
                   <td>
                     {tieneDetalle ? (
                       <span
