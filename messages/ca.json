@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
+    "viewConflicts": "Veure conflictes",
+    "viewAll": "Veure-ho tot",
     "allDays": "Totes les jornades",
     "pastDay": "Jornada passada: només lectura",
     "colTipo": "Tipus",

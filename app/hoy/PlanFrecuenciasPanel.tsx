@@ -30,6 +30,7 @@ export default function PlanFrecuenciasPanel({
   const [creando, setCreando] = useState(false);
   const [vista, setVista] = useState<"tabla" | "archivos">("tabla");
   const [jornadaSel, setJornadaSel] = useState<string>("todas");
+  const [soloProblemas, setSoloProblemas] = useState(false);
 
   // Jornadas que tienen equipos, ordenadas de más antigua a más reciente.
   const jornadas = Array.from(
@@ -47,10 +48,18 @@ export default function PlanFrecuenciasPanel({
   const editableEfectivo = editable && !esPasada;
   const puedeAprobarEfectivo = puedeAprobar && !esPasada;
 
-  const filasVisibles =
+  const filasPorJornada =
     jornadaActiva === "todas"
       ? filasConResultado
       : filasConResultado.filter((f) => f.datos.jornada === jornadaActiva);
+
+  // Filas con problema (advertencia o conflicto) dentro de la jornada que se está viendo.
+  const filasConProblema = filasPorJornada.filter((f) => f.resultado.nivel !== "ok");
+  const numProblemas = filasConProblema.length;
+
+  // El filtro solo actúa si hay algo que filtrar: al resolver el último problema, la tabla vuelve a verse entera.
+  const filtroActivo = soloProblemas && numProblemas > 0;
+  const filasVisibles = filtroActivo ? filasConProblema : filasPorJornada;
 
   async function guardar(datos: FrecuenciaDatos) {
     if (editandoId) {
@@ -114,6 +123,11 @@ export default function PlanFrecuenciasPanel({
                 ))}
               </select>
             </label>
+            {numProblemas > 0 && (
+              <button className="cp-btn" onClick={() => setSoloProblemas(!filtroActivo)}>
+                {filtroActivo ? t("viewAll") : `${t("viewConflicts")} (${numProblemas})`}
+              </button>
+            )}
             {esPasada && <span className="pill p-warn">{t("pastDay")}</span>}
           </div>
 
