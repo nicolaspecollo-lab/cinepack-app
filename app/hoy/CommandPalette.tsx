@@ -91,7 +91,7 @@ export default function CommandPalette({
 
   const showDropdown = open && (filtered.length > 0 || query.trim().length > 1);
 
- return (
+  return (
     <div className="cmdk-inline-wrap" ref={wrapRef}
       onMouseEnter={() => {
         isMouseInside.current = true;
