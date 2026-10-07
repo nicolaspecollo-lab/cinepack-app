@@ -74,36 +74,36 @@ export default function PlanFrecuenciasPanel({
       <div className="hp-open-head">
         <h3><span className="hex"></span> {t("title")}</h3>
 
-        <div className="hp-pc-toolrow" style={{ marginLeft: "auto", padding: 0, border: "none" }}>
-          <button
-            className={`hp-pc-toolrow-btn ${vista === "tabla" ? "active" : ""}`}
-            onClick={() => setVista("tabla")}
-          >
-            <Icon name="table" size={12} /> {tHp("viewTable")}
-          </button>
-          <button
-            className={`hp-pc-toolrow-btn ${vista === "archivos" ? "active" : ""}`}
-            onClick={() => setVista("archivos")}
-          >
-            <Icon name="folder" size={12} /> {tHp("viewFiles")}
-          </button>
+        <div className="hp-open-head-tabs">
+          <div className="hp-pc-toolrow">
+            <button
+              className={`hp-pc-toolrow-btn ${vista === "tabla" ? "active" : ""}`}
+              onClick={() => setVista("tabla")}
+            >
+              <Icon name="table" size={12} /> {tHp("viewTable")}
+            </button>
+            <button
+              className={`hp-pc-toolrow-btn ${vista === "archivos" ? "active" : ""}`}
+              onClick={() => setVista("archivos")}
+            >
+              <Icon name="folder" size={12} /> {tHp("viewFiles")}
+            </button>
+          </div>
         </div>
       </div>
 
       {error && (
-        <p className="amsg err" style={{ margin: "0 30px" }}>
+        <p className="amsg err fr-msg">
           {error === ERROR_SIN_PROYECTO ? t("errNoProject") : error}
         </p>
       )}
 
       {vista === "tabla" ? (
         <>
-          <div
-            style={{ padding: "0 30px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}
-          >
-            <label className="cal-field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <div className="fr-toolbar">
+            <label className="cal-field">
               <span>{t("colJornada")}</span>
-               <select
+              <select
                 className="cdp-select"
                 value={jornadaActiva}
                 onChange={(e) => setJornadaSel(e.target.value)}

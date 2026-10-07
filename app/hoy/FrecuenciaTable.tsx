@@ -40,7 +40,7 @@ export default function FrecuenciaTable({
   }
 
   return (
-    <div className="twrap" style={{ padding: "0 30px" }}>
+    <div className="twrap fr-table-wrap">
       <table className="t">
         <thead>
           <tr>
@@ -51,7 +51,7 @@ export default function FrecuenciaTable({
             <th>{t("colFrecuencia")}</th>
             <th>{t("colReserva")}</th>
             <th>{t("colEstado")}</th>
-            {hayAcciones && <th style={{ textAlign: "right" }}>{t("colAcciones")}</th>}
+            {hayAcciones && <th className="fr-actions">{t("colAcciones")}</th>}
           </tr>
         </thead>
         <tbody>
@@ -92,12 +92,11 @@ export default function FrecuenciaTable({
                   <td>
                     {tieneDetalle ? (
                       <span
-                        className={`pill ${pillClase}`}
+                        className={`pill ${pillClase} fr-pill-link`}
                         role="button"
                         tabIndex={0}
                         aria-expanded={abierto}
                         title={t("seeDetail")}
-                        style={{ cursor: "pointer" }}
                         onClick={() => setAbiertoId(abierto ? null : id)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
@@ -112,15 +111,15 @@ export default function FrecuenciaTable({
                       <span className={`pill ${pillClase}`}>{pillTexto}</span>
                     )}
                     {datos.estado_aprobacion === "pendiente" ? (
-                      <span className="pill p-warn" style={{ marginLeft: 6 }}>{t("approvalPending")}</span>
+                      <span className="pill p-warn fr-pill-gap">{t("approvalPending")}</span>
                     ) : (
-                      <span className="pill p-ok" style={{ marginLeft: 6 }}>{t("approved")}</span>
+                      <span className="pill p-ok fr-pill-gap">{t("approved")}</span>
                     )}
                   </td>
                   {hayAcciones && (
-                    <td style={{ textAlign: "right" }}>
+                    <td className="fr-actions">
                       {puedeAprobarFila && (
-                        <button className="cp-btn cp-btn-acc" onClick={() => onAprobar?.(id)} title={t("approve")} style={{ marginRight: "6px" }}>
+                        <button className="cp-btn cp-btn-acc" onClick={() => onAprobar?.(id)} title={t("approve")}>
                           {t("approve")}
                         </button>
                       )}
@@ -129,7 +128,7 @@ export default function FrecuenciaTable({
                           <button className="cp-btn" onClick={() => onEditar(id)} title={t("edit")}>
                             <Icon name="pencil" size={12} />
                           </button>
-                          <button className="cp-btn" onClick={() => onBorrar(id)} title={t("delete")} style={{ marginLeft: "6px" }}>
+                          <button className="cp-btn" onClick={() => onBorrar(id)} title={t("delete")}>
                             <Icon name="trash" size={12} />
                           </button>
                         </>
@@ -141,12 +140,12 @@ export default function FrecuenciaTable({
                 {abierto && tieneDetalle && (
                   <tr>
                     <td colSpan={numColumnas}>
-                      <div style={{ padding: "8px 4px" }}>
+                      <div className="fr-detail">
                         <b>
                           {resultado.motivo === "intermodulacion" ? t("reasonIntermod") : t("reasonSeparation")}
                         </b>
                         <div>{t("conflictWith")}</div>
-                        <ul style={{ margin: "4px 0 0 18px" }}>
+                        <ul>
                           {(resultado.causadoPor ?? []).map((otroId) => {
                             const otra = filas.find((f) => f.id === otroId);
                             if (!otra) return null;

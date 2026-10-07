@@ -6034,3 +6034,18 @@
 .cp-optc .cdp-tool-name{ font-family:var(--optc-font-body); color:var(--optc-text); }
 .cp-optc .cdp-tool-cargo{ font-family:var(--optc-font-mono); color:var(--optc-muted); }
 .cp-optc .cdp-jefe-badge{ font-family:var(--optc-font-mono); background:var(--violet); color:var(--optc-text); }
+
+/* ── Plan de frecuencias ── */
+.cp-dash .fr-msg{ margin:0 var(--gutter) 8px; }
+.cp-dash .fr-toolbar{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:0 var(--gutter); }
+.cp-dash .fr-toolbar .cal-field{ flex-direction:row; align-items:center; gap:8px; }
+.cp-dash .fr-table-wrap{ padding:0 var(--gutter); }
+.cp-dash .fr-actions{ text-align:right; white-space:nowrap; }
+.cp-dash .fr-actions .cp-btn + .cp-btn{ margin-left:6px; }
+.cp-dash .fr-pill-link{ cursor:pointer; }
+.cp-dash .fr-pill-gap{ margin-left:6px; }
+.cp-dash .fr-detail{ padding:8px 4px; }
+.cp-dash .fr-detail ul{ margin:4px 0 0 18px; }
+.cp-dash .fr-form{ padding:0 20px 20px; display:flex; flex-direction:column; gap:12px; }
+.cp-dash .t tr.fr-row-conflicto td{ background:color-mix(in srgb, var(--rose) 14%, transparent); }
+.cp-dash .t tr.fr-row-advertencia td{ background:color-mix(in srgb, var(--amber) 14%, transparent); }

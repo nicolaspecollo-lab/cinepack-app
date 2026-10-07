@@ -57,7 +57,7 @@ export default function FrecuenciaFormModal({
           <button className="dsr-close" onClick={onCancelar} title={t("close")}>✕</button>
         </div>
 
-        <div style={{ padding: "0 20px 20px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="fr-form">
           <label className="cal-field">
             <span>{t("colJornada")}</span>
             <input type="date" value={jornada} onChange={(e) => setJornada(e.target.value)} />
