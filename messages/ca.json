@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
+    "allDays": "Totes les jornades",
+    "pastDay": "Jornada passada: només lectura",
     "colTipo": "Tipus",
     "colAsignadoA": "Assignat a",
     "colReserva": "Reserva (MHz)",

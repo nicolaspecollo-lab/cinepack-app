@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",
+    "allDays": "Todas las jornadas",
+    "pastDay": "Jornada pasada: solo lectura",
     "colTipo": "Tipo",
     "colAsignadoA": "Asignado a",
     "colReserva": "Reserva (MHz)",

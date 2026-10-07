@@ -24,10 +24,33 @@ export default function PlanFrecuenciasPanel({
   // Textos de las pestañas: ya existen en el bloque "hp" y los usa el panel genérico.
   const tHp = useTranslations("hp");
   const { filas, loading, error, crear, editar, aprobar, borrar } = useFrecuenciasFilas(fullName);
+  // Los conflictos se calculan con TODAS las filas; el selector solo filtra lo que se ve.
   const filasConResultado = useConflictoFrecuencias(filas);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [creando, setCreando] = useState(false);
   const [vista, setVista] = useState<"tabla" | "archivos">("tabla");
+  const [jornadaSel, setJornadaSel] = useState<string>("todas");
+
+  // Jornadas que tienen equipos, ordenadas de más antigua a más reciente.
+  const jornadas = Array.from(
+    new Set(filasConResultado.map((f) => f.datos.jornada).filter((j) => j !== ""))
+  ).sort();
+
+  // Si la jornada elegida ya no existe (por ejemplo, se borró su último equipo), se vuelve a "todas".
+  const jornadaActiva = jornadaSel !== "todas" && jornadas.includes(jornadaSel) ? jornadaSel : "todas";
+
+  // Fecha de hoy en formato AAAA-MM-DD, en hora local (las jornadas se guardan así).
+  const hoy = new Date().toLocaleDateString("sv-SE");
+  const esPasada = jornadaActiva !== "todas" && jornadaActiva < hoy;
+
+  // Una jornada pasada se abre en solo lectura: no se edita ni se aprueba.
+  const editableEfectivo = editable && !esPasada;
+  const puedeAprobarEfectivo = puedeAprobar && !esPasada;
+
+  const filasVisibles =
+    jornadaActiva === "todas"
+      ? filasConResultado
+      : filasConResultado.filter((f) => f.datos.jornada === jornadaActiva);
 
   async function guardar(datos: FrecuenciaDatos) {
     if (editandoId) {
@@ -75,7 +98,26 @@ export default function PlanFrecuenciasPanel({
 
       {vista === "tabla" ? (
         <>
-          {editable && (
+          <div
+            style={{ padding: "0 30px", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}
+          >
+            <label className="cal-field" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <span>{t("colJornada")}</span>
+               <select
+                className="cdp-select"
+                value={jornadaActiva}
+                onChange={(e) => setJornadaSel(e.target.value)}
+              >
+                <option value="todas">{t("allDays")}</option>
+                {jornadas.map((j) => (
+                  <option key={j} value={j}>{j}</option>
+                ))}
+              </select>
+            </label>
+            {esPasada && <span className="pill p-warn">{t("pastDay")}</span>}
+          </div>
+
+          {editableEfectivo && (
             <div className="od-actionbar">
               <button className="cp-btn cp-btn-acc" onClick={() => setCreando(true)}>
                 + {t("addFrequency")}
@@ -87,16 +129,16 @@ export default function PlanFrecuenciasPanel({
             <p className="cons-text">{t("loading")}</p>
           ) : (
             <FrecuenciaTable
-              filas={filasConResultado}
-              editable={editable}
-              puedeAprobar={puedeAprobar}
+              filas={filasVisibles}
+              editable={editableEfectivo}
+              puedeAprobar={puedeAprobarEfectivo}
               onEditar={(id) => setEditandoId(id)}
               onBorrar={borrar}
               onAprobar={aprobar}
             />
           )}
 
-          {editable && (creando || editandoId) && (
+          {editableEfectivo && (creando || editandoId) && (
             <FrecuenciaFormModal inicial={filaEditando} onGuardar={guardar} onCancelar={cerrarModal} />
           )}
         </>

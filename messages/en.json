@@ -1010,6 +1010,8 @@
   },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
+    "allDays": "All shooting days",
+    "pastDay": "Past day: read only",
     "colTipo": "Type",
     "colAsignadoA": "Assigned to",
     "colReserva": "Reserve (MHz)",
