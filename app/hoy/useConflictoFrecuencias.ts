@@ -13,6 +13,10 @@ export type FrecuenciaDatos = {
   estado_aprobacion: EstadoAprobacion;
   creado_por_departamento: string;
   notas?: string;
+  tipo?: string; // micro de mano, petaca, walkie, vídeo inalámbrico...
+  asignado_a?: string; // personaje o persona que lo lleva
+  reserva_mhz?: number | null; // frecuencia de reserva, no entra en los conflictos
+  posicion_petaca?: string; // dónde va la petaca (solo si es una petaca)
 };
 
 export type ResultadoInterferencia = {

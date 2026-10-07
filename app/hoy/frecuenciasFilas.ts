@@ -28,6 +28,11 @@ export function datosAFrecuencia(datos: DatosFila): FrecuenciaDatos {
     estado_aprobacion: datos.estado_aprobacion === "aprobada" ? "aprobada" : "pendiente",
     creado_por_departamento: datos.departamento_responsable ?? "",
     notas: datos.notas || undefined,
+    // Campos de la especificación de Marta (vacío -> undefined / null).
+    tipo: datos.tipo || undefined,
+    asignado_a: datos.asignado_a || undefined,
+    reserva_mhz: parseFrecuencia(datos.reserva_mhz),
+    posicion_petaca: datos.posicion_petaca || undefined,
   };
 }
 
@@ -44,5 +49,9 @@ export function frecuenciaADatos(f: FrecuenciaDatos): DatosFila {
   // conserva lo que ya hubiera guardado (por ejemplo, desde la tabla genérica).
   if (f.modelo_fabricante !== undefined) datos.modelo_fabricante = f.modelo_fabricante;
   if (f.notas !== undefined) datos.notas = f.notas;
+  if (f.tipo !== undefined) datos.tipo = f.tipo;
+  if (f.asignado_a !== undefined) datos.asignado_a = f.asignado_a;
+  if (f.posicion_petaca !== undefined) datos.posicion_petaca = f.posicion_petaca;
+  if (f.reserva_mhz !== undefined) datos.reserva_mhz = f.reserva_mhz === null ? "" : String(f.reserva_mhz);
   return datos;
 }
