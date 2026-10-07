@@ -1010,6 +1010,7 @@
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",
+    "stateUnassigned": "Sin asignar",
     "viewConflicts": "Ver conflictos",
     "viewAll": "Ver todos",
     "allDays": "Todas las jornadas",

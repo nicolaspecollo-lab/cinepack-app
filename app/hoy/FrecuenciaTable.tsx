@@ -56,16 +56,29 @@ export default function FrecuenciaTable({
         </thead>
         <tbody>
           {filas.map(({ id, datos, resultado }) => {
+            // Sin frecuencia no se ha comprobado nada: se muestra "Sin asignar" y no "OK".
+            const sinAsignar = datos.frecuencia_mhz === null;
+
             const claseFila =
               resultado.nivel === "conflicto"
                 ? "fr-row-conflicto"
                 : resultado.nivel === "advertencia"
                 ? "fr-row-advertencia"
                 : undefined;
-            const pillClase =
-              resultado.nivel === "conflicto" ? "p-bad" : resultado.nivel === "advertencia" ? "p-warn" : "p-ok";
-            const pillTexto =
-              resultado.nivel === "conflicto" ? t("stateConflict") : resultado.nivel === "advertencia" ? t("stateWarning") : t("stateOk");
+            const pillClase = sinAsignar
+              ? "p-mut"
+              : resultado.nivel === "conflicto"
+              ? "p-bad"
+              : resultado.nivel === "advertencia"
+              ? "p-warn"
+              : "p-ok";
+            const pillTexto = sinAsignar
+              ? t("stateUnassigned")
+              : resultado.nivel === "conflicto"
+              ? t("stateConflict")
+              : resultado.nivel === "advertencia"
+              ? t("stateWarning")
+              : t("stateOk");
 
             // Solo se aprueba lo pendiente, con frecuencia asignada y sin conflicto.
             const puedeAprobarFila =

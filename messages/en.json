@@ -1010,6 +1010,7 @@
   },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
+    "stateUnassigned": "Unassigned",
     "viewConflicts": "View conflicts",
     "viewAll": "View all",
     "allDays": "All shooting days",

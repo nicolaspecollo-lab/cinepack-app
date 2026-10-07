@@ -1010,6 +1010,7 @@
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
+    "stateUnassigned": "Sense assignar",
     "viewConflicts": "Veure conflictes",
     "viewAll": "Veure-ho tot",
     "allDays": "Totes les jornades",
