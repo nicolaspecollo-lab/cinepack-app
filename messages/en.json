@@ -1008,6 +1008,19 @@
     "phRole": "Role",
     "phNamePhone": "Name / phone"
   },
+    "moodboard": {
+    "tabBoard": "Board",
+    "tabFiles": "Files",
+    "create": "Create moodboard",
+    "emptyTitle": "No moodboard yet",
+    "emptyHint": "Create the first one to start collecting visual references.",
+    "readOnlyEmpty": "There is no moodboard yet.",
+    "addImage": "Add image",
+    "addNote": "Add note",
+    "delete": "Delete",
+    "save": "Save",
+    "download": "Download"
+  },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
     "stateUnassigned": "Unassigned",

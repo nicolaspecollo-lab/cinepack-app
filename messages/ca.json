@@ -1008,6 +1008,19 @@
     "phRole": "Rol",
     "phNamePhone": "Nom / telèfon"
   },
+    "moodboard": {
+    "tabBoard": "Tauler",
+    "tabFiles": "Arxius",
+    "create": "Crear moodboard",
+    "emptyTitle": "Encara no hi ha cap moodboard",
+    "emptyHint": "Crea el primer per començar a reunir referències visuals.",
+    "readOnlyEmpty": "Encara no hi ha cap moodboard.",
+    "addImage": "Afegir imatge",
+    "addNote": "Afegir nota",
+    "delete": "Eliminar",
+    "save": "Desar",
+    "download": "Descarregar"
+  },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
     "stateUnassigned": "Sense assignar",
