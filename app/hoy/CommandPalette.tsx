@@ -26,6 +26,8 @@ export default function CommandPalette({
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const isMouseInside = useRef(false);
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -90,7 +92,27 @@ export default function CommandPalette({
   const showDropdown = open && (filtered.length > 0 || query.trim().length > 1);
 
   return (
-    <div className="cmdk-inline-wrap" ref={wrapRef}>
+    <div className="cmdk-inline-wrap" ref={wrapRef}
+      onMouseEnter={() => {
+        isMouseInside.current = true;
+        if (autoCloseTimerRef.current) {
+          clearTimeout(autoCloseTimerRef.current);
+          autoCloseTimerRef.current = null;
+        }
+      }}
+      onMouseLeave={() => {
+        isMouseInside.current = false;
+        if (open) {
+          autoCloseTimerRef.current = setTimeout(() => {
+            // Si el ratón sigue fuera tras 2.5 segundos, cerramos la barra automáticamente
+            if (!isMouseInside.current) {
+              setOpen(false);
+              inputRef.current?.blur(); // Quitamos el foco también para limpiar el estado
+            }
+          }, 2500);
+        }
+      }}
+    >
       <div className="cmdk-inline-field" onClick={() => inputRef.current?.focus()}>
         <span className="hex cmdk-inline-hex"></span>
         <input
