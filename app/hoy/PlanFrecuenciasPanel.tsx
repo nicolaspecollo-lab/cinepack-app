@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import Icon from "../components/Icon";
+import ToolMenu from "../components/ToolMenu";
 import { useConflictoFrecuencias } from "./useConflictoFrecuencias";
 import type { FrecuenciaDatos } from "./useConflictoFrecuencias";
 import { useFrecuenciasFilas, ERROR_SIN_PROYECTO } from "./useFrecuenciasFilas";
@@ -110,19 +111,31 @@ export default function PlanFrecuenciasPanel({
       {vista === "tabla" ? (
         <>
           <div className="fr-toolbar">
-            <label className="cal-field">
-              <span>{t("colJornada")}</span>
-              <select
-                className="cdp-select"
-                value={jornadaActiva}
-                onChange={(e) => setJornadaSel(e.target.value)}
-              >
-                <option value="todas">{t("allDays")}</option>
-                {jornadas.map((j) => (
-                  <option key={j} value={j}>{j}</option>
-                ))}
-              </select>
-            </label>
+            <ToolMenu
+              label={jornadaActiva === "todas" ? t("allDays") : `${t("colJornada")} ${jornadaActiva}`}
+            >
+              {(close) => (
+                <div className="tm-section">
+                  <button
+                    type="button"
+                    className={`tm-item ${jornadaActiva === "todas" ? "active" : ""}`}
+                    onClick={() => { setJornadaSel("todas"); close(); }}
+                  >
+                    <span>{t("allDays")}</span>
+                  </button>
+                  {jornadas.map((j) => (
+                    <button
+                      key={j}
+                      type="button"
+                      className={`tm-item ${jornadaActiva === j ? "active" : ""}`}
+                      onClick={() => { setJornadaSel(j); close(); }}
+                    >
+                      <span>{j}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </ToolMenu>
             {numProblemas > 0 && (
               <button className="cp-btn" onClick={() => setSoloProblemas(!filtroActivo)}>
                 {filtroActivo ? t("viewAll") : `${t("viewConflicts")} (${numProblemas})`}
