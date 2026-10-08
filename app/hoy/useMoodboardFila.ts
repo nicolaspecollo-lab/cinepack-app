@@ -57,15 +57,36 @@ export function useMoodboardFila(fullName: string) {
     load();
   }, [load]);
 
-  // CREAR: la fila única del proyecto, con el tablero vacío. Si ya existe, no hace nada.
+  // Un moodboard "existe" solo si la fila tiene la clave `elementos`.
+  // Una fila antigua (p. ej. de la galería genérica) no cuenta como moodboard creado.
+  const existe = fila !== null && typeof fila.datos?.elementos === "string";
+
+  // CREAR: la fila única del proyecto, con el tablero vacío.
+  // Si ya hay una fila antigua sin `elementos`, la reutiliza en vez de insertar otra.
   async function crear() {
-    if (fila) return;
+    if (existe) return;
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
       setError(ERROR_SIN_PROYECTO);
       return;
     }
     const supabase = createClient();
+
+    if (fila) {
+      const datos = { ...fila.datos, ...elementosADatos([]) };
+      const { error: err } = await supabase
+        .from("herramienta_filas")
+        .update({ datos, editor_nombre: fullName, updated_at: new Date().toISOString() })
+        .eq("id", fila.id);
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      setFila({ ...fila, datos });
+      setError(null);
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error: err } = await supabase
       .from("herramienta_filas")
@@ -111,5 +132,5 @@ export function useMoodboardFila(fullName: string) {
   // Elementos ya traducidos; memoizados para no recalcular en cada render.
   const elementos = useMemo<ElementoMoodboard[]>(() => (fila ? datosAElementos(fila.datos) : []), [fila]);
 
-  return { existe: fila !== null, elementos, loading, error, crear, guardar };
+  return { existe, elementos, loading, error, crear, guardar };
 }

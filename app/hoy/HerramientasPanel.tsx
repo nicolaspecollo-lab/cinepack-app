@@ -373,7 +373,7 @@ export default function HerramientasPanel({
             }
           />
         ) : esMoodboard ? (
-          <MoodboardPanel departamento={departamento} editable={seccion === "cargo"} />
+          <MoodboardPanel departamento={departamento} fullName={fullName} editable={seccion === "cargo"} />
         ) : (
           <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} editable={seccion === "cargo"} />
         )}

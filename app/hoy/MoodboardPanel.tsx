@@ -5,16 +5,21 @@ import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import Icon from "../components/Icon";
 import { CarpetaArchivos } from "./HerramientaPanel";
+import { MOODBOARD_HERRAMIENTA_ID } from "./moodboardFilas";
+import { ERROR_SIN_PROYECTO, useMoodboardFila } from "./useMoodboardFila";
 
-export const MOODBOARD_HERRAMIENTA_ID = "arte-moodboard";
+// HerramientasPanel sigue importando el id desde aquí.
+export { MOODBOARD_HERRAMIENTA_ID };
 
 type Props = {
   departamento: string;
+  fullName: string;
   editable: boolean;
 };
 
-export default function MoodboardPanel({ departamento, editable }: Props) {
+export default function MoodboardPanel({ departamento, fullName, editable }: Props) {
   const t = useTranslations("moodboard");
+  const { existe, loading, error, crear } = useMoodboardFila(fullName);
   const [vista, setVista] = useState<"tablero" | "archivos">("tablero");
 
   // Mismas pestañas Tablero / Archivos que el resto de herramientas: se portan
@@ -36,15 +41,29 @@ export default function MoodboardPanel({ departamento, editable }: Props) {
     <>
       {slot ? createPortal(tabs, slot) : tabs}
 
-      {vista === "tablero" ? (
+      {error && <p className="amsg err">{error === ERROR_SIN_PROYECTO ? t("noProject") : error}</p>}
+
+      {vista === "archivos" ? (
+        <CarpetaArchivos departamento={departamento} herramientaId={MOODBOARD_HERRAMIENTA_ID} editable={editable} />
+      ) : loading ? (
+        <p className="amsg">{t("loading")}</p>
+      ) : existe ? (
+        // Provisional: aquí irá el lienzo con react-konva.
+        <div className="soon-box">
+          <span className="hex"></span>
+          <h4>{t("tabBoard")}</h4>
+        </div>
+      ) : (
         <div className="soon-box">
           <span className="hex"></span>
           <h4>{t("emptyTitle")}</h4>
           <p>{editable ? t("emptyHint") : t("readOnlyEmpty")}</p>
-          {editable && <button className="cp-btn cp-btn-acc">+ {t("create")}</button>}
+          {editable && (
+            <button className="cp-btn cp-btn-acc" onClick={() => crear()}>
+              + {t("create")}
+            </button>
+          )}
         </div>
-      ) : (
-        <CarpetaArchivos departamento={departamento} herramientaId={MOODBOARD_HERRAMIENTA_ID} editable={editable} />
       )}
     </>
   );
