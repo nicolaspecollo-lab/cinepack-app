@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import Icon from "../components/Icon";
 import { CarpetaArchivos } from "./HerramientaPanel";
 import { MOODBOARD_HERRAMIENTA_ID } from "./moodboardFilas";
 import { ERROR_SIN_PROYECTO, useMoodboardFila } from "./useMoodboardFila";
+
+// Konva necesita el navegador (canvas), así que el lienzo se carga solo en el cliente.
+const MoodboardLienzo = dynamic(() => import("./MoodboardLienzo"), { ssr: false });
 
 // HerramientasPanel sigue importando el id desde aquí.
 export { MOODBOARD_HERRAMIENTA_ID };
@@ -19,7 +23,7 @@ type Props = {
 
 export default function MoodboardPanel({ departamento, fullName, editable }: Props) {
   const t = useTranslations("moodboard");
-  const { existe, loading, error, crear } = useMoodboardFila(fullName);
+  const { existe, elementos, loading, error, crear } = useMoodboardFila(fullName);
   const [vista, setVista] = useState<"tablero" | "archivos">("tablero");
 
   // Mismas pestañas Tablero / Archivos que el resto de herramientas: se portan
@@ -48,11 +52,7 @@ export default function MoodboardPanel({ departamento, fullName, editable }: Pro
       ) : loading ? (
         <p className="amsg">{t("loading")}</p>
       ) : existe ? (
-        // Provisional: aquí irá el lienzo con react-konva.
-        <div className="soon-box">
-          <span className="hex"></span>
-          <h4>{t("tabBoard")}</h4>
-        </div>
+        <MoodboardLienzo elementos={elementos} editable={editable} />
       ) : (
         <div className="soon-box">
           <span className="hex"></span>

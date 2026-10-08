@@ -6049,3 +6049,7 @@
 .cp-dash .fr-form{ padding:0 20px 20px; display:flex; flex-direction:column; gap:12px; }
 .cp-dash .t tr.fr-row-conflicto td{ background:color-mix(in srgb, var(--rose) 14%, transparent); }
 .cp-dash .t tr.fr-row-advertencia td{ background:color-mix(in srgb, var(--amber) 14%, transparent); }
+
+/* Moodboard de Arte */
+.cp-dash .mb-barra{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:0 var(--gutter) 12px; }
+.cp-dash .mb-lienzo{ margin:0 var(--gutter) 24px; border:1px solid var(--line); background:var(--hl1); overflow:hidden; }
