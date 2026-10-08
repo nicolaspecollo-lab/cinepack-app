@@ -319,7 +319,6 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
                       <Rect width={e.ancho} height={e.alto} fill={COLOR_NOTA} />
                       <Text
                         width={e.ancho}
-                        height={e.alto}
                         padding={10}
                         text={e.texto}
                         fontSize={14}
