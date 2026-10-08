@@ -62,6 +62,8 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
   // Imágenes ya cargadas, por ruta de Storage.
   const [imagenes, setImagenes] = useState<Record<string, HTMLImageElement>>({});
   const [seleccion, setSeleccion] = useState<string | null>(null);
+  // Nota cuyo texto se está editando sobre el tablero (doble clic).
+  const [editando, setEditando] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [errorSubida, setErrorSubida] = useState<string | null>(null);
@@ -104,14 +106,15 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
   }, [elementos]);
 
   // El transformador (tiradores de tamaño y giro) se engancha al elemento seleccionado.
+  // Mientras se edita el texto de una nota, no se muestra.
   useEffect(() => {
     const tr = transformerRef.current;
     if (!tr) return;
-    const nodo = seleccion && editable ? nodos.current[seleccion] : null;
+    const nodo = seleccion && editable && !editando ? nodos.current[seleccion] : null;
     tr.nodes(nodo ? [nodo] : []);
     tr.moveToTop();
     tr.getLayer()?.batchDraw();
-  }, [seleccion, editable, items, imagenes, ancho]);
+  }, [seleccion, editando, editable, items, imagenes, ancho]);
 
   function anadirNota() {
     const desplazamiento = (items.length % 6) * 24;
@@ -173,7 +176,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
     }
   }
 
-    // Seleccionar también trae el elemento al frente (el último de la lista se dibuja encima).
+  // Seleccionar también trae el elemento al frente (el último de la lista se dibuja encima).
   function seleccionar(id: string) {
     if (!editable) return;
     setSeleccion(id);
@@ -196,6 +199,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
     if (!seleccion) return;
     setItems((prev) => prev.filter((e) => e.id !== seleccion));
     setSeleccion(null);
+    setEditando(null);
   }
 
   // Exporta el tablero a PNG. Se ocultan los tiradores un instante para que no salgan en la imagen.
@@ -232,7 +236,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
       x: e.x,
       y: e.y,
       rotation: e.rotacion,
-      draggable: editable,
+      draggable: editable && editando !== e.id,
       onMouseDown: () => seleccionar(e.id),
       onTouchStart: () => seleccionar(e.id),
       onDragEnd: (ev: Konva.KonvaEventObject<DragEvent>) =>
@@ -256,7 +260,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
   }
 
   const elementoSeleccionado = items.find((e) => e.id === seleccion);
-  const notaSeleccionada = elementoSeleccionado?.tipo === "nota" ? elementoSeleccionado : null;
+  const notaEditando = items.find((e): e is ElementoNota => e.id === editando && e.tipo === "nota");
 
   return (
     <>
@@ -283,19 +287,6 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
 
       {errorSubida && <p className="amsg err">{errorSubida}</p>}
 
-      {editable && notaSeleccionada && (
-        <div className="mb-barra">
-          <label className="hp-gfield">
-            <span>{t("noteText")}</span>
-            <textarea
-              value={notaSeleccionada.texto}
-              onChange={(ev) => cambiarTexto(notaSeleccionada.id, ev.target.value)}
-              rows={3}
-            />
-          </label>
-        </div>
-      )}
-
       <div ref={contenedorRef} className="mb-lienzo">
         {ancho > 0 && (
           <Stage
@@ -320,6 +311,8 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
                     nodos.current[e.id] = nodo;
                   }}
                   {...propsElemento(e)}
+                  onDblClick={() => e.tipo === "nota" && editable && setEditando(e.id)}
+                  onDblTap={() => e.tipo === "nota" && editable && setEditando(e.id)}
                 >
                   {e.tipo === "nota" ? (
                     <>
@@ -330,7 +323,9 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
                         padding={10}
                         text={e.texto}
                         fontSize={14}
+                        lineHeight={1.2}
                         fill={COLOR_TEXTO_NOTA}
+                        visible={editando !== e.id}
                       />
                     </>
                   ) : (
@@ -353,6 +348,27 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
               )}
             </Layer>
           </Stage>
+        )}
+
+        {editable && notaEditando && (
+          <textarea
+            className="hp-cell-area mb-editor"
+            autoFocus
+            onFocus={(ev) => ev.target.select()}
+            value={notaEditando.texto}
+            onChange={(ev) => cambiarTexto(notaEditando.id, ev.target.value)}
+            onBlur={() => setEditando(null)}
+            onKeyDown={(ev) => {
+              if (ev.key === "Escape") setEditando(null);
+            }}
+            style={{
+              left: notaEditando.x,
+              top: notaEditando.y,
+              width: notaEditando.ancho,
+              height: notaEditando.alto,
+              transform: `rotate(${notaEditando.rotacion}deg)`,
+            }}
+          />
         )}
       </div>
     </>
