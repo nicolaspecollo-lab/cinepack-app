@@ -146,7 +146,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
     setErrorSubida(null);
     try {
       const supabase = createClient();
-      const ruta = `${projectId}/${safeKey(MOODBOARD_DEPARTAMENTO)}/herramientas/${safeKey(MOODBOARD_HERRAMIENTA_ID)}/_tablero/${Date.now()}-${safeKey(archivo.name)}`;
+      const ruta = `${projectId}/${safeKey(MOODBOARD_DEPARTAMENTO)}/herramientas/${safeKey(MOODBOARD_HERRAMIENTA_ID)}/_carpeta/${Date.now()}-${safeKey(archivo.name)}`;
       const { error: errSubida } = await supabase.storage.from("documentos").upload(ruta, archivo);
       if (errSubida) throw errSubida;
       const { data, error: errFirma } = await supabase.storage.from("documentos").createSignedUrl(ruta, 3600);
