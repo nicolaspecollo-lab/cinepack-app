@@ -1019,7 +1019,9 @@
     "addNote": "Afegir nota",
     "delete": "Eliminar",
     "save": "Desar",
-    "download": "Descarregar"
+    "download": "Descarregar",
+    "noProject": "No hi ha cap projecte seleccionat.",
+    "loading": "Carregant…"
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",

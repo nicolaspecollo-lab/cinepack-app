@@ -1019,7 +1019,9 @@
     "addNote": "Añadir nota",
     "delete": "Eliminar",
     "save": "Guardar",
-    "download": "Descargar"
+    "download": "Descargar",
+    "noProject": "No hay ningún proyecto seleccionado.",
+    "loading": "Cargando…"
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",

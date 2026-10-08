@@ -1019,7 +1019,9 @@
     "addNote": "Add note",
     "delete": "Delete",
     "save": "Save",
-    "download": "Download"
+    "download": "Download",
+    "noProject": "No project is selected.",
+    "loading": "Loading…"
   },
     "frecuencias": {
     "title": "Wireless Frequency Plan",
