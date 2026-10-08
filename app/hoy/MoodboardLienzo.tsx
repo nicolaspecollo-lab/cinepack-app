@@ -50,6 +50,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
   const t = useTranslations("moodboard");
   const contenedorRef = useRef<HTMLDivElement>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const escenarioRef = useRef<Konva.Stage>(null);
   const entradaArchivoRef = useRef<HTMLInputElement>(null);
   const nodos = useRef<Record<string, Konva.Group | null>>({});
   // Rutas de imagen cuya carga ya se ha pedido, para no repetirla.
@@ -197,6 +198,28 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
     setSeleccion(null);
   }
 
+  // Exporta el tablero a PNG. Se ocultan los tiradores un instante para que no salgan en la imagen.
+  function descargar() {
+    const escenario = escenarioRef.current;
+    if (!escenario) return;
+    const transformador = transformerRef.current;
+    try {
+      transformador?.visible(false);
+      escenario.draw();
+      const url = escenario.toDataURL({ mimeType: "image/png", pixelRatio: 2 });
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `moodboard-${new Date().toISOString().slice(0, 10)}.png`;
+      enlace.click();
+      setErrorSubida(null);
+    } catch (e) {
+      setErrorSubida(e instanceof Error ? e.message : String(e));
+    } finally {
+      transformador?.visible(true);
+      escenario.draw();
+    }
+  }
+
   async function guardarTablero() {
     setGuardando(true);
     await guardar(items);
@@ -251,6 +274,9 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
           <button className="cp-btn cp-btn-acc" onClick={guardarTablero} disabled={guardando}>
             {t("save")}
           </button>
+          <button className="cp-btn" onClick={descargar}>
+            {t("download")}
+          </button>
           <input ref={entradaArchivoRef} type="file" accept="image/*" hidden onChange={subirImagen} />
         </div>
       )}
@@ -273,6 +299,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
       <div ref={contenedorRef} className="mb-lienzo">
         {ancho > 0 && (
           <Stage
+            ref={escenarioRef}
             width={ancho}
             height={ALTO_TABLERO}
             onMouseDown={(ev) => {
