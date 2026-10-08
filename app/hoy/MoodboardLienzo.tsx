@@ -27,7 +27,7 @@ const MINIMO = 60;
 // Ancho máximo con el que entra una imagen recién subida.
 const ANCHO_INICIAL_IMAGEN = 320;
 // Colores del lienzo (van dentro del <canvas>, el CSS no llega).
-const COLOR_FONDO = "#15151c";
+const COLOR_FONDO = "#808080";
 const COLOR_NOTA = "#f2d16b";
 const COLOR_TEXTO_NOTA = "#15151c";
 const COLOR_HUECO_IMAGEN = "#2a2a35";
@@ -330,7 +330,7 @@ export default function MoodboardLienzo({ elementos, editable, guardar }: Props)
                     </>
                   ) : (
                     <>
-                      <Rect width={e.ancho} height={e.alto} fill={COLOR_HUECO_IMAGEN} />
+                      {!imagenes[e.ruta] && <Rect width={e.ancho} height={e.alto} fill={COLOR_HUECO_IMAGEN} />}
                       <KonvaImage image={imagenes[e.ruta]} width={e.ancho} height={e.alto} />
                     </>
                   )}
