@@ -1021,7 +1021,9 @@
     "save": "Guardar",
     "download": "Descargar",
     "noProject": "No hay ningún proyecto seleccionado.",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "noteText": "Texto de la nota",
+    "noteDefault": "Nueva nota"
   },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",

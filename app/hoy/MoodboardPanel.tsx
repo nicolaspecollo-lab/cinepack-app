@@ -23,7 +23,7 @@ type Props = {
 
 export default function MoodboardPanel({ departamento, fullName, editable }: Props) {
   const t = useTranslations("moodboard");
-  const { existe, elementos, loading, error, crear } = useMoodboardFila(fullName);
+  const { existe, elementos, loading, error, crear, guardar } = useMoodboardFila(fullName);
   const [vista, setVista] = useState<"tablero" | "archivos">("tablero");
 
   // Mismas pestañas Tablero / Archivos que el resto de herramientas: se portan
@@ -52,7 +52,7 @@ export default function MoodboardPanel({ departamento, fullName, editable }: Pro
       ) : loading ? (
         <p className="amsg">{t("loading")}</p>
       ) : existe ? (
-        <MoodboardLienzo elementos={elementos} editable={editable} />
+        <MoodboardLienzo elementos={elementos} editable={editable} guardar={guardar} />
       ) : (
         <div className="soon-box">
           <span className="hex"></span>

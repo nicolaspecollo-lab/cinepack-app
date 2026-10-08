@@ -1021,7 +1021,9 @@
     "save": "Desar",
     "download": "Descarregar",
     "noProject": "No hi ha cap projecte seleccionat.",
-    "loading": "Carregant…"
+    "loading": "Carregant…",
+    "noteText": "Text de la nota",
+    "noteDefault": "Nova nota"
   },
     "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
