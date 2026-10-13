@@ -1013,7 +1013,15 @@
     "noProject": "No hi ha cap projecte seleccionat.",
     "emptyTitle": "Encara no hi ha referències",
     "emptyHint": "Aquí es reuniran les referències visuals d'il·luminació, color, enquadrament i composició del projecte.",
-    "readOnlyEmpty": "El departament de Fotografia encara no ha afegit referències visuals."
+    "readOnlyEmpty": "El departament de Fotografia encara no ha afegit referències visuals.",
+    "stateDraft": "Esborrany",
+    "statePending": "Pendent",
+    "stateApproved": "Aprovada",
+    "stateDiscarded": "Descartada",
+    "catLighting": "Il·luminació",
+    "catColor": "Color",
+    "catFraming": "Enquadrament",
+    "catComposition": "Composició"
   },
     "moodboard": {
     "tabBoard": "Tauler",

@@ -1013,7 +1013,15 @@
     "noProject": "No hay ningún proyecto seleccionado.",
     "emptyTitle": "Todavía no hay referencias",
     "emptyHint": "Aquí se reunirán las referencias visuales de iluminación, color, encuadre y composición del proyecto.",
-    "readOnlyEmpty": "El departamento de Fotografía aún no ha añadido referencias visuales."
+    "readOnlyEmpty": "El departamento de Fotografía aún no ha añadido referencias visuales.",
+    "stateDraft": "Borrador",
+    "statePending": "Pendiente",
+    "stateApproved": "Aprobada",
+    "stateDiscarded": "Descartada",
+    "catLighting": "Iluminación",
+    "catColor": "Color",
+    "catFraming": "Encuadre",
+    "catComposition": "Composición"
   },
     "moodboard": {
     "tabBoard": "Tablero",

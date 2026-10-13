@@ -1013,7 +1013,15 @@
     "noProject": "No project selected.",
     "emptyTitle": "No references yet",
     "emptyHint": "Visual references for lighting, colour, framing and composition will be gathered here.",
-    "readOnlyEmpty": "The Photography department hasn't added visual references yet."
+    "readOnlyEmpty": "The Photography department hasn't added visual references yet.",
+    "stateDraft": "Draft",
+    "statePending": "Pending",
+    "stateApproved": "Approved",
+    "stateDiscarded": "Discarded",
+    "catLighting": "Lighting",
+    "catColor": "Colour",
+    "catFraming": "Framing",
+    "catComposition": "Composition"
   },
     "moodboard": {
     "tabBoard": "Board",
