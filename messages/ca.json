@@ -1048,7 +1048,11 @@
     "noResults": "No hi ha referències amb aquests filtres.",
     "actSend": "Enviar a revisió",
     "actApprove": "Aprovar",
-    "actDiscard": "Descartar"
+    "actDiscard": "Descartar",
+    "fldComments": "Comentaris",
+    "noComments": "Encara no hi ha comentaris.",
+    "commentPlaceholder": "Escriu un comentari…",
+    "commentSend": "Comentar"
   },
     "moodboard": {
     "tabBoard": "Tauler",

@@ -76,6 +76,7 @@ export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyec
       ruta,
       estado: "borrador",
       principal: false,
+      comentarios: [],
     });
     setGuardando(false);
     onCerrar();
@@ -91,13 +92,13 @@ export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyec
 
         <input ref={entradaArchivoRef} type="file" accept="image/*" hidden onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
         <div className="gdes-field">
-            <div className="comn-dropzone" onClick={() => entradaArchivoRef.current?.click()}>
-                <span className="comn-dropzone-hex">+</span>
-                <span className="comn-dropzone-text">
-                    <b>{archivo ? archivo.name : t("dropTitle")}</b>
-                    <span>{t("dropHint")}</span>
-                </span>
-            </div>
+          <div className="comn-dropzone" onClick={() => entradaArchivoRef.current?.click()}>
+            <span className="comn-dropzone-hex">+</span>
+            <span className="comn-dropzone-text">
+              <b>{archivo ? archivo.name : t("dropTitle")}</b>
+              <span>{t("dropHint")}</span>
+            </span>
+          </div>
         </div>
 
         <label className="gdes-field">

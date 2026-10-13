@@ -15,7 +15,7 @@ type Props = { fullName: string; editable: boolean };
 export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const t = useTranslations("moodboardFoto");
   const { categorias, niveles } = useEtiquetasMoodboardFoto();
-  const { referencias, loading, error, crear, cambiarEstado } = useMoodboardFotoFilas(fullName);
+  const { referencias, loading, error, crear, cambiarEstado, comentar } = useMoodboardFotoFilas(fullName);
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [abiertaId, setAbiertaId] = useState<string | null>(null);
   const [filtroNivel, setFiltroNivel] = useState<Nivel | null>(null);
@@ -103,8 +103,10 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
           fila={filaAbierta}
           url={urls[filaAbierta.datos.ruta]}
           editable={editable}
+          fullName={fullName}
           onCerrar={() => setAbiertaId(null)}
           onCambiarEstado={cambiarEstado}
+          onComentar={comentar}
         />
       )}
 

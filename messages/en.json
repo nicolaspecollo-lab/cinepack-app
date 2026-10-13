@@ -1048,7 +1048,11 @@
     "noResults": "No references match these filters.",
     "actSend": "Send for review",
     "actApprove": "Approve",
-    "actDiscard": "Discard"
+    "actDiscard": "Discard",
+    "fldComments": "Comments",
+    "noComments": "No comments yet.",
+    "commentPlaceholder": "Write a comment…",
+    "commentSend": "Comment"
   },
     "moodboard": {
     "tabBoard": "Board",

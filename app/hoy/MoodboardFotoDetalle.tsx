@@ -11,16 +11,19 @@ type Props = {
   fila: FilaReferencia;
   url?: string;
   editable: boolean;
+  fullName: string;
   onCerrar: () => void;
   onCambiarEstado: (id: string, estado: Estado, accion: string) => Promise<unknown>;
+  onComentar: (id: string, texto: string) => Promise<unknown>;
 };
 
 type Accion = { estado: Estado; accion: string; texto: string; acc: boolean };
 
-export default function MoodboardFotoDetalle({ fila, url, editable, onCerrar, onCambiarEstado }: Props) {
+export default function MoodboardFotoDetalle({ fila, url, editable, fullName, onCerrar, onCambiarEstado, onComentar }: Props) {
   const t = useTranslations("moodboardFoto");
   const { estados, categorias, niveles } = useEtiquetasMoodboardFoto();
   const [ocupado, setOcupado] = useState(false);
+  const [comentario, setComentario] = useState("");
   const d = fila.datos;
 
   const acciones: Accion[] = [];
@@ -33,6 +36,14 @@ export default function MoodboardFotoDetalle({ fila, url, editable, onCerrar, on
   async function ejecutar(a: Accion) {
     setOcupado(true);
     await onCambiarEstado(fila.id, a.estado, a.accion);
+    setOcupado(false);
+  }
+
+  async function enviarComentario() {
+    if (!comentario.trim()) return;
+    setOcupado(true);
+    await onComentar(fila.id, comentario);
+    setComentario("");
     setOcupado(false);
   }
 
@@ -84,6 +95,38 @@ export default function MoodboardFotoDetalle({ fila, url, editable, onCerrar, on
             <div className="gdes-pers">{d.etiquetas.map((e, i) => <span key={i} className="gdes-chip">{e}</span>)}</div>
           </div>
         )}
+
+        <div className="gdes-field">
+          <span>{t("fldComments")}</span>
+          {d.comentarios.length === 0 ? (
+            <p className="amsg">{t("noComments")}</p>
+          ) : (
+            <div className="cq-thread">
+              {d.comentarios.map((c, i) => (
+                <div key={i} className={`cq-bubble${c.usuario === fullName ? " cq-bubble-me" : ""}`}>
+                  <div className="cq-bubble-head">
+                    <b>{c.usuario}</b> · {new Date(c.fecha).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
+                  </div>
+                  {c.texto}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="cq-reply-row">
+            <input
+              className="cq-reply-input"
+              value={comentario}
+              placeholder={t("commentPlaceholder")}
+              onChange={(e) => setComentario(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") enviarComentario();
+              }}
+            />
+            <button type="button" className="cp-btn cp-btn-acc" disabled={ocupado || !comentario.trim()} onClick={enviarComentario}>
+              {t("commentSend")}
+            </button>
+          </div>
+        </div>
 
         {acciones.length > 0 && (
           <div className="gdes-detail-actions mb-acciones-foto">

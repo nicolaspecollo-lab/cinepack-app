@@ -14,6 +14,9 @@ export type Categoria = (typeof CATEGORIAS)[number];
 export const ESTADOS = ["borrador", "pendiente", "aprobada", "descartada"] as const;
 export type Estado = (typeof ESTADOS)[number];
 
+// Un comentario: quién, cuándo (fecha ISO) y qué dijo.
+export type Comentario = { usuario: string; fecha: string; texto: string };
+
 // Una referencia visual = una fila de herramienta_filas.
 export type Referencia = {
   titulo: string;
@@ -29,6 +32,7 @@ export type Referencia = {
   ruta: string;
   estado: Estado;
   principal: boolean;
+  comentarios: Comentario[];
 };
 
 // Comprueba que un texto guardado es uno de los valores permitidos.
@@ -41,6 +45,24 @@ function leerEtiquetas(texto: string | undefined): string[] {
   try {
     const crudo: unknown = JSON.parse(texto ?? "[]");
     return Array.isArray(crudo) ? crudo.filter((e): e is string => typeof e === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+// Los comentarios también se guardan como JSON; se descartan los que no tengan la forma esperada.
+export function leerComentarios(texto: string | undefined): Comentario[] {
+  try {
+    const crudo: unknown = JSON.parse(texto ?? "[]");
+    if (!Array.isArray(crudo)) return [];
+    return crudo.filter(
+      (c): c is Comentario =>
+        typeof c === "object" &&
+        c !== null &&
+        typeof (c as Comentario).usuario === "string" &&
+        typeof (c as Comentario).fecha === "string" &&
+        typeof (c as Comentario).texto === "string",
+    );
   } catch {
     return [];
   }
@@ -64,6 +86,7 @@ export function datosAReferencia(datos: DatosFila): Referencia | null {
     ruta,
     estado,
     principal: datos.principal === "true",
+    comentarios: leerComentarios(datos.comentarios),
   };
 }
 
@@ -81,5 +104,6 @@ export function referenciaADatos(r: Referencia): DatosFila {
     ruta: r.ruta,
     estado: r.estado,
     principal: String(r.principal),
+    comentarios: JSON.stringify(r.comentarios),
   };
 }

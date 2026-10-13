@@ -1048,7 +1048,11 @@
     "noResults": "No hay referencias con estos filtros.",
     "actSend": "Enviar a revisión",
     "actApprove": "Aprobar",
-    "actDiscard": "Descartar"
+    "actDiscard": "Descartar",
+    "fldComments": "Comentarios",
+    "noComments": "Todavía no hay comentarios.",
+    "commentPlaceholder": "Escribe un comentario…",
+    "commentSend": "Comentar"
   },
     "moodboard": {
     "tabBoard": "Tablero",

@@ -7,6 +7,7 @@ import {
   MOODBOARD_FOTO_DEPARTAMENTO,
   MOODBOARD_FOTO_HERRAMIENTA_ID,
   datosAReferencia,
+  leerComentarios,
   referenciaADatos,
   type Estado,
   type Referencia,
@@ -96,7 +97,7 @@ export function useMoodboardFotoFilas(fullName: string) {
   }
 
   // EDITAR: se fusiona con lo ya guardado para no perder claves que este panel todavía no conoce
-  // (posición del collage, comentarios...).
+  // (posición del collage...).
   async function editar(id: string, r: Referencia) {
     const actual = filasDB.find((x) => x.id === id);
     if (!actual) return;
@@ -137,6 +138,35 @@ export function useMoodboardFotoFilas(fullName: string) {
     setError(null);
   }
 
+  // COMENTAR: añade un comentario (usuario, fecha y texto) a la referencia.
+  // Pueden comentar todos los cargos; el permiso de estado no aplica aquí.
+  async function comentar(id: string, texto: string) {
+    const actual = filasDB.find((x) => x.id === id);
+    const limpio = texto.trim();
+    if (!actual || !limpio) return;
+    const ahora = new Date().toISOString();
+    const comentarios = [
+      ...leerComentarios(actual.datos.comentarios),
+      { usuario: fullName, fecha: ahora, texto: limpio },
+    ];
+    const datos = { ...actual.datos, comentarios: JSON.stringify(comentarios) };
+    const registro = [
+      ...(actual.registro ?? []),
+      { accion: "comenta", usuario: fullName, fecha: ahora },
+    ];
+    const supabase = createClient();
+    const { error: err } = await supabase
+      .from("herramienta_filas")
+      .update({ datos, registro, editor_nombre: fullName, updated_at: ahora })
+      .eq("id", id);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
+    setError(null);
+  }
+
   // Referencias ya traducidas. Las filas que no son referencias (galería genérica antigua) se descartan.
   const referencias = useMemo<FilaReferencia[]>(
     () =>
@@ -147,5 +177,5 @@ export function useMoodboardFotoFilas(fullName: string) {
     [filasDB]
   );
 
-  return { referencias, loading, error, crear, editar, cambiarEstado };
+  return { referencias, loading, error, crear, editar, cambiarEstado, comentar };
 }
