@@ -1008,6 +1008,13 @@
     "phRole": "Rol",
     "phNamePhone": "Nom / telèfon"
   },
+    "moodboardFoto": {
+    "loading": "Carregant referències…",
+    "noProject": "No hi ha cap projecte seleccionat.",
+    "emptyTitle": "Encara no hi ha referències",
+    "emptyHint": "Aquí es reuniran les referències visuals d'il·luminació, color, enquadrament i composició del projecte.",
+    "readOnlyEmpty": "El departament de Fotografia encara no ha afegit referències visuals."
+  },
     "moodboard": {
     "tabBoard": "Tauler",
     "tabFiles": "Arxius",

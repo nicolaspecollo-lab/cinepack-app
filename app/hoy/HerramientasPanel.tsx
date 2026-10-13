@@ -9,6 +9,8 @@ import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
 import PlanFrecuenciasPanel from "./PlanFrecuenciasPanel";
 import { FRECUENCIAS_DEPARTAMENTO } from "./frecuenciasFilas";
 import MoodboardPanel, { MOODBOARD_HERRAMIENTA_ID } from "./MoodboardPanel";
+import MoodboardFotoPanel from "./MoodboardFotoPanel";
+import { MOODBOARD_FOTO_HERRAMIENTA_ID } from "./moodboardFotoFilas";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import { createClient } from "@/lib/supabase/client";
@@ -329,6 +331,7 @@ export default function HerramientasPanel({
     const esCasting = abierta.id === "cast-candidatos";
     const esFrecuencias = abierta.id === "son-plan-frecuencias";
     const esMoodboard = abierta.id === MOODBOARD_HERRAMIENTA_ID;
+    const esMoodboardFoto = abierta.id === MOODBOARD_FOTO_HERRAMIENTA_ID;
     return (
       <div className="hp-open">
         {seccion === "departamento" ? (
@@ -374,6 +377,11 @@ export default function HerramientasPanel({
           />
         ) : esMoodboard ? (
           <MoodboardPanel departamento={departamento} fullName={fullName} editable={seccion === "cargo"} />
+        ) : esMoodboardFoto ? (
+          <MoodboardFotoPanel
+            fullName={fullName}
+            editable={seccion === "cargo" && (!!isAdmin || (!!cargo && cargo === cargoJefe))}
+          />
         ) : (
           <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} editable={seccion === "cargo"} />
         )}

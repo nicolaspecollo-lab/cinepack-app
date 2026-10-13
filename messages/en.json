@@ -1008,6 +1008,13 @@
     "phRole": "Role",
     "phNamePhone": "Name / phone"
   },
+    "moodboardFoto": {
+    "loading": "Loading references…",
+    "noProject": "No project selected.",
+    "emptyTitle": "No references yet",
+    "emptyHint": "Visual references for lighting, colour, framing and composition will be gathered here.",
+    "readOnlyEmpty": "The Photography department hasn't added visual references yet."
+  },
     "moodboard": {
     "tabBoard": "Board",
     "tabFiles": "Files",
