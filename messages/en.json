@@ -1045,7 +1045,10 @@
     "levelScene": "Scene",
     "filterAll": "All",
     "filterAllCat": "All",
-    "noResults": "No references match these filters."
+    "noResults": "No references match these filters.",
+    "actSend": "Send for review",
+    "actApprove": "Approve",
+    "actDiscard": "Discard"
   },
     "moodboard": {
     "tabBoard": "Board",

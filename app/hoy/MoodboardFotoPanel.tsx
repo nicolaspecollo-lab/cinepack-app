@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import MoodboardFotoDetalle from "./MoodboardFotoDetalle";
 import MoodboardFotoFicha from "./MoodboardFotoFicha";
 import MoodboardFotoGaleria from "./MoodboardFotoGaleria";
 import { CATEGORIAS, NIVELES, type Categoria, type Nivel } from "./moodboardFotoFilas";
@@ -14,23 +15,32 @@ type Props = { fullName: string; editable: boolean };
 export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const t = useTranslations("moodboardFoto");
   const { categorias, niveles } = useEtiquetasMoodboardFoto();
-  const { referencias, loading, error, crear } = useMoodboardFotoFilas(fullName);
+  const { referencias, loading, error, crear, cambiarEstado } = useMoodboardFotoFilas(fullName);
   const [fichaAbierta, setFichaAbierta] = useState(false);
+  const [abiertaId, setAbiertaId] = useState<string | null>(null);
   const [filtroNivel, setFiltroNivel] = useState<Nivel | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria | null>(null);
 
   const rutas = useMemo(() => referencias.map((r) => r.datos.ruta), [referencias]);
   const urls = useUrlsImagenes(rutas);
 
+  // Los borradores solo los ve quien puede editar (Dirección de fotografía y administrador).
+  const base = useMemo(
+    () => referencias.filter((r) => editable || r.datos.estado !== "borrador"),
+    [referencias, editable],
+  );
+
   const visibles = useMemo(
     () =>
-      referencias.filter(
+      base.filter(
         (r) =>
           (!filtroNivel || r.datos.nivel === filtroNivel) &&
           (!filtroCategoria || r.datos.categoria === filtroCategoria),
       ),
-    [referencias, filtroNivel, filtroCategoria],
+    [base, filtroNivel, filtroCategoria],
   );
+
+  const filaAbierta = abiertaId ? base.find((r) => r.id === abiertaId) : undefined;
 
   const botonAnadir = (
     <button className="cp-btn cp-btn-acc" onClick={() => setFichaAbierta(true)}>
@@ -40,13 +50,13 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
 
   return (
     <>
-      {editable && referencias.length > 0 && (
+      {editable && base.length > 0 && (
         <div className="mb-barra mb-barra-foto">{botonAnadir}</div>
       )}
 
       {error && <p className="amsg err">{error === ERROR_SIN_PROYECTO ? t("noProject") : error}</p>}
 
-      {referencias.length > 0 && (
+      {base.length > 0 && (
         <>
           <div className="dsubtabs">
             <button className={`dsubtab ${!filtroNivel ? "active" : ""}`} onClick={() => setFiltroNivel(null)}>
@@ -75,7 +85,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
 
       {loading ? (
         <p className="amsg">{t("loading")}</p>
-      ) : referencias.length === 0 ? (
+      ) : base.length === 0 ? (
         <div className="soon-box">
           <span className="hex"></span>
           <h4>{t("emptyTitle")}</h4>
@@ -85,7 +95,17 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
       ) : visibles.length === 0 ? (
         <p className="amsg">{t("noResults")}</p>
       ) : (
-        <MoodboardFotoGaleria referencias={visibles} urls={urls} />
+        <MoodboardFotoGaleria referencias={visibles} urls={urls} onAbrir={setAbiertaId} />
+      )}
+
+      {filaAbierta && (
+        <MoodboardFotoDetalle
+          fila={filaAbierta}
+          url={urls[filaAbierta.datos.ruta]}
+          editable={editable}
+          onCerrar={() => setAbiertaId(null)}
+          onCambiarEstado={cambiarEstado}
+        />
       )}
 
       {fichaAbierta && (

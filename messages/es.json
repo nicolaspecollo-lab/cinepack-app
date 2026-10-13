@@ -1045,7 +1045,10 @@
     "levelScene": "Escena",
     "filterAll": "Todos",
     "filterAllCat": "Todas",
-    "noResults": "No hay referencias con estos filtros."
+    "noResults": "No hay referencias con estos filtros.",
+    "actSend": "Enviar a revisión",
+    "actApprove": "Aprobar",
+    "actDiscard": "Descartar"
   },
     "moodboard": {
     "tabBoard": "Tablero",

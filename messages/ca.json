@@ -1045,7 +1045,10 @@
     "levelScene": "Escena",
     "filterAll": "Tots",
     "filterAllCat": "Totes",
-    "noResults": "No hi ha referències amb aquests filtres."
+    "noResults": "No hi ha referències amb aquests filtres.",
+    "actSend": "Enviar a revisió",
+    "actApprove": "Aprovar",
+    "actDiscard": "Descartar"
   },
     "moodboard": {
     "tabBoard": "Tauler",

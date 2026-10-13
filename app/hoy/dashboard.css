@@ -6058,3 +6058,4 @@
 
 /* Moodboard de Fotografía */
 .cp-dash .mb-barra-foto{ padding-top:14px; } /* variante de mb-barra con aire arriba */
+.cp-dash .mb-acciones-foto{ gap:8px; } /* separa los botones de acción de la ficha */
