@@ -1042,7 +1042,10 @@
     "uploadError": "Could not upload the image: {msg}",
     "levelGeneral": "General look",
     "levelSequence": "Sequence",
-    "levelScene": "Scene"
+    "levelScene": "Scene",
+    "filterAll": "All",
+    "filterAllCat": "All",
+    "noResults": "No references match these filters."
   },
     "moodboard": {
     "tabBoard": "Board",

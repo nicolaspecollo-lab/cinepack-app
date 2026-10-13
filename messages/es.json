@@ -1042,7 +1042,10 @@
     "uploadError": "No se pudo subir la imagen: {msg}",
     "levelGeneral": "Look general",
     "levelSequence": "Secuencia",
-    "levelScene": "Escena"
+    "levelScene": "Escena",
+    "filterAll": "Todos",
+    "filterAllCat": "Todas",
+    "noResults": "No hay referencias con estos filtros."
   },
     "moodboard": {
     "tabBoard": "Tablero",

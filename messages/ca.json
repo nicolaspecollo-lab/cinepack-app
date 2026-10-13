@@ -1042,7 +1042,10 @@
     "uploadError": "No s'ha pogut pujar la imatge: {msg}",
     "levelGeneral": "Look general",
     "levelSequence": "Seqüència",
-    "levelScene": "Escena"
+    "levelScene": "Escena",
+    "filterAll": "Tots",
+    "filterAllCat": "Totes",
+    "noResults": "No hi ha referències amb aquests filtres."
   },
     "moodboard": {
     "tabBoard": "Tauler",
