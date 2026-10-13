@@ -1008,6 +1008,23 @@
     "phRole": "Rol",
     "phNamePhone": "Nombre / teléfono"
   },
+    "moodboard": {
+    "tabBoard": "Tablero",
+    "tabFiles": "Archivos",
+    "create": "Crear moodboard",
+    "emptyTitle": "Aún no hay ningún moodboard",
+    "emptyHint": "Crea el primero para empezar a reunir referencias visuales.",
+    "readOnlyEmpty": "Todavía no hay ningún moodboard.",
+    "addImage": "Añadir imagen",
+    "addNote": "Añadir nota",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "download": "Descargar",
+    "noProject": "No hay ningún proyecto seleccionado.",
+    "loading": "Cargando…",
+    "noteText": "Texto de la nota",
+    "noteDefault": "Nueva nota"
+  },
     "frecuencias": {
     "title": "Plan de Frecuencias Inalámbricas",
     "stateUnassigned": "Sin asignar",
