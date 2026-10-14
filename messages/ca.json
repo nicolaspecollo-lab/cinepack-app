@@ -1008,7 +1008,7 @@
     "phRole": "Rol",
     "phNamePhone": "Nom / telèfon"
   },
-    "moodboard": {
+  "moodboard": {
     "tabBoard": "Tauler",
     "tabFiles": "Arxius",
     "create": "Crear moodboard",
@@ -1025,7 +1025,7 @@
     "noteText": "Text de la nota",
     "noteDefault": "Nova nota"
   },
-    "frecuencias": {
+  "frecuencias": {
     "title": "Pla de Freqüències Sense Fils",
     "stateUnassigned": "Sense assignar",
     "viewConflicts": "Veure conflictes",
@@ -1075,6 +1075,32 @@
     "save": "Desar",
     "cancel": "Cancel·lar",
     "delete": "Eliminar"
+  },
+  "planSonido": {
+    "emptyTitle": "Encara no hi ha fitxes de so",
+    "emptyHint": "Afegeix la primera escena per preparar com s'enregistrarà el so.",
+    "readOnlyEmpty": "El Pla de so directe encara no té fitxes.",
+    "addScene": "+ Nova fitxa",
+    "scene": "Escena",
+    "method": "Mètode de captació",
+    "risk": "Risc de soroll",
+    "strategy": "Estratègia de captació",
+    "challenges": "Reptes acústics",
+    "wildtrack": "Wildtracks a prendre",
+    "choose": "Selecciona…",
+    "method_boom": "Boom",
+    "method_lavalier": "Lavalier",
+    "method_mixto": "Mixt",
+    "method_otro": "Altre",
+    "risk_bajo": "Baix",
+    "risk_medio": "Mitjà",
+    "risk_alto": "Alt",
+    "state_sin_empezar": "Sense començar",
+    "state_en_preparacion": "En preparació",
+    "state_lista": "Llesta",
+    "markReady": "Marcar com a llesta",
+    "reopen": "Reobrir fitxa",
+    "markReadyHint": "Tria mètode i risc per poder marcar-la com a llesta."
   },
   "escenas": {
     "loading": "Carregant escenes…",

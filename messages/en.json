@@ -1008,7 +1008,7 @@
     "phRole": "Role",
     "phNamePhone": "Name / phone"
   },
-    "moodboard": {
+  "moodboard": {
     "tabBoard": "Board",
     "tabFiles": "Files",
     "create": "Create moodboard",
@@ -1025,7 +1025,7 @@
     "noteText": "Note text",
     "noteDefault": "New note"
   },
-    "frecuencias": {
+  "frecuencias": {
     "title": "Wireless Frequency Plan",
     "stateUnassigned": "Unassigned",
     "viewConflicts": "View conflicts",
@@ -1075,6 +1075,32 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete"
+  },
+  "planSonido": {
+    "emptyTitle": "There are no sound sheets yet",
+    "emptyHint": "Add the first scene to plan how the sound will be recorded.",
+    "readOnlyEmpty": "The Live sound plan has no sheets yet.",
+    "addScene": "+ New sheet",
+    "scene": "Scene",
+    "method": "Capture method",
+    "risk": "Noise risk",
+    "strategy": "Capture strategy",
+    "challenges": "Acoustic challenges",
+    "wildtrack": "Wildtracks to record",
+    "choose": "Select…",
+    "method_boom": "Boom",
+    "method_lavalier": "Lavalier",
+    "method_mixto": "Mixed",
+    "method_otro": "Other",
+    "risk_bajo": "Low",
+    "risk_medio": "Medium",
+    "risk_alto": "High",
+    "state_sin_empezar": "Not started",
+    "state_en_preparacion": "In preparation",
+    "state_lista": "Ready",
+    "markReady": "Mark as ready",
+    "reopen": "Reopen sheet",
+    "markReadyHint": "Choose a method and a risk level to mark it as ready."
   },
   "escenas": {
     "loading": "Loading scenes…",
