@@ -1058,7 +1058,8 @@
     "actCompare": "Compare references",
     "compareTitle": "Compare references",
     "compareNote": "These references compete for the same place.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "chooseMain": "Choose as main"
   },
     "moodboard": {
     "tabBoard": "Board",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useEtiquetasMoodboardFoto } from "./useEtiquetasMoodboardFoto";
 import type { FilaReferencia } from "./useMoodboardFotoFilas";
@@ -7,15 +8,23 @@ import type { FilaReferencia } from "./useMoodboardFotoFilas";
 type Props = {
   filas: FilaReferencia[];
   urls: Record<string, string>;
+  onElegir: (id: string) => Promise<unknown>;
   onCerrar: () => void;
 };
 
-export default function MoodboardFotoComparar({ filas, urls, onCerrar }: Props) {
+export default function MoodboardFotoComparar({ filas, urls, onElegir, onCerrar }: Props) {
   const t = useTranslations("moodboardFoto");
   const { estados, categorias, niveles } = useEtiquetasMoodboardFoto();
+  const [ocupado, setOcupado] = useState(false);
 
   if (filas.length === 0) return null;
   const sitio = filas[0].datos;
+
+  async function elegir(id: string) {
+    setOcupado(true);
+    await onElegir(id);
+    setOcupado(false);
+  }
 
   return (
     <div className="dsr-overlay" onClick={onCerrar}>
@@ -58,6 +67,9 @@ export default function MoodboardFotoComparar({ filas, urls, onCerrar }: Props) 
                   {d.fuente && (
                     <div className="gdes-meta"><span>{t("fldSource")}: {d.fuente}</span></div>
                   )}
+                  <button type="button" className="cp-btn cp-btn-acc" disabled={ocupado} onClick={() => elegir(f.id)}>
+                    {t("chooseMain")}
+                  </button>
                 </div>
               );
             })}

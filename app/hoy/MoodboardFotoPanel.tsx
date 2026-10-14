@@ -53,6 +53,17 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   );
 
   const filaAbierta = abiertaId ? base.find((r) => r.id === abiertaId) : undefined;
+  
+  // ELEGIR COMO PRINCIPAL: la elegida pasa a Aprobada y principal; las demás pierden el principal
+  // (si estaban Aprobadas vuelven a Pendiente). Así desaparece el conflicto.
+  async function elegirPrincipal(id: string) {
+    await cambiarEstado(id, "aprobada", "elige_principal", true);
+    for (const f of grupoComparar) {
+      if (f.id === id) continue;
+      await cambiarEstado(f.id, f.datos.estado === "aprobada" ? "pendiente" : f.datos.estado, "pierde_principal", false);
+    }
+    setComparandoId(null);
+  }
 
   const botonAnadir = (
     <button className="cp-btn cp-btn-acc" onClick={() => setFichaAbierta(true)}>
@@ -131,6 +142,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         <MoodboardFotoComparar
           filas={grupoComparar}
           urls={urls}
+          onElegir={elegirPrincipal}
           onCerrar={() => setComparandoId(null)}
         />
       )}

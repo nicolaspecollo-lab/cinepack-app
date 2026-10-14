@@ -43,7 +43,7 @@ export default function MoodboardFotoDetalle({
     // Al enviar a revisión la referencia se propone como principal de su sitio.
     if (d.estado === "borrador") acciones.push({ estado: "pendiente", accion: "envia_revision", texto: t("actSend"), acc: true, principal: true });
     // Con conflicto no se aprueba directamente: se elige con Comparar.
-    if (d.estado === "pendiente" && !enConflicto) acciones.push({ estado: "aprobada", accion: "aprueba", texto: t("actApprove"), acc: true });
+    if (d.estado === "pendiente" && d.principal && !enConflicto) acciones.push({ estado: "aprobada", accion: "aprueba", texto: t("actApprove"), acc: true });
     if (d.estado !== "descartada") acciones.push({ estado: "descartada", accion: "descarta", texto: t("actDiscard"), acc: false, principal: false });
   }
 
