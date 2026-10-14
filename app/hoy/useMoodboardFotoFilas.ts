@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { DatosFila } from "./moodboardFilas";
 import {
@@ -30,6 +30,32 @@ export function useMoodboardFotoFilas(fullName: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Última versión de las filas, siempre al día (el estado de React se actualiza
+  // con retraso y dos cambios seguidos partirían de datos viejos y se pisarían).
+  const filasRef = useRef<FilaDB[]>([]);
+  // Cola de guardados: se envían de uno en uno y en orden.
+  const cola = useRef<Promise<void>>(Promise.resolve());
+
+  function aplicar(nuevas: FilaDB[]) {
+    filasRef.current = nuevas;
+    setFilasDB(nuevas);
+  }
+
+  // Encola un UPDATE de una fila. El siguiente no empieza hasta que acabe el anterior.
+  function guardar(id: string, cambios: Record<string, unknown>): Promise<void> {
+    const tarea = cola.current.then(async () => {
+      try {
+        const supabase = createClient();
+        const { error: err } = await supabase.from("herramienta_filas").update(cambios).eq("id", id);
+        setError(err ? err.message : null);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    });
+    cola.current = tarea;
+    return tarea;
+  }
+
   // LEER: todas las filas de esta herramienta en el proyecto.
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -51,7 +77,9 @@ export function useMoodboardFotoFilas(fullName: string) {
       setLoading(false);
       return;
     }
-    setFilasDB((data ?? []) as FilaDB[]);
+    const filas = (data ?? []) as FilaDB[];
+    filasRef.current = filas;
+    setFilasDB(filas);
     setError(null);
     setLoading(false);
   }, []);
@@ -72,7 +100,8 @@ export function useMoodboardFotoFilas(fullName: string) {
     }
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const orden = filasDB.length ? Math.max(...filasDB.map((x) => x.orden)) + 1 : 0;
+    const actuales = filasRef.current;
+    const orden = actuales.length ? Math.max(...actuales.map((x) => x.orden)) + 1 : 0;
     const { data, error: err } = await supabase
       .from("herramienta_filas")
       .insert({
@@ -93,34 +122,25 @@ export function useMoodboardFotoFilas(fullName: string) {
       setError(err.message);
       return;
     }
-    if (data) setFilasDB((prev) => [...prev, data as FilaDB]);
+    if (data) aplicar([...filasRef.current, data as FilaDB]);
     setError(null);
   }
 
   // EDITAR: se fusiona con lo ya guardado para no perder claves que este panel todavía no conoce
   // (posición del collage...).
   async function editar(id: string, r: Referencia) {
-    const actual = filasDB.find((x) => x.id === id);
+    const actual = filasRef.current.find((x) => x.id === id);
     if (!actual) return;
     const datos = { ...actual.datos, ...referenciaADatos(r) };
-    const supabase = createClient();
-    const { error: err } = await supabase
-      .from("herramienta_filas")
-      .update({ datos, editor_nombre: fullName, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos } : x)));
-    setError(null);
+    aplicar(filasRef.current.map((x) => (x.id === id ? { ...x, datos } : x)));
+    await guardar(id, { datos, editor_nombre: fullName, updated_at: new Date().toISOString() });
   }
 
   // CAMBIAR ESTADO: envía a revisión, aprueba o descarta, y anota quién lo hizo y cuándo.
   // Si se indica "principal", también marca o desmarca la referencia como principal.
   // El permiso se controla en la pantalla (quién ve el botón), no aquí.
   async function cambiarEstado(id: string, estado: Estado, accion: string, principal?: boolean) {
-    const actual = filasDB.find((x) => x.id === id);
+    const actual = filasRef.current.find((x) => x.id === id);
     if (!actual) return;
     const datos = {
       ...actual.datos,
@@ -131,23 +151,14 @@ export function useMoodboardFotoFilas(fullName: string) {
       ...(actual.registro ?? []),
       { accion, usuario: fullName, fecha: new Date().toISOString() },
     ];
-    const supabase = createClient();
-    const { error: err } = await supabase
-      .from("herramienta_filas")
-      .update({ datos, registro, editor_nombre: fullName, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
-    setError(null);
+    aplicar(filasRef.current.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
+    await guardar(id, { datos, registro, editor_nombre: fullName, updated_at: new Date().toISOString() });
   }
 
   // COMENTAR: añade un comentario (usuario, fecha y texto) a la referencia.
   // Pueden comentar todos los cargos; el permiso de estado no aplica aquí.
   async function comentar(id: string, texto: string) {
-    const actual = filasDB.find((x) => x.id === id);
+    const actual = filasRef.current.find((x) => x.id === id);
     const limpio = texto.trim();
     if (!actual || !limpio) return;
     const ahora = new Date().toISOString();
@@ -160,17 +171,8 @@ export function useMoodboardFotoFilas(fullName: string) {
       ...(actual.registro ?? []),
       { accion: "comenta", usuario: fullName, fecha: ahora },
     ];
-    const supabase = createClient();
-    const { error: err } = await supabase
-      .from("herramienta_filas")
-      .update({ datos, registro, editor_nombre: fullName, updated_at: ahora })
-      .eq("id", id);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
-    setError(null);
+    aplicar(filasRef.current.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
+    await guardar(id, { datos, registro, editor_nombre: fullName, updated_at: ahora });
   }
 
   // GUARDAR GEOMETRÍAS: posición y tamaño de varias referencias del Collage de una vez.
@@ -179,29 +181,17 @@ export function useMoodboardFotoFilas(fullName: string) {
   async function guardarGeometrias(cambios: Record<string, Geometria>) {
     const nuevosDatos: Record<string, DatosFila> = {};
     for (const [id, geometria] of Object.entries(cambios)) {
-      const actual = filasDB.find((x) => x.id === id);
+      const actual = filasRef.current.find((x) => x.id === id);
       if (actual) nuevosDatos[id] = { ...actual.datos, geometria: JSON.stringify(geometria) };
     }
     const ids = Object.keys(nuevosDatos);
     if (ids.length === 0) return;
 
-    const supabase = createClient();
     const ahora = new Date().toISOString();
-    const resultados = await Promise.all(
-      ids.map((id) =>
-        supabase
-          .from("herramienta_filas")
-          .update({ datos: nuevosDatos[id], editor_nombre: fullName, updated_at: ahora })
-          .eq("id", id),
-      ),
+    aplicar(filasRef.current.map((x) => (nuevosDatos[x.id] ? { ...x, datos: nuevosDatos[x.id] } : x)));
+    await Promise.all(
+      ids.map((id) => guardar(id, { datos: nuevosDatos[id], editor_nombre: fullName, updated_at: ahora })),
     );
-    const fallo = resultados.find((r) => r.error);
-    if (fallo?.error) {
-      setError(fallo.error.message);
-      return;
-    }
-    setFilasDB((prev) => prev.map((x) => (nuevosDatos[x.id] ? { ...x, datos: nuevosDatos[x.id] } : x)));
-    setError(null);
   }
 
   // Referencias ya traducidas. Las filas que no son referencias (galería genérica antigua) se descartan.
