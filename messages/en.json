@@ -1059,7 +1059,9 @@
     "compareTitle": "Compare references",
     "compareNote": "These references compete for the same place.",
     "cancel": "Cancel",
-    "chooseMain": "Choose as main"
+    "chooseMain": "Choose as main",
+    "modeCollage": "Collage style",
+    "modeGallery": "Structured style (gallery)"
   },
     "moodboard": {
     "tabBoard": "Board",

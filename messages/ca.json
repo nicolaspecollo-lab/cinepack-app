@@ -1059,7 +1059,9 @@
     "compareTitle": "Comparar referències",
     "compareNote": "Aquestes referències competeixen pel mateix lloc.",
     "cancel": "Cancel·lar",
-    "chooseMain": "Triar com a principal"
+    "chooseMain": "Triar com a principal",
+    "modeCollage": "Estil Collage",
+    "modeGallery": "Estil Estructurat (galeria)"
   },
     "moodboard": {
     "tabBoard": "Tauler",

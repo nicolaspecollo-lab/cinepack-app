@@ -10,6 +10,7 @@ import MoodboardFotoGaleria from "./MoodboardFotoGaleria";
 import { CATEGORIAS, NIVELES, type Categoria, type Nivel } from "./moodboardFotoFilas";
 import { useEtiquetasMoodboardFoto } from "./useEtiquetasMoodboardFoto";
 import { ERROR_SIN_PROYECTO, useMoodboardFotoFilas } from "./useMoodboardFotoFilas";
+import { useMoodboardFotoModo } from "./useMoodboardFotoModo";
 import { useUrlsImagenes } from "./useUrlsImagenes";
 
 type Props = { fullName: string; editable: boolean };
@@ -18,6 +19,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const t = useTranslations("moodboardFoto");
   const { categorias, niveles } = useEtiquetasMoodboardFoto();
   const { referencias, loading, error, crear, cambiarEstado, comentar } = useMoodboardFotoFilas(fullName);
+  const { modo, cambiarModo } = useMoodboardFotoModo(fullName);
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [abiertaId, setAbiertaId] = useState<string | null>(null);
   const [comparandoId, setComparandoId] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   );
 
   const filaAbierta = abiertaId ? base.find((r) => r.id === abiertaId) : undefined;
-  
+
   // ELEGIR COMO PRINCIPAL: la elegida pasa a Aprobada y principal; las demás pierden el principal
   // (si estaban Aprobadas vuelven a Pendiente). Así desaparece el conflicto.
   async function elegirPrincipal(id: string) {
@@ -71,10 +73,33 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
     </button>
   );
 
+  // Estilo del moodboard que elige el Director para el proyecto (Collage o Galería).
+  const selectorModo = (
+    <div className="cp-seg">
+      <button
+        type="button"
+        className={`cp-seg-cell${modo === "collage" ? " cp-seg-on" : ""}`}
+        onClick={() => cambiarModo("collage")}
+      >
+        {t("modeCollage")}
+      </button>
+      <button
+        type="button"
+        className={`cp-seg-cell${modo === "galeria" ? " cp-seg-on" : ""}`}
+        onClick={() => cambiarModo("galeria")}
+      >
+        {t("modeGallery")}
+      </button>
+    </div>
+  );
+
   return (
     <>
       {editable && base.length > 0 && (
-        <div className="mb-barra mb-barra-foto">{botonAnadir}</div>
+        <div className="mb-barra mb-barra-foto">
+          {botonAnadir}
+          {selectorModo}
+        </div>
       )}
 
       {error && <p className="amsg err">{error === ERROR_SIN_PROYECTO ? t("noProject") : error}</p>}
