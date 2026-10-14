@@ -116,11 +116,16 @@ export function useMoodboardFotoFilas(fullName: string) {
   }
 
   // CAMBIAR ESTADO: envía a revisión, aprueba o descarta, y anota quién lo hizo y cuándo.
+  // Si se indica "principal", también marca o desmarca la referencia como principal.
   // El permiso se controla en la pantalla (quién ve el botón), no aquí.
-  async function cambiarEstado(id: string, estado: Estado, accion: string) {
+  async function cambiarEstado(id: string, estado: Estado, accion: string, principal?: boolean) {
     const actual = filasDB.find((x) => x.id === id);
     if (!actual) return;
-    const datos = { ...actual.datos, estado };
+    const datos = {
+      ...actual.datos,
+      estado,
+      ...(principal === undefined ? {} : { principal: String(principal) }),
+    };
     const registro = [
       ...(actual.registro ?? []),
       { accion, usuario: fullName, fecha: new Date().toISOString() },

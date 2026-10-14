@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { idsEnConflicto } from "./conflictosMoodboardFoto";
 import MoodboardFotoDetalle from "./MoodboardFotoDetalle";
 import MoodboardFotoFicha from "./MoodboardFotoFicha";
 import MoodboardFotoGaleria from "./MoodboardFotoGaleria";
@@ -29,6 +30,9 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
     () => referencias.filter((r) => editable || r.datos.estado !== "borrador"),
     [referencias, editable],
   );
+
+  // Conflicto: se calcula, no se guarda (dos principales en el mismo sitio).
+  const conflictos = useMemo(() => idsEnConflicto(base), [base]);
 
   const visibles = useMemo(
     () =>
@@ -95,7 +99,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
       ) : visibles.length === 0 ? (
         <p className="amsg">{t("noResults")}</p>
       ) : (
-        <MoodboardFotoGaleria referencias={visibles} urls={urls} onAbrir={setAbiertaId} />
+        <MoodboardFotoGaleria referencias={visibles} urls={urls} conflictos={conflictos} onAbrir={setAbiertaId} />
       )}
 
       {filaAbierta && (
@@ -103,6 +107,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
           fila={filaAbierta}
           url={urls[filaAbierta.datos.ruta]}
           editable={editable}
+          enConflicto={conflictos.has(filaAbierta.id)}
           fullName={fullName}
           onCerrar={() => setAbiertaId(null)}
           onCambiarEstado={cambiarEstado}

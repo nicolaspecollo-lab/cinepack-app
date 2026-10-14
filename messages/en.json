@@ -1052,7 +1052,9 @@
     "fldComments": "Comments",
     "noComments": "No comments yet.",
     "commentPlaceholder": "Write a comment…",
-    "commentSend": "Comment"
+    "commentSend": "Comment",
+    "stateConflict": "Conflict",
+    "conflictNote": "Another reference is proposed as the main one for this same place."
   },
     "moodboard": {
     "tabBoard": "Board",

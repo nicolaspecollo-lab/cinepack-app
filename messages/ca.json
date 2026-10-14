@@ -1052,7 +1052,9 @@
     "fldComments": "Comentaris",
     "noComments": "Encara no hi ha comentaris.",
     "commentPlaceholder": "Escriu un comentari…",
-    "commentSend": "Comentar"
+    "commentSend": "Comentar",
+    "stateConflict": "Conflicte",
+    "conflictNote": "Hi ha una altra referència proposada com a principal en aquest mateix lloc."
   },
     "moodboard": {
     "tabBoard": "Tauler",

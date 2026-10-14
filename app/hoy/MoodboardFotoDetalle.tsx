@@ -11,15 +11,16 @@ type Props = {
   fila: FilaReferencia;
   url?: string;
   editable: boolean;
+  enConflicto: boolean;
   fullName: string;
   onCerrar: () => void;
-  onCambiarEstado: (id: string, estado: Estado, accion: string) => Promise<unknown>;
+  onCambiarEstado: (id: string, estado: Estado, accion: string, principal?: boolean) => Promise<unknown>;
   onComentar: (id: string, texto: string) => Promise<unknown>;
 };
 
-type Accion = { estado: Estado; accion: string; texto: string; acc: boolean };
+type Accion = { estado: Estado; accion: string; texto: string; acc: boolean; principal?: boolean };
 
-export default function MoodboardFotoDetalle({ fila, url, editable, fullName, onCerrar, onCambiarEstado, onComentar }: Props) {
+export default function MoodboardFotoDetalle({ fila, url, editable, enConflicto, fullName, onCerrar, onCambiarEstado, onComentar }: Props) {
   const t = useTranslations("moodboardFoto");
   const { estados, categorias, niveles } = useEtiquetasMoodboardFoto();
   const [ocupado, setOcupado] = useState(false);
@@ -28,14 +29,16 @@ export default function MoodboardFotoDetalle({ fila, url, editable, fullName, on
 
   const acciones: Accion[] = [];
   if (editable) {
-    if (d.estado === "borrador") acciones.push({ estado: "pendiente", accion: "envia_revision", texto: t("actSend"), acc: true });
-    if (d.estado === "pendiente") acciones.push({ estado: "aprobada", accion: "aprueba", texto: t("actApprove"), acc: true });
-    if (d.estado !== "descartada") acciones.push({ estado: "descartada", accion: "descarta", texto: t("actDiscard"), acc: false });
+    // Al enviar a revisión la referencia se propone como principal de su sitio.
+    if (d.estado === "borrador") acciones.push({ estado: "pendiente", accion: "envia_revision", texto: t("actSend"), acc: true, principal: true });
+    // Con conflicto no se aprueba directamente: se elige con Comparar.
+    if (d.estado === "pendiente" && !enConflicto) acciones.push({ estado: "aprobada", accion: "aprueba", texto: t("actApprove"), acc: true });
+    if (d.estado !== "descartada") acciones.push({ estado: "descartada", accion: "descarta", texto: t("actDiscard"), acc: false, principal: false });
   }
 
   async function ejecutar(a: Accion) {
     setOcupado(true);
-    await onCambiarEstado(fila.id, a.estado, a.accion);
+    await onCambiarEstado(fila.id, a.estado, a.accion, a.principal);
     setOcupado(false);
   }
 
@@ -61,8 +64,12 @@ export default function MoodboardFotoDetalle({ fila, url, editable, fullName, on
         </div>
 
         <div className="gdes-pers">
-          <span className={`pill ${CLASE_ESTADO[d.estado]}`}>{estados[d.estado]}</span>
+          <span className={`pill ${enConflicto ? "p-bad" : CLASE_ESTADO[d.estado]}`}>
+            {enConflicto ? t("stateConflict") : estados[d.estado]}
+          </span>
         </div>
+
+        {enConflicto && <p className="amsg err">{t("conflictNote")}</p>}
 
         {url && (
           <div className="gdes-field">

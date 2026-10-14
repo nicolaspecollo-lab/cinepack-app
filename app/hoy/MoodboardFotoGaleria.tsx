@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { Estado } from "./moodboardFotoFilas";
 import { useEtiquetasMoodboardFoto } from "./useEtiquetasMoodboardFoto";
 import type { FilaReferencia } from "./useMoodboardFotoFilas";
@@ -14,10 +15,12 @@ export const CLASE_ESTADO: Record<Estado, string> = {
 type Props = {
   referencias: FilaReferencia[];
   urls: Record<string, string>;
+  conflictos: Set<string>;
   onAbrir: (id: string) => void;
 };
 
-export default function MoodboardFotoGaleria({ referencias, urls, onAbrir }: Props) {
+export default function MoodboardFotoGaleria({ referencias, urls, conflictos, onAbrir }: Props) {
+  const t = useTranslations("moodboardFoto");
   const { estados, categorias } = useEtiquetasMoodboardFoto();
 
   return (
@@ -25,6 +28,7 @@ export default function MoodboardFotoGaleria({ referencias, urls, onAbrir }: Pro
       {referencias.map((f) => {
         const d = f.datos;
         const url = urls[d.ruta];
+        const enConflicto = conflictos.has(f.id);
         return (
           <div
             key={f.id}
@@ -50,7 +54,9 @@ export default function MoodboardFotoGaleria({ referencias, urls, onAbrir }: Pro
               {d.destino ? ` · ${d.destino}` : ""}
             </div>
             <div className="hp-gfoot">
-              <span className={`pill ${CLASE_ESTADO[d.estado]}`}>{estados[d.estado]}</span>
+              <span className={`pill ${enConflicto ? "p-bad" : CLASE_ESTADO[d.estado]}`}>
+                {enConflicto ? t("stateConflict") : estados[d.estado]}
+              </span>
             </div>
           </div>
         );
