@@ -11,6 +11,7 @@ import {
   COLOR_FONDO,
   COLOR_TITULO,
 } from "./moodboardFotoColores";
+import { cajaOcupada, meterDentro } from "./moodboardFotoLimites";
 import {
   ALTO_CELDA,
   ALTO_MINIMO,
@@ -110,9 +111,10 @@ export default function MoodboardFotoLienzo({ referencias, urls, conflictos, edi
 
   // Dónde y con qué tamaño se dibuja cada referencia: lo cambiado sin guardar, si no lo guardado
   // y, si nunca se ha movido, su sitio en la cuadrícula automática (ajustada a la imagen).
+  // Lo guardado se mete dentro del lienzo: así se rescatan las referencias que quedaron fuera.
   function geometriaDe(r: FilaReferencia, i: number): Geometria {
     const propia = pendientes[r.id] ?? r.datos.geometria;
-    if (propia) return propia;
+    if (propia) return ancho > 0 ? meterDentro(propia, ancho) : propia;
     const x = (i % columnas) * anchoCelda + MARGEN / 2;
     const y = Math.floor(i / columnas) * ALTO_CELDA + MARGEN / 2;
     const anchoUtil = anchoCelda - MARGEN;
@@ -129,8 +131,8 @@ export default function MoodboardFotoLienzo({ referencias, urls, conflictos, edi
     ? [...elementos.filter((e) => e.r.id !== seleccion), ...elementos.filter((e) => e.r.id === seleccion)]
     : elementos;
 
-  // El lienzo crece lo necesario para que quepa todo lo que se haya colocado.
-  const fondo = Math.max(0, ...elementos.map((e) => e.g.y + e.g.alto)) + MARGEN;
+  // Se usa la caja real de cada referencia (con su giro), no solo y + alto, para que no se corte la esquina más baja.
+  const fondo = Math.max(0, ...elementos.map((e) => cajaOcupada(e.g).maxY)) + MARGEN;
   const alto = Math.max(ALTO_MINIMO, filas * ALTO_CELDA, fondo);
 
   // Cambios aún sin guardar: los que difieren de lo que ya hay en la base de datos.
@@ -209,6 +211,11 @@ export default function MoodboardFotoLienzo({ referencias, urls, conflictos, edi
                     rotation={g.rotacion}
                     opacity={d.estado === "descartada" ? OPACIDAD_DESCARTADA : 1}
                     draggable={editable}
+                    // Mientras se arrastra, la referencia no puede salir por arriba, izquierda ni derecha.
+                    dragBoundFunc={(pos) => {
+                      const dentro = meterDentro({ ...g, x: pos.x, y: pos.y }, ancho);
+                      return { x: dentro.x, y: dentro.y };
+                    }}
                     onMouseDown={() => editable && setSeleccion(r.id)}
                     onTouchStart={() => editable && setSeleccion(r.id)}
                     onClick={editable ? undefined : abrir}
@@ -225,13 +232,19 @@ export default function MoodboardFotoLienzo({ referencias, urls, conflictos, edi
                       const sy = nodo.scaleY();
                       nodo.scaleX(1);
                       nodo.scaleY(1);
-                      cambiar(r.id, {
-                        x: nodo.x(),
-                        y: nodo.y(),
-                        rotacion: nodo.rotation(),
-                        ancho: Math.max(TAMANO_MINIMO, g.ancho * sx),
-                        alto: Math.max(TAMANO_MINIMO, g.alto * sy),
-                      });
+                      // Al escalar o girar también se puede salir del lienzo: se vuelve a meter dentro.
+                      const nueva = meterDentro(
+                        {
+                          x: nodo.x(),
+                          y: nodo.y(),
+                          rotacion: nodo.rotation(),
+                          ancho: Math.max(TAMANO_MINIMO, g.ancho * sx),
+                          alto: Math.max(TAMANO_MINIMO, g.alto * sy),
+                        },
+                        ancho,
+                      );
+                      nodo.position({ x: nueva.x, y: nueva.y });
+                      cambiar(r.id, nueva);
                     }}
                   >
                     <Rect width={g.ancho} height={g.alto} fill={COLOR_CELDA} stroke={color} strokeWidth={GROSOR_BORDE} />
