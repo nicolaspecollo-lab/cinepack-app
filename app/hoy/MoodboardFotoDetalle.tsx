@@ -17,6 +17,7 @@ type Props = {
   onCambiarEstado: (id: string, estado: Estado, accion: string, principal?: boolean) => Promise<unknown>;
   onComentar: (id: string, texto: string) => Promise<unknown>;
   onComparar: () => void;
+  onEditar: () => void;
 };
 
 type Accion = { estado: Estado; accion: string; texto: string; acc: boolean; principal?: boolean };
@@ -31,6 +32,7 @@ export default function MoodboardFotoDetalle({
   onCambiarEstado,
   onComentar,
   onComparar,
+  onEditar,
 }: Props) {
   const t = useTranslations("moodboardFoto");
   const { estados, categorias, niveles } = useEtiquetasMoodboardFoto();
@@ -146,9 +148,9 @@ export default function MoodboardFotoDetalle({
           </div>
         </div>
 
-        {(acciones.length > 0 || (editable && enConflicto)) && (
+        {editable && (
           <div className="gdes-detail-actions mb-acciones-foto">
-            {editable && enConflicto && (
+            {enConflicto && (
               <button type="button" className="cp-btn cp-btn-acc" disabled={ocupado} onClick={onComparar}>
                 {t("actCompare")}
               </button>
@@ -158,6 +160,9 @@ export default function MoodboardFotoDetalle({
                 {a.texto}
               </button>
             ))}
+            <button type="button" className="cp-btn" disabled={ocupado} onClick={onEditar}>
+              {t("actEdit")}
+            </button>
           </div>
         )}
       </div>

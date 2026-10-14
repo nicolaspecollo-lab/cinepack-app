@@ -14,27 +14,32 @@ import {
   type Referencia,
 } from "./moodboardFotoFilas";
 import { useEtiquetasMoodboardFoto } from "./useEtiquetasMoodboardFoto";
+import type { FilaReferencia } from "./useMoodboardFotoFilas";
 
 type Props = {
   onCerrar: () => void;
   onGuardar: (r: Referencia) => Promise<unknown>;
   textoSinProyecto: string;
+  // Si llega una fila, la Ficha funciona en modo edición (sin cambiar la imagen).
+  fila?: FilaReferencia;
 };
 
-export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyecto }: Props) {
+export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyecto, fila }: Props) {
   const t = useTranslations("moodboardFoto");
   const { categorias, niveles } = useEtiquetasMoodboardFoto();
   const entradaArchivoRef = useRef<HTMLInputElement>(null);
+  const editando = Boolean(fila);
 
+  // En edición los campos arrancan con los datos de la referencia; al crear, vacíos.
   const [archivo, setArchivo] = useState<File | null>(null);
-  const [titulo, setTitulo] = useState("");
-  const [categoria, setCategoria] = useState<Categoria>("iluminacion");
-  const [nivel, setNivel] = useState<Nivel>("general");
-  const [destino, setDestino] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [queTomar, setQueTomar] = useState("");
-  const [fuente, setFuente] = useState("");
-  const [etiquetas, setEtiquetas] = useState("");
+  const [titulo, setTitulo] = useState(fila?.datos.titulo ?? "");
+  const [categoria, setCategoria] = useState<Categoria>(fila?.datos.categoria ?? "iluminacion");
+  const [nivel, setNivel] = useState<Nivel>(fila?.datos.nivel ?? "general");
+  const [destino, setDestino] = useState(fila?.datos.destino ?? "");
+  const [descripcion, setDescripcion] = useState(fila?.datos.descripcion ?? "");
+  const [queTomar, setQueTomar] = useState(fila?.datos.queTomar ?? "");
+  const [fuente, setFuente] = useState(fila?.datos.fuente ?? "");
+  const [etiquetas, setEtiquetas] = useState(fila ? fila.datos.etiquetas.join(", ") : "");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +49,28 @@ export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyec
       setError(t("errTitle"));
       return;
     }
+
+    const campos = {
+      titulo: titulo.trim(),
+      categoria,
+      nivel,
+      destino: destino.trim(),
+      descripcion: descripcion.trim(),
+      queTomar: queTomar.trim(),
+      fuente: fuente.trim(),
+      etiquetas: etiquetas.split(",").map((e) => e.trim()).filter(Boolean),
+    };
+
+    // EDITAR: se conserva todo lo que la Ficha no toca (imagen, estado, principal, comentarios, posición).
+    if (fila) {
+      setGuardando(true);
+      await onGuardar({ ...fila.datos, ...campos });
+      setGuardando(false);
+      onCerrar();
+      return;
+    }
+
+    // CREAR: hace falta imagen y proyecto.
     if (!archivo) {
       setError(t("errImage"));
       return;
@@ -65,14 +92,7 @@ export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyec
     }
 
     await onGuardar({
-      titulo: titulo.trim(),
-      categoria,
-      nivel,
-      destino: destino.trim(),
-      descripcion: descripcion.trim(),
-      queTomar: queTomar.trim(),
-      fuente: fuente.trim(),
-      etiquetas: etiquetas.split(",").map((e) => e.trim()).filter(Boolean),
+      ...campos,
       ruta,
       estado: "borrador",
       principal: false,
@@ -86,20 +106,24 @@ export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyec
     <div className="gdes-overlay" onClick={onCerrar}>
       <div className="gdes-detail" onClick={(e) => e.stopPropagation()}>
         <div className="gdes-detail-head">
-          <h3><span className="hex" />{t("newReference")}</h3>
+          <h3><span className="hex" />{editando ? t("editReference") : t("newReference")}</h3>
           <button type="button" className="gdes-close" onClick={onCerrar} aria-label={t("close")}>✕</button>
         </div>
 
-        <input ref={entradaArchivoRef} type="file" accept="image/*" hidden onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
-        <div className="gdes-field">
-          <div className="comn-dropzone" onClick={() => entradaArchivoRef.current?.click()}>
-            <span className="comn-dropzone-hex">+</span>
-            <span className="comn-dropzone-text">
-              <b>{archivo ? archivo.name : t("dropTitle")}</b>
-              <span>{t("dropHint")}</span>
-            </span>
-          </div>
-        </div>
+        {!editando && (
+          <>
+            <input ref={entradaArchivoRef} type="file" accept="image/*" hidden onChange={(e) => setArchivo(e.target.files?.[0] ?? null)} />
+            <div className="gdes-field">
+              <div className="comn-dropzone" onClick={() => entradaArchivoRef.current?.click()}>
+                <span className="comn-dropzone-hex">+</span>
+                <span className="comn-dropzone-text">
+                  <b>{archivo ? archivo.name : t("dropTitle")}</b>
+                  <span>{t("dropHint")}</span>
+                </span>
+              </div>
+            </div>
+          </>
+        )}
 
         <label className="gdes-field">
           <span>{t("fldTitle")}</span>
@@ -157,7 +181,7 @@ export default function MoodboardFotoFicha({ onCerrar, onGuardar, textoSinProyec
 
         <div className="gdes-detail-actions">
           <button type="button" className="cp-btn cp-btn-acc" onClick={guardar} disabled={guardando}>
-            {guardando ? t("saving") : t("save")}
+            {guardando ? t("saving") : editando ? t("saveChanges") : t("save")}
           </button>
         </div>
       </div>

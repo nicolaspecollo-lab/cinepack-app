@@ -22,11 +22,12 @@ type Props = { fullName: string; editable: boolean };
 export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const t = useTranslations("moodboardFoto");
   const { categorias, niveles } = useEtiquetasMoodboardFoto();
-  const { referencias, loading, error, crear, cambiarEstado, comentar, guardarGeometrias } =
+  const { referencias, loading, error, crear, editar, cambiarEstado, comentar, guardarGeometrias } =
     useMoodboardFotoFilas(fullName);
   const { modo, cambiarModo } = useMoodboardFotoModo(fullName);
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [abiertaId, setAbiertaId] = useState<string | null>(null);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [comparandoId, setComparandoId] = useState<string | null>(null);
   const [filtroNivel, setFiltroNivel] = useState<Nivel | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria | null>(null);
@@ -60,6 +61,8 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   );
 
   const filaAbierta = abiertaId ? base.find((r) => r.id === abiertaId) : undefined;
+  // Solo quien puede editar llega a la Ficha en modo edición.
+  const filaEditando = editable && editandoId ? base.find((r) => r.id === editandoId) : undefined;
 
   // ELEGIR COMO PRINCIPAL: la elegida pasa a Aprobada y principal; las demás pierden el principal
   // (si estaban Aprobadas vuelven a Pendiente). Así desaparece el conflicto.
@@ -70,6 +73,12 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
       await cambiarEstado(f.id, f.datos.estado === "aprobada" ? "pendiente" : f.datos.estado, "pierde_principal", false);
     }
     setComparandoId(null);
+  }
+
+  // Al cerrar la Ficha de edición (guardando o no) se vuelve al Detalle de esa referencia.
+  function cerrarEdicion() {
+    setAbiertaId(editandoId);
+    setEditandoId(null);
   }
 
   const botonAnadir = (
@@ -174,6 +183,10 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
             setComparandoId(filaAbierta.id);
             setAbiertaId(null);
           }}
+          onEditar={() => {
+            setEditandoId(filaAbierta.id);
+            setAbiertaId(null);
+          }}
         />
       )}
 
@@ -192,6 +205,16 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         <MoodboardFotoFicha
           onCerrar={() => setFichaAbierta(false)}
           onGuardar={crear}
+          textoSinProyecto={t("noProject")}
+        />
+      )}
+
+      {filaEditando && (
+        <MoodboardFotoFicha
+          key={filaEditando.id}
+          fila={filaEditando}
+          onCerrar={cerrarEdicion}
+          onGuardar={(r) => editar(filaEditando.id, r)}
           textoSinProyecto={t("noProject")}
         />
       )}
