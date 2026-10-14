@@ -1054,7 +1054,11 @@
     "commentPlaceholder": "Escriu un comentari…",
     "commentSend": "Comentar",
     "stateConflict": "Conflicte",
-    "conflictNote": "Hi ha una altra referència proposada com a principal en aquest mateix lloc."
+    "conflictNote": "Hi ha una altra referència proposada com a principal en aquest mateix lloc.",
+    "actCompare": "Comparar referències",
+    "compareTitle": "Comparar referències",
+    "compareNote": "Aquestes referències competeixen pel mateix lloc.",
+    "cancel": "Cancel·lar"
   },
     "moodboard": {
     "tabBoard": "Tauler",

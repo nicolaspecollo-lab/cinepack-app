@@ -1054,7 +1054,11 @@
     "commentPlaceholder": "Write a comment…",
     "commentSend": "Comment",
     "stateConflict": "Conflict",
-    "conflictNote": "Another reference is proposed as the main one for this same place."
+    "conflictNote": "Another reference is proposed as the main one for this same place.",
+    "actCompare": "Compare references",
+    "compareTitle": "Compare references",
+    "compareNote": "These references compete for the same place.",
+    "cancel": "Cancel"
   },
     "moodboard": {
     "tabBoard": "Board",

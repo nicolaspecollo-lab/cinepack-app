@@ -16,11 +16,22 @@ type Props = {
   onCerrar: () => void;
   onCambiarEstado: (id: string, estado: Estado, accion: string, principal?: boolean) => Promise<unknown>;
   onComentar: (id: string, texto: string) => Promise<unknown>;
+  onComparar: () => void;
 };
 
 type Accion = { estado: Estado; accion: string; texto: string; acc: boolean; principal?: boolean };
 
-export default function MoodboardFotoDetalle({ fila, url, editable, enConflicto, fullName, onCerrar, onCambiarEstado, onComentar }: Props) {
+export default function MoodboardFotoDetalle({
+  fila,
+  url,
+  editable,
+  enConflicto,
+  fullName,
+  onCerrar,
+  onCambiarEstado,
+  onComentar,
+  onComparar,
+}: Props) {
   const t = useTranslations("moodboardFoto");
   const { estados, categorias, niveles } = useEtiquetasMoodboardFoto();
   const [ocupado, setOcupado] = useState(false);
@@ -135,8 +146,13 @@ export default function MoodboardFotoDetalle({ fila, url, editable, enConflicto,
           </div>
         </div>
 
-        {acciones.length > 0 && (
+        {(acciones.length > 0 || (editable && enConflicto)) && (
           <div className="gdes-detail-actions mb-acciones-foto">
+            {editable && enConflicto && (
+              <button type="button" className="cp-btn cp-btn-acc" disabled={ocupado} onClick={onComparar}>
+                {t("actCompare")}
+              </button>
+            )}
             {acciones.map((a) => (
               <button key={a.estado} type="button" className={`cp-btn${a.acc ? " cp-btn-acc" : ""}`} disabled={ocupado} onClick={() => ejecutar(a)}>
                 {a.texto}

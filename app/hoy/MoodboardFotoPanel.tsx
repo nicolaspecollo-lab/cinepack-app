@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { idsEnConflicto } from "./conflictosMoodboardFoto";
+import { idsEnConflicto, referenciasEnMismoSitio } from "./conflictosMoodboardFoto";
+import MoodboardFotoComparar from "./MoodboardFotoComparar";
 import MoodboardFotoDetalle from "./MoodboardFotoDetalle";
 import MoodboardFotoFicha from "./MoodboardFotoFicha";
 import MoodboardFotoGaleria from "./MoodboardFotoGaleria";
@@ -19,6 +20,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const { referencias, loading, error, crear, cambiarEstado, comentar } = useMoodboardFotoFilas(fullName);
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [abiertaId, setAbiertaId] = useState<string | null>(null);
+  const [comparandoId, setComparandoId] = useState<string | null>(null);
   const [filtroNivel, setFiltroNivel] = useState<Nivel | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria | null>(null);
 
@@ -33,6 +35,12 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
 
   // Conflicto: se calcula, no se guarda (dos principales en el mismo sitio).
   const conflictos = useMemo(() => idsEnConflicto(base), [base]);
+
+  // Referencias que se están comparando (las que compiten por el mismo sitio).
+  const grupoComparar = useMemo(
+    () => (comparandoId ? referenciasEnMismoSitio(base, comparandoId) : []),
+    [base, comparandoId],
+  );
 
   const visibles = useMemo(
     () =>
@@ -112,6 +120,18 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
           onCerrar={() => setAbiertaId(null)}
           onCambiarEstado={cambiarEstado}
           onComentar={comentar}
+          onComparar={() => {
+            setComparandoId(filaAbierta.id);
+            setAbiertaId(null);
+          }}
+        />
+      )}
+
+      {comparandoId && grupoComparar.length > 1 && (
+        <MoodboardFotoComparar
+          filas={grupoComparar}
+          urls={urls}
+          onCerrar={() => setComparandoId(null)}
         />
       )}
 
