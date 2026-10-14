@@ -142,7 +142,9 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         <MoodboardFotoComparar
           filas={grupoComparar}
           urls={urls}
+          fullName={fullName}
           onElegir={elegirPrincipal}
+          onComentar={comentar}
           onCerrar={() => setComparandoId(null)}
         />
       )}
