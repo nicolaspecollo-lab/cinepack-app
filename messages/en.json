@@ -1063,7 +1063,10 @@
     "modeCollage": "Collage style",
     "modeGallery": "Structured style (gallery)",
     "collageHint": "Drag to move, use the corners to resize or rotate, and double-click to open the card.",
-    "saveLayout": "Save layout"
+    "saveLayout": "Save layout",
+    "groupBy": "Group by",
+    "groupCategory": "Category",
+    "groupScene": "Scene"
   },
     "moodboard": {
     "tabBoard": "Board",
