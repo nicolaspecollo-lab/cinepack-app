@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { DatosFila } from "./moodboardFilas";
 import {
@@ -27,6 +27,26 @@ export function usePlanSonidoFilas(fullName: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Última versión de las filas, siempre al día (el estado de React se actualiza
+  // con retraso y dos cambios seguidos partirían de datos viejos).
+  const filasRef = useRef<FilaDB[]>([]);
+  // Cola de guardados: se envían de uno en uno y en orden.
+  const cola = useRef<Promise<unknown>>(Promise.resolve());
+
+  function aplicar(nuevas: FilaDB[]) {
+    filasRef.current = nuevas;
+    setFilasDB(nuevas);
+  }
+
+  // Encola un UPDATE de una fila. El siguiente no empieza hasta que acabe el anterior.
+  function guardar(id: string, cambios: Record<string, unknown>) {
+    cola.current = cola.current.then(async () => {
+      const supabase = createClient();
+      const { error: err } = await supabase.from("herramienta_filas").update(cambios).eq("id", id);
+      setError(err ? err.message : null);
+    });
+  }
+
   // LEER: todas las fichas del Plan de sonido directo en el proyecto.
   const load = useCallback(async () => {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -48,7 +68,9 @@ export function usePlanSonidoFilas(fullName: string) {
       setLoading(false);
       return;
     }
-    setFilasDB((data ?? []) as FilaDB[]);
+    const filas = (data ?? []) as FilaDB[];
+    filasRef.current = filas;
+    setFilasDB(filas);
     setError(null);
     setLoading(false);
   }, []);
@@ -69,7 +91,8 @@ export function usePlanSonidoFilas(fullName: string) {
     }
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const orden = filasDB.length ? Math.max(...filasDB.map((x) => x.orden)) + 1 : 0;
+    const actuales = filasRef.current;
+    const orden = actuales.length ? Math.max(...actuales.map((x) => x.orden)) + 1 : 0;
     const { data, error: err } = await supabase
       .from("herramienta_filas")
       .insert({
@@ -90,14 +113,14 @@ export function usePlanSonidoFilas(fullName: string) {
       setError(err.message);
       return;
     }
-    if (data) setFilasDB((prev) => [...prev, data as FilaDB]);
+    if (data) aplicar([...filasRef.current, data as FilaDB]);
     setError(null);
   }
 
   // EDITAR: se fusiona con lo ya guardado para no perder claves que este panel no conoce.
   // Si la ficha estaba "lista" y se edita, vuelve a "en preparación" (hay que revisarla de nuevo).
-  async function editar(id: string, f: FichaEscena) {
-    const actual = filasDB.find((x) => x.id === id);
+  function editar(id: string, f: FichaEscena) {
+    const actual = filasRef.current.find((x) => x.id === id);
     if (!actual) return;
     const estabaLista = datosAFicha(actual.datos).lista;
     const datos = { ...actual.datos, ...fichaADatos({ ...f, lista: false }) };
@@ -106,24 +129,15 @@ export function usePlanSonidoFilas(fullName: string) {
       ...(actual.registro ?? []),
       { accion: estabaLista ? "edita_y_reabre" : "edita", usuario: fullName, fecha: ahora },
     ];
-    const supabase = createClient();
-    const { error: err } = await supabase
-      .from("herramienta_filas")
-      .update({ datos, registro, editor_nombre: fullName, updated_at: ahora })
-      .eq("id", id);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
-    setError(null);
+    aplicar(filasRef.current.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
+    guardar(id, { datos, registro, editor_nombre: fullName, updated_at: ahora });
   }
 
   // MARCAR COMO LISTA / REABRIR: cambia solo el campo "lista" y lo anota en el registro.
   // La regla "no se puede marcar sin método y riesgo" se controla en la pantalla (puedeMarcarLista).
   // El permiso también se controla en la pantalla (quién ve el botón), no aquí.
-  async function marcarLista(id: string, lista: boolean) {
-    const actual = filasDB.find((x) => x.id === id);
+  function marcarLista(id: string, lista: boolean) {
+    const actual = filasRef.current.find((x) => x.id === id);
     if (!actual) return;
     const ahora = new Date().toISOString();
     const datos = { ...actual.datos, lista: String(lista) };
@@ -131,17 +145,8 @@ export function usePlanSonidoFilas(fullName: string) {
       ...(actual.registro ?? []),
       { accion: lista ? "marca_lista" : "reabre", usuario: fullName, fecha: ahora },
     ];
-    const supabase = createClient();
-    const { error: err } = await supabase
-      .from("herramienta_filas")
-      .update({ datos, registro, editor_nombre: fullName, updated_at: ahora })
-      .eq("id", id);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    setFilasDB((prev) => prev.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
-    setError(null);
+    aplicar(filasRef.current.map((x) => (x.id === id ? { ...x, datos, registro } : x)));
+    guardar(id, { datos, registro, editor_nombre: fullName, updated_at: ahora });
   }
 
   // Fichas ya traducidas a la forma tipada (con método, riesgo y lista).
