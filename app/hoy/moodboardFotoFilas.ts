@@ -17,6 +17,9 @@ export type Estado = (typeof ESTADOS)[number];
 // Un comentario: quién, cuándo (fecha ISO) y qué dijo.
 export type Comentario = { usuario: string; fecha: string; texto: string };
 
+// Posición y tamaño de la referencia en el lienzo del Collage: píxeles, y rotación en grados.
+export type Geometria = { x: number; y: number; ancho: number; alto: number; rotacion: number };
+
 // Una referencia visual = una fila de herramienta_filas.
 export type Referencia = {
   titulo: string;
@@ -33,7 +36,11 @@ export type Referencia = {
   estado: Estado;
   principal: boolean;
   comentarios: Comentario[];
+  // Opcional: solo existe cuando el Director ha movido o escalado la referencia en el Collage.
+  geometria?: Geometria;
 };
+
+const esNumero = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 
 // Comprueba que un texto guardado es uno de los valores permitidos.
 function esUno<T extends string>(lista: readonly T[], valor: string | undefined): valor is T {
@@ -68,6 +75,23 @@ export function leerComentarios(texto: string | undefined): Comentario[] {
   }
 }
 
+// La geometría también es un JSON; si falta o viene dañada, no hay geometría y el lienzo
+// coloca la referencia en la cuadrícula automática.
+function leerGeometria(texto: string | undefined): Geometria | undefined {
+  if (!texto) return undefined;
+  try {
+    const crudo: unknown = JSON.parse(texto);
+    if (typeof crudo !== "object" || crudo === null) return undefined;
+    const { x, y, ancho, alto, rotacion } = crudo as Record<string, unknown>;
+    if (esNumero(x) && esNumero(y) && esNumero(ancho) && esNumero(alto) && esNumero(rotacion)) {
+      return { x, y, ancho, alto, rotacion };
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // Lectura: devuelve null si la fila no es una referencia (p. ej. una fila antigua de la galería genérica).
 export function datosAReferencia(datos: DatosFila): Referencia | null {
   const { nivel, categoria, estado, ruta } = datos;
@@ -87,10 +111,12 @@ export function datosAReferencia(datos: DatosFila): Referencia | null {
     estado,
     principal: datos.principal === "true",
     comentarios: leerComentarios(datos.comentarios),
+    geometria: leerGeometria(datos.geometria),
   };
 }
 
-// Escritura: todo se guarda como texto plano.
+// Escritura: todo se guarda como texto plano. La geometría solo se escribe si existe,
+// así que guardar una referencia sin geometría no borra la que ya tuviera la fila.
 export function referenciaADatos(r: Referencia): DatosFila {
   return {
     titulo: r.titulo,
@@ -105,5 +131,6 @@ export function referenciaADatos(r: Referencia): DatosFila {
     estado: r.estado,
     principal: String(r.principal),
     comentarios: JSON.stringify(r.comentarios),
+    ...(r.geometria ? { geometria: JSON.stringify(r.geometria) } : {}),
   };
 }

@@ -10,6 +10,7 @@ import {
   leerComentarios,
   referenciaADatos,
   type Estado,
+  type Geometria,
   type Referencia,
 } from "./moodboardFotoFilas";
 import { ERROR_SIN_PROYECTO } from "./useMoodboardFila";
@@ -172,6 +173,37 @@ export function useMoodboardFotoFilas(fullName: string) {
     setError(null);
   }
 
+  // GUARDAR GEOMETRÍAS: posición y tamaño de varias referencias del Collage de una vez.
+  // No se anota en el registro (mover imágenes no es un cambio que auditar).
+  // El permiso se controla en la pantalla (solo ve el botón quien puede editar).
+  async function guardarGeometrias(cambios: Record<string, Geometria>) {
+    const nuevosDatos: Record<string, DatosFila> = {};
+    for (const [id, geometria] of Object.entries(cambios)) {
+      const actual = filasDB.find((x) => x.id === id);
+      if (actual) nuevosDatos[id] = { ...actual.datos, geometria: JSON.stringify(geometria) };
+    }
+    const ids = Object.keys(nuevosDatos);
+    if (ids.length === 0) return;
+
+    const supabase = createClient();
+    const ahora = new Date().toISOString();
+    const resultados = await Promise.all(
+      ids.map((id) =>
+        supabase
+          .from("herramienta_filas")
+          .update({ datos: nuevosDatos[id], editor_nombre: fullName, updated_at: ahora })
+          .eq("id", id),
+      ),
+    );
+    const fallo = resultados.find((r) => r.error);
+    if (fallo?.error) {
+      setError(fallo.error.message);
+      return;
+    }
+    setFilasDB((prev) => prev.map((x) => (nuevosDatos[x.id] ? { ...x, datos: nuevosDatos[x.id] } : x)));
+    setError(null);
+  }
+
   // Referencias ya traducidas. Las filas que no son referencias (galería genérica antigua) se descartan.
   const referencias = useMemo<FilaReferencia[]>(
     () =>
@@ -182,5 +214,5 @@ export function useMoodboardFotoFilas(fullName: string) {
     [filasDB]
   );
 
-  return { referencias, loading, error, crear, editar, cambiarEstado, comentar };
+  return { referencias, loading, error, crear, editar, cambiarEstado, comentar, guardarGeometrias };
 }
