@@ -14,11 +14,19 @@ export type Riesgo = (typeof RIESGOS)[number];
 // El estado NO se guarda: se calcula con estadoDe().
 export type EstadoFicha = "sin_empezar" | "en_preparacion" | "lista";
 
-// Clases de color ya existentes en dashboard.css.
+// Clases de color de la píldora de estado (ya existen en dashboard.css).
 export const CLASE_ESTADO_FICHA: Record<EstadoFicha, string> = {
   sin_empezar: "p-mut",
   en_preparacion: "p-warn",
   lista: "p-ok",
+};
+
+// Clases de color del control segmentado (ya existen en dashboard.css).
+// El texto siempre va escrito en el botón: el color nunca va solo.
+export const CLASE_RIESGO: Record<Riesgo, string> = {
+  bajo: "seg-ok",
+  medio: "seg-warn",
+  alto: "seg-bad",
 };
 
 export type FichaEscena = {
