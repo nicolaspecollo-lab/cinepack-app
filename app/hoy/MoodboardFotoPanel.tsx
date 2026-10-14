@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { idsEnConflicto, referenciasEnMismoSitio } from "./conflictosMoodboardFoto";
 import MoodboardFotoComparar from "./MoodboardFotoComparar";
@@ -12,6 +13,9 @@ import { useEtiquetasMoodboardFoto } from "./useEtiquetasMoodboardFoto";
 import { ERROR_SIN_PROYECTO, useMoodboardFotoFilas } from "./useMoodboardFotoFilas";
 import { useMoodboardFotoModo } from "./useMoodboardFotoModo";
 import { useUrlsImagenes } from "./useUrlsImagenes";
+
+// Konva necesita el navegador (canvas), así que el lienzo se carga solo en el cliente.
+const MoodboardFotoLienzo = dynamic(() => import("./MoodboardFotoLienzo"), { ssr: false });
 
 type Props = { fullName: string; editable: boolean };
 
@@ -142,6 +146,8 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         </div>
       ) : visibles.length === 0 ? (
         <p className="amsg">{t("noResults")}</p>
+      ) : modo === "collage" ? (
+        <MoodboardFotoLienzo referencias={visibles} urls={urls} conflictos={conflictos} onAbrir={setAbiertaId} />
       ) : (
         <MoodboardFotoGaleria referencias={visibles} urls={urls} conflictos={conflictos} onAbrir={setAbiertaId} />
       )}
