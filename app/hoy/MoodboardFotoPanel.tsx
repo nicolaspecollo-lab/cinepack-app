@@ -22,7 +22,8 @@ type Props = { fullName: string; editable: boolean };
 export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const t = useTranslations("moodboardFoto");
   const { categorias, niveles } = useEtiquetasMoodboardFoto();
-  const { referencias, loading, error, crear, cambiarEstado, comentar } = useMoodboardFotoFilas(fullName);
+  const { referencias, loading, error, crear, cambiarEstado, comentar, guardarGeometrias } =
+    useMoodboardFotoFilas(fullName);
   const { modo, cambiarModo } = useMoodboardFotoModo(fullName);
   const [fichaAbierta, setFichaAbierta] = useState(false);
   const [abiertaId, setAbiertaId] = useState<string | null>(null);
@@ -147,7 +148,14 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
       ) : visibles.length === 0 ? (
         <p className="amsg">{t("noResults")}</p>
       ) : modo === "collage" ? (
-        <MoodboardFotoLienzo referencias={visibles} urls={urls} conflictos={conflictos} onAbrir={setAbiertaId} />
+        <MoodboardFotoLienzo
+          referencias={visibles}
+          urls={urls}
+          conflictos={conflictos}
+          editable={editable}
+          onAbrir={setAbiertaId}
+          onGuardar={guardarGeometrias}
+        />
       ) : (
         <MoodboardFotoGaleria referencias={visibles} urls={urls} conflictos={conflictos} onAbrir={setAbiertaId} />
       )}

@@ -22,3 +22,6 @@ export const TAMANO_TITULO = 13;
 // Separación del texto respecto al borde de la celda (horizontal y vertical).
 export const RELLENO_TITULO_X = 8;
 export const RELLENO_TITULO_Y = 3;
+
+// Tamaño mínimo (ancho y alto) al que se puede reducir una referencia con los tiradores.
+export const TAMANO_MINIMO = 60;

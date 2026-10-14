@@ -1061,7 +1061,9 @@
     "cancel": "Cancel·lar",
     "chooseMain": "Triar com a principal",
     "modeCollage": "Estil Collage",
-    "modeGallery": "Estil Estructurat (galeria)"
+    "modeGallery": "Estil Estructurat (galeria)",
+    "collageHint": "Arrossega per moure, fes servir les cantonades per escalar o girar i fes doble clic per obrir la fitxa.",
+    "saveLayout": "Desar disposició"
   },
     "moodboard": {
     "tabBoard": "Tauler",

@@ -1061,7 +1061,9 @@
     "cancel": "Cancelar",
     "chooseMain": "Elegir como principal",
     "modeCollage": "Estilo Collage",
-    "modeGallery": "Estilo Estructurado (galería)"
+    "modeGallery": "Estilo Estructurado (galería)",
+    "collageHint": "Arrastra para mover, usa las esquinas para escalar o girar y haz doble clic para abrir la ficha.",
+    "saveLayout": "Guardar disposición"
   },
     "moodboard": {
     "tabBoard": "Tablero",

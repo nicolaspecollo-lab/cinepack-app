@@ -1061,7 +1061,9 @@
     "cancel": "Cancel",
     "chooseMain": "Choose as main",
     "modeCollage": "Collage style",
-    "modeGallery": "Structured style (gallery)"
+    "modeGallery": "Structured style (gallery)",
+    "collageHint": "Drag to move, use the corners to resize or rotate, and double-click to open the card.",
+    "saveLayout": "Save layout"
   },
     "moodboard": {
     "tabBoard": "Board",
