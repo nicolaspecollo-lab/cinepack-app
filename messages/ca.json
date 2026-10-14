@@ -1057,7 +1057,7 @@
     "commentPlaceholder": "Escriu un comentari…",
     "commentSend": "Comentar",
     "stateConflict": "Conflicte",
-    "conflictNote": "Hi ha una altra referència proposada com a principal en aquest mateix lloc.",
+    "conflictNote": "Conflicte detectat. Hi ha més d'una referència principal per al mateix destí.",
     "actCompare": "Comparar referències",
     "compareTitle": "Comparar referències",
     "compareNote": "Aquestes referències competeixen pel mateix lloc.",

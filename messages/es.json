@@ -1057,7 +1057,7 @@
     "commentPlaceholder": "Escribe un comentario…",
     "commentSend": "Comentar",
     "stateConflict": "Conflicto",
-    "conflictNote": "Hay otra referencia propuesta como principal en este mismo sitio.",
+    "conflictNote": "Conflicto detectado. Hay más de una referencia principal para el mismo destino.",
     "actCompare": "Comparar referencias",
     "compareTitle": "Comparar referencias",
     "compareNote": "Estas referencias compiten por el mismo sitio.",

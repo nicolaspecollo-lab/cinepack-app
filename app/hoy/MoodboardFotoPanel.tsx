@@ -190,14 +190,18 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         />
       )}
 
-      {comparandoId && grupoComparar.length > 1 && (
+       {comparandoId && grupoComparar.length > 1 && (
         <MoodboardFotoComparar
           filas={grupoComparar}
           urls={urls}
           fullName={fullName}
           onElegir={elegirPrincipal}
           onComentar={comentar}
-          onCerrar={() => setComparandoId(null)}
+          onCerrar={() => {
+            // Al cerrar o cancelar se vuelve al Detalle de la referencia desde la que se abrió Comparar.
+            setAbiertaId(comparandoId);
+            setComparandoId(null);
+          }}
         />
       )}
 
