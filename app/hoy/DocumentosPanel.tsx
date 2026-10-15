@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import { DOCUMENTOS_POR_DEPARTAMENTO } from "../constants";
 import PlanSonidoPanel from "./PlanSonidoPanel";
-import { CLASE_ESTADO_PLAN, estadoPlanDe } from "./planSonidoFilas";
+import { CLASE_ESTADO_PLAN, hayCambiosTrasPublicar,estadoPlanDe } from "./planSonidoFilas";
 import { usePlanSonidoEstado } from "./usePlanSonidoEstado";
 import { usePlanSonidoFilas } from "./usePlanSonidoFilas";
 
@@ -106,7 +106,7 @@ function DocumentosBase({
       setSubiendo(null);
       return;
     }
-    
+
     // Date.now() se ejecuta al subir un archivo (en un clic), no al pintar el componente.
     // eslint-disable-next-line react-hooks/purity
     const path = `${projectId}/${safeKey(departamento)}/${categoria}/${Date.now()}-${safeKey(file.name)}`;
@@ -290,7 +290,7 @@ function DocumentosSonido(props: Props) {
   const [abierto, setAbierto] = useState(false);
 
   const listo = !cargandoFichas && !cargandoPlan;
-  const estado = estadoPlanDe(fichas.length, plan.publicado);
+  const estado = estadoPlanDe(fichas.length, plan.publicado, hayCambiosTrasPublicar(fichas, plan.publicadoEn));
   const listas = fichas.filter((f) => f.datos.lista).length;
 
   const resumen: PlanSonidoResumen | undefined = listo

@@ -1113,7 +1113,9 @@
     "cardDesc": "Fichas de captación por escena. Consulta en solo lectura.",
     "cardCount": "{total, plural, one {# ficha} other {# fichas}} · {ready, plural, one {# lista} other {# listas}}",
     "cardOpen": "Abrir plan",
-    "cardClose": "Cerrar"
+    "cardClose": "Cerrar",
+    "planState_modificado": "Modificado",
+    "planHint_modificado": "El plan cambió después de publicarlo. Vuelve a publicarlo para actualizar Visionado."
   },
   "escenas": {
     "loading": "Cargando escenas…",

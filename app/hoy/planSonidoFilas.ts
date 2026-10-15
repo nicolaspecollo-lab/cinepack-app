@@ -97,18 +97,6 @@ export function estadoDe(f: FichaEscena): EstadoFicha {
 // Fila aparte, a nivel de proyecto: guarda solo si el plan está publicado.
 // Va en otra "herramienta" para no mezclarse con las fichas de escena.
 export const PLAN_SONIDO_ESTADO_HERRAMIENTA_ID = "son-plan-directo-estado";
-
-// Vacío y Borrador se calculan (no se guardan); solo Publicado se guarda.
-export type EstadoPlan = "vacio" | "borrador" | "publicado";
-
-// Clases de color de la píldora del plan (ya existen en dashboard.css).
-// El texto siempre va escrito en la píldora: el color nunca va solo.
-export const CLASE_ESTADO_PLAN: Record<EstadoPlan, string> = {
-  vacio: "p-mut",
-  borrador: "p-warn",
-  publicado: "p-ok",
-};
-
 export type DatosPlan = {
   publicado: boolean;
   publicadoPor: string;
@@ -134,7 +122,27 @@ export function planADatos(p: DatosPlan): DatosFila {
 }
 
 // Estado del plan calculado: sin fichas es Vacío; con fichas, Borrador hasta que se publique.
-export function estadoPlanDe(totalFichas: number, publicado: boolean): EstadoPlan {
+export type EstadoPlan = "vacio" | "borrador" | "publicado" | "modificado";
+
+export const CLASE_ESTADO_PLAN: Record<EstadoPlan, string> = {
+  vacio: "p-mut",
+  borrador: "p-warn",
+  publicado: "p-ok",
+  modificado: "p-orange",
+};
+
+export function estadoPlanDe(totalFichas: number, publicado: boolean, hayCambios = false): EstadoPlan {
   if (totalFichas === 0) return "vacio";
-  return publicado ? "publicado" : "borrador";
+  if (!publicado) return "borrador";
+  return hayCambios ? "modificado" : "publicado";
+}
+
+// ¿Hay alguna ficha creada o cambiada después de publicar? Se mira el historial de cada ficha.
+export function hayCambiosTrasPublicar(
+  fichas: { registro: { fecha: string }[] }[],
+  publicadoEn: string
+): boolean {
+  const publicado = new Date(publicadoEn).getTime();
+  if (Number.isNaN(publicado)) return false;
+  return fichas.some((f) => f.registro.some((r) => new Date(r.fecha).getTime() > publicado));
 }

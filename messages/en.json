@@ -1114,7 +1114,9 @@
     "cardDesc": "Capture sheets per scene. Read-only view.",
     "cardCount": "{total, plural, one {# sheet} other {# sheets}} · {ready} ready",
     "cardOpen": "Open plan",
-    "cardClose": "Close"
+    "cardClose": "Close",
+    "planState_modificado": "Modified",
+    "planHint_modificado": "The plan changed after it was published. Publish it again to update Viewing."
   },
   "escenas": {
     "loading": "Loading scenes…",

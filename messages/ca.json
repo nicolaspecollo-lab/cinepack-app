@@ -1114,7 +1114,9 @@
     "cardDesc": "Fitxes de captació per escena. Consulta en només lectura.",
     "cardCount": "{total, plural, one {# fitxa} other {# fitxes}} · {ready, plural, one {# llesta} other {# llestes}}",
     "cardOpen": "Obrir pla",
-    "cardClose": "Tancar"
+    "cardClose": "Tancar",
+    "planState_modificado": "Modificat",
+    "planHint_modificado": "El pla ha canviat després de publicar-lo. Torna a publicar-lo per actualitzar el Visionat."
   },
   "escenas": {
     "loading": "Carregant escenes…",

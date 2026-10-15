@@ -72,7 +72,7 @@ export function usePlanSonidoEstado(fullName: string) {
   // Si ya existe la fila la actualiza; si no, la crea.
   // El permiso se controla en la pantalla (quién ve el botón), no aquí.
   async function publicar() {
-    if (publicando.current || plan.publicado) return;
+    if (publicando.current) return;
     publicando.current = true;
 
     const projectId = localStorage.getItem("cinepack-proyecto-id");

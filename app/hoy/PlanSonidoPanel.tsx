@@ -10,6 +10,7 @@ import {
   RIESGOS,
   estadoDe,
   estadoPlanDe,
+  hayCambiosTrasPublicar,
   puedeMarcarLista,
   type FichaEscena,
 } from "./planSonidoFilas";
@@ -85,8 +86,13 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
     );
   }
 
-  // Estado del plan completo. Vacío y Borrador se calculan; Publicado viene de la base de datos.
-  const estadoPlan = estadoPlanDe(ordenadas.length, plan.publicado);
+  // Estado del plan completo. Vacío, Borrador y Modificado se calculan; Publicado viene de la base de datos.
+  const estadoPlan = estadoPlanDe(
+    ordenadas.length,
+    plan.publicado,
+    hayCambiosTrasPublicar(fichas, plan.publicadoEn)
+  );
+  
   const barraEstadoPlan = (
     <div className="doc-status">
       <span className={`pill ${CLASE_ESTADO_PLAN[estadoPlan]}`}>{t(`planState_${estadoPlan}`)}</span>
@@ -105,7 +111,7 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
   const botonera = (
     <div className="hp-actions">
       {botonNuevaFicha}
-      {estadoPlan === "borrador" && (
+      {(estadoPlan === "borrador" || estadoPlan === "modificado") && (
         <button className="cp-btn cp-btn-acc" onClick={publicarPlan}>
           {t("publish")}
         </button>
