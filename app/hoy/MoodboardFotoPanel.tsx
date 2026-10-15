@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { coincideBusqueda } from "./buscarMoodboardFoto"; // BÚSQUEDA
+import { estanEnMismoSitio } from "./compararMoodboardFoto"; // LIBRE
 import { idsEnConflicto, referenciasEnMismoSitio } from "./conflictosMoodboardFoto";
 import MoodboardFotoComparar from "./MoodboardFotoComparar";
 import MoodboardFotoDetalle from "./MoodboardFotoDetalle";
 import MoodboardFotoFicha from "./MoodboardFotoFicha";
 import MoodboardFotoGaleria from "./MoodboardFotoGaleria";
+import MoodboardFotoSelector from "./MoodboardFotoSelector"; // LIBRE
 import { CATEGORIAS, NIVELES, type Categoria, type Nivel } from "./moodboardFotoFilas";
 import { useEtiquetasMoodboardFoto } from "./useEtiquetasMoodboardFoto";
 import { ERROR_SIN_PROYECTO, useMoodboardFotoFilas } from "./useMoodboardFotoFilas";
@@ -33,6 +35,8 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const [filtroNivel, setFiltroNivel] = useState<Nivel | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria | null>(null);
   const [busqueda, setBusqueda] = useState(""); // BÚSQUEDA
+  const [selectorAbierto, setSelectorAbierto] = useState(false); // LIBRE
+  const [idsLibres, setIdsLibres] = useState<string[] | null>(null); // LIBRE
 
   const rutas = useMemo(() => referencias.map((r) => r.datos.ruta), [referencias]);
   const urls = useUrlsImagenes(rutas);
@@ -46,11 +50,12 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   // Conflicto: se calcula, no se guarda (dos principales en el mismo sitio).
   const conflictos = useMemo(() => idsEnConflicto(base), [base]);
 
-  // Referencias que se están comparando (las que compiten por el mismo sitio).
-  const grupoComparar = useMemo(
-    () => (comparandoId ? referenciasEnMismoSitio(base, comparandoId) : []),
-    [base, comparandoId],
-  );
+  // Referencias que se están comparando: las elegidas a mano (comparación libre)
+  // o las que compiten por el mismo sitio (desde el Detalle).
+  const grupoComparar = useMemo(() => {
+    if (idsLibres) return base.filter((r) => idsLibres.includes(r.id)); // LIBRE
+    return comparandoId ? referenciasEnMismoSitio(base, comparandoId) : [];
+  }, [base, comparandoId, idsLibres]);
 
   const visibles = useMemo(
     () =>
@@ -63,19 +68,27 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
     [base, filtroNivel, filtroCategoria, busqueda],
   );
 
+  // LIBRE: lo que se ofrece en el selector es lo que se ve con los filtros, sin descartadas.
+  const comparables = useMemo(
+    () => visibles.filter((r) => r.datos.estado !== "descartada"),
+    [visibles],
+  );
+
   const filaAbierta = abiertaId ? base.find((r) => r.id === abiertaId) : undefined;
   // Solo quien puede editar llega a la Ficha en modo edición.
   const filaEditando = editable && editandoId ? base.find((r) => r.id === editandoId) : undefined;
 
-  // ELEGIR COMO PRINCIPAL: la elegida pasa a Aprobada y principal; las demás pierden el principal
-  // (si estaban Aprobadas vuelven a Pendiente). Así desaparece el conflicto.
+  // ELEGIR COMO PRINCIPAL: la elegida pasa a Aprobada y principal; las demás del mismo sitio pierden
+  // el principal (si estaban Aprobadas vuelven a Pendiente). Así desaparece el conflicto,
+  // aunque se haya abierto desde la comparación libre con solo algunas de ellas.
   async function elegirPrincipal(id: string) {
     await cambiarEstado(id, "aprobada", "elige_principal", true);
-    for (const f of grupoComparar) {
+    for (const f of referenciasEnMismoSitio(base, id)) { // LIBRE
       if (f.id === id) continue;
       await cambiarEstado(f.id, f.datos.estado === "aprobada" ? "pendiente" : f.datos.estado, "pierde_principal", false);
     }
     setComparandoId(null);
+    setIdsLibres(null); // LIBRE
   }
 
   // Al cerrar la Ficha de edición (guardando o no) se vuelve al Detalle de esa referencia.
@@ -151,6 +164,12 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
                   {categorias[c]}
                 </button>
               ))}
+              {/* LIBRE: comparar referencias elegidas a mano */}
+              {comparables.length > 1 && (
+                <button className="hp-etb-fchip" onClick={() => setSelectorAbierto(true)}>
+                  {t("compareFree")}
+                </button>
+              )}
             </div>
           </div>
         </>
@@ -201,17 +220,36 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         />
       )}
 
-      {comparandoId && grupoComparar.length > 1 && (
+      {/* LIBRE: selector de referencias a comparar */}
+      {selectorAbierto && (
+        <MoodboardFotoSelector
+          filas={comparables}
+          urls={urls}
+          onComparar={(ids) => {
+            setIdsLibres(ids);
+            setSelectorAbierto(false);
+          }}
+          onCerrar={() => setSelectorAbierto(false)}
+        />
+      )}
+
+      {(comparandoId || idsLibres) && grupoComparar.length > 1 && (
         <MoodboardFotoComparar
           filas={grupoComparar}
           urls={urls}
           fullName={fullName}
+          editable={editable} // LIBRE
+          mismoSitio={idsLibres ? estanEnMismoSitio(grupoComparar) : true} // LIBRE
           onElegir={elegirPrincipal}
           onComentar={comentar}
           onCerrar={() => {
-            // Al cerrar o cancelar se vuelve al Detalle de la referencia desde la que se abrió Comparar.
-            setAbiertaId(comparandoId);
-            setComparandoId(null);
+            // Desde el Detalle se vuelve al Detalle; la comparación libre simplemente se cierra.
+            if (comparandoId) {
+              setAbiertaId(comparandoId);
+              setComparandoId(null);
+            } else {
+              setIdsLibres(null); // LIBRE
+            }
           }}
         />
       )}

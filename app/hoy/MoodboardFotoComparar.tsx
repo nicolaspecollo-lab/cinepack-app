@@ -12,6 +12,10 @@ type Props = {
   onElegir: (id: string) => Promise<unknown>;
   onComentar: (id: string, texto: string) => Promise<unknown>;
   onCerrar: () => void;
+  // LIBRE: quien solo mira (Departamentos) puede comparar y comentar, pero no elegir.
+  editable?: boolean;
+  // LIBRE: false cuando se comparan referencias de sitios distintos (comparación libre).
+  mismoSitio?: boolean;
 };
 
 export default function MoodboardFotoComparar({
@@ -21,6 +25,8 @@ export default function MoodboardFotoComparar({
   onElegir,
   onComentar,
   onCerrar,
+  editable = true, // LIBRE
+  mismoSitio = true, // LIBRE
 }: Props) {
   const t = useTranslations("moodboardFoto");
   const { estados, categorias, niveles } = useEtiquetasMoodboardFoto();
@@ -54,13 +60,20 @@ export default function MoodboardFotoComparar({
 
         <div className="dsr-head">
           <div>
-            <div className="dsr-tipo">{niveles[sitio.nivel]} · {categorias[sitio.categoria]}</div>
-            {sitio.destino && <div className="dsr-titulo">{sitio.destino}</div>}
+            {/* LIBRE: el sitio solo tiene sentido si todas compiten por el mismo */}
+            {mismoSitio ? (
+              <>
+                <div className="dsr-tipo">{niveles[sitio.nivel]} · {categorias[sitio.categoria]}</div>
+                {sitio.destino && <div className="dsr-titulo">{sitio.destino}</div>}
+              </>
+            ) : (
+              <div className="dsr-titulo">{t("compareFreeHeading")}</div>
+            )}
           </div>
         </div>
 
         <div className="dsr-body">
-          <p className="amsg">{t("compareNote")}</p>
+          <p className="amsg">{mismoSitio ? t("compareNote") : t("compareFreeNote")}</p>
           <div className="gdes-grid">
             {filas.map((f) => {
               const d = f.datos;
@@ -119,9 +132,12 @@ export default function MoodboardFotoComparar({
                     </button>
                   </div>
 
-                  <button type="button" className="cp-btn cp-btn-acc" disabled={ocupado} onClick={() => elegir(f.id)}>
-                    {t("chooseMain")}
-                  </button>
+                  {/* LIBRE: elegir principal solo si se puede editar y compiten por el mismo sitio */}
+                  {editable && mismoSitio && (
+                    <button type="button" className="cp-btn cp-btn-acc" disabled={ocupado} onClick={() => elegir(f.id)}>
+                      {t("chooseMain")}
+                    </button>
+                  )}
                 </div>
               );
             })}
