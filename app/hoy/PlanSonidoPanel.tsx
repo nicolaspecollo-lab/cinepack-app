@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
+import { PrintHeader } from "./HerramientaPanel";
 import {
   CLASE_ESTADO_FICHA,
   CLASE_ESTADO_PLAN,
   CLASE_RIESGO,
   METODOS,
+  PLAN_SONIDO_DEPARTAMENTO,
   RIESGOS,
   estadoDe,
   estadoPlanDe,
@@ -152,24 +155,6 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
     </div>
   );
 
-  // Los botones de abajo, solo para quien edita. "Aprobar y publicar" con el plan en Borrador o Modificado;
-  // "Enviar a postproducción" solo con el plan Publicado y sin cambios pendientes.
-  const botonera = (
-    <div className="hp-actions">
-      {botonNuevaFicha}
-      {(estadoPlan === "borrador" || estadoPlan === "modificado") && (
-        <button className="cp-btn cp-btn-acc" onClick={publicarPlan}>
-          {t("publish")}
-        </button>
-      )}
-      {estadoPlan === "publicado" && (
-        <button className="cp-btn cp-btn-acc" onClick={cerrarPlan}>
-          {t("sendToPost")}
-        </button>
-      )}
-    </div>
-  );
-
   if (ordenadas.length === 0) {
     return (
       <>
@@ -184,129 +169,158 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
     );
   }
 
+  // Acciones de la herramienta, arriba a la derecha (como pide el informe de Marta).
+  // "Vista de impresión" para quien ve el plan; "Aprobar y publicar" con el plan en Borrador o Modificado;
+  // "Enviar a postproducción" solo con el plan Publicado y sin cambios pendientes.
+  const acciones = (
+  <div className="dsubtabs">
+    <button type="button" className="cp-btn" onClick={() => window.print()}>
+      {t("printView")}
+    </button>
+    {editable && (estadoPlan === "borrador" || estadoPlan === "modificado") && (
+      <button type="button" className="cp-btn cp-btn-acc-fill" onClick={publicarPlan}>
+        {t("publish")}
+      </button>
+    )}
+    {editable && estadoPlan === "publicado" && (
+      <button type="button" className="cp-btn cp-btn-acc-fill" onClick={cerrarPlan}>
+        {t("sendToPost")}
+      </button>
+    )}
+  </div>
+);
+
+  // Se porta a la cabecera de la herramienta (HerramientasPanel.tsx). Si ese hueco no existe
+  // (por ejemplo, dentro de la ventana de Visionado), las acciones se pintan en su sitio.
+  const hueco = typeof document !== "undefined" ? document.getElementById("hp-open-head-tabs") : null;
+
   return (
-    <div className="sdir-wrap">
-      {barraEstadoPlan}
-      <div className="sdir-grid hp-galeria">
-        {ordenadas.map((fila) => {
-          const d = fila.datos;
-          const estado = estadoDe(d);
-          const listaParaMarcar = puedeMarcarLista(d);
+    <>
+      {hueco ? createPortal(acciones, hueco) : acciones}
+      <div className="sdir-wrap hp-print-area">
+        <PrintHeader herramientaNombre={t("cardTitle")} departamento={PLAN_SONIDO_DEPARTAMENTO} />
+        {barraEstadoPlan}
+        <div className="sdir-grid hp-galeria">
+          {ordenadas.map((fila) => {
+            const d = fila.datos;
+            const estado = estadoDe(d);
+            const listaParaMarcar = puedeMarcarLista(d);
 
-          return (
-            <div key={fila.id} className="sdir-card">
-              <div className="sdir-head">
-                {editable ? (
-                  <input
-                    className="sdir-esc"
-                    defaultValue={d.escena}
-                    aria-label={t("scene")}
-                    onBlur={(e) => cambiar(fila, "escena", e.target.value.trim())}
-                  />
-                ) : (
-                  <span className="sdir-esc">{d.escena || "•"}</span>
-                )}
-                <span className={`pill ${CLASE_ESTADO_FICHA[estado]} fr-pill-gap`}>{t(`state_${estado}`)}</span>
-              </div>
-
-              <div className="sdir-field">
-                <span>{t("method")}</span>
-                <div className="cp-seg" role="group" aria-label={t("method")}>
-                  {METODOS.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      className={`cp-seg-cell${d.metodo === m ? " cp-seg-on" : ""}`}
-                      aria-pressed={d.metodo === m}
-                      disabled={!editable}
-                      onClick={() => cambiar(fila, "metodo", d.metodo === m ? "" : m)}
-                    >
-                      {t(`method_${m}`)}
-                    </button>
-                  ))}
+            return (
+              <div key={fila.id} className="sdir-card">
+                <div className="sdir-head">
+                  {editable ? (
+                    <input
+                      className="sdir-esc"
+                      defaultValue={d.escena}
+                      aria-label={t("scene")}
+                      onBlur={(e) => cambiar(fila, "escena", e.target.value.trim())}
+                    />
+                  ) : (
+                    <span className="sdir-esc">{d.escena || "•"}</span>
+                  )}
+                  <span className={`pill ${CLASE_ESTADO_FICHA[estado]} fr-pill-gap`}>{t(`state_${estado}`)}</span>
                 </div>
-              </div>
 
-              <div className="sdir-field">
-                <span>{t("risk")}</span>
-                <div className="cp-seg" role="group" aria-label={t("risk")}>
-                  {RIESGOS.map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      className={`cp-seg-cell${d.riesgo === r ? ` cp-seg-on ${CLASE_RIESGO[r]}` : ""}`}
-                      aria-pressed={d.riesgo === r}
-                      disabled={!editable}
-                      onClick={() => cambiar(fila, "riesgo", d.riesgo === r ? "" : r)}
-                    >
-                      {t(`risk_${r}`)}
-                    </button>
-                  ))}
+                <div className="sdir-field">
+                  <span>{t("method")}</span>
+                  <div className="cp-seg" role="group" aria-label={t("method")}>
+                    {METODOS.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        className={`cp-seg-cell${d.metodo === m ? " cp-seg-on" : ""}`}
+                        aria-pressed={d.metodo === m}
+                        disabled={!editable}
+                        onClick={() => cambiar(fila, "metodo", d.metodo === m ? "" : m)}
+                      >
+                        {t(`method_${m}`)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="sdir-estrat">
-                <span className="sdir-lbl">{t("strategy")}</span>
-                <textarea
-                  className="sdir-estrat-ta"
-                  defaultValue={d.estrategia}
-                  placeholder={editable ? "—" : ""}
-                  readOnly={!editable}
-                  rows={2}
-                  onBlur={(e) => cambiar(fila, "estrategia", e.target.value)}
-                />
-              </div>
+                <div className="sdir-field">
+                  <span>{t("risk")}</span>
+                  <div className="cp-seg" role="group" aria-label={t("risk")}>
+                    {RIESGOS.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        className={`cp-seg-cell${d.riesgo === r ? ` cp-seg-on ${CLASE_RIESGO[r]}` : ""}`}
+                        aria-pressed={d.riesgo === r}
+                        disabled={!editable}
+                        onClick={() => cambiar(fila, "riesgo", d.riesgo === r ? "" : r)}
+                      >
+                        {t(`risk_${r}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              {(editable || d.retos) && (
-                <label className="sdir-field">
-                  <span>{t("challenges")}</span>
+                <div className="sdir-estrat">
+                  <span className="sdir-lbl">{t("strategy")}</span>
                   <textarea
-                    className="sdir-ta"
-                    defaultValue={d.retos}
+                    className="sdir-estrat-ta"
+                    defaultValue={d.estrategia}
                     placeholder={editable ? "—" : ""}
                     readOnly={!editable}
                     rows={2}
-                    onBlur={(e) => cambiar(fila, "retos", e.target.value)}
-                  />
-                </label>
-              )}
-
-              {(editable || d.wildtrack) && (
-                <div className="sdir-wild">
-                  <span className="sdir-wild-lbl">{t("wildtrack")}</span>
-                  <input
-                    className="sdir-wild-in"
-                    defaultValue={d.wildtrack}
-                    placeholder={editable ? "—" : ""}
-                    readOnly={!editable}
-                    onBlur={(e) => cambiar(fila, "wildtrack", e.target.value)}
+                    onBlur={(e) => cambiar(fila, "estrategia", e.target.value)}
                   />
                 </div>
-              )}
 
-              {editable && (
-                <div className="sdir-field">
-                  {d.lista ? (
-                    <button className="cp-btn" onClick={() => cambiarLista(fila, false)}>
-                      {t("reopen")}
-                    </button>
-                  ) : (
-                    <button
-                      className="cp-btn cp-btn-acc"
-                      disabled={!listaParaMarcar}
-                      onClick={() => cambiarLista(fila, true)}
-                    >
-                      {t("markReady")}
-                    </button>
-                  )}
-                  {!d.lista && !listaParaMarcar && <span>{t("markReadyHint")}</span>}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {(editable || d.retos) && (
+                  <label className="sdir-field">
+                    <span>{t("challenges")}</span>
+                    <textarea
+                      className="sdir-ta"
+                      defaultValue={d.retos}
+                      placeholder={editable ? "—" : ""}
+                      readOnly={!editable}
+                      rows={2}
+                      onBlur={(e) => cambiar(fila, "retos", e.target.value)}
+                    />
+                  </label>
+                )}
+
+                {(editable || d.wildtrack) && (
+                  <div className="sdir-wild">
+                    <span className="sdir-wild-lbl">{t("wildtrack")}</span>
+                    <input
+                      className="sdir-wild-in"
+                      defaultValue={d.wildtrack}
+                      placeholder={editable ? "—" : ""}
+                      readOnly={!editable}
+                      onBlur={(e) => cambiar(fila, "wildtrack", e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {editable && (
+                  <div className="sdir-field">
+                    {d.lista ? (
+                      <button className="cp-btn" onClick={() => cambiarLista(fila, false)}>
+                        {t("reopen")}
+                      </button>
+                    ) : (
+                      <button
+                        className="cp-btn cp-btn-acc"
+                        disabled={!listaParaMarcar}
+                        onClick={() => cambiarLista(fila, true)}
+                      >
+                        {t("markReady")}
+                      </button>
+                    )}
+                    {!d.lista && !listaParaMarcar && <span>{t("markReadyHint")}</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {editable && botonAnadir}
       </div>
-      {editable && botonera}
-    </div>
+    </>
   );
 }

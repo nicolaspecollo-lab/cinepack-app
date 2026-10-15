@@ -1121,7 +1121,8 @@
     "planHint_cerrado": "Sent to post-production by {user} on {date}. The plan is read-only.",
     "sendToPost": "Send to post-production",
     "confirmClose": "You are about to send the plan to post-production. It will be closed and read-only. Continue?",
-    "saved": "Saved"
+    "saved": "Saved",
+    "printView": "Print view"
   },
   "escenas": {
     "loading": "Loading scenes…",

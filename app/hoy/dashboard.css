@@ -4922,6 +4922,18 @@
 /* Estado "Modificado" del plan (etiqueta naranja) */
 .cp-dash .p-orange{ background:color-mix(in srgb, var(--orange) 14%, transparent); color:var(--orange); }
 
+/* ===========================================================================
+   Plan de sonido directo — impresión
+   =========================================================================== */
+@media print{
+  .cp-dash .hp-print-area .sdir-card{ break-inside:avoid; }
+  .cp-dash .hp-print-area .sdir-estrat-ta,
+  .cp-dash .hp-print-area .sdir-ta,
+  .cp-dash .hp-print-area .sdir-wild-in{ color:#0b0d10; resize:none; }
+  .cp-dash .hp-print-area .sdir-field>.cp-btn,
+  .cp-dash .hp-print-area .sdir-field>.cp-btn~span{ display:none; }
+}
+
 /* -- Control de baterías -- */
 .cp-dash .sbat-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
 .cp-dash .sbat-card{ position:relative; background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--acc); padding:13px 15px; display:flex; flex-direction:column; gap:11px; }
