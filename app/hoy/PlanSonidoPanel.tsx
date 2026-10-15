@@ -25,10 +25,12 @@ function numeroDe(escena: string): number {
   return Number.isNaN(n) ? Number.MAX_SAFE_INTEGER : n;
 }
 
-export default function PlanSonidoPanel({ fullName, editable }: Props) {
+export default function PlanSonidoPanel({ fullName, editable: permitido }: Props) {
   const t = useTranslations("planSonido");
   const { fichas, loading, error, crear, editar, marcarLista } = usePlanSonidoFilas(fullName);
-  const { plan, loading: cargandoPlan, error: errorPlan, publicar } = usePlanSonidoEstado(fullName); // PUBLICAR
+  const { plan, loading: cargandoPlan, error: errorPlan, publicar, cerrar } = usePlanSonidoEstado(fullName);
+  // Un plan cerrado queda en solo lectura para todos, también para quien lo editaba.
+  const editable = permitido && !plan.cerrado;
 
   const ordenadas = useMemo(
     () => [...fichas].sort((a, b) => numeroDe(a.datos.escena) - numeroDe(b.datos.escena)),
@@ -66,6 +68,12 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
     await publicar();
   }
 
+  // CERRAR: pide confirmación y, si se acepta, envía el plan a postproducción (queda cerrado).
+  async function cerrarPlan() {
+    if (!window.confirm(t("confirmClose"))) return;
+    await cerrar();
+  }
+
   if (loading || cargandoPlan) return null;
 
   const botonNuevaFicha = (
@@ -86,13 +94,13 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
     );
   }
 
-  // Estado del plan completo. Vacío, Borrador y Modificado se calculan; Publicado viene de la base de datos.
+  // Estado del plan completo. Vacío, Borrador, Modificado y Cerrado se calculan o vienen de la base de datos.
   const estadoPlan = estadoPlanDe(
     ordenadas.length,
     plan.publicado,
-    hayCambiosTrasPublicar(fichas, plan.publicadoEn)
+    hayCambiosTrasPublicar(fichas, plan.publicadoEn),
+    plan.cerrado
   );
-  
   const barraEstadoPlan = (
     <div className="doc-status">
       <span className={`pill ${CLASE_ESTADO_PLAN[estadoPlan]}`}>{t(`planState_${estadoPlan}`)}</span>
@@ -102,18 +110,29 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
               user: plan.publicadoPor,
               date: new Date(plan.publicadoEn).toLocaleString(),
             })
-          : t(`planHint_${estadoPlan}`)}
+          : estadoPlan === "cerrado"
+            ? t("planHint_cerrado", {
+                user: plan.cerradoPor,
+                date: new Date(plan.cerradoEn).toLocaleString(),
+              })
+            : t(`planHint_${estadoPlan}`)}
       </span>
     </div>
   );
 
-  // PUBLICAR: los botones de abajo. "Aprobar y publicar" solo para quien edita y con el plan en Borrador.
+  // Los botones de abajo, solo para quien edita. "Aprobar y publicar" con el plan en Borrador o Modificado;
+  // "Enviar a postproducción" solo con el plan Publicado y sin cambios pendientes.
   const botonera = (
     <div className="hp-actions">
       {botonNuevaFicha}
       {(estadoPlan === "borrador" || estadoPlan === "modificado") && (
         <button className="cp-btn cp-btn-acc" onClick={publicarPlan}>
           {t("publish")}
+        </button>
+      )}
+      {estadoPlan === "publicado" && (
+        <button className="cp-btn cp-btn-acc" onClick={cerrarPlan}>
+          {t("sendToPost")}
         </button>
       )}
     </div>

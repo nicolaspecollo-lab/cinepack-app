@@ -94,13 +94,16 @@ export function estadoDe(f: FichaEscena): EstadoFicha {
 // ESTADO DEL PLAN COMPLETO (Vacío / Borrador / Publicado)
 // ───────────────────────────────────────────────────────────────
 
-// Fila aparte, a nivel de proyecto: guarda solo si el plan está publicado.
+// Fila aparte, a nivel de proyecto: guarda si el plan está publicado y si está cerrado.
 // Va en otra "herramienta" para no mezclarse con las fichas de escena.
 export const PLAN_SONIDO_ESTADO_HERRAMIENTA_ID = "son-plan-directo-estado";
 export type DatosPlan = {
   publicado: boolean;
   publicadoPor: string;
   publicadoEn: string;
+  cerrado: boolean;
+  cerradoPor: string;
+  cerradoEn: string;
 };
 
 // fila de la base de datos -> datos del plan tipados
@@ -109,6 +112,9 @@ export function datosAPlan(datos: DatosFila): DatosPlan {
     publicado: datos.publicado === "true",
     publicadoPor: sinHtml(datos.publicadoPor),
     publicadoEn: sinHtml(datos.publicadoEn),
+    cerrado: datos.cerrado === "true",
+    cerradoPor: sinHtml(datos.cerradoPor),
+    cerradoEn: sinHtml(datos.cerradoEn),
   };
 }
 
@@ -118,21 +124,32 @@ export function planADatos(p: DatosPlan): DatosFila {
     publicado: String(p.publicado),
     publicadoPor: p.publicadoPor,
     publicadoEn: p.publicadoEn,
+    cerrado: String(p.cerrado),
+    cerradoPor: p.cerradoPor,
+    cerradoEn: p.cerradoEn,
   };
 }
 
-// Estado del plan calculado: sin fichas es Vacío; con fichas, Borrador hasta que se publique.
-export type EstadoPlan = "vacio" | "borrador" | "publicado" | "modificado";
+// Estado del plan calculado: sin fichas es Vacío; con fichas, Borrador hasta que se publique;
+// Modificado si cambia tras publicarse; Cerrado cuando se envía a postproducción.
+export type EstadoPlan = "vacio" | "borrador" | "publicado" | "modificado" | "cerrado";
 
 export const CLASE_ESTADO_PLAN: Record<EstadoPlan, string> = {
   vacio: "p-mut",
   borrador: "p-warn",
   publicado: "p-ok",
   modificado: "p-orange",
+  cerrado: "p-mut",
 };
 
-export function estadoPlanDe(totalFichas: number, publicado: boolean, hayCambios = false): EstadoPlan {
+export function estadoPlanDe(
+  totalFichas: number,
+  publicado: boolean,
+  hayCambios = false,
+  cerrado = false
+): EstadoPlan {
   if (totalFichas === 0) return "vacio";
+  if (cerrado) return "cerrado";
   if (!publicado) return "borrador";
   return hayCambios ? "modificado" : "publicado";
 }

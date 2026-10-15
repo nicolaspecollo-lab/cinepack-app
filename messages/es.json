@@ -1115,7 +1115,11 @@
     "cardOpen": "Abrir plan",
     "cardClose": "Cerrar",
     "planState_modificado": "Modificado",
-    "planHint_modificado": "El plan cambió después de publicarlo. Vuelve a publicarlo para actualizar Visionado."
+    "planHint_modificado": "El plan cambió después de publicarlo. Vuelve a publicarlo para actualizar Visionado.",
+    "planState_cerrado": "Cerrado",
+    "planHint_cerrado": "Enviado a postproducción por {user} el {date}. El plan está en solo lectura.",
+    "sendToPost": "Enviar a postproducción",
+    "confirmClose": "Vas a enviar el plan a postproducción. Quedará cerrado y en solo lectura. ¿Continuar?"
   },
   "escenas": {
     "loading": "Cargando escenas…",

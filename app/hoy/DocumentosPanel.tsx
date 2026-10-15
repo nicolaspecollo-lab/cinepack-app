@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import { DOCUMENTOS_POR_DEPARTAMENTO } from "../constants";
 import PlanSonidoPanel from "./PlanSonidoPanel";
-import { CLASE_ESTADO_PLAN, hayCambiosTrasPublicar,estadoPlanDe } from "./planSonidoFilas";
+import { CLASE_ESTADO_PLAN, estadoPlanDe, hayCambiosTrasPublicar } from "./planSonidoFilas";
 import { usePlanSonidoEstado } from "./usePlanSonidoEstado";
 import { usePlanSonidoFilas } from "./usePlanSonidoFilas";
 
@@ -27,7 +27,7 @@ type Props = {
   readOnly?: boolean;
 };
 
-// resumen del Plan de sonido directo para pintarlo en su tarjeta del catálogo.
+// Resumen del Plan de sonido directo para pintarlo en su tarjeta del catálogo.
 // Solo lo rellena el envoltorio de Sonido; para el resto de departamentos no existe.
 type PlanSonidoResumen = {
   publicado: boolean;
@@ -38,7 +38,7 @@ type PlanSonidoResumen = {
   onAbrir: () => void;
 };
 
-// Tarjeta del catálogo que se sustituye por el estado real del plan.
+// La tarjeta del catálogo que se sustituye por el estado real del plan.
 const GRUPO_PLAN_SONIDO = "plan-de-sonido";
 const DOC_PLAN_SONIDO = "plan-de-sonido-directo";
 
@@ -161,7 +161,7 @@ function DocumentosBase({
     );
   }
 
-  // ¿esta es la tarjeta del Plan de sonido directo? (solo si el envoltorio de Sonido nos pasa el resumen)
+  // ¿Esta es la tarjeta del Plan de sonido directo? (solo si el envoltorio de Sonido nos pasa el resumen)
   const esPlanSonido = (grupoId: string, docId: string) =>
     planSonido !== undefined && grupoId === GRUPO_PLAN_SONIDO && docId === DOC_PLAN_SONIDO;
 
@@ -282,7 +282,7 @@ function DocumentosBase({
 }
 
 // Envoltorio solo para Sonido. Lee el estado real del plan, se lo pasa al catálogo
-// y abre el plan en solo lectura (la misma ventana que usamos antes en la tarjeta separada).
+// y abre el plan en solo lectura.
 function DocumentosSonido(props: Props) {
   const t = useTranslations("planSonido");
   const { fichas, loading: cargandoFichas } = usePlanSonidoFilas(props.fullName);
@@ -290,7 +290,12 @@ function DocumentosSonido(props: Props) {
   const [abierto, setAbierto] = useState(false);
 
   const listo = !cargandoFichas && !cargandoPlan;
-  const estado = estadoPlanDe(fichas.length, plan.publicado, hayCambiosTrasPublicar(fichas, plan.publicadoEn));
+  const estado = estadoPlanDe(
+    fichas.length,
+    plan.publicado,
+    hayCambiosTrasPublicar(fichas, plan.publicadoEn),
+    plan.cerrado
+  );
   const listas = fichas.filter((f) => f.datos.lista).length;
 
   const resumen: PlanSonidoResumen | undefined = listo
@@ -304,7 +309,12 @@ function DocumentosSonido(props: Props) {
                 user: plan.publicadoPor,
                 date: new Date(plan.publicadoEn).toLocaleString(),
               })
-            : t(`planHint_${estado}`)
+            : estado === "cerrado"
+              ? t("planHint_cerrado", {
+                  user: plan.cerradoPor,
+                  date: new Date(plan.cerradoEn).toLocaleString(),
+                })
+              : t(`planHint_${estado}`)
         }`,
         textoAbrir: t("cardOpen"),
         onAbrir: () => setAbierto(true),

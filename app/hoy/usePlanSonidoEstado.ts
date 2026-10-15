@@ -25,7 +25,7 @@ export function usePlanSonidoEstado(fullName: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Evita publicar dos veces si se pulsa el botón dos veces seguidas.
+  // Evita publicar o cerrar dos veces si se pulsa el botón dos veces seguidas.
   const publicando = useRef(false);
 
   // LEER: misma consulta que las fichas, pero con el identificador del estado y solo la primera fila.
@@ -62,17 +62,17 @@ export function usePlanSonidoEstado(fullName: string) {
     load();
   }, [load]);
 
-  // Datos del plan ya traducidos. Sin fila guardada, el plan no está publicado.
+  // Datos del plan ya traducidos. Sin fila guardada, el plan no está publicado ni cerrado.
   const plan = useMemo(
     () => datosAPlan(fila ? fila.datos : {}),
     [fila]
   );
 
-  // PUBLICAR: marca el plan como publicado y anota quién y cuándo.
-  // Si ya existe la fila la actualiza; si no, la crea.
+  // PUBLICAR: marca el plan como publicado y anota quién y cuándo. Se puede volver a publicar
+  // si el plan cambió después. Si ya existe la fila la actualiza; si no, la crea.
   // El permiso se controla en la pantalla (quién ve el botón), no aquí.
   async function publicar() {
-    if (publicando.current) return;
+    if (publicando.current || plan.cerrado) return;
     publicando.current = true;
 
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -83,7 +83,7 @@ export function usePlanSonidoEstado(fullName: string) {
     }
 
     const ahora = new Date().toISOString();
-    const datosPlan = planADatos({ publicado: true, publicadoPor: fullName, publicadoEn: ahora });
+    const datosPlan = planADatos({ ...plan, publicado: true, publicadoPor: fullName, publicadoEn: ahora });
     const registro = [
       ...(fila?.registro ?? []),
       { accion: "publica", usuario: fullName, fecha: ahora },
@@ -132,5 +132,32 @@ export function usePlanSonidoEstado(fullName: string) {
     publicando.current = false;
   }
 
-  return { plan, loading, error, publicar };
+  // CERRAR (enviar a postproducción): solo un plan ya publicado. Anota quién y cuándo.
+  // Un plan cerrado queda en solo lectura. El permiso se controla en la pantalla.
+  async function cerrar() {
+    if (publicando.current || !fila || !plan.publicado || plan.cerrado) return;
+    publicando.current = true;
+
+    const ahora = new Date().toISOString();
+    const datosPlan = planADatos({ ...plan, cerrado: true, cerradoPor: fullName, cerradoEn: ahora });
+    const datos = { ...fila.datos, ...datosPlan };
+    const registro = [
+      ...(fila.registro ?? []),
+      { accion: "cierra", usuario: fullName, fecha: ahora },
+    ];
+    const supabase = createClient();
+    const { error: err } = await supabase
+      .from("herramienta_filas")
+      .update({ datos, registro, editor_nombre: fullName, updated_at: ahora })
+      .eq("id", fila.id);
+    if (err) {
+      setError(err.message);
+    } else {
+      setFila({ ...fila, datos, registro });
+      setError(null);
+    }
+    publicando.current = false;
+  }
+
+  return { plan, loading, error, publicar, cerrar };
 }
