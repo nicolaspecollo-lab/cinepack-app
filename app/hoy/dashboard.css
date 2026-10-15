@@ -6055,3 +6055,7 @@
 .cp-dash .mb-lienzo{ position:relative; margin:0 var(--gutter) 24px; border:1px solid var(--line); background:var(--hl1); overflow:hidden; }
 /* Cuadro de texto que se coloca sobre la nota al editarla (se combina con hp-cell-area) */
 .cp-dash .mb-editor{ position:absolute; transform-origin:0 0; box-sizing:border-box; padding:10px; font-family:Arial,sans-serif; font-size:14px; line-height:1.2; color:#15151c; background:#f2d16b; }
+
+/* Moodboard de Fotografía */
+.cp-dash .mb-barra-foto{ padding-top:14px; } /* variante de mb-barra con aire arriba */
+.cp-dash .mb-acciones-foto{ gap:8px; } /* separa los botones de acción de la ficha */
