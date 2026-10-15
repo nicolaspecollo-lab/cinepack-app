@@ -1049,6 +1049,7 @@
     "filterAll": "All",
     "filterAllCat": "All",
     "noResults": "No references match these filters.",
+    "searchPlaceholder": "Search by title, scene or tag…",
     "actSend": "Send for review",
     "actApprove": "Approve",
     "actDiscard": "Discard",

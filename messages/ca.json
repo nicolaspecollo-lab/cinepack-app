@@ -1049,6 +1049,7 @@
     "filterAll": "Tots",
     "filterAllCat": "Totes",
     "noResults": "No hi ha referències amb aquests filtres.",
+    "searchPlaceholder": "Cerca per títol, escena o etiqueta…",
     "actSend": "Enviar a revisió",
     "actApprove": "Aprovar",
     "actDiscard": "Descartar",

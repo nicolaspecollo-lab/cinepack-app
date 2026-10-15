@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { coincideBusqueda } from "./buscarMoodboardFoto"; // BÚSQUEDA
 import { idsEnConflicto, referenciasEnMismoSitio } from "./conflictosMoodboardFoto";
 import MoodboardFotoComparar from "./MoodboardFotoComparar";
 import MoodboardFotoDetalle from "./MoodboardFotoDetalle";
@@ -31,6 +32,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
   const [comparandoId, setComparandoId] = useState<string | null>(null);
   const [filtroNivel, setFiltroNivel] = useState<Nivel | null>(null);
   const [filtroCategoria, setFiltroCategoria] = useState<Categoria | null>(null);
+  const [busqueda, setBusqueda] = useState(""); // BÚSQUEDA
 
   const rutas = useMemo(() => referencias.map((r) => r.datos.ruta), [referencias]);
   const urls = useUrlsImagenes(rutas);
@@ -55,9 +57,10 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
       base.filter(
         (r) =>
           (!filtroNivel || r.datos.nivel === filtroNivel) &&
-          (!filtroCategoria || r.datos.categoria === filtroCategoria),
+          (!filtroCategoria || r.datos.categoria === filtroCategoria) &&
+          coincideBusqueda(r.datos, busqueda), // BÚSQUEDA
       ),
-    [base, filtroNivel, filtroCategoria],
+    [base, filtroNivel, filtroCategoria, busqueda],
   );
 
   const filaAbierta = abiertaId ? base.find((r) => r.id === abiertaId) : undefined;
@@ -131,6 +134,14 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
             ))}
           </div>
           <div className="hp-etb-wrap">
+            <input
+              className="hp-etb-search"
+              type="search"
+              value={busqueda}
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />{/* BÚSQUEDA */}
             <div className="hp-etb-filtros">
               <button className={`hp-etb-fchip${!filtroCategoria ? " on" : ""}`} onClick={() => setFiltroCategoria(null)}>
                 {t("filterAllCat")}
@@ -190,7 +201,7 @@ export default function MoodboardFotoPanel({ fullName, editable }: Props) {
         />
       )}
 
-       {comparandoId && grupoComparar.length > 1 && (
+      {comparandoId && grupoComparar.length > 1 && (
         <MoodboardFotoComparar
           filas={grupoComparar}
           urls={urls}
