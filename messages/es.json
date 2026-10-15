@@ -1119,7 +1119,8 @@
     "planState_cerrado": "Cerrado",
     "planHint_cerrado": "Enviado a postproducción por {user} el {date}. El plan está en solo lectura.",
     "sendToPost": "Enviar a postproducción",
-    "confirmClose": "Vas a enviar el plan a postproducción. Quedará cerrado y en solo lectura. ¿Continuar?"
+    "confirmClose": "Vas a enviar el plan a postproducción. Quedará cerrado y en solo lectura. ¿Continuar?",
+    "saved": "Guardado"
   },
   "escenas": {
     "loading": "Cargando escenas…",

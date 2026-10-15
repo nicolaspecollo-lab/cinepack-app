@@ -1120,7 +1120,8 @@
     "planState_cerrado": "Tancat",
     "planHint_cerrado": "Enviat a postproducció per {user} el {date}. El pla és de només lectura.",
     "sendToPost": "Enviar a postproducció",
-    "confirmClose": "Enviaràs el pla a postproducció. Quedarà tancat i de només lectura. Continuar?"
+    "confirmClose": "Enviaràs el pla a postproducció. Quedarà tancat i de només lectura. Continuar?",
+    "saved": "Desat"
   },
   "escenas": {
     "loading": "Carregant escenes…",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   CLASE_ESTADO_FICHA,
@@ -19,6 +19,9 @@ import { usePlanSonidoFilas, type FilaFicha } from "./usePlanSonidoFilas";
 
 type Props = { fullName: string; editable: boolean };
 
+// Cuánto tiempo se ve el aviso "Guardado".
+const MS_AVISO_GUARDADO = 2000;
+
 // Para ordenar las fichas por número de escena. Lo que no sea número va al final.
 function numeroDe(escena: string): number {
   const n = parseInt(escena, 10);
@@ -31,6 +34,23 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
   const { plan, loading: cargandoPlan, error: errorPlan, publicar, cerrar } = usePlanSonidoEstado(fullName);
   // Un plan cerrado queda en solo lectura para todos, también para quien lo editaba.
   const editable = permitido && !plan.cerrado;
+
+  // Aviso breve "Guardado" tras cada cambio.
+  const [guardado, setGuardado] = useState(false);
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Al salir de la pantalla se cancela el aviso pendiente.
+    return () => {
+      if (temporizador.current) clearTimeout(temporizador.current);
+    };
+  }, []);
+
+  function avisarGuardado() {
+    setGuardado(true);
+    if (temporizador.current) clearTimeout(temporizador.current);
+    temporizador.current = setTimeout(() => setGuardado(false), MS_AVISO_GUARDADO);
+  }
 
   const ordenadas = useMemo(
     () => [...fichas].sort((a, b) => numeroDe(a.datos.escena) - numeroDe(b.datos.escena)),
@@ -57,6 +77,13 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
   function cambiar<K extends keyof FichaEscena>(fila: FilaFicha, campo: K, valor: FichaEscena[K]) {
     if (fila.datos[campo] === valor) return;
     editar(fila.id, { ...fila.datos, [campo]: valor });
+    avisarGuardado();
+  }
+
+  // Marcar como lista o reabrir una ficha.
+  function cambiarLista(fila: FilaFicha, lista: boolean) {
+    marcarLista(fila.id, lista);
+    avisarGuardado();
   }
 
   // PUBLICAR: pide confirmación diciendo cuántas fichas no están listas y, si se acepta, publica.
@@ -117,6 +144,11 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
               })
             : t(`planHint_${estadoPlan}`)}
       </span>
+      {guardado && (
+        <span className="amsg ok" role="status">
+          {t("saved")}
+        </span>
+      )}
     </div>
   );
 
@@ -255,14 +287,14 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
               {editable && (
                 <div className="sdir-field">
                   {d.lista ? (
-                    <button className="cp-btn" onClick={() => marcarLista(fila.id, false)}>
+                    <button className="cp-btn" onClick={() => cambiarLista(fila, false)}>
                       {t("reopen")}
                     </button>
                   ) : (
                     <button
                       className="cp-btn cp-btn-acc"
                       disabled={!listaParaMarcar}
-                      onClick={() => marcarLista(fila.id, true)}
+                      onClick={() => cambiarLista(fila, true)}
                     >
                       {t("markReady")}
                     </button>
