@@ -1100,7 +1100,21 @@
     "state_lista": "Llesta",
     "markReady": "Marcar com a llesta",
     "reopen": "Reobrir fitxa",
-    "markReadyHint": "Tria mètode i risc per poder marcar-la com a llesta."
+    "markReadyHint": "Tria mètode i risc per poder marcar-la com a llesta.",
+    "planState_vacio": "Buit",
+    "planState_borrador": "Esborrany",
+    "planState_publicado": "Publicat",
+    "planHint_vacio": "Encara no hi ha fitxes d'escena.",
+    "planHint_borrador": "El pla s'està preparant i encara no està publicat.",
+    "planHint_publicado": "Publicat per {user} el {date}.",
+    "publish": "Aprovar i publicar",
+    "confirmPublish": "Vas a publicar el pla de so. Totes les fitxes estan llestes. Vols publicar-lo?",
+    "confirmPublishPending": "Vas a publicar el pla de so. {count, plural, one {Hi ha # fitxa que no està llesta.} other {Hi ha # fitxes que no estan llestes.}} Vols publicar-lo igualment?",
+    "cardTitle": "Pla de so directe",
+    "cardDesc": "Fitxes de captació per escena. Consulta en només lectura.",
+    "cardCount": "{total, plural, one {# fitxa} other {# fitxes}} · {ready, plural, one {# llesta} other {# llestes}}",
+    "cardOpen": "Obrir pla",
+    "cardClose": "Tancar"
   },
   "escenas": {
     "loading": "Carregant escenes…",

@@ -1099,7 +1099,21 @@
     "state_lista": "Lista",
     "markReady": "Marcar como lista",
     "reopen": "Reabrir ficha",
-    "markReadyHint": "Elige método y riesgo para poder marcarla como lista."
+    "markReadyHint": "Elige método y riesgo para poder marcarla como lista.",
+    "planState_vacio": "Vacío",
+    "planState_borrador": "Borrador",
+    "planState_publicado": "Publicado",
+    "planHint_vacio": "Todavía no hay fichas de escena.",
+    "planHint_borrador": "El plan se está preparando y aún no está publicado.",
+    "planHint_publicado": "Publicado por {user} el {date}.",
+    "publish": "Aprobar y publicar",
+    "confirmPublish": "Vas a publicar el plan de sonido. Todas las fichas están listas. ¿Publicar?",
+    "confirmPublishPending": "Vas a publicar el plan de sonido. {count, plural, one {Hay # ficha que no está lista.} other {Hay # fichas que no están listas.}} ¿Publicar igualmente?",
+    "cardTitle": "Plan de sonido directo",
+    "cardDesc": "Fichas de captación por escena. Consulta en solo lectura.",
+    "cardCount": "{total, plural, one {# ficha} other {# fichas}} · {ready, plural, one {# lista} other {# listas}}",
+    "cardOpen": "Abrir plan",
+    "cardClose": "Cerrar"
   },
   "escenas": {
     "loading": "Cargando escenas…",

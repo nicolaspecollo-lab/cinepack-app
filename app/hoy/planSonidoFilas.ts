@@ -89,3 +89,52 @@ export function estadoDe(f: FichaEscena): EstadoFicha {
   const conDatos = f.metodo || f.riesgo || f.estrategia || f.retos || f.wildtrack;
   return conDatos ? "en_preparacion" : "sin_empezar";
 }
+
+// ───────────────────────────────────────────────────────────────
+// ESTADO DEL PLAN COMPLETO (Vacío / Borrador / Publicado)
+// ───────────────────────────────────────────────────────────────
+
+// Fila aparte, a nivel de proyecto: guarda solo si el plan está publicado.
+// Va en otra "herramienta" para no mezclarse con las fichas de escena.
+export const PLAN_SONIDO_ESTADO_HERRAMIENTA_ID = "son-plan-directo-estado";
+
+// Vacío y Borrador se calculan (no se guardan); solo Publicado se guarda.
+export type EstadoPlan = "vacio" | "borrador" | "publicado";
+
+// Clases de color de la píldora del plan (ya existen en dashboard.css).
+// El texto siempre va escrito en la píldora: el color nunca va solo.
+export const CLASE_ESTADO_PLAN: Record<EstadoPlan, string> = {
+  vacio: "p-mut",
+  borrador: "p-warn",
+  publicado: "p-ok",
+};
+
+export type DatosPlan = {
+  publicado: boolean;
+  publicadoPor: string;
+  publicadoEn: string;
+};
+
+// fila de la base de datos -> datos del plan tipados
+export function datosAPlan(datos: DatosFila): DatosPlan {
+  return {
+    publicado: datos.publicado === "true",
+    publicadoPor: sinHtml(datos.publicadoPor),
+    publicadoEn: sinHtml(datos.publicadoEn),
+  };
+}
+
+// datos del plan -> fila de la base de datos (todo texto)
+export function planADatos(p: DatosPlan): DatosFila {
+  return {
+    publicado: String(p.publicado),
+    publicadoPor: p.publicadoPor,
+    publicadoEn: p.publicadoEn,
+  };
+}
+
+// Estado del plan calculado: sin fichas es Vacío; con fichas, Borrador hasta que se publique.
+export function estadoPlanDe(totalFichas: number, publicado: boolean): EstadoPlan {
+  if (totalFichas === 0) return "vacio";
+  return publicado ? "publicado" : "borrador";
+}

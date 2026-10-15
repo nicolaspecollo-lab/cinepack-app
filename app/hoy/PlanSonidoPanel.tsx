@@ -4,13 +4,16 @@ import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   CLASE_ESTADO_FICHA,
+  CLASE_ESTADO_PLAN,
   CLASE_RIESGO,
   METODOS,
   RIESGOS,
   estadoDe,
+  estadoPlanDe,
   puedeMarcarLista,
   type FichaEscena,
 } from "./planSonidoFilas";
+import { usePlanSonidoEstado } from "./usePlanSonidoEstado";
 import { usePlanSonidoFilas, type FilaFicha } from "./usePlanSonidoFilas";
 
 type Props = { fullName: string; editable: boolean };
@@ -24,6 +27,7 @@ function numeroDe(escena: string): number {
 export default function PlanSonidoPanel({ fullName, editable }: Props) {
   const t = useTranslations("planSonido");
   const { fichas, loading, error, crear, editar, marcarLista } = usePlanSonidoFilas(fullName);
+  const { plan, loading: cargandoPlan, error: errorPlan, publicar } = usePlanSonidoEstado(fullName); // PUBLICAR
 
   const ordenadas = useMemo(
     () => [...fichas].sort((a, b) => numeroDe(a.datos.escena) - numeroDe(b.datos.escena)),
@@ -52,38 +56,80 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
     editar(fila.id, { ...fila.datos, [campo]: valor });
   }
 
-  if (loading) return null;
+  // PUBLICAR: pide confirmación diciendo cuántas fichas no están listas y, si se acepta, publica.
+  async function publicarPlan() {
+    const sinLista = ordenadas.filter((f) => !f.datos.lista).length;
+    const texto =
+      sinLista > 0 ? t("confirmPublishPending", { count: sinLista }) : t("confirmPublish");
+    if (!window.confirm(texto)) return;
+    await publicar();
+  }
 
-  const botonAnadir = (
-    <div className="hp-actions">
-      <button className="cp-btn cp-btn-acc" onClick={anadirFicha}>
-        {t("addScene")}
-      </button>
-    </div>
+  if (loading || cargandoPlan) return null;
+
+  const botonNuevaFicha = (
+    <button className="cp-btn cp-btn-acc" onClick={anadirFicha}>
+      {t("addScene")}
+    </button>
   );
 
-  if (error) {
+  const botonAnadir = <div className="hp-actions">{botonNuevaFicha}</div>;
+
+  const fallo = error ?? errorPlan;
+  if (fallo) {
     return (
       <div className="soon-box">
         <span className="hex"></span>
-        <p>{error}</p>
+        <p>{fallo}</p>
       </div>
     );
   }
 
+  // Estado del plan completo. Vacío y Borrador se calculan; Publicado viene de la base de datos.
+  const estadoPlan = estadoPlanDe(ordenadas.length, plan.publicado);
+  const barraEstadoPlan = (
+    <div className="doc-status">
+      <span className={`pill ${CLASE_ESTADO_PLAN[estadoPlan]}`}>{t(`planState_${estadoPlan}`)}</span>
+      <span className="txt">
+        {estadoPlan === "publicado"
+          ? t("planHint_publicado", {
+              user: plan.publicadoPor,
+              date: new Date(plan.publicadoEn).toLocaleString(),
+            })
+          : t(`planHint_${estadoPlan}`)}
+      </span>
+    </div>
+  );
+
+  // PUBLICAR: los botones de abajo. "Aprobar y publicar" solo para quien edita y con el plan en Borrador.
+  const botonera = (
+    <div className="hp-actions">
+      {botonNuevaFicha}
+      {estadoPlan === "borrador" && (
+        <button className="cp-btn cp-btn-acc" onClick={publicarPlan}>
+          {t("publish")}
+        </button>
+      )}
+    </div>
+  );
+
   if (ordenadas.length === 0) {
     return (
-      <div className="soon-box">
-        <span className="hex"></span>
-        <h4>{t("emptyTitle")}</h4>
-        <p>{editable ? t("emptyHint") : t("readOnlyEmpty")}</p>
-        {editable && botonAnadir}
-      </div>
+      <>
+        {barraEstadoPlan}
+        <div className="soon-box">
+          <span className="hex"></span>
+          <h4>{t("emptyTitle")}</h4>
+          <p>{editable ? t("emptyHint") : t("readOnlyEmpty")}</p>
+          {editable && botonAnadir}
+        </div>
+      </>
     );
   }
 
   return (
     <div className="sdir-wrap">
+      {barraEstadoPlan}
       <div className="sdir-grid">
         {ordenadas.map((fila) => {
           const d = fila.datos;
@@ -203,7 +249,7 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
           );
         })}
       </div>
-      {editable && botonAnadir}
+      {editable && botonera}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import DocumentosPanel from "./DocumentosPanel";
 import EscenasPanel from "./EscenasPanel";
+import PlanSonidoVisionadoCard from "./PlanSonidoVisionadoCard"; // NUEVO
 import { ACCENTS, PERMISOS_VISIONADO } from "../constants";
 
 export default function VisionadoPanel({
@@ -54,6 +55,7 @@ export default function VisionadoPanel({
           <div className="mbsection-title" style={{ margin: "18px 30px 12px" }}>
             {t("docsOf", { dept: activo })}
           </div>
+          {activo === "Sonido" && <PlanSonidoVisionadoCard fullName={fullName} />} {/* NUEVO */}
           <DocumentosPanel departamento={activo} fullName={fullName} readOnly />
 
           <div className="mbsection-title" style={{ margin: "24px 30px 12px" }}>
