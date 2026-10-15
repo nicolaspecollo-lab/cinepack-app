@@ -130,7 +130,7 @@ export default function PlanSonidoPanel({ fullName, editable }: Props) {
   return (
     <div className="sdir-wrap">
       {barraEstadoPlan}
-      <div className="sdir-grid">
+      <div className="sdir-grid hp-galeria">
         {ordenadas.map((fila) => {
           const d = fila.datos;
           const estado = estadoDe(d);
