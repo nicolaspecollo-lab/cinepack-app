@@ -4919,6 +4919,26 @@
 .cp-dash .sdir-wild-lbl{ font-family:'Poppins',sans-serif; font-weight:600; font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
 .cp-dash .sdir-wild-in{ font-family:'Courier New',monospace; font-size:12px; color:var(--text); background:none; border:none; border-bottom:1px solid var(--line); padding:2px 0; width:100%; }
 .cp-dash .sdir-wild-in:focus{ outline:none; border-bottom-color:var(--acc); }
+/* Estado "Modificado" del plan (etiqueta naranja) */
+.cp-dash .p-orange{ background:color-mix(in srgb, var(--orange) 14%, transparent); color:var(--orange); }
+
+/* ===========================================================================
+   Plan de sonido directo — impresión
+   =========================================================================== */
+@media print{
+  .cp-dash .hp-print-area .sdir-card{ break-inside:avoid; }
+  .cp-dash .hp-print-area .sdir-estrat-ta,
+  .cp-dash .hp-print-area .sdir-ta,
+  .cp-dash .hp-print-area .sdir-wild-in{ color:#0b0d10; resize:none; }
+  .cp-dash .hp-print-area .sdir-field>.cp-btn,
+  .cp-dash .hp-print-area .sdir-field>.cp-btn~span{ display:none; }
+  .cp-dash .dsr-overlay:has(.hp-print-area){ position:static; padding:0; background:none; }
+  .cp-dash .dsr-overlay:has(.hp-print-area) .dsr-panel{ max-height:none; box-shadow:none; border:none; }
+  .cp-dash .dsr-overlay:has(.hp-print-area) .dsr-body{ overflow:visible; }
+}
+
+/* En la ventana de Visionado el plan no ofrece "Vista de impresión" (se imprime desde Exclusivas o Departamentos) */
+.cp-dash .dsr-overlay .hp-open-head-tabs{ display:none; }
 
 /* -- Control de baterías -- */
 .cp-dash .sbat-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
