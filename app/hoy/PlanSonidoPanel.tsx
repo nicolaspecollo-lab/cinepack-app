@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { PrintHeader } from "./HerramientaPanel";
 import {
@@ -124,6 +123,14 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
     );
   }
 
+  // Título de la herramienta: hexágono y nombre arriba a la izquierda, como el resto de herramientas.
+  const titulo = (
+    <h3>
+      <span className="hex"></span>
+      {t("cardTitle")}
+    </h3>
+  );
+
   // Estado del plan completo. Vacío, Borrador, Modificado y Cerrado se calculan o vienen de la base de datos.
   const estadoPlan = estadoPlanDe(
     ordenadas.length,
@@ -158,6 +165,7 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
   if (ordenadas.length === 0) {
     return (
       <>
+        <div className="hp-open-head">{titulo}</div>
         {barraEstadoPlan}
         <div className="soon-box">
           <span className="hex"></span>
@@ -173,30 +181,29 @@ export default function PlanSonidoPanel({ fullName, editable: permitido }: Props
   // "Vista de impresión" para quien ve el plan; "Aprobar y publicar" con el plan en Borrador o Modificado;
   // "Enviar a postproducción" solo con el plan Publicado y sin cambios pendientes.
   const acciones = (
-  <div className="dsubtabs">
-    <button type="button" className="cp-btn" onClick={() => window.print()}>
-      {t("printView")}
-    </button>
-    {editable && (estadoPlan === "borrador" || estadoPlan === "modificado") && (
-      <button type="button" className="cp-btn cp-btn-acc-fill" onClick={publicarPlan}>
-        {t("publish")}
+    <div className="printbar">
+      <button type="button" className="cp-btn" onClick={() => window.print()}>
+        {t("printView")}
       </button>
-    )}
-    {editable && estadoPlan === "publicado" && (
-      <button type="button" className="cp-btn cp-btn-acc-fill" onClick={cerrarPlan}>
-        {t("sendToPost")}
-      </button>
-    )}
-  </div>
-);
-
-  // Se porta a la cabecera de la herramienta (HerramientasPanel.tsx). Si ese hueco no existe
-  // (por ejemplo, dentro de la ventana de Visionado), las acciones se pintan en su sitio.
-  const hueco = typeof document !== "undefined" ? document.getElementById("hp-open-head-tabs") : null;
+      {editable && (estadoPlan === "borrador" || estadoPlan === "modificado") && (
+        <button type="button" className="cp-btn cp-btn-acc-fill" onClick={publicarPlan}>
+          {t("publish")}
+        </button>
+      )}
+      {editable && estadoPlan === "publicado" && (
+        <button type="button" className="cp-btn cp-btn-acc-fill" onClick={cerrarPlan}>
+          {t("sendToPost")}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <>
-      {hueco ? createPortal(acciones, hueco) : acciones}
+      <div className="hp-open-head">
+        {titulo}
+        <div className="hp-open-head-tabs">{acciones}</div>
+      </div>
       <div className="sdir-wrap hp-print-area">
         <PrintHeader herramientaNombre={t("cardTitle")} departamento={PLAN_SONIDO_DEPARTAMENTO} />
         {barraEstadoPlan}

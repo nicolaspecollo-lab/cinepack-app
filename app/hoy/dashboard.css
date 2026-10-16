@@ -4932,7 +4932,13 @@
   .cp-dash .hp-print-area .sdir-wild-in{ color:#0b0d10; resize:none; }
   .cp-dash .hp-print-area .sdir-field>.cp-btn,
   .cp-dash .hp-print-area .sdir-field>.cp-btn~span{ display:none; }
+  .cp-dash .dsr-overlay:has(.hp-print-area){ position:static; padding:0; background:none; }
+  .cp-dash .dsr-overlay:has(.hp-print-area) .dsr-panel{ max-height:none; box-shadow:none; border:none; }
+  .cp-dash .dsr-overlay:has(.hp-print-area) .dsr-body{ overflow:visible; }
 }
+
+/* En la ventana de Visionado el plan no ofrece "Vista de impresión" (se imprime desde Exclusivas o Departamentos) */
+.cp-dash .dsr-overlay .hp-open-head-tabs{ display:none; }
 
 /* -- Control de baterías -- */
 .cp-dash .sbat-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
