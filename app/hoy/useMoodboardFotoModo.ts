@@ -74,7 +74,13 @@ export function useMoodboardFotoModo(fullName: string) {
       .select("id")
       .single();
     if (error) {
-      setModoLocal(anterior);
+      if (error.code === "23505") {
+        // Otra llamada concurrente ganó la carrera (índice único por proyecto):
+        // releemos la fila que quedó creada en vez de quedarnos con un estado inconsistente.
+        await load();
+      } else {
+        setModoLocal(anterior);
+      }
       return;
     }
     if (data) setFilaId(data.id);
