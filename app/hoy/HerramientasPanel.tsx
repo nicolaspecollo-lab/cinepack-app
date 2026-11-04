@@ -8,6 +8,8 @@ import HerramientaPanel from "./HerramientaPanel";
 import CandidatosPorPersonajePanel from "./CandidatosPorPersonajePanel";
 import PlanFrecuenciasPanel from "./PlanFrecuenciasPanel";
 import { FRECUENCIAS_DEPARTAMENTO } from "./frecuenciasFilas";
+import PlanSonidoPanel from "./PlanSonidoPanel";
+import { PLAN_SONIDO_DEPARTAMENTO, PLAN_SONIDO_HERRAMIENTA_ID } from "./planSonidoFilas";
 import MoodboardPanel, { MOODBOARD_HERRAMIENTA_ID } from "./MoodboardPanel";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
@@ -328,6 +330,7 @@ export default function HerramientasPanel({
   if (abierta) {
     const esCasting = abierta.id === "cast-candidatos";
     const esFrecuencias = abierta.id === "son-plan-frecuencias";
+    const esPlanSonido = abierta.id === PLAN_SONIDO_HERRAMIENTA_ID && departamento === PLAN_SONIDO_DEPARTAMENTO;
     const esMoodboard = abierta.id === MOODBOARD_HERRAMIENTA_ID;
     return (
       <div className="hp-open">
@@ -371,6 +374,11 @@ export default function HerramientasPanel({
               departamento === FRECUENCIAS_DEPARTAMENTO &&
               (!!isAdmin || (!!cargo && cargo === cargoJefe))
             }
+          />
+        ) : esPlanSonido ? (
+          <PlanSonidoPanel
+            fullName={fullName}
+            editable={seccion === "cargo" && (!!isAdmin || (!!cargo && cargo === cargoJefe))}
           />
         ) : esMoodboard ? (
           <MoodboardPanel departamento={departamento} fullName={fullName} editable={seccion === "cargo"} />
