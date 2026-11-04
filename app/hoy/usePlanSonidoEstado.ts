@@ -124,7 +124,13 @@ export function usePlanSonidoEstado(fullName: string) {
       .select("id, datos, registro")
       .single();
     if (err) {
-      setError(err.message);
+      if (err.code === "23505") {
+        // Otra llamada concurrente ganó la carrera (índice único por proyecto):
+        // releemos la fila que quedó creada en vez de fallar.
+        await load();
+      } else {
+        setError(err.message);
+      }
     } else if (data) {
       setFila(data as FilaDB);
       setError(null);
