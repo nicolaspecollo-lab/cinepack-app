@@ -11,7 +11,7 @@ Cada informe que produce un agente (analista-mercado-cine, cartografo-productora
 - Cuando Nico aprueba un informe en el panel, se mueve (o se copia) a `/oficina-marketing/informes/aprobados/` y desde ahí sí puede usarse. Si lo devuelve con feedback, el agente responsable lo revisa con ese feedback y lo vuelve a entregar — el informe anterior no se usa mientras tanto.
 
 ## Estándar de diseño (no negociable)
-Todo informe que llegue a Nico, sin excepción, se entrega como PDF generado con `/oficina/plantilla-informe/` (ver su README): portada de marca CINEPACK, tipografía Poppins, acento violeta `#C98AF2` de esta oficina. Nunca un archivo `.md` crudo adjunto ni mostrado como texto plano — eso es exactamente lo que Nico pidió dejar de ver. `comite-marketing` verifica esto antes de registrar cualquier informe como entrega pendiente de aprobación.
+Todo informe que llegue a Nico, sin excepción, se entrega como PDF generado con `/oficina/plantilla-informe/` (ver su README): portada de marca CINEPACK, tipografía Poppins, acento violeta `#C98AF2` de esta oficina. Nunca un archivo `.md` crudo adjunto ni mostrado como texto plano. El agente `disenador-cinepack` (transversal, compartido con la Oficina de Desarrollo) genera/revisa el PDF después de que `comite-marketing` verifica el rigor de contenido, antes de registrarlo como entrega pendiente de la aprobación de Nico.
 
 ## Inviolables (mismas que la oficina de desarrollo)
 - Nada inventado: toda cifra, dato o afirmación con fuente citada o marcada explícitamente "hipótesis".
