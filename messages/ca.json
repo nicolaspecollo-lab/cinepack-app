@@ -131,6 +131,10 @@
       "label": "Checklist de tancament",
       "desc": "Llista de control per al tancament del rodatge."
     },
+    "documentos": {
+      "label": "Documents",
+      "desc": "Fulls i documents en blanc compartits amb tot el projecte."
+    },
     "all": "Tots",
     "back": "Torna"
   },

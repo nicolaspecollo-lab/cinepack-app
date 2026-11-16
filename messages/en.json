@@ -131,6 +131,10 @@
       "label": "Wrap checklist",
       "desc": "Control list for closing out the shoot."
     },
+    "documentos": {
+      "label": "Documents",
+      "desc": "Blank sheets and documents shared with the whole project."
+    },
     "all": "All",
     "back": "Back"
   },
