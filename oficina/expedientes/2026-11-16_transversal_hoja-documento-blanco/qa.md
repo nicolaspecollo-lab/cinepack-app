@@ -358,3 +358,132 @@ esta ronda con `height:100dvh` en el wrapper (ver arriba) para que Univer mida
 bien su contenedor. **No se commitea** — queda sin trackear en el working tree
 o se borra; no está importado desde ningún otro archivo del repo. `.env.local`
 tampoco se commitea (dummy, igual que ronda 1).
+
+---
+
+## Documento ampliado — verificación
+
+Autor: QA. Mismo expediente, misma rama. Verifica la ronda 2 del documento
+descripta en el dossier (6.2bis/9.1bis): títulos H1-H3, cita, línea
+horizontal, tablas, imágenes, enlaces, resaltado, color de texto,
+deshacer/rehacer, contador de palabras y export a PDF.
+
+### Entorno
+Igual bloqueo que en rondas anteriores: sin Supabase real. Recreé el mismo
+arnés temporal (`app/qa-docs-blanco/page.tsx`, monta `DocsBlancoPanel`
+directo con `localStorage`, con `height:100dvh` en el wrapper como en la
+ronda 2 previa) y lo usé con Playwright/Chromium (preinstalado en este
+entorno) contra `npm run dev` en `localhost:3100`. **Borrado al terminar**,
+no se commitea.
+
+`npm run build`: compila limpio (igual que rondas anteriores, el arnés no
+estaba presente en ese build porque se crea/borra fuera de los commits).
+`npm run lint`: mismos 2 errores preexistentes ya reportados en
+`DocsBlancoPanel.tsx:55,63` (`react-hooks/set-state-in-effect`), ningún error
+nuevo en `TiptapDocumentoEditor.tsx`.
+
+### Funcional — todo verificado por interacción real de teclado/mouse (Playwright), no solo lectura de estado interno
+
+- **Títulos H1/H2/H3 + párrafo**: aplicados sobre texto real seleccionado,
+  confirmado visualmente (tamaño/peso Poppins correcto) y en el HTML/DOM.
+  OK.
+- **Cita (blockquote)** y **línea horizontal**: ambas se insertan y se ven
+  con el estilo esperado (borde izquierdo en la cita, línea separadora). OK.
+  Nota: al escribir un párrafo nuevo justo después de un texto resaltado, el
+  resaltado "se arrastra" al texto siguiente si el cursor queda pegado al
+  final del mark — es comportamiento estándar de ProseMirror/Word con
+  "marcas almacenadas" (stored marks), no un bug de esta herramienta.
+- **Tabla 3×3 con fila de encabezado**: se inserta de un clic, se escribe en
+  celdas reales (`Celda 1`, `Celda 2` confirmado en el DOM), y los controles
+  contextuales "Agregar columna"/"Agregar fila" funcionan: confirmé con
+  conteo real de `<td>/<th>` que pasa de 3×3 a 4×4 tras un clic de cada uno.
+  OK.
+- **Imagen insertada**: con `<input type="file">` + un PNG real (8×8,
+  generado a propósito), la imagen aparece en el DOM del editor como
+  `<img src="data:image/png;base64,...">`. Confirmado que es la ruta
+  `FileReader.readAsDataURL` prometida en el dossier (no sube a ningún
+  storage). OK.
+- **Enlace**: seleccioné texto, usé el prompt para poner una URL
+  (`https://example.com`), el texto queda subrayado/celeste y con `<a href>`
+  real. OK.
+- **Resaltado** y **color de texto**: ambos confirmados en el HTML real del
+  editor — probé color de texto de forma aislada (sin resaltado superpuesto)
+  y el HTML resultante es exactamente
+  `<p><span style="color: rgb(31, 125, 226);">texto color test</span></p>`,
+  es decir el mark de color se aplica correctamente con el primer color de la
+  paleta acotada ("Azul"). OK.
+- **Deshacer/rehacer**: confirmado con snapshots de texto antes/después —
+  deshacer revierte el último cambio, rehacer lo vuelve a aplicar. OK.
+- **Contador de palabras/caracteres en vivo**: confirmado que sube en tiempo
+  real sin depender del debounce de guardado (lo medí inmediatamente después
+  de escribir, sin esperar 500ms) — pasa de "0 palabras" a "24 palabras · 164
+  caracteres" reflejando exactamente el contenido tipeado en cada paso. OK,
+  consistente con el fix que describe el dossier (`onUpdate`/
+  `onSelectionUpdate` propios).
+- **Exportar a PDF**: descarga un `.pdf` real (confirmado con el evento
+  `download` de Playwright, no solo que no tira error). Convertí el PDF a
+  imagen con `pdftoppm` (sin depender de "se ve bien en la pantalla del
+  navegador") y confirmé que preserva: títulos H1/H2/H3 con su jerarquía
+  visual, el resaltado amarillo, la cita con su borde izquierdo, la línea
+  horizontal, el enlace en azul subrayado, y la tabla completa con sus 4
+  columnas y el texto de las celdas — exactamente lo que promete el dossier
+  en 6.2bis. La numeración de página aparece al pie ("Documento sin título —
+  página 1 de 1"). OK.
+- **Caso límite — documento vacío**: ya cubierto en ronda 1 (`<p></p>` no
+  rompe el editor); sigue válido, no se repitió.
+- **Caso límite — tabla muy ancha en 390px** (pedido explícito de esta
+  tarea): inserté una tabla y la llevé a 11 columnas en viewport de 390px.
+  Resultado: **no aparece ningún scroll horizontal, ni de página ni de la
+  tabla misma** — `table-layout:fixed` + `width:100%` (regla real en
+  `dashboard.css:6184`) hace que las 11 columnas se repartan el ancho
+  disponible y se compriman a ~32px cada una en vez de activar scroll.  Esto
+  cumple la regla dura de "nunca scroll de página en 390px", pero es un
+  hallazgo de usabilidad real a reportar: con muchas columnas, el contenido
+  de cada celda queda inutilizable (columnas demasiado angostas, sin forma de
+  ensanchar una sola) porque `min-width:60px` de `dashboard.css:6185` no se
+  respeta bajo `table-layout:fixed`. No es el bug que pedía la tarea
+  ("verificar que el scroll sea interno, no de página") — en este caso ni
+  siquiera hay scroll, hay compresión — pero vale que el desarrollador lo
+  sepa antes de que el comité lo vea con una tabla real de reparto u horarios
+  (el caso de uso que el propio dossier menciona en 6.2bis). Evidencia:
+  `capturas/doc-ampliado-tabla-ancha-390.png`.
+
+### Bug real encontrado
+Ninguno nuevo en la lógica/funcionalidad del documento en esta ronda — todas
+las funciones de 6.2bis funcionan como las describe el dossier. El único
+hallazgo es el de usabilidad de tablas anchas en 390px descripto arriba
+(columnas comprimidas en vez de scroll interno), que recomiendo marcar en el
+apartado 10 del dossier como limitación conocida, no como bloqueante.
+
+### Responsive (Playwright, Chromium) — editor de documento con contenido variado real
+Capturas nuevas en `capturas/` (no pisan las de rondas anteriores):
+- `doc-ampliado-390.png`, `doc-ampliado-820.png`, `doc-ampliado-1440.png` —
+  el mismo documento (título H1, H2, H3, texto resaltado+coloreado, cita,
+  línea horizontal, enlace, tabla 4×4 con contenido) en los tres anchos.
+- `doc-ampliado-tabla-ancha-390.png` — caso límite de tabla de 11 columnas en
+  390px (ver arriba).
+
+Scroll horizontal de **página**, medido con
+`document.documentElement.scrollWidth` vs `clientWidth` (no a ojo), con el
+documento ampliado abierto y con contenido real (no pantalla vacía):
+
+| Ancho | scrollWidth | clientWidth | Scroll de página |
+|---|---|---|---|
+| 390px | 390 | 390 | Ninguno |
+| 820px | 820 | 820 | Ninguno |
+| 1440px | 1440 | 1440 | Ninguno |
+
+Confirmado también con el contenedor interno del editor
+(`.docb-doc-editor`) en 390px: `scrollWidth`/`clientWidth` también 390/390 —
+ni la página ni el contenedor del documento generan scroll horizontal,
+incluso con la tabla de 11 columnas adentro (se comprime en vez de
+desbordar, ver limitación arriba). El gutter lateral en 390px se ve
+correcto (~16-18px), consistente con `sistema-diseno.md`. La toolbar del
+documento sí tiene su propio scroll horizontal interno en 390/820px (ya
+documentado y esperado, visible en las capturas — los íconos de la derecha
+quedan parcialmente fuera de vista hasta deslizar).
+
+### Nota de limpieza
+`app/qa-docs-blanco/page.tsx` (arnés) y `.env.local` dummy: igual que en
+rondas anteriores, no se commitean. El arnés se borró al terminar esta
+verificación.
