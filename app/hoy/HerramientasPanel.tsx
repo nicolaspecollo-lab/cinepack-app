@@ -15,6 +15,7 @@ import MoodboardFotoPanel from "./MoodboardFotoPanel";
 import { MOODBOARD_FOTO_HERRAMIENTA_ID } from "./moodboardFotoFilas";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
+import DocsBlancoPanel from "./DocsBlancoPanel";
 import { createClient } from "@/lib/supabase/client";
 import Icon from "../components/Icon";
 import PlantillaCuadro from "./PlantillaCuadro";
@@ -77,6 +78,16 @@ export default function HerramientasPanel({
   const [personalTools, setPersonalTools] = useState<PersonalTool[]>([]);
   const [abiertaPersonal, setAbiertaPersonal] = useState<PersonalTool | null>(null);
   const [creandoEspacio, setCreandoEspacio] = useState(false);
+  const [docsBlancoAbierto, setDocsBlancoAbierto] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id ?? null);
+    })();
+  }, []);
 
   async function recargarPersonalTools() {
     const projectId = localStorage.getItem("cinepack-proyecto-id");
@@ -129,6 +140,7 @@ export default function HerramientasPanel({
     setAbierta(h);
     setAbiertaPersonal(null);
     setCreandoEspacio(false);
+    setDocsBlancoAbierto(false);
     localStorage.setItem(openKey(departamento, seccion), h.id);
   }
 
@@ -136,6 +148,7 @@ export default function HerramientasPanel({
     setAbiertaPersonal(pt);
     setAbierta(null);
     setCreandoEspacio(false);
+    setDocsBlancoAbierto(false);
     localStorage.setItem(openPersonalKey(departamento), pt.id);
   }
 
@@ -202,10 +215,18 @@ export default function HerramientasPanel({
     setCreandoEspacio(true);
     setAbierta(null);
     setAbiertaPersonal(null);
+    setDocsBlancoAbierto(false);
+  }
+
+  function abrirDocsBlanco() {
+    setDocsBlancoAbierto(true);
+    setAbierta(null);
+    setAbiertaPersonal(null);
+    setCreandoEspacio(false);
   }
 
   useEffect(() => {
-    if (seccion !== "cargo" || abierta || abiertaPersonal || creandoEspacio) return;
+    if (seccion !== "cargo" || abierta || abiertaPersonal || creandoEspacio || docsBlancoAbierto) return;
     if (personalTools.length > 0) { abrirPersonal(personalTools[0]); return; }
     if (cargoSubTools.length > 0) abrir(cargoSubTools[0]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -257,6 +278,9 @@ export default function HerramientasPanel({
       <button className={`gen-subtab ${creandoEspacio ? "on" : ""}`} onClick={abrirCreador}>
         + {t("workspaceCardTitle")}
       </button>
+      <button className={`gen-subtab ${docsBlancoAbierto ? "on" : ""}`} onClick={abrirDocsBlanco}>
+        + Hoja / Documento
+      </button>
       {cargoSubTools.map((h) => (
         <button
           key={h.id}
@@ -268,6 +292,15 @@ export default function HerramientasPanel({
       ))}
     </div>
   );
+
+  if (seccion === "cargo" && docsBlancoAbierto && userId) {
+    return (
+      <div className="hp-open">
+        {cargoSubtabsBar}
+        <DocsBlancoPanel departamento={departamento} fullName={fullName} ownerId={userId} />
+      </div>
+    );
+  }
 
   if (seccion === "cargo" && creandoEspacio) {
     return (

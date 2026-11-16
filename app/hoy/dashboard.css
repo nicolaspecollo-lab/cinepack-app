@@ -6079,3 +6079,97 @@
 /* Moodboard de Fotografía */
 .cp-dash .mb-barra-foto{ padding-top:14px; } /* variante de mb-barra con aire arriba */
 .cp-dash .mb-acciones-foto{ gap:8px; } /* separa los botones de acción de la ficha */
+/* ===========================================================================
+   Docs en blanco (Hoja de cálculo real / Documento enriquecido real)
+   Expediente: 2026-11-16_transversal_hoja-documento-blanco
+   =========================================================================== */
+.cp-dash .docb-loading{ padding:var(--sp-5) var(--gutter); color:var(--muted); font-size:var(--fs-sm); }
+
+.cp-dash .docb-index{ display:flex; flex-direction:column; gap:0; width:100%; box-sizing:border-box; }
+.cp-dash .docb-index-head{ display:flex; align-items:flex-start; gap:14px; padding:var(--sp-5) var(--gutter) var(--sp-4); }
+.cp-dash .docb-index-head .hex{ width:14px; height:12px; background:var(--acc); flex-shrink:0; margin-top:4px; }
+.cp-dash .docb-index-head h4{ font-family:'Poppins',sans-serif; font-size:var(--fs-md); font-weight:700; margin:0 0 4px; }
+.cp-dash .docb-index-head p{ font-size:var(--fs-sm); color:var(--muted); margin:0; }
+
+.cp-dash .docb-nuevo-cards{ display:flex; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-4); flex-wrap:wrap; }
+.cp-dash .docb-nuevo-card{
+  --docb-color: var(--acc);
+  flex:1 1 220px; min-width:0; box-sizing:border-box;
+  display:flex; align-items:center; gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4); background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--docb-color);
+  cursor:pointer; text-align:left; transition:border-color var(--dur) ease, background var(--dur) ease, transform var(--dur-fast) ease;
+}
+.cp-dash .docb-nuevo-card:hover{ border-color:var(--docb-color); background:var(--hl1); }
+.cp-dash .docb-nuevo-card:active{ transform:scale(0.98); }
+.cp-dash .docb-nuevo-icon{
+  font-size:var(--fs-md); flex-shrink:0; width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:color-mix(in srgb, var(--docb-color) 18%, transparent); color:var(--docb-color);
+}
+.cp-dash .docb-nuevo-card strong{ display:block; font-family:'Poppins',sans-serif; font-size:var(--fs-base); font-weight:700; color:var(--text); }
+.cp-dash .docb-nuevo-card span{ display:block; font-size:var(--fs-xs); color:var(--muted); margin-top:2px; }
+
+.cp-dash .docb-lista{ display:flex; flex-direction:column; gap:var(--sp-2); padding:0 var(--gutter) var(--sp-5); }
+.cp-dash .docb-item{
+  display:flex; align-items:center; gap:var(--sp-3); width:100%; box-sizing:border-box;
+  padding:var(--sp-2) var(--sp-3); background:var(--bg-2); border:1px solid var(--line);
+  cursor:pointer; text-align:left; transition:border-color var(--dur) ease, background var(--dur) ease;
+}
+.cp-dash .docb-item:hover{ border-color:var(--acc); background:var(--hl1); }
+.cp-dash .docb-item-icon{ flex-shrink:0; color:var(--muted); }
+.cp-dash .docb-item-info{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
+.cp-dash .docb-item-info strong{ font-family:'Poppins',sans-serif; font-size:var(--fs-base); font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cp-dash .docb-item-info span{ font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .docb-item-go{ flex-shrink:0; color:var(--muted); }
+
+/* Documento/hoja abierto */
+.cp-dash .docb-open{ display:flex; flex-direction:column; flex:1; min-width:0; }
+.cp-dash .docb-open-head{ display:flex; align-items:center; gap:var(--sp-2); padding:var(--sp-3) var(--gutter); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.cp-dash .docb-back{ background:none; border:1px solid var(--line); color:var(--text); width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
+.cp-dash .docb-back:hover{ background:var(--hl1); }
+.cp-dash .docb-open-icon{ color:var(--muted); flex-shrink:0; }
+.cp-dash .docb-open-title{
+  flex:1; min-width:120px; background:none; border:none; color:var(--text);
+  font-family:'Poppins',sans-serif; font-size:var(--fs-base); font-weight:700;
+  padding:4px 2px; border-bottom:1px dashed transparent;
+}
+.cp-dash .docb-open-title:focus{ outline:none; border-bottom-color:var(--acc); }
+.cp-dash .docb-share, .cp-dash .docb-delete{
+  display:flex; align-items:center; gap:6px; background:none; border:1px solid var(--line); color:var(--muted);
+  font-size:var(--fs-xs); padding:5px 9px; cursor:pointer; flex-shrink:0; white-space:nowrap;
+}
+.cp-dash .docb-share:hover, .cp-dash .docb-delete:hover{ border-color:var(--acc); color:var(--text); }
+.cp-dash .docb-share.on{ border-color:var(--lime); color:var(--lime); }
+
+/* Hoja de cálculo (Univer): su UI nativa está pensada para escritorio —
+   en 390px se envuelve en scroll horizontal controlado en vez de recortarla,
+   respetando overflow-x:hidden del shell exterior (.cp-dash). */
+.cp-dash .docb-hoja-wrap{ flex:1; min-height:480px; display:flex; flex-direction:column; min-width:0; }
+.cp-dash .docb-hoja-scroll{ flex:1; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.cp-dash .docb-hoja-scroll > div{ min-width:640px; height:100%; }
+@media (max-width:640px){ .cp-dash .docb-hoja-wrap{ min-height:420px; } }
+
+/* Documento (TipTap) */
+.cp-dash .docb-doc-wrap{ display:flex; flex-direction:column; flex:1; min-width:0; }
+.cp-dash .docb-doc-toolbar{
+  display:flex; align-items:center; gap:2px; padding:var(--sp-2) var(--gutter);
+  border-bottom:1px solid var(--line); overflow-x:auto; -webkit-overflow-scrolling:touch; flex-shrink:0;
+}
+.cp-dash .docb-doc-toolbar button{
+  background:none; border:1px solid transparent; color:var(--muted); width:28px; height:28px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; border-radius:2px;
+}
+.cp-dash .docb-doc-toolbar button:hover{ background:var(--hl2); color:var(--text); }
+.cp-dash .docb-doc-toolbar button.on{ background:var(--hl3); color:var(--acc); border-color:var(--line); }
+.cp-dash .docb-doc-sep{ width:1px; height:18px; background:var(--line); margin:0 4px; flex-shrink:0; }
+.cp-dash .docb-doc-editor{ flex:1; min-width:0; overflow-y:auto; padding:var(--sp-5) var(--gutter); }
+.cp-dash .docb-doc-editor .ProseMirror{
+  outline:none; min-height:300px; max-width:720px; margin:0 auto;
+  font-family:'Courier New', Courier, monospace; font-size:var(--fs-base); color:var(--text); line-height:1.6;
+}
+.cp-dash .docb-doc-editor .ProseMirror h2{ font-family:'Poppins',sans-serif; font-weight:800; font-size:var(--fs-xl); letter-spacing:-0.02em; line-height:1.1; margin:0.6em 0 0.3em; }
+.cp-dash .docb-doc-editor .ProseMirror p{ margin:0.4em 0; }
+.cp-dash .docb-doc-editor .ProseMirror ul, .cp-dash .docb-doc-editor .ProseMirror ol{ padding-left:1.4em; }
+.cp-dash .docb-doc-editor .ProseMirror p.is-editor-empty:first-child::before{
+  content:attr(data-placeholder); color:var(--muted); float:left; height:0; pointer-events:none;
+}
