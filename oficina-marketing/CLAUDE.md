@@ -18,6 +18,8 @@ Flujo real:
 4. Si aprueba: el informe se mueve a `/oficina-marketing/informes/aprobados/` **inmediatamente** — desde ese momento es memoria real, disponible para `estratega-posicionamiento` y cualquier otro agente, sin esperar nada de Nico.
 5. Se registra igual en el panel en vivo (colección `entregas`) para que Nico lo vea, con el estado que puso el director. Nico puede revisar y, si no está de acuerdo, devolverlo — eso lo saca de `aprobados/` hasta que se corrija — pero el flujo normal no lo espera.
 
+**Dos calificaciones distintas (regla de Nico, 16/11/2026), tanto para el director como para Nico en el panel**: "Cumple" (satisface el estándar) y "Supera las expectativas" (además de cumplir, aporta algo no pedido o eleva el nivel de la oficina) — nunca tratarlas como sinónimos. Un informe que el director aprueba por default es "Cumple"; "Supera" se reserva para cuando hay un hallazgo o ángulo genuinamente por encima de lo esperado.
+
 `estratega-posicionamiento` **solo puede citar o basarse en informes de `/oficina-marketing/informes/aprobados/`** — nunca en un borrador sin la aprobación del director, aunque le "parezca" correcto.
 
 ## Ciclo autónomo (tarea programada)

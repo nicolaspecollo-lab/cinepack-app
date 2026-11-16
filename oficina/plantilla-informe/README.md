@@ -24,7 +24,7 @@ node oficina/plantilla-informe/build.js <archivo.md> <salida.pdf> <meta.json>
 }
 ```
 
-Clases de badge disponibles: `badge-ok` (verde, aprobado), `badge-warn` (ámbar, pendiente), `badge-danger` (rojo, archivado/objeciones).
+Clases de badge disponibles: `badge-supera` (verde-dorado degradé, "Supera las expectativas" — calificación distinta de "Cumple", no sinónimo), `badge-ok` (verde, cumple/aprobado), `badge-warn` (ámbar, pendiente), `badge-danger` (rojo, archivado/objeciones).
 
 Requiere `pandoc` y Playwright (ambos ya disponibles en el entorno de esta oficina).
 

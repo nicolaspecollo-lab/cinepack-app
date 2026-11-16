@@ -33,6 +33,7 @@ blockquote{margin:16px 0; padding:4px 0 4px 16px; border-left:3px solid var(--ac
 .badge-ok{background:rgba(82,236,100,.14); color:var(--ok);}
 .badge-warn{background:rgba(232,163,48,.14); color:var(--warn);}
 .badge-danger{background:rgba(240,122,128,.14); color:var(--danger);}
+.badge-supera{background:linear-gradient(90deg, var(--ok), #bfe88a); color:#0D0D12;}
 
 /* cover page */
 .cover{
