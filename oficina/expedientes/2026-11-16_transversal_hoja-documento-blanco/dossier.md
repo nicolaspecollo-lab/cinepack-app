@@ -19,7 +19,13 @@ dentro de "Exclusivas" de su departamento:
   (color, alineación), insertar/eliminar filas y columnas — un lienzo de
   cálculo real, no una tabla con columnas predefinidas.
 - **Documento** (TipTap, núcleo MIT): negrita, cursiva, subrayado, tachado,
-  títulos, listas (simple/numerada), alineación, exportación a PDF.
+  resaltado, color de texto, títulos H1-H3, párrafo, citas, línea
+  horizontal, listas (simple/numerada), alineación, enlaces, tablas,
+  imágenes insertadas, deshacer/rehacer, contador de palabras/caracteres en
+  vivo y exportación a PDF. **Ampliado en una segunda ronda** (feedback
+  directo de Nico: "la vara es Word/Pages, a esta herramienta le faltan
+  muchas opciones de texto") — ver 6.2bis y 9.1bis para el detalle de lo
+  agregado en esa ronda.
 
 Ambos se autoguardan (debounce ~0.5-0.6s tras el último cambio), el usuario
 los nombra él mismo, y puede marcarlos "Compartido" para que el resto del
@@ -66,6 +72,76 @@ acceso explícito — ver arquitectura.md).
 4. Igual que la hoja: nombre editable in-line, autoguardado, botón
    "Compartido"/"Privado", botón eliminar con confirmación.
 
+### 6.2bis Ronda 2 del documento — ampliación a nivel Word/Pages
+Devolución textual de Nico sobre el editor en vivo: "Es muy grande la
+diferencia de desarrollo entre la herramienta de celdas y esta de 'documento
+en blanco'. A esta herramienta le faltan muchas opciones de texto y WORD o
+Pages son nuestra referencia." Se tomó como devolución real (no cosmética) y
+se amplió el documento con las funciones que más valor aportan a un equipo de
+rodaje (notas, actas, instrucciones) sin pasar de una tarde de desarrollo:
+
+- **Títulos H1/H2/H3** (antes solo un nivel) + párrafo, para estructurar
+  actas con secciones y subsecciones.
+- **Cita (blockquote)** y **línea horizontal**, para separar bloques dentro
+  de instrucciones largas (ej. "decisión del día" citada aparte).
+- **Tablas** (`@tiptap/extension-table` + `table-row`/`table-cell`/
+  `table-header`, redimensionables): crean 3×3 con fila de encabezado de un
+  clic desde la barra; con el cursor dentro de una tabla aparecen botones
+  contextuales para agregar columna, agregar fila y eliminar la tabla
+  (reusa los iconos ya existentes `columns`/`rows`/`trash` de `Icon.tsx`,
+  sin inventar un set nuevo). Caso de uso real: planillas de reparto o de
+  horarios pegadas directamente dentro de un acta, sin saltar a la hoja de
+  cálculo.
+- **Imágenes insertadas** (`@tiptap/extension-image`): botón que abre el
+  selector de archivos del sistema (mismo patrón ya usado en
+  `MoodboardLienzo.tsx`/`CarpetaNavegable.tsx` — `<input type="file">` +
+  `FileReader.readAsDataURL`), sin subir a ningún storage nuevo ni crear una
+  API route. Caso de uso: pegar una foto de referencia de locación o un
+  plano de continuidad directamente en la instrucción del día.
+- **Enlaces** (`@tiptap/extension-link`): prompt simple para poner/editar/
+  quitar URL sobre el texto seleccionado.
+- **Resaltado de texto** y **color de texto** (`@tiptap/extension-highlight`
+  + `@tiptap/extension-color` + `@tiptap/extension-text-style`), este
+  último con una paleta acotada a los acentos ya nombrados en
+  `sistema-diseno.md` (`--blue`, `--pink`, `--green`, `--amber`, `--rose`,
+  `--violet`) en vez de un selector de color libre, para no romper la
+  identidad visual del documento.
+- **Deshacer/rehacer visibles** en la barra (el historial ya lo traía
+  TipTap; antes no tenía botón).
+- **Contador de palabras/caracteres en vivo** (`@tiptap/extension-character-
+  count`), al pie del editor — el detalle que Word siempre muestra y que
+  antes no existía. Se detectó y corrigió un bug real al verificarlo: antes
+  solo se habría actualizado al ritmo del guardado debounceado (500ms
+  después del último cambio, y solo si el padre re-renderizaba), no en cada
+  tecla; ahora hay un `onUpdate`/`onSelectionUpdate` propio que fuerza el
+  re-render inmediato del contador y del estado "activo" de la barra, sin
+  tocar el debounce del guardado real.
+- **Export a PDF con numeración de página**: cada hoja exportada ahora
+  lleva `"<nombre> — página X de Y"` al pie, y la captura con `html2canvas`
+  se verificó que preserva tablas e imágenes nuevas (se agregó una hoja de
+  estilos mínima — bordes de celda, fondo de encabezado, `max-width` de
+  imagen — dentro del contenedor oculto que se fotografía, porque fuera de
+  `.cp-dash` el documento no hereda `dashboard.css`).
+
+Deliberadamente fuera de alcance de esta ronda (lo pidió explícitamente el
+encargo): control de cambios/comentarios tipo Word real — es un expediente
+aparte si Nico lo pide.
+
+**Verificación real (Playwright, no solo compilación)**: se montó el
+componente en una página temporal fuera del flujo de login (borrada antes
+de cerrar el expediente, no queda en el repo) y se probó con un navegador
+automatizado: insertar una tabla 3×3 y escribir en una celda, insertar una
+imagen real vía selector de archivos, aplicar color de texto a una
+selección, ver el contador de palabras subir de 0 a 4 y luego a 6 en vivo, y
+exportar a PDF — la tabla, el color de texto y la numeración de página
+aparecieron correctos en el PDF resultante (verificado convirtiendo la
+página a imagen con `pdftoppm`). Se encontró y corrigió en el proceso un
+bug real de UI: el menú desplegable de color de texto quedaba recortado
+porque heredaba el `overflow-x:auto` de la barra de herramientas (la barra
+necesita scroll horizontal en 390px); se resolvió posicionando el menú en
+`position:fixed` sobre la posición real del botón en vez de depender del
+flujo del contenedor.
+
 ### 6.3 Por qué es un panel a medida (no el motor genérico)
 Igual justificación que `MoodboardFotoLienzo.tsx`/`PlanSonidoPanel.tsx`: el
 contenido es un lienzo de edición completo (celdas con fórmulas / documento
@@ -90,7 +166,7 @@ señalado en `arquitectura.md`, Nivel 1).
 | `app/hoy/docsBlanco.ts` | Modelo de datos (`DocBlanco`) + funciones CRUD. Implementa el contrato de la tabla `docs_blanco` definida en `arquitectura.md` contra **localStorage** (stub explícito, ver 9.1). Migrar a Supabase real es un cambio mecánico de estas mismas funciones, sin tocar la UI. |
 | `app/hoy/DocsBlancoPanel.tsx` | Panel a medida: listado ("Mis documentos/hojas"), creación, apertura, renombrado in-line, toggle privado/compartido, borrado. Monta `UniverHojaEditor`/`TiptapDocumentoEditor` vía `next/dynamic` con `ssr:false` (mismo patrón que `MoodboardLienzo`/`MoodboardFotoLienzo`, porque ambos editores dependen del DOM/canvas real). |
 | `app/hoy/UniverHojaEditor.tsx` | Monta Univer (`@univerjs/presets` + `@univerjs/preset-sheets-core`, locale `es-ES`) sobre un `<div>` ref. Crea el workbook desde el snapshot guardado (`univerAPI.createWorkbook(...)`) o uno vacío. Autoguarda en cada `CommandExecuted` (debounce 600ms) usando `fWorkbook.save()`. |
-| `app/hoy/TiptapDocumentoEditor.tsx` | Monta TipTap (`@tiptap/react` + `StarterKit` + `Underline` + `TextAlign` + `Placeholder`). Toolbar propia con los iconos de `Icon.tsx` (negrita/cursiva/subrayado/tachado/títulos/listas/alineación/exportar). Autoguarda el JSON de ProseMirror en `onUpdate` (debounce 500ms). Exporta a PDF con `jspdf` (ya en el stack). |
+| `app/hoy/TiptapDocumentoEditor.tsx` | Monta TipTap (`@tiptap/react` + `StarterKit` + `Underline` + `TextAlign` + `Placeholder` + `Table`/`TableRow`/`TableCell`/`TableHeader` + `Image` + `Link` + `TextStyle` + `Color` + `Highlight` + `CharacterCount`, todas `@tiptap/extension-*` MIT). Toolbar propia con los iconos de `Icon.tsx` (negrita/cursiva/subrayado/tachado/resaltado/color/H1-H3/párrafo/cita/línea horizontal/listas/alineación/enlace/imagen/tabla + controles contextuales de tabla/deshacer/rehacer/exportar). Autoguarda el JSON de ProseMirror en `onUpdate` (debounce 500ms, separado del re-render inmediato de la UI). Exporta a PDF con `jspdf` + `html2canvas`, preservando tablas/imágenes y con numeración de página. |
 | `app/hoy/HerramientasPanel.tsx` (modificado) | Agrega el botón "+ Hoja / Documento" en la barra de sub-pestañas de "Exclusivas" y el estado `docsBlancoAbierto`, siguiendo el mismo patrón ya usado por "+ Espacio de trabajo"/`EspacioTrabajoPanel`. Resuelve el `userId` real vía `supabase.auth.getUser()` (necesario como `owner_id`). |
 | `app/hoy/dashboard.css` (ampliado) | Reglas `.docb-*`: tokens `--gutter`/`--fs-*`/`--sp-*`/`--hl*`/`--line`/`--acc`, sin valores sueltos. La UI nativa de Univer no es mobile-first (riesgo ya señalado por el arquitecto); se la envuelve en `.docb-hoja-scroll` con `overflow-x:auto` propio en vez de recortarla, respetando el `overflow-x:hidden` global de `.cp-dash`. |
 | `supabase/migrations/20261116000000_docs_blanco.sql` | Tablas `docs_blanco` / `docs_blanco_accesos` + RLS, exactamente como las definió `arquitectura.md` (reusa `puede_admin_depto()` ya existente). **No corrida contra un proyecto Supabase real en esta sesión** — queda pendiente de validación real antes de cerrar el expediente. |
@@ -100,6 +176,25 @@ señalado en `arquitectura.md`, Nivel 1).
 - `@univerjs/preset-sheets-core` `^1.5.2` (bundlea `@univerjs/core`, `sheets`, `sheets-ui`, `sheets-formula(-ui)`, `docs(-ui)`, `ui`, `design`, `engine-render`, `engine-formula`, `rpc`, `network`, `sheets-numfmt(-ui)` — todas en `1.5.2`, licencia Apache-2.0 verificada en el propio `package.json` de cada paquete descargado)
 - `rxjs` `^7.8.2` (peer-dep de Univer)
 - `@tiptap/react` `^3.34.0`, `@tiptap/core` `^3.34.0`, `@tiptap/pm` `^3.34.0`, `@tiptap/starter-kit` `^3.34.0`, `@tiptap/extension-text-align` `^3.34.0`, `@tiptap/extension-underline` `^3.34.0`, `@tiptap/extension-placeholder` `^3.34.0` (todas MIT)
+
+#### 9.1bis Librerías agregadas en la ronda 2 (ampliación "nivel Word/Pages")
+Todas oficiales `@tiptap/extension-*` en la misma versión ya fijada en el
+proyecto (`3.34.0`), licencia MIT, sin ninguna librería ajena a la familia
+TipTap ya aprobada:
+- `@tiptap/extension-table`, `@tiptap/extension-table-row`,
+  `@tiptap/extension-table-cell`, `@tiptap/extension-table-header`
+- `@tiptap/extension-image`
+- `@tiptap/extension-link`
+- `@tiptap/extension-character-count`
+- `@tiptap/extension-text-style`, `@tiptap/extension-color`
+- `@tiptap/extension-highlight`
+
+`npm install` de estas 9 no arrojó conflicto de peer-dependencies contra
+React 19.2.4/Next.js 16.2.9 (misma familia y versión que las extensiones ya
+instaladas). `npm run build` compila y tipa limpio con todas instaladas.
+No se agregó ninguna API route nueva: la imagen se inserta client-side como
+`data:` URL (`FileReader.readAsDataURL`), mismo patrón ya usado en
+`MoodboardLienzo.tsx`/`CarpetaNavegable.tsx` de este mismo repo.
 
 **Compatibilidad verificada contra React 19.2.4 / Next.js 16.2.9**: `npm install`
 no arrojó ningún conflicto de peer-dependencies (los `peerDependencies`
