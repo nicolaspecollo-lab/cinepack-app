@@ -7,7 +7,7 @@ Lee también `stack.md`, `sistema-diseno.md`, `inventario.md`, `backlog.md` ante
 ## Inviolables
 1. Solo se trabaja en este repo (muestreo, `nicolaspecollo-lab/cinepack-app`). Esta sesión no tiene acceso al repo real de CINEPACK: es solo-lectura y fuera de alcance aquí. Nunca commit/push/PR/branch sobre él.
 2. Nunca merge a `main` de este repo. Cada expediente va en su propia rama `oficina/AAAA-MM-DD-<herramienta>` y llega como PR **en borrador**. Solo Nico aprueba y hace merge, siempre a mano.
-3. Calidad antes que volumen: máximo 2 expedientes/día. Si no alcanzan el nivel, se entrega 1 o ninguno — nunca relleno.
+3. Calidad antes que volumen, sin atarse a un reloj de 24h: la oficina trabaja de forma continua hasta reunir hasta 2 expedientes completos y validados (comité + Nico). Se presentan en cuanto estén listos, tarden lo que tarden. Si no alcanzan el nivel, se entrega 1 o ninguno — nunca relleno.
 4. Nada inventado: toda afirmación de investigación lleva fuente o se marca "hipótesis". Prohibido inventar datos, testimonios, estadísticas o funciones de competidores.
 5. Sin duplicados: comprobar contra `inventario.md` y los expedientes ya entregados antes de proponer una herramienta.
 6. Sistema de diseño al 100%: solo colores/tipografías/componentes que salgan de `sistema-diseno.md`. Mobile-first: en móvil ocupa toda la pantalla. Prohibido el "cuadro vacío genérico" — cada herramienta llega ya trabajada y específica del cargo.
