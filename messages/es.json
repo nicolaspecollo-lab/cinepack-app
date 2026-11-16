@@ -131,6 +131,10 @@
       "label": "Checklist wrap",
       "desc": "Lista de control para el cierre del rodaje."
     },
+    "documentos": {
+      "label": "Documentos",
+      "desc": "Hojas y documentos en blanco compartidos con todo el proyecto."
+    },
     "all": "Todos",
     "back": "Volver"
   },

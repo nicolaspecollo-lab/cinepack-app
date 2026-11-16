@@ -69,6 +69,19 @@ export function listarDocsBlanco(
     .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
 }
 
+// Nivel 2 de integración (arquitectura.md, apartado 4): listado a nivel
+// proyecto de todo lo "Compartido", sin filtrar por owner ni departamento —
+// a diferencia de listarDocsBlanco (nivel 1, ligado al cargo que lo creó).
+// "localStorage" simula hoy una sola fila por proyecto (el stub no separa por
+// usuario), así que en este prototipo esto ya incluye lo creado por cualquiera
+// en esa sesión; migrado a Supabase sería `select * where project_id=... and
+// visibilidad='compartido'` sin RLS por owner.
+export function listarDocsCompartidosProyecto(projectId: string): DocBlanco[] {
+  return leerTodos(projectId)
+    .filter((d) => d.visibilidad === "compartido")
+    .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1));
+}
+
 export function crearDocBlanco(params: {
   projectId: string;
   tipo: TipoDocBlanco;

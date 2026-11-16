@@ -10,13 +10,14 @@
 // títulos/alineación — lo que pidió el expediente — y exportación.
 // ===========================================================================
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 import Icon from "../components/Icon";
 
 export default function TiptapDocumentoEditor({
@@ -33,6 +34,7 @@ export default function TiptapDocumentoEditor({
     onGuardarRef.current = onGuardar;
   }, [onGuardar]);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [exportando, setExportando] = useState(false);
 
   const hayContenido = contenido && Object.keys(contenido).length > 0;
 
@@ -61,15 +63,59 @@ export default function TiptapDocumentoEditor({
 
   if (!editor) return null;
 
-  function exportarPdf() {
-    const doc = new jsPDF();
-    const texto = editor!.getText();
-    const lineas = doc.splitTextToSize(texto, 180);
-    doc.setFontSize(14);
-    doc.text(nombre || "Documento", 14, 18);
-    doc.setFontSize(11);
-    doc.text(lineas, 14, 30);
-    doc.save(`${nombre || "documento"}.pdf`);
+  // Exporta el HTML real de TipTap (no editor.getText(), que descartaba todo
+  // el formato) a un <div> oculto, lo "fotografía" con html2canvas preservando
+  // negrita/cursiva/subrayado/tachado/títulos/listas/alineación tal como se
+  // ven en pantalla, y vuelca esa imagen a un PDF con jsPDF, paginando si el
+  // documento no entra en una sola hoja A4. html2canvas ya viene instalado
+  // como dependencia transitiva de jspdf (no es una librería nueva).
+  async function exportarPdf() {
+    if (!editor || exportando) return;
+    setExportando(true);
+    const contenedor = document.createElement("div");
+    contenedor.innerHTML = editor.getHTML();
+    contenedor.style.position = "fixed";
+    contenedor.style.left = "-9999px";
+    contenedor.style.top = "0";
+    contenedor.style.width = "700px";
+    contenedor.style.padding = "32px";
+    contenedor.style.background = "#ffffff";
+    contenedor.style.color = "#111111";
+    contenedor.style.fontFamily = "'Courier New', Courier, monospace";
+    contenedor.style.fontSize = "14px";
+    contenedor.style.lineHeight = "1.5";
+    document.body.appendChild(contenedor);
+    try {
+      const canvas = await html2canvas(contenedor, { scale: 2, backgroundColor: "#ffffff" });
+      const pdf = new jsPDF({ unit: "pt", format: "a4" });
+      const margen = 36;
+      const anchoPdf = pdf.internal.pageSize.getWidth() - margen * 2;
+      const altoPdf = pdf.internal.pageSize.getHeight() - margen * 2;
+      const escalaPxPorPt = canvas.width / anchoPdf;
+      const altoPaginaPx = altoPdf * escalaPxPorPt;
+      let yaRenderizadoPx = 0;
+      let esPrimera = true;
+      while (yaRenderizadoPx < canvas.height) {
+        const altoRebanadaPx = Math.min(altoPaginaPx, canvas.height - yaRenderizadoPx);
+        const rebanada = document.createElement("canvas");
+        rebanada.width = canvas.width;
+        rebanada.height = altoRebanadaPx;
+        const ctx = rebanada.getContext("2d");
+        if (ctx) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, rebanada.width, rebanada.height);
+          ctx.drawImage(canvas, 0, yaRenderizadoPx, canvas.width, altoRebanadaPx, 0, 0, canvas.width, altoRebanadaPx);
+        }
+        if (!esPrimera) pdf.addPage();
+        pdf.addImage(rebanada.toDataURL("image/png"), "PNG", margen, margen, anchoPdf, altoRebanadaPx / escalaPxPorPt);
+        yaRenderizadoPx += altoRebanadaPx;
+        esPrimera = false;
+      }
+      pdf.save(`${nombre || "documento"}.pdf`);
+    } finally {
+      document.body.removeChild(contenedor);
+      setExportando(false);
+    }
   }
 
   return (
@@ -167,7 +213,7 @@ export default function TiptapDocumentoEditor({
           <Icon name="align-right" size={14} />
         </button>
         <span className="docb-doc-sep" />
-        <button type="button" onClick={exportarPdf} title="Exportar a PDF">
+        <button type="button" onClick={exportarPdf} disabled={exportando} title={exportando ? "Generando PDF…" : "Exportar a PDF"}>
           <Icon name="download" size={14} />
         </button>
       </div>
