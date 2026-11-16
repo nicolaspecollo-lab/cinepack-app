@@ -6173,3 +6173,33 @@
 .cp-dash .docb-doc-editor .ProseMirror p.is-editor-empty:first-child::before{
   content:attr(data-placeholder); color:var(--muted); float:left; height:0; pointer-events:none;
 }
+.cp-dash .docb-doc-editor .ProseMirror h1{ font-family:'Poppins',sans-serif; font-weight:800; font-size:calc(var(--fs-xl) * 1.25); letter-spacing:-0.02em; line-height:1.1; margin:0.7em 0 0.3em; }
+.cp-dash .docb-doc-editor .ProseMirror h3{ font-family:'Poppins',sans-serif; font-weight:800; font-size:var(--fs-lg); letter-spacing:-0.02em; line-height:1.15; margin:0.5em 0 0.3em; }
+.cp-dash .docb-doc-editor .ProseMirror blockquote{ border-left:3px solid var(--line); margin:0.5em 0; padding:2px 0 2px var(--sp-3); color:var(--muted); }
+.cp-dash .docb-doc-editor .ProseMirror hr{ border:none; border-top:1px solid var(--line); margin:1em 0; }
+.cp-dash .docb-doc-editor .ProseMirror a{ color:var(--blue); text-decoration:underline; }
+.cp-dash .docb-doc-editor .ProseMirror mark{ background:var(--yellow); color:#16161D; border-radius:2px; padding:0 1px; }
+.cp-dash .docb-doc-editor .ProseMirror img{ max-width:100%; height:auto; border-radius:2px; display:block; margin:0.6em auto; }
+.cp-dash .docb-doc-editor .ProseMirror img.ProseMirror-selectednode{ outline:2px solid var(--acc); }
+.cp-dash .docb-doc-editor .ProseMirror table{ border-collapse:collapse; table-layout:fixed; width:100%; margin:0.6em 0; overflow:hidden; }
+.cp-dash .docb-doc-editor .ProseMirror table td, .cp-dash .docb-doc-editor .ProseMirror table th{ border:1px solid var(--line); padding:4px 8px; vertical-align:top; position:relative; min-width:60px; }
+.cp-dash .docb-doc-editor .ProseMirror table th{ background:var(--hl1); font-weight:700; text-align:left; }
+.cp-dash .docb-doc-editor .ProseMirror table .selectedCell{ background:var(--hl2); }
+.cp-dash .docb-doc-editor .ProseMirror .column-resize-handle{ background:var(--acc); position:absolute; right:-2px; top:0; bottom:0; width:3px; pointer-events:none; }
+.cp-dash .docb-doc-editor .ProseMirror.resize-cursor{ cursor:col-resize; }
+.cp-dash .docb-doc-toolbar button.docb-doc-wide{ width:auto; padding:0 6px; font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-xs); }
+.cp-dash .docb-doc-toolbar button:disabled{ opacity:.35; cursor:default; }
+.cp-dash .docb-doc-colorwrap{ position:relative; flex-shrink:0; }
+.cp-dash .docb-doc-colormenu{
+  z-index:50; display:flex; gap:4px; padding:6px;
+  background:var(--bg-2); border:1px solid var(--line); border-radius:4px; box-shadow:0 12px 30px var(--shadow);
+}
+.cp-dash .docb-doc-colorchip{ width:18px; height:18px; border-radius:50%; border:1px solid var(--line); cursor:pointer; padding:0; }
+.cp-dash .docb-doc-footer{
+  flex-shrink:0; padding:var(--sp-2) var(--gutter); border-top:1px solid var(--line);
+  color:var(--muted); font-size:var(--fs-xs); text-align:right;
+}
+@media (max-width:640px){
+  .cp-dash .docb-doc-toolbar{ gap:1px; padding:var(--sp-2) var(--gutter); }
+  .cp-dash .docb-doc-editor .ProseMirror{ max-width:100%; }
+}
