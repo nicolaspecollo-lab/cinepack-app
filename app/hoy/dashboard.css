@@ -6146,7 +6146,7 @@
    respetando overflow-x:hidden del shell exterior (.cp-dash). */
 .cp-dash .docb-hoja-wrap{ flex:1; min-height:480px; display:flex; flex-direction:column; min-width:0; }
 .cp-dash .docb-hoja-scroll{ flex:1; min-width:0; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-.cp-dash .docb-hoja-scroll > div{ min-width:640px; height:100%; }
+.cp-dash .docb-hoja-scroll > .docb-hoja-univer-root{ min-width:640px; height:100%; }
 @media (max-width:640px){ .cp-dash .docb-hoja-wrap{ min-height:420px; } }
 
 /* Documento (TipTap) */

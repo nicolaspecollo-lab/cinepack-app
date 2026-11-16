@@ -86,7 +86,26 @@ export default function UniverHojaEditor({
 
   return (
     <div className="docb-hoja-wrap">
-      <div className="docb-hoja-scroll" ref={containerRef} />
+      {/* Univer monta su UI dentro del nodo que le pasamos como `container`,
+          pero también le usa de referencia (`rootContainerElement`) para
+          anexarle, como HERMANOS directos de esa raíz, overlays internos
+          posteriores (p. ej. el editor de texto enriquecido de la celda
+          activa, `#univer-doc-selection-container-...`, creado recién al
+          entrar en modo edición). Si le pasamos directamente `.docb-hoja-scroll`
+          como container, la regla `.docb-hoja-scroll > div{ min-width:640px;
+          height:100% }` (pensada solo para el root visual de Univer, el
+          único div que debía tener ese tamaño) termina aplicándose TAMBIÉN a
+          esos overlays hermanos. Como ese overlay es `position:fixed`, el
+          `height:100%` se resuelve contra el viewport (~900px) y el
+          `min-width:640px` lo estira a 640px de ancho — con `pointer-events:
+          auto` eso bloqueaba los clics reales del mouse en toda esa franja de
+          la grilla. Fix: pasarle a Univer un div anidado propio
+          (`docb-hoja-univer-root`) como container, para que los overlays que
+          agrega después cuelguen de ÉL, no de `.docb-hoja-scroll` — así el
+          selector `> div` vuelve a matchear solo ese único nodo raíz. */}
+      <div className="docb-hoja-scroll">
+        <div className="docb-hoja-univer-root" ref={containerRef} />
+      </div>
     </div>
   );
 }
