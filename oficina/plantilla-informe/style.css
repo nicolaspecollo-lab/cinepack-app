@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#0D0D12; --bg-2:#16161D; --panel:#1b1b24; --line:rgba(255,255,255,.1);
+  --text:#F4F4F6; --muted:#C8CAD4; --accent:#1F7DE2; --accent-2:#E8A330;
+  --ok:#52EC64; --warn:#E8A330; --danger:#F07A7A;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);}
+body{font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.65;}
+.page{padding:26mm 20mm 22mm;}
+h1,h2,h3,h4{font-family:'Poppins',sans-serif; font-weight:800; letter-spacing:-0.02em; line-height:1.15; color:#fff; margin:0 0 10px;}
+h1{font-size:26px;} h2{font-size:19px; margin-top:34px; padding-top:18px; border-top:1px solid var(--line); color:var(--accent-2);}
+h3{font-size:15px; margin-top:20px; color:#fff;}
+p{margin:0 0 12px;}
+a{color:var(--accent-2);}
+strong{color:#fff;}
+ul,ol{margin:0 0 14px; padding-left:20px;}
+li{margin-bottom:4px;}
+table{width:100%; border-collapse:collapse; margin:12px 0 18px; font-size:12px;}
+th{background:var(--bg-2); color:var(--accent-2); text-align:left; padding:7px 10px; font-family:'Poppins',sans-serif; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.03em; border-bottom:2px solid var(--line);}
+td{padding:7px 10px; border-bottom:1px solid var(--line); color:var(--muted); vertical-align:top;}
+tr:nth-child(even) td{background:rgba(255,255,255,.015);}
+code{background:var(--bg-2); color:var(--accent-2); padding:1px 5px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:11px;}
+pre{background:var(--bg-2); border:1px solid var(--line); border-radius:8px; padding:12px 14px; overflow-x:auto;}
+pre code{background:none; padding:0;}
+hr{border:none; border-top:1px solid var(--line); margin:28px 0;}
+img{max-width:100%; border-radius:8px; border:1px solid var(--line); display:block; margin:10px 0 16px;}
+blockquote{margin:16px 0; padding:4px 0 4px 16px; border-left:3px solid var(--accent-2); color:#fff; font-style:normal;}
+
+/* badges inline, used via literal <span class="badge-x"> inserted by generator */
+.badge{display:inline-block; font-family:'Poppins',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:.02em; text-transform:uppercase; padding:4px 11px; border-radius:99px; margin-bottom:4px;}
+.badge-ok{background:rgba(82,236,100,.14); color:var(--ok);}
+.badge-warn{background:rgba(232,163,48,.14); color:var(--warn);}
+.badge-danger{background:rgba(240,122,128,.14); color:var(--danger);}
+
+/* cover page */
+.cover{
+  height: 257mm; display:flex; flex-direction:column; justify-content:space-between;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(31,125,226,.18), transparent 45%),
+    radial-gradient(circle at 90% 85%, rgba(232,163,48,.14), transparent 45%),
+    var(--bg);
+  padding:26mm 20mm 16mm; position:relative; overflow:hidden; page-break-after:always;
+}
+.cover::before{
+  content:""; position:absolute; inset:0; opacity:.5; pointer-events:none;
+  background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.cover-top{display:flex; align-items:center; gap:12px; position:relative; z-index:1;}
+.cover-top img{width:34px; height:34px; border-radius:8px; border:none; margin:0;}
+.cover-top .word{font-family:'Poppins',sans-serif; font-weight:800; font-size:16px; letter-spacing:-0.01em;}
+.cover-top .word b{color:var(--accent-2);}
+.cover-mid{position:relative; z-index:1;}
+.cover-mid .kicker{font-family:'Poppins',sans-serif; font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); margin-bottom:14px;}
+.cover-mid h1{font-size:40px; max-width:140mm; margin-bottom:16px;}
+.cover-mid .sub{color:var(--muted); font-size:14.5px; max-width:130mm;}
+.cover-bottom{position:relative; z-index:1; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid var(--line); padding-top:14px; font-size:11px; color:var(--muted); font-family:'Poppins',sans-serif;}
+.cover-bottom .meta-item b{display:block; color:#fff; font-size:12.5px; margin-bottom:2px;}
+
+.footer-note{margin-top:40px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:10.5px; text-align:center;}
