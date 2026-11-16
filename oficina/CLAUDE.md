@@ -6,8 +6,8 @@ Lee también `stack.md`, `sistema-diseno.md`, `inventario.md`, `backlog.md` ante
 
 ## Inviolables
 1. Solo se trabaja en este repo (muestreo, `nicolaspecollo-lab/cinepack-app`). Esta sesión no tiene acceso al repo real de CINEPACK: es solo-lectura y fuera de alcance aquí. Nunca commit/push/PR/branch sobre él.
-2. Nunca merge a `main` de este repo. Cada expediente va en su propia rama `oficina/AAAA-MM-DD-<herramienta>` y llega como PR **en borrador**. Solo Nico aprueba y hace merge, siempre a mano.
-3. Calidad antes que volumen, sin atarse a un reloj de 24h: la oficina trabaja de forma continua hasta reunir hasta 2 expedientes completos y validados (comité + Nico). Se presentan en cuanto estén listos, tarden lo que tarden. Si no alcanzan el nivel, se entrega 1 o ninguno — nunca relleno.
+2. Nunca merge a `main` de este repo (ahí vive el trabajo real de Jean-Antoine, fuera de nuestro alcance). El merge de un expediente validado a `claude/oficina-agentes-cinepack-jv179i` (la rama de trabajo de esta oficina) SÍ es automático en cuanto Nico lo valida — ver "Cola de merge" abajo. El paso de `claude/oficina-agentes-cinepack-jv179i` al repo real de CINEPACK lo sigue haciendo siempre Nico a mano (no hay acceso de escritura a ese repo desde esta sesión).
+3. Ritmo fijo (regla de Nico, 16/11/2026): **3 herramientas por día**, entregadas a las **10:00 hora de Madrid**. Si alguna no llega al nivel exigido para esa hora, se entrega 1 o 2 y se explica el motivo de la que falta — nunca relleno, pero el objetivo ya no es "hasta completar 2 sin reloj": es 3 a las 10:00, todos los días.
 4. Nada inventado: toda afirmación de investigación lleva fuente o se marca "hipótesis". Prohibido inventar datos, testimonios, estadísticas o funciones de competidores.
 5. Sin duplicados: comprobar contra `inventario.md` y los expedientes ya entregados antes de proponer una herramienta.
 6. Sistema de diseño al 100%: solo colores/tipografías/componentes que salgan de `sistema-diseno.md`. Mobile-first: en móvil ocupa toda la pantalla. Prohibido el "cuadro vacío genérico" — cada herramienta llega ya trabajada y específica del cargo.
@@ -35,8 +35,19 @@ Si un mismo expediente agrupa **más de una herramienta distinta y nombrable** (
 - **Ambición y profundidad**: cubre varias fases/aristas reales del cargo, no una pantalla plana resuelta con lo obvio; contenido precargado exhaustivo y específico; integración que abre posibilidades reales. Si la herramienta es "una herramienta más" sin la complejidad que amerita, es objeción igual que cualquiera de las anteriores.
 Si no supera las 2 rondas: se archiva con el motivo, no se entrega a Nico.
 
-## Ciclo diario
-1. Director lee backlog/expedientes/partes y elige hasta 2 herramientas. 2. Agente de departamento define necesidad + investigador documenta (con fuentes). 3. Arquitecto diseña integración y modelo de datos. 4. Desarrollador construye el prototipo en `oficina/AAAA-MM-DD-<herramienta>`. 5. QA prueba y genera capturas en 390/820/1440px (Playwright). 6. Comité revisa (máx. 2 rondas). 7. `dossier.pdf` con capturas. 8. PR en borrador en este repo, con dossier y PDF adjuntos — nunca merge. 9. Actualizar backlog, inventario y parte diario.
+## Ciclo diario (10:00 hora de Madrid, todos los días)
+1. Director lee backlog/expedientes/partes y elige 3 herramientas. 2. Agente de departamento define necesidad + investigador documenta (con fuentes). 3. Arquitecto diseña integración y modelo de datos. 4. Desarrollador construye el prototipo en `oficina/AAAA-MM-DD-<herramienta>`. 5. QA prueba y genera capturas en 390/820/1440px (Playwright). 6. Comité revisa (máx. 2 rondas). 7. `dossier.pdf` con la plantilla de marca. 8. PR en borrador contra `claude/oficina-agentes-cinepack-jv179i` (nunca contra `main`), con dossier y PDF adjuntos. 9. Actualizar backlog, inventario y parte diario.
+
+## Revisión de Nico y cola de merge
+Nico revisa cada entrega en el panel en vivo en cuanto puede — no hay una ventana fija de revisión, se procesa apenas deja el feedback (si esta sesión está activa, al toque; si no, en el chequeo automático de cada hora, que es el mínimo técnico posible).
+
+Dos calificaciones **distintas** de aprobación (no una sola "aprobado"):
+- **Cumple**: la entrega satisface la checklist completa, sin objeciones reales.
+- **Supera las expectativas**: además de cumplir, aporta algo que Nico no esperaba o eleva el estándar del resto de la oficina — esta calificación queda registrada aparte para que el equipo sepa qué nivel busca Nico, no solo que "pasó".
+
+En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agrega automáticamente a la **cola de merge** (`/oficina/cola-merge.md` + colección `cola_merge` del panel) y se mergea sin más trámite el PR del expediente contra `claude/oficina-agentes-cinepack-jv179i` (esto es automático, no requiere una acción manual adicional de Nico — la validación en el panel YA es la autorización). El paso siguiente, llevar ese cambio al repo real de CINEPACK, sigue siendo 100% manual de Nico y queda registrado en la misma cola como "pendiente de push a producción".
+
+Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
 ## Entrega a Nico (en cuanto el comité aprueba)
-PDF del expediente + enlace al PR en borrador + resumen de 5 líneas. Al cerrar la jornada: parte diario con qué se entregó, qué se archivó y por qué, qué queda pendiente, qué decisiones necesitan la intervención de Nico.
+PDF del expediente (con la plantilla de marca) + enlace al PR en borrador + resumen de 5 líneas. Al cerrar la jornada: parte diario con qué se entregó, qué se archivó y por qué, qué queda pendiente, qué decisiones necesitan la intervención de Nico, y el estado de la cola de merge.
