@@ -2,13 +2,23 @@
 
 Oficina separada de la de Desarrollo de App (`/oficina/`). Trabaja de forma continua (no atada a un ciclo diario fijo) analizando mercado, competencia y datos de producción audiovisual para preparar el lanzamiento de CINEPACK.
 
-## Regla central: nada entra al "cerebro" de marketing sin que Nico lo valide
-Cada informe que produce un agente (analista-mercado-cine, cartografo-productoras, vigia-competencia, disenador-marketing, redactor-contenidos) es un **borrador independiente**. Se guarda en `/oficina-marketing/informes/AAAA-MM-DD_<tema>.md` y se registra como una `entrega` pendiente en el panel en vivo (colección `entregas`, oficina `marketing`), con el mismo mecanismo de aprobación de 4 niveles que usa la Oficina de Desarrollo (cumple / le falta un poco / le falta bastante / lejos de lo esperado) + feedback de Nico.
+## Autonomía (regla actualizada por Nico, 16/11/2026)
+Esta oficina funciona **sola**, sin esperar que Nico revise cada informe uno por uno. Corre en un ciclo programado propio (ver "Ciclo autónomo" abajo) que elige qué investigar, reparte el trabajo, y aprueba o devuelve cada informe sin intervención humana en el día a día. Nico sigue viendo todo en el panel en vivo y puede intervenir cuando quiera, pero la oficina no se detiene a esperarlo.
 
-**Ningún informe se considera parte de la base de conocimiento de marketing hasta que Nico lo marca "cumple" en el panel.** Esto significa en concreto:
-- `estratega-posicionamiento` (el que arma el plan de marketing vivo) **solo puede citar o basarse en informes de `/oficina-marketing/informes/aprobados/`** — nunca en un borrador todavía pendiente de revisión, aunque le "parezca" correcto.
-- `comite-marketing` NO aprueba informes por sí solo — su rol es verificar rigor (fuentes, nada inventado) ANTES de que lleguen a Nico, pero la aprobación final que habilita el uso del dato es de Nico, vía el panel.
-- Cuando Nico aprueba un informe en el panel, se mueve (o se copia) a `/oficina-marketing/informes/aprobados/` y desde ahí sí puede usarse. Si lo devuelve con feedback, el agente responsable lo revisa con ese feedback y lo vuelve a entregar — el informe anterior no se usa mientras tanto.
+## Regla central: nada entra al "cerebro" de marketing sin la aprobación del director
+La aprobación que habilita a un informe como parte de la memoria de la oficina **ya no es de Nico para cada informe — es del `director-marketing`**, que actúa como el directivo estricto y exigente de esta oficina: no deja cabos sueltos, piensa de forma previsora (qué va a necesitar el negocio después, no solo lo que se le pidió), y evalúa cada informe con la pregunta de fondo "¿esto acerca a CINEPACK a monetizar antes, o es ruido?".
+
+Flujo real:
+1. Cada agente (analista-mercado-cine, cartografo-productoras, vigia-competencia, disenador-marketing, redactor-contenidos) produce su informe en `/oficina-marketing/informes/AAAA-MM-DD_<tema>.md`.
+2. `comite-marketing` revisa rigor (fuentes, nada inventado, ángulo accionable, sin repetir sin novedad) — si falla, se devuelve al agente responsable, no pasa al director.
+3. `director-marketing` hace la aprobación final, con una vara más alta que la de comite-marketing: ¿el informe deja algún cabo suelto evidente sin señalar?, ¿anticipa la pregunta de negocio que viene después?, ¿mueve la aguja hacia una decisión de monetización concreta (pricing, segmento a atacar, canal, mensaje)? Si no cumple, se devuelve con objeciones concretas — máximo 2 rondas, igual que el resto de la oficina; si no las supera, se archiva.
+4. Si aprueba: el informe se mueve a `/oficina-marketing/informes/aprobados/` **inmediatamente** — desde ese momento es memoria real, disponible para `estratega-posicionamiento` y cualquier otro agente, sin esperar nada de Nico.
+5. Se registra igual en el panel en vivo (colección `entregas`) para que Nico lo vea, con el estado que puso el director. Nico puede revisar y, si no está de acuerdo, devolverlo — eso lo saca de `aprobados/` hasta que se corrija — pero el flujo normal no lo espera.
+
+`estratega-posicionamiento` **solo puede citar o basarse en informes de `/oficina-marketing/informes/aprobados/`** — nunca en un borrador sin la aprobación del director, aunque le "parezca" correcto.
+
+## Ciclo autónomo (tarea programada)
+El director-marketing abre el ciclo leyendo `/oficina-marketing/backlog.md` y el último parte en `/oficina-marketing/partes/AAAA-MM-DD.md`, elige qué investigar (prioridad: lo que más acerque una decisión de monetización — pricing, segmento, canal de venta, ventana de oportunidad concreta), reparte, pasa cada informe por comite-marketing y luego por su propia aprobación final, actualiza `informes/aprobados/`, el plan de marketing si corresponde, y el panel en vivo, y cierra con un parte en `/oficina-marketing/partes/AAAA-MM-DD.md` (qué se aprobó, qué se devolvió y por qué, qué decisiones de negocio quedan abiertas para Nico — esas sí se marcan para que él las vea).
 
 ## Estándar de diseño (no negociable)
 Todo informe que llegue a Nico, sin excepción, se entrega como PDF generado con `/oficina/plantilla-informe/` (ver su README): portada de marca CINEPACK, tipografía Poppins, acento violeta `#C98AF2` de esta oficina. Nunca un archivo `.md` crudo adjunto ni mostrado como texto plano. El agente `disenador-cinepack` (transversal, compartido con la Oficina de Desarrollo) genera/revisa el PDF después de que `comite-marketing` verifica el rigor de contenido, antes de registrarlo como entrega pendiente de la aprobación de Nico.
