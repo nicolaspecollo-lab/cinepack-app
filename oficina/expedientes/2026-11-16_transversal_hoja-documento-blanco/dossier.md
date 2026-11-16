@@ -57,9 +57,12 @@ acceso explícito — ver arquitectura.md).
    texto y aplica negrita/cursiva/título con la barra superior (iconos de
    `Icon.tsx`, scrolleable horizontalmente en 390px si no entran todos).
 3. Al terminar, pulsa el icono de descarga en la barra para exportar a PDF
-   (usa `jspdf`, ya en el stack — el PDF toma el texto plano del documento;
-   una exportación con el formato enriquecido completo queda marcada como
-   mejora futura, ver riesgos).
+   (vuelca `editor.getHTML()` a un contenedor oculto, lo captura con
+   `html2canvas` a escala 2 y pagina el resultado en `jsPDF` por altura de
+   A4 — preserva negrita, cursiva, subrayado, tachado, títulos, listas y
+   alineación tal como se ven en pantalla, corregido en la ronda 2 de
+   revisión tras detectarse que la primera versión exportaba solo texto
+   plano).
 4. Igual que la hoja: nombre editable in-line, autoguardado, botón
    "Compartido"/"Privado", botón eliminar con confirmación.
 
@@ -122,9 +125,19 @@ type-check completo con estas librerías instaladas.
   3. Exportación de la hoja a `.xlsx` real y del documento a `.docx` (hoy solo
      hay export a PDF del documento; la hoja no tiene botón de exportación
      todavía).
-  4. Nivel "Documentos" a nivel proyecto en `WorkspaceShell.tsx` (listado
-     global, no solo dentro de "Exclusivas" de cada departamento) — en este
-     expediente se integró únicamente en el nivel 1 (cargo/usuario).
+  4. ~~Nivel "Documentos" a nivel proyecto~~ — **resuelto en la ronda 2**:
+     `DocumentosProyectoPanel.tsx` + nueva sub-pestaña "Documentos" dentro de
+     `GeneralesPanel.tsx` (visible a todo el proyecto, no solo a quien creó
+     el doc), listando todo `docs_blanco` con `visibilidad='compartido'` vía
+     `listarDocsCompartidosProyecto(projectId)`. Sigue pendiente el Nivel 3
+     (permisos granulares fila-por-persona en `docs_blanco_accesos`), que ya
+     estaba fuera del alcance de este expediente desde `arquitectura.md`.
+
+### 9.4 Riesgos residuales aceptados en la aprobación de ronda 2
+- **Insertar/eliminar columna**: QA confirmó visualmente el menú contextual correcto, pero no recapturó el efecto visual posterior al clic (quedó como "verificado parcialmente", a diferencia de fórmulas/formato/filas que sí tienen captura antes/después completa).
+- **Fix del overlay de Univer** (bloqueaba clics reales en una franja de ~640px de la grilla, corregido en `UniverHojaEditor.tsx` pasando un contenedor anidado propio en vez de `.docb-hoja-scroll` directo): la causa raíz identificada coincide con el fix aplicado y compila limpio, pero no hay una captura/medición de QA que reconfirme con clics de mouse reales, después del fix, que el bug ya no ocurre.
+
+Ambos quedaron aceptados como riesgo menor no bloqueante por el comité de calidad en la ronda 2 (no son ninguna de las 3 objeciones originales de la ronda 1, y no hay ronda 3 disponible para repetir la verificación).
 
 ### 9.3 Bloqueantes reales para el comité
 Ninguno. No hubo conflicto de peer-dependencies ni incompatibilidad con
