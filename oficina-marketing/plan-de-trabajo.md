@@ -29,6 +29,29 @@ Los tres pueden arrancar en paralelo apenas Nico apruebe este plan — no depend
 - **Espera más:** disenador-marketing y redactor-contenidos no arrancan hasta que estratega-posicionamiento tenga mensaje y segmentación validados en `plan-marketing.md` — nunca trabajan sobre datos crudos sin aprobar.
 - **Transversal:** comite-marketing revisa rigor de cada informe (fuentes, nada inventado, ángulo accionable, novedad real) antes de que cualquiera se registre como `entrega` pendiente de la aprobación de Nico. Esto corre después de cada entrega de los tres primeros agentes, no es un paso aparte en el calendario.
 
+## 4bis. Respuestas de Nico (2026-11-16)
+
+1. **Mercado prioritario**: arrancar directo con el **bloque UE completo** (España + Francia + Alemania + Italia + Reino Unido) para la primera vuelta de datos de producción y productoras, no solo España. Ajuste aplicado: el informe de producción pasa a cubrir los 5 países desde la primera vuelta (ver `informes/2026-11-16_produccion-ue-5-paises.md`); el mapa de productoras arranca igual por España (por volumen de trabajo) y deja el resto de la UE para una segunda vuelta.
+2. **Pricing de referencia**: SÍ existe, real y definido — https://cinepack.es/packs.html. 12 packs por tipo de proyecto, precio mensual (IVA excluido), plan corto o largo de contrato:
+
+   | Pack | Tipo | Duración | Roles | €/mes |
+   |---|---|---|---|---|
+   | 01 | Largometraje de ficción | 8 o 16 meses | 24 (o ilimitados) | 135 |
+   | 02 | Largometraje documental | 8 o 16 meses | 12 | 110 |
+   | 03 | Largometraje de animación | 8 o 16 meses | 20 | 110 |
+   | 04 | Serie de ficción | 12 o 24 meses | 32 | 180 |
+   | 05 | Serie documental | 12 o 24 meses | 14 | 80 |
+   | 06 | Serie de TV | 12 o 24 meses | 35 | 195 |
+   | 07 | Serie de animación | 12 o 24 meses | 25 | 140 |
+   | 08 | Cortometraje de ficción | 2 u 8 meses | 10 | 55 |
+   | 09 | Cortometraje documental | 2 u 8 meses | 6 | 30 |
+   | 10 | Cortometraje de animación | 2 u 8 meses | 8 | 45 |
+   | 11 | Comerciales/Publicidad | 1 o 3 meses | 8 | 45 |
+   | 12 | Escuelas/Universidades | 4 o 12 meses | 10 | 55 |
+
+   Todos con opción de roles ilimitados a precio superior no publicado, y pago anual (con descuento) o mensual. Nota al pie de la web: "precios orientativos, sujetos a confirmación comercial". **Ajuste aplicado**: este pricing es insumo directo del informe de vigía de competencia (sección de comparación explícita contra cada competidor, ver `informes/2026-11-16_competencia-precios.md`) y quedará disponible para el estratega-posicionamiento una vez ese informe esté aprobado.
+3. **Estado comercial real**: NO hay ningún cliente/lead/piloto real todavía. La app es 100% web, en app.cinepack.es, sin más detalle público (URL de marketing/landing distinta de la de producto: cinepack.es para pricing, app.cinepack.es para el producto). Ajuste aplicado: el cartógrafo de productoras trata a las 20 productoras listadas como *target* puro, no como clientes existentes — se señala explícitamente en el informe.
+
 ## 4. Preguntas abiertas para Nico
 
 1. **Mercado prioritario**: ¿arrancamos por España en solitario o directamente con el bloque UE (España + Francia + Alemania + Italia + Reino Unido) para la primera vuelta de datos de producción y productoras?
