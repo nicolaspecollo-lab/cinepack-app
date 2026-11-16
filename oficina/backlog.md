@@ -2,7 +2,10 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
-## 0. Herramienta transversal — Hoja y documento en blanco (PRIMER EXPEDIENTE, obligatorio por encargo)
+## 0. Herramienta transversal — Hoja y documento en blanco — ✅ ENTREGADA (16/11, PR #5)
+Aprobada por el comité tras 2 rondas. Univer (hoja, Apache-2.0) + TipTap (documento, MIT). Ver `expedientes/2026-11-16_transversal_hoja-documento-blanco/`. Pendiente real (no bloqueante): persistencia Supabase, export .xlsx/.docx, permisos fila-por-persona (Nivel 3).
+
+## 0bis. (texto original, archivado)
 No es de un departamento: la usa cualquier cargo para crear su propia hoja/documento en blanco, nombrado por el usuario. Dos modos:
 - **Hoja de cálculo**: fórmulas, formato de celdas, colores, alineación, insertar/eliminar filas y columnas, importar/exportar Excel.
 - **Documento**: edición de texto enriquecido estilo Word, con exportación.

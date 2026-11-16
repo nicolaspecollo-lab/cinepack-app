@@ -111,7 +111,7 @@ Herramientas de departamento: Plan de distribución, Listado de festivales (seed
 - Herramientas `nota`/`checklist` sin `hint` identificadas como **Vacía/placeholder** (lista cerrada, confirmada por grep, 16 casos):
   `dir-notas-escena`, `dir-decisiones-visionado`, `dir-control-horarios` (2ª Asistencia), `dir-notas-ensayo`, `dir-actas`, `prod-tareas-admin`, `foto-checklist-descarga`, `foto-dit-backup`, `arte-checklist-tareas`, `rep-diario-personaje`, `rep-notas-preparacion`, `rep-notas-escenas`, `rep-instrucciones-figuracion`, `post-checklist-mezcla`, `rrhh-plan-bienestar`, `mo-memoria`, además de `gen-checklist-wrap`.
 - No existe en el repo ningún precargado de ítems de checklist (`CHECKLIST_ITEMS`/similar) — confirma que todo tipo `checklist`/`nota` sin `hint` es, literalmente, un cuadro vacío genérico hoy.
-- Herramienta transversal "Hoja y documento en blanco" (sección 7 del encargo): **no existe todavía**, ni como herramienta registrada ni como librería instalada. Es trabajo 100% nuevo → primer expediente (ver `backlog.md`).
+- Herramienta transversal "Hoja y documento en blanco" (sección 7 del encargo): **Consolidada** (16/11, PR #5, aprobada por el comité). Univer (hoja) + TipTap (documento). Ver `expedientes/2026-11-16_transversal_hoja-documento-blanco/`.
 
 ## Limitaciones de este inventario
 - No se tuvo acceso al repo real para contrastar si estas herramientas "Consolidadas" en el prototipo ya existen de otra forma en producción (evitar duplicar trabajo que ya esté en el repo real). **El director-oficina debe preguntar a Nico si hay alguna forma de contrastar contra el repo real antes de dar luz verde a un expediente.**
