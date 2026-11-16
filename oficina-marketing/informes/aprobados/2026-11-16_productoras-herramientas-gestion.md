@@ -57,3 +57,7 @@ Las 20 filas quedan en "sin evidencia pública encontrada" tras esta ronda. Esto
 ---
 
 **Nota de revisión (autoaplicada):** No se inventó ningún vínculo productora-herramienta. Las señales de la sección 3 se documentan explícitamente como no atribuibles, en vez de omitirlas o forzarlas a una fila. El resultado es menos útil de lo que al estratega le gustaría, pero es el dato real.
+
+## Lectura del director
+
+Aprobado. El cartógrafo ya saca la conclusión de negocio correcta en la sección 4 — no se queda en el "0 de 20": el hallazgo real es que ninguna de las 20 productoras tiene herramienta corporativa, y las únicas menciones son de freelancers contratados por rodaje. Esto cambia el argumento de venta de raíz: no es "migración" (no podemos probar que usan X), es **estandarización** ("¿con qué herramienta llega el próximo coordinador que contratás?"). Fijo esta conclusión como la lectura oficial del informe, no un matiz: encargo a estratega-posicionamiento que la use como base del próximo mensaje dirigido a productoras, y aviso expresamente a redactor-contenidos que el ángulo "cambiate de StudioBinder a CINEPACK" queda vetado hasta que haya evidencia real de herramienta instalada en alguna productora.

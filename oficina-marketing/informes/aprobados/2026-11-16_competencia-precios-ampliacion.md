@@ -46,3 +46,9 @@ La sesión principal confirmó el acceso con `curl` directo (studiobinder.com 40
 **Conclusión final de este ciclo**: el único de los cuatro del que se obtuvo contenido real de pricing es **SetHero** (freemium por proyecto, sin tarifa plana mensual pública). Yamdu confirmado como "sin self-serve, solo contacto". StudioBinder y Celtx siguen sin confirmar por bloqueos propios de cada sitio (bot-blocking y CDN de terceros respectivamente), no por falta de acceso de red general.
 
 **Mensaje al estratega-posicionamiento (actualiza el punto 3 de arriba):** con este dato nuevo, la conclusión de "paridad de precio" sigue sin poder sostenerse con los 4 competidores — pero ahora hay un matiz real y accionable: **SetHero cobra por proyecto con el primero gratis**, un modelo de entrada mucho más bajo que cualquier pack de CINEPACK. Si SetHero es percibido como la alternativa más barata de entrada, el mensaje de CINEPACK no puede ser solo "paridad" — necesita destacar el alcance (17 departamentos vs. solo call sheets) para justificar no competir en el punto de entrada más bajo.
+
+## Lectura del director
+
+Aprobado. El informe ya cierra el "entonces qué hacemos" sobre SetHero en la sección anterior, no se queda en el dato suelto: decisión de mensaje fijada — CINEPACK no compite por precio de entrada contra un freemium por proyecto, compite por alcance (17 departamentos vs. call sheets). Encargo a estratega-posicionamiento: incorporar esto a `plan-marketing.md` como principio de mensaje, no solo como nota de competencia.
+
+PeliProp queda como cabo sin cerrar, y así se documenta explícitamente: no es falta de búsqueda (cinco vías agotadas en dos ciclos), es falta de dato de entrada. Plan de cierre: pasa al backlog como bloqueado, responsable Nico, con una sola pregunta — confirmar nombre comercial/legal exacto o una URL de origen del dato. Hasta esa confirmación, ningún material de venta menciona a PeliProp ni el ángulo de convocatorias ICAA asociado.
