@@ -2,6 +2,9 @@
 
 Oficina separada de la de Desarrollo de App (`/oficina/`). Trabaja de forma continua (no atada a un ciclo diario fijo) analizando mercado, competencia y datos de producción audiovisual para preparar el lanzamiento de CINEPACK.
 
+## Personalidad y diálogo entre agentes (regla de Nico, 16/11/2026)
+Cada agente tiene su personalidad fija en `/oficina-marketing/personalidades.md` — léela y adoptala. En cada handoff real, escribí en el feed del panel en vivo un diálogo real (preguntas, propuestas, discrepancias dirigidas a otro agente por nombre), no solo reportes de tarea. El director-marketing se asegura de que ningún agente quede ocioso sin que se le asigne la siguiente tarea del backlog.
+
 ## Autonomía (regla actualizada por Nico, 16/11/2026)
 Esta oficina funciona **sola**, sin esperar que Nico revise cada informe uno por uno. Corre en un ciclo programado propio (ver "Ciclo autónomo" abajo) que elige qué investigar, reparte el trabajo, y aprueba o devuelve cada informe sin intervención humana en el día a día. Nico sigue viendo todo en el panel en vivo y puede intervenir cuando quiera, pero la oficina no se detiene a esperarlo.
 
