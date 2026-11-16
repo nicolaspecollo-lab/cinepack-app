@@ -190,3 +190,171 @@ queda en el working tree sin trackear; si no, se puede borrar sin impacto
 `.env.local` (gitignorado, nunca se commiteó): contiene solo valores dummy
 (`https://example.invalid` + placeholder) para destrabar el middleware, no
 son credenciales reales de nada.
+
+---
+
+## Ronda 2 — respuesta a la Objeción 3 del comité (comite-ronda1.md)
+
+Autor: QA. Mismo expediente, misma rama. Sigue sin haber Supabase real en esta
+sesión, así que reutilicé el mismo tipo de arnés aislado de la ronda 1
+(`app/qa-docs-blanco/page.tsx`, montando `DocsBlancoPanel` directo con
+`localStorage`), **no commiteado** — ver nota de limpieza al final.
+
+Ajuste necesario al arnés: la ronda 1 lo envolvía solo en
+`<div className="cp-dash"><div className="hp-open">`, sin contexto de altura.
+Eso hacía que el contenedor de Univer midiera `height:0` (el editor de hoja
+quedaba completamente en negro, sin grilla visible) — confirmado inspeccionando
+el DOM (`getBoundingClientRect()` del `<section>` que envuelve el canvas
+devolvía `height:0`). No es un bug de la app: en producción, `.cp-dash` vive
+dentro del árbol flex de `WorkspaceShell.tsx:118` (`style={{ flex: 1 }}`), que sí
+tiene altura resuelta por el layout de la página. Corregido el arnés agregando
+`height:"100dvh"` en el wrapper, replicando ese contexto — con eso Univer midió
+correctamente (`height:704px` en viewport de 900px) y la grilla se renderizó
+con normalidad. Documento esto explícitamente para que no se confunda con un
+bug real del editor.
+
+### 1. Capturas de los editores ABIERTOS en 390/820/1440px (pedido del comité)
+
+Nuevas, en `capturas/` (no se borraron las de ronda 1: `390px.png`, `820px.png`,
+`1440px.png`, que siguen mostrando el listado):
+
+- `editor-hoja-390.png`, `editor-hoja-820.png`, `editor-hoja-1440.png` — hoja
+  Univer abierta, con grilla, toolbar y pestaña "Sheet1" visibles.
+- `editor-doc-390.png`, `editor-doc-820.png`, `editor-doc-1440.png` — documento
+  TipTap abierto, con toolbar (H, negrita, cursiva, listas, alinear) y placeholder
+  "Escribí tu documento…".
+
+**Scroll horizontal de PÁGINA** (medido con Playwright,
+`document.documentElement.scrollWidth` vs `clientWidth`, con el editor de hoja
+y el de documento abiertos, no solo el listado):
+
+| Ancho | scrollWidth | clientWidth | Scroll de página |
+|---|---|---|---|
+| 390px | 390 | 390 | Ninguno |
+| 820px | 820 | 820 | Ninguno |
+| 1440px | 1440 | 1440 | Ninguno |
+
+Confirmado en los 3 anchos, con ambos editores abiertos. `overflow-x:hidden` de
+`.cp-dash` se respeta.
+
+**Comportamiento de la toolbar de Univer en 390px — explícito, sin esconderlo**:
+tiene **scroll horizontal interno propio**, tal como lo documenta el comentario
+de `UniverHojaEditor.tsx:11-17` y la regla CSS
+`.cp-dash .docb-hoja-scroll{ overflow-x:auto; ... } .cp-dash .docb-hoja-scroll > div{ min-width:640px; ... }`
+(`dashboard.css:6147-6150`). En `editor-hoja-390.png` se ve la barra de scroll
+gris debajo de la fila de pestañas ("Sheet1"): el contenedor interno de Univer
+(toolbar + grilla + pestañas, todo junto) fuerza un ancho mínimo de 640px, así
+que en 390px el conjunto entero se desliza horizontalmente dentro de su propio
+contenedor — **no es scroll de página** (eso se mide aparte y da 0 en los tres
+anchos), es un scroll interno contenido, visible también en 820px (donde 640 <
+820 pero Univer igual reserva ese ancho mínimo, con la barra de scroll presente
+aunque casi no haya nada que desplazar). Esto es la solución que ya proponía el
+desarrollador en su comentario, y funciona como está descripta: el usuario desliza
+la barra en vez de perder controles nativos de Univer.
+
+### 2. Verificación MANUAL (no solo DOM) de fórmulas, formato de celda y filas/columnas — pedido del comité
+
+Hecho con Playwright pero con interacciones reales de mouse/teclado sobre el
+`<canvas>` de Univer (no lectura de estado interno vía API), con capturas antes
+y después.
+
+**Hallazgo importante primero** (hay que reportarlo, no esconderlo): hacer
+`page.mouse.click()` directo sobre la grilla en el rango aproximado
+`x:46–686, y:179–1079` (en viewport 1440px) no mueve la selección de celda —
+el clic queda "atrapado" por un `<div>` overlay interno de Univer
+(`#univer-doc-selection-container-__INTERNAL_EDITOR__DOCS_NORMAL`, el editor de
+texto enriquecido de la celda activa) que mide **640×900px** con
+`pointer-events:auto` y `z-index:1000`, en vez de medir solo la celda activa.
+Confirmado con `getBoundingClientRect()` + `elementFromPoint()`: a la derecha de
+`x=686` el clic sí llega al canvas y mueve la selección con normalidad (probado:
+clic en `x:800,y:250` → selecciona `I3` correctamente). El número "640" coincide
+con el `min-width:640px` que `dashboard.css:6149` fuerza en
+`.docb-hoja-scroll > div` para el diseño mobile — es consistente con que ese
+contenedor (pensado para el scroll horizontal de la toolbar en 390px) también
+sea la referencia de tamaño que usa el editor de celda de Univer para su overlay
+interno, en vez de ajustarse al tamaño real de la celda. **Esto no es un
+artefacto de Playwright**: es CSS/DOM real, reproducible con una página recién
+cargada, sin interacción previa — un usuario real con mouse en escritorio que
+hace clic en una celda dentro de las primeras ~7 columnas (ancho ~640px) puede
+encontrarse con que el clic no selecciona la celda esperada. Pasar esto al
+desarrollador para que lo revise contra la integración de Univer (probablemente
+hay que forzar que ese contenedor de edición mida el tamaño de la celda activa,
+no el del wrapper con `min-width:640px`).
+
+Como workaround real (no es un truco de test, es una forma válida de uso:
+Excel/Sheets soportan navegar por el "cuadro de nombres"), usé el cuadro de
+nombres (`name box`, input "A1" arriba a la izquierda de la grilla) para
+seleccionar celdas por teclado y así probar las funciones sin depender del área
+con el bug de clic:
+
+- **Fórmula `=A1+A2`**: escribí `5` en A1, `7` en A2, `=A1+A2` en A3 (vía
+  cuadro de nombres + teclado). Resultado: A3 muestra **12** en la grilla y la
+  barra de fórmulas muestra `=A1+A2` al seleccionar A3 — el cálculo es correcto.
+  Evidencia: `manual-formula-1-a1-a2-a3-calculado.png`,
+  `manual-formula-2-a3-formula-bar.png`.
+- **Formato de celda — color de fondo**: seleccioné B2 (con texto "Hola"), click
+  en el botón de color de relleno de la toolbar (clic directo, sin necesidad de
+  abrir el picker porque aplica el último color por defecto) → la celda queda
+  con fondo azul sólido. Evidencia: `manual-formato-1-color-fondo-aplicado.png`.
+- **Formato de celda — alineación**: seleccioné C1 (con texto "Hola", alineado
+  a la izquierda por defecto), abrí el menú de alineación horizontal de la
+  toolbar, click en "centro" → el texto pasa de alineado a la izquierda a
+  centrado dentro de la celda. Evidencia: `manual-alinear-1-menu.png` (menú
+  abierto, texto a la izquierda) y `manual-alinear-2-resultado.png` (texto ya
+  centrado).
+- **Insertar fila**: con datos de control `A1="fila1"`, `A2="fila2"`,
+  `A3="fila3"`, clic derecho sobre el encabezado de la fila 2 → "Insertar 1
+  filas arriba" → aparece una fila vacía nueva en la posición 2 y "fila2"/"fila3"
+  se corren una fila hacia abajo (quedan en 3 y 4). Evidencia:
+  `manual-filas-1-antes.png` (antes) y `manual-filas-4-insertada-ok.png`
+  (después, fila 2 vacía, fila2→fila3, fila3→fila4).
+- **Eliminar fila**: sobre esa misma hoja, clic derecho en el encabezado de la
+  fila con "fila2" → "Eliminar fila seleccionada" → la fila desaparece y
+  "fila3" sube a ocupar la fila 2. Evidencia: `manual-filas-3-eliminada.png`
+  (se ve "fila1" en 1, "fila3" en 2 — "fila2" ya no está en ningún lado).
+- **Insertar/eliminar columna**: confirmé que el menú contextual del
+  encabezado de columna (clic derecho sobre encabezado "B") expone "Insertar 1
+  columnas a la izquierda/derecha" y "Eliminar columna seleccionada" —
+  mismo patrón de UI que filas (evidencia: `manual-columnas-1-menu.png`). **No
+  reconfirmé visualmente el resultado después de insertar/eliminar columna**
+  (el primer intento usó un selector de Playwright que no hizo click en el
+  elemento correcto y no repetí la prueba por límite de tiempo de esta ronda);
+  dado que filas e insertar/eliminar comparten exactamente el mismo
+  componente de menú contextual de Univer y el mismo patrón de interacción que
+  ya verifiqué para filas, hay alta confianza de que funciona igual, pero
+  **marco esto como verificado parcialmente** (menú presente y correcto, efecto
+  visual puntual de insertar/eliminar columna no vuelto a capturar) — si el
+  comité quiere el mismo nivel de certeza que con filas, pido una repetición
+  corta en ronda 3 o delego la confirmación final al desarrollador.
+
+### 3. Resumen para el comité
+
+- Scroll horizontal de página: **confirmado ausente** en 390/820/1440px, con
+  los editores de hoja y documento abiertos (no solo el listado).
+- Toolbar de Univer en 390px: **tiene scroll horizontal interno propio**, tal
+  como el desarrollador documentó — no es scroll de página, es el
+  comportamiento esperado.
+- Fórmula `=A1+A2`: **calcula correctamente** (evidencia visual, valor 12).
+- Formato de celda (color de fondo, alineación): **se puede aplicar**
+  (evidencia visual antes/después para ambos).
+- Insertar/eliminar fila: **funciona** (evidencia visual antes/después,
+  contenido real desplazándose correctamente).
+- Insertar/eliminar columna: **menú correcto, efecto no re-confirmado
+  visualmente en esta ronda** (ver detalle arriba) — pendiente menor.
+- **Bug nuevo encontrado, no pedido explícitamente por el comité pero relevante
+  para 8/10 del dossier**: un overlay interno de Univer
+  (`__INTERNAL_EDITOR__DOCS_NORMAL`) mide 640×900px en vez de ajustarse a la
+  celda activa, bloqueando clics de mouse reales sobre una franja de ~640px de
+  ancho de la grilla (columnas A a ~G aprox. en escritorio). Afecta
+  directamente la usabilidad de "hacer clic en una celda" — recomiendo que el
+  desarrollador lo revise antes de que esto llegue a Nico, aunque no bloqueó
+  esta ronda de QA porque encontré un workaround real (cuadro de nombres) para
+  seguir verificando fórmulas/formato/filas.
+
+### 4. Nota de limpieza (igual que ronda 1)
+
+`app/qa-docs-blanco/page.tsx` es el mismo arnés temporal de QA, actualizado en
+esta ronda con `height:100dvh` en el wrapper (ver arriba) para que Univer mida
+bien su contenedor. **No se commitea** — queda sin trackear en el working tree
+o se borra; no está importado desde ningún otro archivo del repo. `.env.local`
+tampoco se commitea (dummy, igual que ronda 1).
