@@ -1,4 +1,6 @@
-# Reglas de la Oficina de Agentes CINEPACK (resumen operativo)
+# Reglas de la Oficina de Desarrollo de App CINEPACK (resumen operativo)
+
+Esta es la oficina de **desarrollo de producto** (director, departamentos, investigador, arquitecto, desarrollador, QA, comité de calidad): diseña y prototipa herramientas nuevas para la app. Existe una segunda oficina separada, de **Marketing e inteligencia de mercado**, con sus propios agentes — ver `/oficina-marketing/` cuando exista.
 
 Lee también `stack.md`, `sistema-diseno.md`, `inventario.md`, `backlog.md` antes de proponer o construir nada.
 
@@ -21,6 +23,7 @@ Lee también `stack.md`, `sistema-diseno.md`, `inventario.md`, `backlog.md` ante
 - Integración cumplida en los 3 niveles, con flujos de datos concretos.
 - Cumple el sistema de diseño al 100% y es responsive.
 - No duplica nada existente.
+- **Ambición y profundidad**: cubre varias fases/aristas reales del cargo, no una pantalla plana resuelta con lo obvio; contenido precargado exhaustivo y específico; integración que abre posibilidades reales. Si la herramienta es "una herramienta más" sin la complejidad que amerita, es objeción igual que cualquiera de las anteriores.
 Si no supera las 2 rondas: se archiva con el motivo, no se entrega a Nico.
 
 ## Ciclo diario
