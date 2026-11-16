@@ -1,0 +1,29 @@
+# Reglas de la Oficina de Agentes CINEPACK (resumen operativo)
+
+Lee también `stack.md`, `sistema-diseno.md`, `inventario.md`, `backlog.md` antes de proponer o construir nada.
+
+## Inviolables
+1. Solo se trabaja en este repo (muestreo, `nicolaspecollo-lab/cinepack-app`). Esta sesión no tiene acceso al repo real de CINEPACK: es solo-lectura y fuera de alcance aquí. Nunca commit/push/PR/branch sobre él.
+2. Nunca merge a `main` de este repo. Cada expediente va en su propia rama `oficina/AAAA-MM-DD-<herramienta>` y llega como PR **en borrador**. Solo Nico aprueba y hace merge, siempre a mano.
+3. Calidad antes que volumen: máximo 2 expedientes/día. Si no alcanzan el nivel, se entrega 1 o ninguno — nunca relleno.
+4. Nada inventado: toda afirmación de investigación lleva fuente o se marca "hipótesis". Prohibido inventar datos, testimonios, estadísticas o funciones de competidores.
+5. Sin duplicados: comprobar contra `inventario.md` y los expedientes ya entregados antes de proponer una herramienta.
+6. Sistema de diseño al 100%: solo colores/tipografías/componentes que salgan de `sistema-diseno.md`. Mobile-first: en móvil ocupa toda la pantalla. Prohibido el "cuadro vacío genérico" — cada herramienta llega ya trabajada y específica del cargo.
+
+## Estructura del expediente (`dossier.md` → `dossier.pdf`)
+1. Resumen ejecutivo (5 líneas). 2. Origen de la idea. 3. El cargo (funciones, fases, documentos, coordinación). 4. Necesidades y dolores (con fuente). 5. Estado del arte (hoy sin software + competencia: StudioBinder, Yamdu, Movie Magic, SetHero, Celtx y otros, con carencias). 6. Propuesta (funcionalidades, flujos paso a paso, contenido precargado). 7. Integración (departamento / proyecto / otros departamentos — datos concretos que entran y salen). 8. Diseño visual (capturas móvil 390px, tablet 820px, escritorio 1440px). 9. Especificación técnica (componentes, modelo de datos, librerías y licencias). 10. Riesgos y preguntas abiertas. 11. Fuentes.
+
+## Checklist del comité (comite-calidad), máximo 2 rondas de corrección
+- Toda afirmación tiene fuente o está marcada como hipótesis.
+- La herramienta es específica del cargo, no genérica.
+- Supera a la competencia en al menos un aspecto clave, justificado.
+- Integración cumplida en los 3 niveles, con flujos de datos concretos.
+- Cumple el sistema de diseño al 100% y es responsive.
+- No duplica nada existente.
+Si no supera las 2 rondas: se archiva con el motivo, no se entrega a Nico.
+
+## Ciclo diario
+1. Director lee backlog/expedientes/partes y elige hasta 2 herramientas. 2. Agente de departamento define necesidad + investigador documenta (con fuentes). 3. Arquitecto diseña integración y modelo de datos. 4. Desarrollador construye el prototipo en `oficina/AAAA-MM-DD-<herramienta>`. 5. QA prueba y genera capturas en 390/820/1440px (Playwright). 6. Comité revisa (máx. 2 rondas). 7. `dossier.pdf` con capturas. 8. PR en borrador en este repo, con dossier y PDF adjuntos — nunca merge. 9. Actualizar backlog, inventario y parte diario.
+
+## Entrega a Nico (en cuanto el comité aprueba)
+PDF del expediente + enlace al PR en borrador + resumen de 5 líneas. Al cerrar la jornada: parte diario con qué se entregó, qué se archivó y por qué, qué queda pendiente, qué decisiones necesitan la intervención de Nico.
