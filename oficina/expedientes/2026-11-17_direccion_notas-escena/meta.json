@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
+  "title": "Notas de dirección por escena",
+  "subtitle": "De cuadro vacío a tabla estructurada: intención, toma elegida y pendientes para otros departamentos.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
+  "metaItems": [["Fecha", "17 nov 2026"], ["Departamento", "Dirección"], ["Oficina", "Desarrollo"]],
+  "logoPath": "/tmp/claude-0/cinepack-dev-ciclo-20261117/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#E8A330"
+}

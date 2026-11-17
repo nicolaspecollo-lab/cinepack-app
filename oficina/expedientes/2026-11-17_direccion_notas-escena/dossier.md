@@ -30,10 +30,11 @@ Ninguna librería nueva — se reutiliza el renderer genérico de `tipo: "tabla"
 Sin cambio de componente visual: hereda el estilo ya aplicado al renderer de tabla genérico (tokens de `sistema-diseno.md` ya vigentes ahí).
 
 ## 10. QA
-- `tsc --noEmit` sobre `app/herramientas.ts`: sin errores de tipos.
-- **Limitación honesta**: este worktree aislado no tiene `node_modules` instalado, así que no se corrió `next build` completo ni captura de pantalla responsive real. Pendiente de confirmación en un entorno con dependencias instaladas antes de considerar esto "QA completo" en el sentido que exige el estándar de la oficina.
+- `tsc --noEmit` sobre todo el proyecto: sin errores de tipos.
+- `next build` completo: compila sin errores (se instaló `node_modules` real en el worktree aislado tras el bloqueo inicial del ciclo).
+- **Limitación honesta que sigue abierta**: no se pudo levantar el servidor y capturar pantallas responsive reales (390/820/1440px) porque este worktree no tiene credenciales de Supabase configuradas (`.env.local` ausente) y la app requiere sesión autenticada para renderizar `/hoy`. No es un defecto de código — es una limitación de entorno aislado. El cambio reutiliza el mismo renderer genérico de `tipo: "tabla"` ya verificado visualmente en el primer expediente (hoja/documento en blanco) y usado en otras ~45 herramientas del repo, así que el riesgo de regresión visual es bajo, pero no se reporta como verificación real.
 - No se agregaron tests nuevos (cambio es de configuración de datos, no de lógica de componente).
 
 ## 11. Pendientes / preguntas abiertas para Nico
-1. QA real (build + capturas responsive) no se pudo ejecutar en este ciclo por falta de `node_modules` en el worktree aislado — se recomienda re-verificar antes de mergear al repo real.
+1. Falta la verificación visual responsive real (ver limitación de la sección 10) — recomendado antes del push al repo real, no antes del merge a la rama de oficina.
 2. El campo "Pendiente para" no dispara notificación activa a Guion/Script/Postproducción — es solo un filtro visual hoy. Si Nico quiere notificación real, es expediente de integración transversal aparte.
