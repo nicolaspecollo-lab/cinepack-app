@@ -41,3 +41,7 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Horas de documental francés 2023: sin dato (solo cifra de ayuda en euros).
 - PDF del MiC italiano no verificado directamente (cinema.cultura.gov.it bloqueado por red de sesión).
 - Hallazgo de negocio: España destaca en animación (15 series, tendencia al alza desde 2021), Italia en volumen/presupuesto de serie de ficción (94 títulos) — candidato a cruzar con qué pack de pricing promocionar en cada mercado (pack animación para España, pack serie para Italia) en vez del genérico de largometraje.
+
+## Cierres y nuevos frentes (17/11/2026, ciclo retomado 15:10 UTC)
+- **Candidato de cruce pack/formato del punto anterior: ya resuelto como segunda pieza de contenido.** Blog "España hace animación, Italia hace series" aprobado (Cumple), con mapeo explícito a packs reales (07 para España, 04/06 para Italia). Queda pendiente de revisión de Nico en el panel.
+- **Nuevo frente, prioridad media**: cruzar el mapa de productoras ya construido (España/Francia/Italia) contra este hallazgo de formato — ¿cuántas productoras mapeadas son específicamente de animación (España) o serie de ficción (Italia)? Si el volumen es bajo, el mensaje queda en blog/SEO, no escala a campaña paga. Responsable sugerido: estratega-posicionamiento.
