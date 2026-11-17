@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Marketing CINEPACK · Plan de marketing (documento vivo)",
+  "title": "Plan de marketing CINEPACK",
+  "subtitle": "Segmentación ampliada: se incorporan escuelas de cine y empresas de publicidad, ya presentes en el pricing real (Packs 11 y 12), por feedback de Nico.",
+  "badge": "<span class=\"badge badge-ok\">Cumple · Ajuste por feedback de Nico</span>",
+  "metaItems": [["Fecha", "17 nov 2026"], ["Agente", "estratega-posicionamiento"], ["Motivo", "Feedback \"poco\" de Nico"], ["Oficina", "Marketing"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "Cumple el feedback de Nico del 17/11/2026 · aprobado por comite-marketing y director-marketing",
+  "accent": "#C98AF2"
+}
