@@ -91,5 +91,8 @@ Todo worktree nuevo (`git worktree add ...`) usado para un expediente debe, ante
 ## Panel en vivo — estado en tiempo real (regla de Nico, 17/11/2026)
 Cada agente, **al empezar** un paso real de trabajo (no al terminar), se marca `estado:"busy"` en el panel (colección `agentes`, campo `tarea_actual` describiendo qué está haciendo en ese momento) — nunca esperar a tener el resultado final para escribirlo. Recién cuando termina ese paso y entrega el resultado se vuelve a poner `estado:"idle"` con la tarea ya hecha. Quien orquesta (esta sesión, vía tool Agent) es responsable de escribir ese `busy` antes de lanzar cada subagente real, no solo al recibir su reporte final — si no, el panel muestra a todos quietos aunque haya trabajo real en curso.
 
+## Registro en la Biblia (regla de Nico, 17/11/2026, no opcional)
+Toda herramienta que el comité aprueba se registra de inmediato en `/oficina/sistema-diseno.md` (sección "Herramientas registradas" — "la Biblia"): nombre, departamento/cargo, y 1-2 líneas de para qué sirve (el problema real que resuelve). Es parte del cierre del expediente, antes de notificar a Nico, no un paso posterior ni opcional. La estética de toda entrega también se contrasta contra ese mismo archivo — esquinas en punta, paleta y tipografía reales de `cp-theme.css`, nunca un estilo inventado.
+
 ## Entrega a Nico (en cuanto el comité aprueba)
 PDF del expediente (con la plantilla de marca) + enlace al PR en borrador + resumen de 5 líneas. Al cerrar la jornada: parte diario con qué se entregó, qué se archivó y por qué, qué queda pendiente, qué decisiones necesitan la intervención de Nico, y el estado de la cola de merge.

@@ -84,3 +84,14 @@ Esto **es** el patrón mobile-first obligatorio: cualquier herramienta nueva deb
 
 ## Mobile-first (obligatorio, confirmado por el propio CSS)
 El gutter lateral y la tipografía ya están definidos como *fluid* y con breakpoints explícitos a 640px y 380px (ver arriba). `overflow-x:hidden` está forzado en `.cp-dash` como "red de seguridad" para que ningún elemento mal medido abra scroll horizontal — cualquier componente nuevo debe respetar esto (nada de anchos fijos que rompan en 390px).
+
+## Herramientas registradas (regla de Nico, 17/11/2026 — obligatoria)
+Toda herramienta que se agrega a la app, sin excepción, tiene que quedar registrada acá abajo apenas el comité la aprueba — esta es "la Biblia", la fuente única de qué existe en CINEPACK y por qué. Formato por fila: nombre, departamento/cargo, y 1-2 líneas de **para qué sirve** (el problema real que resuelve, no una descripción genérica de lo que hace técnicamente). El director-oficina agrega la fila como parte del cierre del expediente, antes de notificar a Nico — no es un paso opcional ni posterior.
+
+| Herramienta | Departamento / cargo | Para qué sirve |
+|---|---|---|
+| Hoja de cálculo en blanco | Transversal | Herramienta genérica de cálculo dentro del espacio de trabajo, para cuando ningún tipo de tabla predefinida del motor cubre lo que el cargo necesita armar sobre la marcha. |
+| Documento en blanco | Transversal | Redacción de texto libre con formato real (tablas, imágenes, enlaces) dentro del espacio de trabajo, para notas/documentos que no encajan en ninguna herramienta estructurada existente. |
+| Notas de dirección por escena | Dirección | Registro estructurado de notas de dirección por escena (continuidad, intención actoral, tomas), con aviso real al departamento/cargo que corresponda cuando queda algo pendiente. En corrección (2ª ronda). |
+| Checklist de mezcla y masterización de audio | Postproducción/Sonido | Checklist de entregables de la mezcla final (formatos, niveles, versiones) para que no se entregue nada incompleto al cierre de postproducción de sonido. En corrección (1ª ronda — falta capturas visuales reales). |
+| Plan de bienestar y actividades del equipo | RRHH | Plan de actividades y bienestar del equipo de rodaje, ligado al III Convenio colectivo estatal de producción audiovisual. En corrección (1ª ronda — falta capturas visuales reales). |
