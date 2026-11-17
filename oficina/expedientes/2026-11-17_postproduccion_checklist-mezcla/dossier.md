@@ -38,9 +38,14 @@ Sin cambio de componente visual: renderer genérico ya conforme a `sistema-disen
 ## 10. QA
 - `tsc --noEmit` sobre todo el proyecto: sin errores de tipos.
 - `next build` completo: compila sin errores.
-- **Verificación responsive real (actualizado)**: con `.env.local` copiado al worktree, `/hoy` ya no da 500 (307 a `/login`, credenciales válidas). Se montó `HerramientaPanel` en un arnés temporal (`app/qa-harness/page.tsx`, no se commitea — mismo patrón aprobado el 16/11 para `DocsBlancoPanel`) y se capturó con Playwright real en 390/820/1440px: sin scroll horizontal de página en ningún ancho, columnas del checklist de mezcla legibles.
-- **Limitación que sigue abierta**: el arnés no tiene `proyecto activo` en `localStorage` (lo fija el login real), así que no se probó alta/edición de fila end-to-end — no se reporta como probado. Una cuenta `es_tester` real resolvería esto para la próxima ronda.
+- **Verificación responsive real (ronda final, con login real)**: login real contra `cinepack-dev` con una cuenta de QA (`qa.post-sonorizacion2@mailinator.com`), entrando al proyecto de prueba `[PROYECTO TEST] La sed de los almendros`, abriendo la herramienta real desde Departamentos → Postproducción → "Checklist de mezcla y masterización de audio", con una fila real cargada (mezcla final de la escena coral de la asamblea, 25+ pistas, downmix 5.1→estéreo pendiente de revisar fase). Capturado con Playwright real en 390/820/1440px: **sin scroll horizontal en ningún ancho**, tabla con las 8 columnas (Ítem, Tipo, Spec destino, Formato técnico, Loudness/true-peak, Downmix, Estado, Notas) con scroll interno horizontal de la tabla (no de la página), usable en los 3 anchos.
+- La fila se cargó por API directa (insert en `herramienta_filas`) para tener datos reales que mostrar, no por el formulario de alta de la UI.
 - No se agregaron tests nuevos.
+
+### Capturas reales (390 / 820 / 1440px)
+![Checklist de mezcla — 390px](capturas/390px.png)
+![Checklist de mezcla — 820px](capturas/820px.png)
+![Checklist de mezcla — 1440px](capturas/1440px.png)
 
 ## 11. Pendientes / preguntas abiertas para Nico
 1. Verificación visual responsive: **hecha** (ver sección 10). Sigue abierto el alta/edición end-to-end, bloqueado por falta de una cuenta de prueba real.
