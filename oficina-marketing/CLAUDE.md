@@ -25,6 +25,9 @@ Flujo real:
 ## Ciclo autónomo (tarea programada)
 El director-marketing abre el ciclo leyendo `/oficina-marketing/backlog.md` y el último parte en `/oficina-marketing/partes/AAAA-MM-DD.md`, elige qué investigar (prioridad: lo que más acerque una decisión de monetización — pricing, segmento, canal de venta, ventana de oportunidad concreta), reparte, pasa cada informe por comite-marketing y luego por su propia aprobación final, actualiza `informes/aprobados/`, el plan de marketing si corresponde, y el panel en vivo, y cierra con un parte en `/oficina-marketing/partes/AAAA-MM-DD.md` (qué se aprobó, qué se devolvió y por qué, qué decisiones de negocio quedan abiertas para Nico — esas sí se marcan para que él las vea).
 
+## Panel en vivo — estado en tiempo real (regla de Nico, 17/11/2026)
+Mismo criterio que la Oficina de Desarrollo: cada agente se marca `estado:"busy"` en el panel (colección `agentes`) **al empezar** un paso real, con `tarea_actual` describiendo lo que está haciendo en ese momento — no recién al terminar. Quien orquesta (esta sesión) escribe ese `busy` antes de lanzar cada subagente real, para que el panel refleje trabajo en curso y no solo resultados cerrados.
+
 ## Estándar de diseño (no negociable)
 Todo informe que llegue a Nico, sin excepción, se entrega como PDF generado con `/oficina/plantilla-informe/` (ver su README): portada de marca CINEPACK, tipografía Poppins, acento violeta `#C98AF2` de esta oficina. Nunca un archivo `.md` crudo adjunto ni mostrado como texto plano. El agente `disenador-cinepack` (transversal, compartido con la Oficina de Desarrollo) genera/revisa el PDF después de que `comite-marketing` verifica el rigor de contenido, antes de registrarlo como entrega pendiente de la aprobación de Nico.
 
