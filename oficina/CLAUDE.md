@@ -49,6 +49,15 @@ En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agre
 
 Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
+## Botón "Corte" — el único disparador de merge a main (regla de Nico, 17/11/2026)
+El panel separa las entregas de esta oficina en 3 columnas: **Pendientes** (sin veredicto o con "le falta algo"), **Aprobadas** (Cumple/Supera, esperando Corte) y **Mergeadas a main**. Nico aprieta "Corte" en una tarjeta de Aprobadas → el panel escribe `corte_solicitado:true` en esa entrega (colección `entregas`). En la próxima pasada del supervisor horario (o antes si se detecta en el momento), el director-oficina:
+1. Confirma que el PR de esa entrega ya está mergeado a `claude/oficina-agentes-cinepack-jv179i` (si no, lo hace primero).
+2. Mergea esa rama/PR a `main` del repo real (`nicolaspecollo-lab/cinepack-app`) — recién ahí, nunca antes, nunca sin este flag.
+3. Marca la entrega `mergeada_main:true`, `mergeada_main_en:<fecha>` en el panel.
+4. Agrega la fila correspondiente en `oficina/registro-acciones-real.md` (fecha, qué se hizo, "autorizado por Nico vía botón Corte en el panel").
+5. Actualiza `oficina/cola-merge.md` y `oficina/registro-desarrollo.md` si corresponde.
+Ninguna otra vía (feedback, calificación "cumple" sola, pedido verbal fuera del botón) dispara el merge a `main` — sigue siendo la única señal válida, ahora formalizada como botón en vez de frase en el chat.
+
 ## Bases de datos y registros (regla de Nico, 17/11/2026)
 - El repo de trabajo **es** el repo real de CINEPACK (`nicolaspecollo-lab/cinepack-app`), usando ramas para aislar — no hay un repo "paralelo" separado. `main` sigue intocable salvo que Nico diga explícitamente "Corte".
 - Base de datos de desarrollo: proyecto Supabase `cinepack-dev` (antes `cinepack-dev-jeantuan`, mismo esquema clonado del real). Toda herramienta con propuesta visual ya aprobada se implementa y prueba contra `cinepack-dev`, nunca contra el proyecto real. Mientras esté en fase de diseño/aprobación, no hace falta tocar ninguna base.
