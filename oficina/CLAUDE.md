@@ -49,6 +49,14 @@ En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agre
 
 Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
+## Ciclo de vida de una entrega en el panel (regla de Nico, 17/11/2026)
+El panel tiene 4 columnas con un significado exacto, no intercambiable:
+- **Pendientes**: nunca calificada, o fue rebotada y el equipo ya terminó de corregirla y la reenvió — en ambos casos `estado_actual` es `"pendiente"` (nulo cuenta igual). Es la única columna donde Nico tiene algo real para revisar ahora mismo.
+- **Rebotadas**: `estado_actual` es `"poco"`, `"bastante"` o `"lejos"` — significa que el equipo todavía está trabajando la corrección, no que está esperando a Nico.
+- **Aprobadas**: `"cumple"`/`"supera"`, esperando Corte.
+- **App**: `corte_ejecutado:true`.
+**Regla operativa:** cuando el equipo (desarrollador/comité) termina de corregir algo que estaba en Rebotadas y lo vuelve a mandar, tiene que escribir `estado_actual:"pendiente"` en esa entrega (ArtifactData, colección `entregas`) — nunca dejarla en `"poco"/"bastante"/"lejos"` después de corregida, porque eso la deja trabada en Rebotadas aunque ya esté lista para que Nico la revise de nuevo. El `historial` nunca se borra, solo se le agrega.
+
 ## Reacción inmediata a una calificación negativa (regla de Nico, 17/11/2026)
 Apenas Nico califica algo "poco", "bastante" o "lejos", o da Corte, el panel usa la capacidad `comments`/`sendToClaude` para avisarme directamente — esta sesión se despierta casi al instante con el detalle exacto de lo que hizo, sin esperar al supervisor horario. Esta es ahora la vía **principal**; el supervisor horario queda como red de contingencia por si la notificación falla (permiso no otorgado, error de red del lado del navegador, etc.). El director-oficina triagea y reasigna apenas recibo ese aviso, no espera confirmación de Nico para arrancar. El director identifica, punto por punto, qué pide el feedback (bug real, falta de profundidad/diseño, requisito nuevo, feature pendiente) y asigna cada punto al agente correcto (desarrollador, disenador-cinepack, arquitecto-integracion, qa), no todo a una sola persona genérica. Si la entrega ya va por su segunda vuelta real de corrección de fondo, el director avisa explícitamente si corresponde escalar en vez de seguir rondas indefinidas (límite normal: 2 rondas).
 
