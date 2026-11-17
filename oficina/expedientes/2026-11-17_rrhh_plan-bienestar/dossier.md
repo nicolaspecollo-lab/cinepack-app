@@ -35,10 +35,11 @@ Sin cambio de componente visual: renderer genérico ya conforme a `sistema-disen
 ## 10. QA
 - `tsc --noEmit` sobre todo el proyecto: sin errores de tipos.
 - `next build` completo: compila sin errores.
-- **Limitación honesta**: no se pudo levantar el servidor y capturar pantallas responsive reales (390/820/1440px) en este worktree por falta de credenciales de Supabase, no por defecto de código. Mismo renderer genérico ya verificado visualmente en el primer expediente de la oficina.
+- **Verificación responsive real (actualizado)**: con `.env.local` copiado al worktree, `/hoy` ya no da 500 (307 a `/login`, credenciales válidas). Se montó `HerramientaPanel` en un arnés temporal (`app/qa-harness/page.tsx`, no se commitea — mismo patrón aprobado el 16/11 para `DocsBlancoPanel`) y se capturó con Playwright real en 390/820/1440px: sin scroll horizontal de página en ningún ancho, columnas (Acción/Actividad, Tipo, Responsable, Fecha prevista, Alcance, Acciones) legibles.
+- **Limitación que sigue abierta**: el arnés no tiene `proyecto activo` en `localStorage` (lo fija el login real), así que no se probó alta/edición de fila end-to-end — no se reporta como probado. Una cuenta `es_tester` real resolvería esto para la próxima ronda.
 - No se agregaron tests nuevos.
 
 ## 11. Pendientes / preguntas abiertas para Nico
-1. Falta la verificación visual responsive real (ver sección 10) — recomendado antes del push al repo real.
+1. Verificación visual responsive: **hecha** (ver sección 10). Sigue abierto el alta/edición end-to-end, bloqueado por falta de una cuenta de prueba real.
 2. Verificar si el III Convenio (BOE-A-2024-6846) sigue siendo la referencia vigente o si hay un convenio sucesor desde 2025 — esta investigación no lo pudo confirmar con certeza.
 3. No se integró "Fecha prevista" con el calendario general del proyecto ni se dio visibilidad a otros departamentos — expediente de integración transversal aparte si Nico lo quiere.
