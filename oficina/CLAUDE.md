@@ -49,6 +49,13 @@ En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agre
 
 Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
+## Cada rebote endurece las exigencias previas (regla de Nico, 17/11/2026)
+Si Nico rebota algo por un motivo que el comité o el director deberían haber detectado antes de que le llegara (falta la herramienta visual, es genérico, le falta profundidad, etc.), eso **no es solo un arreglo puntual de ese expediente** — es evidencia de un agujero real en la checklist o en cómo se aplica. Cada vez que esto pase, el director-oficina tiene que:
+1. Identificar con precisión qué punto de la checklist (`comite-calidad.md` o `oficina/CLAUDE.md`) falló en dejar pasar ese problema.
+2. Endurecer ese punto por escrito (en el agente/archivo que corresponda) para que el mismo tipo de bache no vuelva a llegar a la revisión de Nico en ningún expediente futuro — no solo corregir el expediente actual.
+3. Dejar registrado en el parte diario qué exigencia se endureció y por qué.
+El objetivo: si hay un director y un comité antes de Nico, algo tan básico como "no se puede ver la herramienta" nunca debería necesitar que Nico lo rebote — eso es exactamente lo que el comité tiene que atajar antes.
+
 ## Ciclo de vida de una entrega en el panel (regla de Nico, 17/11/2026)
 El panel tiene 4 columnas con un significado exacto, no intercambiable:
 - **Pendientes**: nunca calificada, o fue rebotada y el equipo ya terminó de corregirla y la reenvió — en ambos casos `estado_actual` es `"pendiente"` (nulo cuenta igual). Es la única columna donde Nico tiene algo real para revisar ahora mismo.
