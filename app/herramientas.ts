@@ -26,6 +26,7 @@ export type Columna = {
   soloLectura?: boolean; // la celda se muestra siempre como texto plano, nunca editable (ej. un código calculado)
   sinAcento?: boolean;   // sin fondo de color por valor ("tono") ni data bar — para columnas donde ese acento no comunica nada real
   sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
+  notificaDepartamento?: boolean; // tipo "estado" cuyas `opciones` son nombres de departamento: al cambiar a un valor real (no "Ninguno"/"—"), dispara una consulta real (tabla `consultas`, mismo mecanismo que ConsultasPanel) dirigida a ese departamento — ver `dispararConsultaDesdeFila` en HerramientaPanel.tsx.
 };
 
 export type Herramienta = {
@@ -2609,7 +2610,20 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Dirección": {
       departamento: [calendarioEnsayos],
       cargo: [
-        { id: "dir-notas-escena", nombre: "Notas de dirección por escena", tipo: "nota" },
+        {
+          id: "dir-notas-escena", nombre: "Notas de dirección por escena", tipo: "tabla",
+          hint: "Una nota por escena rodada: intención de dirección, qué toma usar y por qué, y qué queda pendiente para Guion/Script/Postproducción. No duplica Continuidad fotográfica (Script) ni Decisiones de visionado (dailies) — esto es la lectura del director, no la de continuidad ni la de montaje.",
+          columnas: [
+            { key: "escena", label: "Escena" },
+            { key: "fecha", label: "Fecha de rodaje", tipo: "fecha" as const },
+            { key: "intencion", label: "Intención de dirección", tipo: "largo" },
+            { key: "toma_elegida", label: "Toma recomendada" },
+            { key: "motivo_toma", label: "Por qué esa toma", tipo: "largo" },
+            { key: "pendiente_para", label: "Pendiente para", tipo: "estado", opciones: ["Guion", "Script/Continuidad", "Postproducción", "Ninguno"], notificaDepartamento: true },
+            { key: "nota_pendiente", label: "Detalle del pendiente", tipo: "largo" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Por revisar", "Resuelta", "Pendiente de dailies"] },
+          ],
+        },
         { id: "dir-decisiones-visionado", nombre: "Decisiones de visionado (dailies)", tipo: "checklist" },
         ACCESOS,
       ],
