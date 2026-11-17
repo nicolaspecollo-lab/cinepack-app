@@ -2609,7 +2609,20 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Dirección": {
       departamento: [calendarioEnsayos],
       cargo: [
-        { id: "dir-notas-escena", nombre: "Notas de dirección por escena", tipo: "nota" },
+        {
+          id: "dir-notas-escena", nombre: "Notas de dirección por escena", tipo: "tabla",
+          hint: "Una nota por escena rodada: intención de dirección, qué toma usar y por qué, y qué queda pendiente para Guion/Script/Postproducción. No duplica Continuidad fotográfica (Script) ni Decisiones de visionado (dailies) — esto es la lectura del director, no la de continuidad ni la de montaje.",
+          columnas: [
+            { key: "escena", label: "Escena" },
+            { key: "fecha", label: "Fecha de rodaje", tipo: "fecha" as const },
+            { key: "intencion", label: "Intención de dirección", tipo: "largo" },
+            { key: "toma_elegida", label: "Toma recomendada" },
+            { key: "motivo_toma", label: "Por qué esa toma", tipo: "largo" },
+            { key: "pendiente_para", label: "Pendiente para", tipo: "estado", opciones: ["Guion", "Script/Continuidad", "Postproducción", "Ninguno"] },
+            { key: "nota_pendiente", label: "Detalle del pendiente", tipo: "largo" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Por revisar", "Resuelta", "Pendiente de dailies"] },
+          ],
+        },
         { id: "dir-decisiones-visionado", nombre: "Decisiones de visionado (dailies)", tipo: "checklist" },
         ACCESOS,
       ],
