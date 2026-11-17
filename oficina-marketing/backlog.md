@@ -22,3 +22,11 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Verificar 3-4 cifras de fatturato (Medusa, Eagle Pictures, Banijay, Endemol Shine Italy) contra Registro Imprese/Camera di Commercio en vez de agregadores de terceros.
 - Búsqueda de LinkedIn de productoras italianas, que esta sesión no pudo completar.
 - Confirmado: el patrón "sin herramienta corporativa" se repite en Italia, con el matiz de que el mercado está "educado" en la categoría (Filmustage/Celtx aparecen en contenido de marketing y temarios) sin estar capturado por ningún competidor — refuerza la hipótesis de estandarización sobre migración.
+
+## Seguimiento al mapa de productoras de Francia (17/11/2026)
+- Contacto de Why Not Productions sin verificar.
+- 4 discrepancias de dirección entre fuentes (Losange, StudioCanal, Mandarin, SND) sin resolver.
+- Cifras de agregadores (Xerfi) sin verificar contra balance oficial.
+- Búsqueda de LinkedIn pendiente.
+- Confirmado por tercera vez consecutiva (España, Italia, Francia): ninguna productora mapeada tiene herramienta corporativa — el mercado está "educado" en la categoría (Filmustage aparece comparándose contra StudioBinder en contenido francés también) sin estar capturado. Refuerza con fuerza la hipótesis de estandarización como eje de mensaje en los 3 mercados principales.
+- Pendiente para vigia-competencia: revisar si Filmustage tiene casos publicados en Francia (handoff del cartógrafo).
