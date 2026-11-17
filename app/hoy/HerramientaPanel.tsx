@@ -1603,6 +1603,7 @@ function HerramientaData({
           }}
           moneda={meta?.datos?._moneda}
           onCambiarMoneda={cambiarMoneda}
+          agruparPor={herramienta.agruparPor}
         />
       )}
 

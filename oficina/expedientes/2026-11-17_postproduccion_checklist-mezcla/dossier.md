@@ -6,6 +6,8 @@ El candidato original de hoy era `foto-dit-backup` (Backup y verificación de ma
 ## 1. Resumen ejecutivo
 `post-checklist-mezcla` era un checklist genérico sin estructura. Se convirtió en tabla con un registro por ítem de entrega de audio (stem, mezcla final, versión DCP/streaming), apoyada en la práctica real de entregables de audio para cine/streaming (loudness, true-peak, downmix, stems DME).
 
+**Ronda 2 (rebote de Nico — "faltan funciones típicas de tablas... necesito que me sorprendas"):** el problema real no era que faltaran funciones del motor (el buscador, el filtro por columna de estado y el orden por columna ya existían de forma genérica para toda tabla) — era que la herramienta no tenía ningún eje de estructura visible, se veía como una tabla plana sin nada que la distinga de un spreadsheet genérico. Se agregó **agrupación visual real** (`agruparPor`), reutilizando y generalizando el mismo mecanismo que ya usa Presupuesto para agrupar por departamento — antes solo estaba hardcodeado para esa herramienta, ahora es un campo declarativo (`Herramienta.agruparPor`) que cualquier tabla puede usar. Acá agrupa por "Tipo" (stems DME diálogo/música/efectos, mezcla final, versión DCP, versión streaming/broadcast), así el mezclador ve de un vistazo qué le falta por tipo de entrega en vez de escanear filas sueltas.
+
 ## 2. Cargo y necesidad real
 Departamento Postproducción, cargo Sonorización final. Hoy no hay registro de qué entregables de audio están pendientes, con qué spec de loudness/formato, ni si el downmix 5.1→estéreo se revisó por fase — esto se resuelve hoy en notas sueltas del mezclador, sin visibilidad para Coordinación de postproducción.
 
@@ -19,7 +21,7 @@ Fuentes: [Audio Delivery Standards - Tools for Film](https://www.toolsforfilm.co
 No aplica normativa española específica (son especificaciones técnicas de plataformas/distribución, no obligación legal).
 
 ## 5. Diseño de la herramienta
-Tabla con columnas: Ítem de entrega, Tipo (Stem DME diálogo/música/efectos, Mezcla final, Versión DCP, Versión streaming/broadcast), Spec objetivo (texto largo), Formato técnico (texto largo), Loudness/true-peak verificado (Sí/No/En curso), Downmix 5.1→estéreo revisado por fase (Sí/No aplica/Pendiente), Estado (Pendiente/En mezcla/Entregado), Notas.
+Tabla con columnas: Ítem de entrega, Tipo (Stem DME diálogo/música/efectos, Mezcla final, Versión DCP, Versión streaming/broadcast), Spec objetivo (texto largo), Formato técnico (texto largo), Loudness/true-peak verificado (Sí/No/En curso), Downmix 5.1→estéreo revisado por fase (Sí/No aplica/Pendiente), Estado (Pendiente/En mezcla/Entregado), Notas. **Agrupada visualmente por "Tipo"** (fila divisoria cada vez que cambia el tipo de entrega, igual que Presupuesto agrupa por departamento) — generalizamos ese mecanismo a un campo declarativo del motor en vez de dejarlo hardcodeado a una sola herramienta.
 
 ## 6. Integración en 3 niveles
 - **Departamento**: visible para Sonorización final, junto a `versionesCorte`/`notasVisionadoPost` (departamento) ya existentes.
@@ -37,9 +39,8 @@ Sin cambio de componente visual: renderer genérico ya conforme a `sistema-disen
 
 ## 10. QA
 - `tsc --noEmit` sobre todo el proyecto: sin errores de tipos.
-- `next build` completo: compila sin errores.
-- **Verificación responsive real (ronda final, con login real)**: login real contra `cinepack-dev` con una cuenta de QA (`qa.post-sonorizacion2@mailinator.com`), entrando al proyecto de prueba `[PROYECTO TEST] La sed de los almendros`, abriendo la herramienta real desde Departamentos → Postproducción → "Checklist de mezcla y masterización de audio", con una fila real cargada (mezcla final de la escena coral de la asamblea, 25+ pistas, downmix 5.1→estéreo pendiente de revisar fase). Capturado con Playwright real en 390/820/1440px: **sin scroll horizontal en ningún ancho**, tabla con las 8 columnas (Ítem, Tipo, Spec destino, Formato técnico, Loudness/true-peak, Downmix, Estado, Notas) con scroll interno horizontal de la tabla (no de la página), usable en los 3 anchos.
-- La fila se cargó por API directa (insert en `herramienta_filas`) para tener datos reales que mostrar, no por el formulario de alta de la UI.
+- `next build --webpack` completo: compila sin errores.
+- **Verificación responsive real, ronda 2 (post rebote "necesito que me sorprendas")**: login real contra `cinepack-dev` desde Exclusivas → "Checklist de mezcla y masterización de audio" (navegación real de la app, no un harness — esta vez entrando por el flujo real de pestañas, no por URL directa), con la fila real ya existente (mezcla final de la escena coral, 25+ pistas) mostrada **agrupada bajo el encabezado "MEZCLA FINAL"** — confirmación visual de que `agruparPor` funciona en producción, no solo en el código. Playwright real en 390/820/1440px: `document.documentElement.scrollWidth === clientWidth` en los 3 anchos (sin scroll horizontal de página), tabla usable con scroll interno propio.
 - No se agregaron tests nuevos.
 
 ### Capturas reales (390 / 820 / 1440px)

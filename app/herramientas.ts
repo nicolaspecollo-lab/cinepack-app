@@ -36,6 +36,11 @@ export type Herramienta = {
   columnas?: Columna[]; // tabla / galería (campos extra de cada tarjeta)
   campos?: Columna[];   // ficha (pares clave/valor)
   estiloDoc?: string;   // nota (className de plantilla elegida al crear)
+  // Agrupa visualmente las filas por el valor de esta columna (fila
+  // divisoria cada vez que cambia, igual que Presupuesto agrupa por
+  // departamento) — declarativo, para cualquier tabla cuyo contenido tenga
+  // un eje natural de agrupación, sin tener que hardcodear un panel a medida.
+  agruparPor?: string;
 };
 
 export type CargoTools = {
@@ -3526,7 +3531,11 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "tabla",
-          hint: "Un registro por ítem de entrega de audio (stem, versión de mezcla, formato técnico). Confirmá el spec exacto del distribuidor/festival antes de mezclar — no hay un único estándar de loudness entre plataformas (Netflix, Amazon, broadcast UE/EEUU y DCP difieren). No es la checklist de entregables generales (`checklistEntrega`) ni el calendario maestro — esto es específico de audio.",
+          hint: "Un registro por ítem de entrega de audio (stem, versión de mezcla, formato técnico), agrupado por tipo de entrega. Confirmá el spec exacto del distribuidor/festival antes de mezclar — no hay un único estándar de loudness entre plataformas (Netflix, Amazon, broadcast UE/EEUU y DCP difieren). No es la checklist de entregables generales (`checklistEntrega`) ni el calendario maestro — esto es específico de audio.",
+          // Agrupa por tipo de ítem (ya es la columna más usada para separar
+          // qué hay que entregar y a quién) en vez de mostrar una tabla
+          // plana de 25+ filas sin estructura — mismo patrón que Presupuesto.
+          agruparPor: "tipo_item",
           columnas: [
             { key: "item", label: "Ítem de entrega" },
             { key: "tipo_item", label: "Tipo", tipo: "estado", opciones: ["Stem DME (diálogo)", "Stem DME (música)", "Stem DME (efectos)", "Mezcla final", "Versión DCP", "Versión streaming/broadcast"] },
