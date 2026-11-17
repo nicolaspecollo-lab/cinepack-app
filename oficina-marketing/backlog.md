@@ -45,3 +45,7 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 ## Cierres y nuevos frentes (17/11/2026, ciclo retomado 15:10 UTC)
 - **Candidato de cruce pack/formato del punto anterior: ya resuelto como segunda pieza de contenido.** Blog "España hace animación, Italia hace series" aprobado (Cumple), con mapeo explícito a packs reales (07 para España, 04/06 para Italia). Queda pendiente de revisión de Nico en el panel.
 - **Nuevo frente, prioridad media**: cruzar el mapa de productoras ya construido (España/Francia/Italia) contra este hallazgo de formato — ¿cuántas productoras mapeadas son específicamente de animación (España) o serie de ficción (Italia)? Si el volumen es bajo, el mensaje queda en blog/SEO, no escala a campaña paga. Responsable sugerido: estratega-posicionamiento.
+
+## Cierre del cruce productoras/formato (17/11/2026, ciclo 16:54 UTC)
+- **Resuelto: el cruce ya se hizo, resultado = insuficiente para campaña paga.** Solo 1 productora española (animación) y 4 italianas (perfil TV) aparecen en los mapas ya construidos — pero esos mapas no filtraban por formato, así que no es una medición real de volumen. Informe aprobado: `2026-11-17_cruce-productoras-formato.md`.
+- **Nuevo frente, prioridad a decidir por Nico**: mapear desde cero productoras de animación (España) y de series de ficción (Italia) — trabajo nuevo de cartografo-productoras, no reutiliza el mapa existente. No arrancar sin confirmación de Nico (es inversión de tiempo nueva, no un ajuste del backlog ya priorizado).
