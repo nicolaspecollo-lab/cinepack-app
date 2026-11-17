@@ -35,8 +35,14 @@ Sin cambio de componente visual: renderer genérico ya conforme a `sistema-disen
 ## 10. QA
 - `tsc --noEmit` sobre todo el proyecto: sin errores de tipos.
 - `next build` completo: compila sin errores.
-- **Verificación responsive real (actualizado)**: con `.env.local` copiado al worktree, `/hoy` ya no da 500 (307 a `/login`, credenciales válidas). Se montó `HerramientaPanel` en un arnés temporal (`app/qa-harness/page.tsx`, no se commitea — mismo patrón aprobado el 16/11 para `DocsBlancoPanel`) y se capturó con Playwright real en 390/820/1440px: sin scroll horizontal de página en ningún ancho, columnas (Acción/Actividad, Tipo, Responsable, Fecha prevista, Alcance, Acciones) legibles.
-- **Limitación que sigue abierta**: el arnés no tiene `proyecto activo` en `localStorage` (lo fija el login real), así que no se probó alta/edición de fila end-to-end — no se reporta como probado. Una cuenta `es_tester` real resolvería esto para la próxima ronda.
+- **Verificación responsive real (ronda final, con login real)**: login real contra `cinepack-dev` con una cuenta de QA (`qa.rrhh-direccion2@mailinator.com`), entrando al proyecto de prueba `[PROYECTO TEST] La sed de los almendros`, abriendo la herramienta real desde Departamentos → RRHH → "Plan de bienestar y actividades del equipo", con una fila real cargada (acción de prevención de riesgos ligada al rodaje del proyecto test). Capturado con Playwright real en 390/820/1440px: **sin scroll horizontal en ningún ancho** (`document.documentElement.scrollWidth` confirmado igual al `clientWidth`), tabla con headers y fila legibles, toolbar (Filtrar/Ordenar/Vista/Exportar) usable en los 3 anchos. Ver capturas abajo.
+- La fila se cargó por API directa (insert en `herramienta_filas`) para tener datos reales que mostrar, no por el formulario de alta de la UI — el flujo de alta en sí (botón "+ fila", edición de celda) no quedó probado interactivamente en esta ronda.
+- No se agregaron tests nuevos.
+
+### Capturas reales (390 / 820 / 1440px)
+![Plan de bienestar — 390px](capturas/390px.png)
+![Plan de bienestar — 820px](capturas/820px.png)
+![Plan de bienestar — 1440px](capturas/1440px.png)
 - No se agregaron tests nuevos.
 
 ## 11. Pendientes / preguntas abiertas para Nico
