@@ -49,6 +49,12 @@ En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agre
 
 Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
+## Bases de datos y registros (regla de Nico, 17/11/2026)
+- El repo de trabajo **es** el repo real de CINEPACK (`nicolaspecollo-lab/cinepack-app`), usando ramas para aislar — no hay un repo "paralelo" separado. `main` sigue intocable salvo que Nico diga explícitamente "Corte".
+- Base de datos de desarrollo: proyecto Supabase `cinepack-dev` (antes `cinepack-dev-jeantuan`, mismo esquema clonado del real). Toda herramienta con propuesta visual ya aprobada se implementa y prueba contra `cinepack-dev`, nunca contra el proyecto real. Mientras esté en fase de diseño/aprobación, no hace falta tocar ninguna base.
+- `oficina/registro-desarrollo.md`: lista de herramientas ya volcadas y probadas de verdad en `cinepack-dev`, aprobadas por el comité, pendientes solo del "Corte" de Nico para pasar a real.
+- `oficina/registro-acciones-real.md`: bitácora append-only de cada acción que tocó el proyecto/repo real (deploys, migraciones, merges a `main`) — fecha, qué se hizo, quién lo autorizó. Esta sesión nunca escribe acá por su cuenta porque nunca ejecuta nada contra lo real.
+
 ## Worktrees — entorno completo obligatorio (regla de Nico, 17/11/2026)
 Todo worktree nuevo (`git worktree add ...`) usado para un expediente debe, antes de cualquier build/QA, tener: `node_modules` (symlink a `/home/user/cinepack-app/node_modules` si no se instala con npm) y `.env.local` (copiarlo de `/home/user/cinepack-app/.env.local` — tiene las credenciales de Supabase que QA necesita para probar de verdad). Sin esto no hay excusa para omitir el QA real ni para marcar una verificación como hecha sin haberla corrido.
 
