@@ -26,6 +26,7 @@ export type Columna = {
   soloLectura?: boolean; // la celda se muestra siempre como texto plano, nunca editable (ej. un código calculado)
   sinAcento?: boolean;   // sin fondo de color por valor ("tono") ni data bar — para columnas donde ese acento no comunica nada real
   sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
+  notificaDepartamento?: boolean; // tipo "estado" cuyas `opciones` son nombres de departamento: al cambiar a un valor real (no "Ninguno"/"—"), dispara una consulta real (tabla `consultas`, mismo mecanismo que ConsultasPanel) dirigida a ese departamento — ver `dispararConsultaDesdeFila` en HerramientaPanel.tsx.
 };
 
 export type Herramienta = {
@@ -2618,7 +2619,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
             { key: "intencion", label: "Intención de dirección", tipo: "largo" },
             { key: "toma_elegida", label: "Toma recomendada" },
             { key: "motivo_toma", label: "Por qué esa toma", tipo: "largo" },
-            { key: "pendiente_para", label: "Pendiente para", tipo: "estado", opciones: ["Guion", "Script/Continuidad", "Postproducción", "Ninguno"] },
+            { key: "pendiente_para", label: "Pendiente para", tipo: "estado", opciones: ["Guion", "Script/Continuidad", "Postproducción", "Ninguno"], notificaDepartamento: true },
             { key: "nota_pendiente", label: "Detalle del pendiente", tipo: "largo" },
             { key: "estado", label: "Estado", tipo: "estado", opciones: ["Por revisar", "Resuelta", "Pendiente de dailies"] },
           ],

@@ -1915,6 +1915,61 @@ function CeldaMoneyConFormula({
   );
 }
 
+// Mapea una opción de columna `notificaDepartamento` que no es literalmente
+// un nombre de departamento real (ej. "Script/Continuidad", que es un cargo
+// de Dirección) al {departamento, cargo} real que espera `consultas`. Las
+// opciones que ya son un departamento real quedan igual (cargo null = llega
+// a todo el departamento).
+const DEPTO_DESTINO_ALIAS: Record<string, { departamento: string; cargo: string | null }> = {
+  "Script/Continuidad": { departamento: "Dirección", cargo: "Script/Continuidad" },
+};
+
+// Dispara una consulta real (mismo mecanismo que ConsultasPanel: tabla
+// `consultas` + /api/consultas/notificar) dirigida al departamento/cargo
+// elegido en una celda `tipo:"estado", notificaDepartamento:true`. Pensado
+// para campos tipo "Pendiente para" — nunca se llama si el valor es
+// "Ninguno"/"—" o si no cambió de verdad. No bloquea el guardado de la
+// celda: si falla, se pierde solo la notificación, no el dato.
+async function dispararConsultaDesdeFila(opts: {
+  valorDestino: string;
+  herramientaNombre: string;
+  departamentoOrigen: string;
+  contexto: string; // ej. "Escena 14 — intención: ..."
+}) {
+  if (!opts.valorDestino || opts.valorDestino === "Ninguno" || opts.valorDestino === "—") return;
+  try {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: perfil } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+    const destino = DEPTO_DESTINO_ALIAS[opts.valorDestino] ?? { departamento: opts.valorDestino, cargo: null };
+    const { data: nueva, error } = await supabase
+      .from("consultas")
+      .insert({
+        project_id: projectId,
+        autor_id: user.id,
+        autor_nombre: perfil?.full_name ?? "—",
+        de_departamento: opts.departamentoOrigen,
+        para_departamentos: [destino.departamento],
+        para_cargo: destino.cargo,
+        titulo: `Pendiente de ${opts.herramientaNombre}`,
+        texto: opts.contexto,
+      })
+      .select("id")
+      .single();
+    if (error || !nueva) return;
+    await fetch("/api/consultas/notificar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consulta_id: nueva.id }),
+    }).catch(() => {});
+  } catch {
+    // silencioso: la celda ya se guardó, la notificación es best-effort
+  }
+}
+
 function Celda({
   col,
   valor,
@@ -1982,7 +2037,18 @@ function Celda({
           options={col.opciones ?? []}
           placeholder="—"
           permitirLibre={col.libre}
-          onChange={(v) => { onChange(v); onCommit(); }}
+          onChange={(v) => {
+            onChange(v);
+            onCommit();
+            if (col.notificaDepartamento && v !== valor) {
+              void dispararConsultaDesdeFila({
+                valorDestino: v,
+                herramientaNombre: herramientaId ?? col.label,
+                departamentoOrigen: departamento ?? "—",
+                contexto: `Fila de "${col.label}" (${herramientaId ?? "—"}) quedó marcada como pendiente para tu equipo.`,
+              });
+            }
+          }}
         />
       </div>
     );
