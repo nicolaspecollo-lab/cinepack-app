@@ -49,14 +49,15 @@ En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agre
 
 Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
-## Botón "Corte" — el único disparador de merge a main (regla de Nico, 17/11/2026)
-El panel separa las entregas de esta oficina en 3 columnas: **Pendientes** (sin veredicto o con "le falta algo"), **Aprobadas** (Cumple/Supera, esperando Corte) y **Mergeadas a main**. Nico aprieta "Corte" en una tarjeta de Aprobadas → el panel escribe `corte_solicitado:true` en esa entrega (colección `entregas`). En la próxima pasada del supervisor horario (o antes si se detecta en el momento), el director-oficina:
-1. Confirma que el PR de esa entrega ya está mergeado a `claude/oficina-agentes-cinepack-jv179i` (si no, lo hace primero).
-2. Mergea esa rama/PR a `main` del repo real (`nicolaspecollo-lab/cinepack-app`) — recién ahí, nunca antes, nunca sin este flag.
-3. Marca la entrega `mergeada_main:true`, `mergeada_main_en:<fecha>` en el panel.
-4. Agrega la fila correspondiente en `oficina/registro-acciones-real.md` (fecha, qué se hizo, "autorizado por Nico vía botón Corte en el panel").
-5. Actualiza `oficina/cola-merge.md` y `oficina/registro-desarrollo.md` si corresponde.
-Ninguna otra vía (feedback, calificación "cumple" sola, pedido verbal fuera del botón) dispara el merge a `main` — sigue siendo la única señal válida, ahora formalizada como botón en vez de frase en el chat.
+## "Corte" — significado exacto, no se diluye (regla de Nico, 17/11/2026)
+"Corte" es la **única** autorización válida para que algo pase de `cinepack-dev` a producción real. No es sinónimo de "está aprobado", ni de "el comité de calidad lo pasó", ni de "está listo hace rato" — pasar el comité y quedar en `registro-desarrollo.md` es condición **necesaria pero no suficiente**. Reglas exactas:
+1. Nunca se infiere ni se asume por tiempo transcurrido, presión de entrega, o "ya pasó todos los controles". Si nadie tocó el botón, nada sale de `cinepack-dev`. El Corte lo da Nico (o quien él delegue explícitamente), a propósito, sabiendo qué autoriza en ese momento.
+2. Cubre las tres cosas que significan "tocar lo real", no solo el código: merge a `main`, migraciones de base de datos contra el proyecto real de Supabase, y el deploy a Vercel. Las tres quedan pendientes de Corte — el modal del panel las marca por separado (`corte_alcance: {main, migraciones, deploy}`) y solo se ejecuta lo que el Corte marcó.
+3. Antes de que el botón esté habilitado, el panel tiene que mostrar con claridad qué se va a llevar a producción (campo `cambios_produccion` de la entrega — el director-oficina lo completa antes de que la entrega llegue a "Aprobadas"). Nunca un Corte genérico sin que Nico sepa exactamente qué está autorizando.
+4. **Condición dura, no negociable**: el botón queda deshabilitado (`qa_responsive_ok !== true`) hasta que QA confirme de verdad, interactuando (no con capturas), que no hay scroll horizontal en 390px, que nada se superpone o se corta, y que la herramienta es usable de punta a punta en 390/820/1440px. Si falta esto en cualquier ancho, no pasa por Corte aunque haya superado el resto de la checklist del comité.
+5. Un Corte autoriza solo ese cambio puntual — nunca autoriza nada a futuro. Cada pase a producción necesita su propio Corte, sin excepción, aunque sea la misma herramienta con un cambio chico.
+
+**Mecánica técnica:** Nico abre el modal "Dar Corte" en una tarjeta de Aprobadas (solo si `qa_responsive_ok:true`), ve el resumen de `cambios_produccion` y la confirmación de QA responsive, marca qué cubre (main/migraciones/deploy) y confirma → el panel escribe `corte_solicitado:true`, `corte_resumen_autorizado`, `corte_alcance` en esa entrega. En la próxima pasada del supervisor horario, el director-oficina ejecuta **únicamente lo marcado en `corte_alcance`** (nunca de más): mergea a `main` si corresponde, aplica la migración si corresponde, dispara el deploy si corresponde; marca `corte_ejecutado:true`, `corte_ejecutado_en:<fecha>`; agrega la fila en `oficina/registro-acciones-real.md` (fecha, qué se hizo exactamente, "autorizado por Nico vía botón Corte — alcance: ..."); actualiza `cola-merge.md`/`registro-desarrollo.md`. Ninguna otra vía dispara nada de esto.
 
 ## Bases de datos y registros (regla de Nico, 17/11/2026)
 - El repo de trabajo **es** el repo real de CINEPACK (`nicolaspecollo-lab/cinepack-app`), usando ramas para aislar — no hay un repo "paralelo" separado. `main` sigue intocable salvo que Nico diga explícitamente "Corte".
