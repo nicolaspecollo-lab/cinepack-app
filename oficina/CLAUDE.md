@@ -49,6 +49,9 @@ En cuanto una entrega queda en **Cumple** o **Supera las expectativas**: se agre
 
 Si la calificación es "le falta un poco/bastante" o "lejos de lo esperado": vuelve a proceso con el feedback de Nico, nunca se mergea.
 
+## Worktrees — entorno completo obligatorio (regla de Nico, 17/11/2026)
+Todo worktree nuevo (`git worktree add ...`) usado para un expediente debe, antes de cualquier build/QA, tener: `node_modules` (symlink a `/home/user/cinepack-app/node_modules` si no se instala con npm) y `.env.local` (copiarlo de `/home/user/cinepack-app/.env.local` — tiene las credenciales de Supabase que QA necesita para probar de verdad). Sin esto no hay excusa para omitir el QA real ni para marcar una verificación como hecha sin haberla corrido.
+
 ## Panel en vivo — estado en tiempo real (regla de Nico, 17/11/2026)
 Cada agente, **al empezar** un paso real de trabajo (no al terminar), se marca `estado:"busy"` en el panel (colección `agentes`, campo `tarea_actual` describiendo qué está haciendo en ese momento) — nunca esperar a tener el resultado final para escribirlo. Recién cuando termina ese paso y entrega el resultado se vuelve a poner `estado:"idle"` con la tarea ya hecha. Quien orquesta (esta sesión, vía tool Agent) es responsable de escribir ese `busy` antes de lanzar cada subagente real, no solo al recibir su reporte final — si no, el panel muestra a todos quietos aunque haya trabajo real en curso.
 
