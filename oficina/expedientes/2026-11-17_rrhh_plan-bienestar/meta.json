@@ -1,10 +1,10 @@
 {
   "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
-  "title": "Plan de bienestar y actividades del equipo",
-  "subtitle": "Acciones de bienestar ligadas al III Convenio colectivo estatal de producción audiovisual (técnicos).",
-  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
-  "metaItems": [["Fecha", "17 nov 2026"], ["Departamento", "RRHH"], ["Oficina", "Desarrollo"]],
+  "title": "Seguridad laboral y formación obligatoria",
+  "subtitle": "Replanteo de fondo tras feedback de Nico: de tabla de actividades de bienestar a sistema real de riesgo → normativa → formación obligatoria → medidas.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión — última ronda</span>",
+  "metaItems": [["Fecha", "17 nov 2026"], ["Departamento", "RRHH"], ["Cargo", "Coordinación de bienestar"], ["Oficina", "Desarrollo"]],
   "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
-  "footerNote": "pendiente de tu aprobación final",
+  "footerNote": "pendiente de tu aprobación final — última ronda posible",
   "accent": "#E8A330"
 }
