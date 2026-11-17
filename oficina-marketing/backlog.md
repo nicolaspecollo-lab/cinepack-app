@@ -16,3 +16,9 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - A qué país apostar primero con esfuerzo comercial directo: la serie histórica ahora da una hipótesis concreta (Italia, por crecimiento sostenido 2020-2023 sin caída grande en el medio) en vez de España por descarte — falta cruzarlo con volumen de productoras activas (encargado a estratega-posicionamiento) antes de que Nico decida.
 - Si se quiere perseguir el ángulo de convocatorias ICAA (y equivalentes de otros países) como gancho de venta, dado que es donde PeliProp supuestamente es fuerte — todavía sin poder confirmarlo (ver punto 1, bloqueado).
 - Mensaje a productoras: dado que ninguna de las 20 mapeadas tiene herramienta corporativa (solo freelancers la usan individualmente), el ángulo de venta pasa de "migración" a "estandarización" — confirmar con Nico si se adopta como línea de mensaje oficial.
+
+## Seguimiento al mapa de productoras de Italia (17/11/2026)
+- Completar contacto de Indigo Film y Fandango (sin ninguno verificado en esta vuelta).
+- Verificar 3-4 cifras de fatturato (Medusa, Eagle Pictures, Banijay, Endemol Shine Italy) contra Registro Imprese/Camera di Commercio en vez de agregadores de terceros.
+- Búsqueda de LinkedIn de productoras italianas, que esta sesión no pudo completar.
+- Confirmado: el patrón "sin herramienta corporativa" se repite en Italia, con el matiz de que el mercado está "educado" en la categoría (Filmustage/Celtx aparecen en contenido de marketing y temarios) sin estar capturado por ningún competidor — refuerza la hipótesis de estandarización sobre migración.
