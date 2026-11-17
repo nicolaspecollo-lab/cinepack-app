@@ -3572,7 +3572,19 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Coordinación de bienestar": {
       departamento: [descansosLegales, protocoloRiesgos, canalIncidencias],
       cargo: [
-        { id: "rrhh-plan-bienestar", nombre: "Plan de bienestar y actividades del equipo", tipo: "checklist" },
+        {
+          id: "rrhh-plan-bienestar", nombre: "Plan de bienestar y actividades del equipo", tipo: "tabla",
+          hint: "Acciones de bienestar y prevención ligadas a lo que exige el III Convenio colectivo estatal de la industria de producción audiovisual (técnicos), BOE-A-2024-6846 (06/04/2024): información de riesgos laborales del sector, campañas de prevención, y seguro de accidentes/enfermedad de contingencias profesionales obligatorio. No sustituye el protocolo de riesgos (`rrhh-protocolo-riesgos`) ni el canal de incidencias (`rrhh-incidencias`) — es el plan de acciones concretas, no la normativa ni la gestión de casos.",
+          columnas: [
+            { key: "accion", label: "Acción / actividad" },
+            { key: "tipo_accion", label: "Tipo", tipo: "estado", opciones: ["Información de riesgos (convenio)", "Campaña de prevención", "Seguro obligatorio", "Bienestar general"] },
+            { key: "responsable", label: "Responsable" },
+            { key: "fecha", label: "Fecha prevista", tipo: "fecha" as const },
+            { key: "alcance", label: "Alcance (equipo/cargo)", tipo: "largo" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Planificada", "En curso", "Realizada"] },
+            { key: "notas", label: "Notas", tipo: "largo" },
+          ],
+        },
       ],
     },
   },
