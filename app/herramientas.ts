@@ -3524,7 +3524,20 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Sonorización final": {
       departamento: [versionesCorte, notasVisionadoPost],
       cargo: [
-        { id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "checklist" },
+        {
+          id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "tabla",
+          hint: "Un registro por ítem de entrega de audio (stem, versión de mezcla, formato técnico). Confirmá el spec exacto del distribuidor/festival antes de mezclar — no hay un único estándar de loudness entre plataformas (Netflix, Amazon, broadcast UE/EEUU y DCP difieren). No es la checklist de entregables generales (`checklistEntrega`) ni el calendario maestro — esto es específico de audio.",
+          columnas: [
+            { key: "item", label: "Ítem de entrega" },
+            { key: "tipo_item", label: "Tipo", tipo: "estado", opciones: ["Stem DME (diálogo)", "Stem DME (música)", "Stem DME (efectos)", "Mezcla final", "Versión DCP", "Versión streaming/broadcast"] },
+            { key: "spec_destino", label: "Spec objetivo (plataforma/festival)", tipo: "largo" },
+            { key: "formato_tecnico", label: "Formato técnico", tipo: "largo" },
+            { key: "loudness_verificado", label: "Loudness/true-peak verificado", tipo: "estado", opciones: ["Sí", "No", "En curso"] },
+            { key: "downmix_revisado", label: "Downmix 5.1→estéreo revisado (fase)", tipo: "estado", opciones: ["Sí", "No aplica", "Pendiente"] },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En mezcla", "Entregado"] },
+            { key: "notas", label: "Notas" },
+          ],
+        },
       ],
     },
     "Coordinación de postproducción": {
