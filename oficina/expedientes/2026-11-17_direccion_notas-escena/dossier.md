@@ -26,6 +26,11 @@ No requirió tabla nueva de Supabase: usa el mismo motor genérico de `tipo: "ta
 ## 8. Librerías y licencias
 Ninguna librería nueva — se reutiliza el renderer genérico de `tipo: "tabla"` ya usado en 168 registros del archivo.
 
+## 8bis. Ejemplo visual real (capturas, pedido explícito de Nico 17/11)
+![Móvil 390px](capturas/390px.png)
+![Tablet 820px](capturas/820px.png)
+![Escritorio 1440px](capturas/1440px.png)
+
 ## 9. Sistema de diseño
 Sin cambio de componente visual: hereda el estilo ya aplicado al renderer de tabla genérico (tokens de `sistema-diseno.md` ya vigentes ahí).
 
