@@ -30,3 +30,9 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Búsqueda de LinkedIn pendiente.
 - Confirmado por tercera vez consecutiva (España, Italia, Francia): ninguna productora mapeada tiene herramienta corporativa — el mercado está "educado" en la categoría (Filmustage aparece comparándose contra StudioBinder en contenido francés también) sin estar capturado. Refuerza con fuerza la hipótesis de estandarización como eje de mensaje en los 3 mercados principales.
 - Pendiente para vigia-competencia: revisar si Filmustage tiene casos publicados en Francia (handoff del cartógrafo).
+
+## Seguimiento a producción por formato (17/11/2026)
+- Serie de ficción española: sin dato.
+- Horas de documental francés 2023: sin dato (solo cifra de ayuda en euros).
+- PDF del MiC italiano no verificado directamente (cinema.cultura.gov.it bloqueado por red de sesión).
+- Hallazgo de negocio: España destaca en animación (15 series, tendencia al alza desde 2021), Italia en volumen/presupuesto de serie de ficción (94 títulos) — candidato a cruzar con qué pack de pricing promocionar en cada mercado (pack animación para España, pack serie para Italia) en vez del genérico de largometraje.
