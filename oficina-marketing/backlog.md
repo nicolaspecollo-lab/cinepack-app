@@ -31,6 +31,11 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Confirmado por tercera vez consecutiva (España, Italia, Francia): ninguna productora mapeada tiene herramienta corporativa — el mercado está "educado" en la categoría (Filmustage aparece comparándose contra StudioBinder en contenido francés también) sin estar capturado. Refuerza con fuerza la hipótesis de estandarización como eje de mensaje en los 3 mercados principales.
 - Pendiente para vigia-competencia: revisar si Filmustage tiene casos publicados en Francia (handoff del cartógrafo).
 
+## Cierres y nuevos frentes (17/11/2026, ciclo autónomo 08:55 UTC)
+- **Plan de marketing: feedback de Nico cerrado.** Capa C (publicidad) y Capa D (escuelas de cine) agregadas a la segmentación, con Packs 11/12 como fuente. Sin tamaño de mercado — nuevo frente abierto para analista-mercado-cine/cartografo-productoras: medir Capa C y D.
+- **Canal de contenidos activado por primera vez.** redactor-contenidos entregó su primera pieza (ángulo de estandarización). Nuevo frente: pensar la segunda pieza (candidatos: SetHero vs. CINEPACK en alcance, o el hallazgo de España-animación/Italia-serie por formato).
+- **Alemania (SPIO)/España histórica (espanadigital.gob.es)/Reino Unido (BFI): reintentado y sigue bloqueado por red de la sesión**, no por falta de fuente. No reintentar en el próximo ciclo sin que Nico habilite los hosts — evitar repetir el mismo resultado negativo.
+
 ## Seguimiento a producción por formato (17/11/2026)
 - Serie de ficción española: sin dato.
 - Horas de documental francés 2023: sin dato (solo cifra de ayuda en euros).
