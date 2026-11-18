@@ -43,6 +43,10 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 
 ## Cierre parcial: tamaño de mercado Capa C/D (18/11/2026, ciclo 04:54 UTC)
 - **Capa C cerrada con dato real**: 45.600 empresas de publicidad en España (INE-DIRCE 2024). Falta el filtro de relevancia (cuántas producen contenido propio) antes de evaluar campaña paga — próximo frente.
+
+## Filtro de Capa C resuelto, replanteado (18/11/2026, ciclo 08:54 UTC)
+- **No existe el dato pedido** (% de agencias con producción propia) — confirmado, no es hueco de búsqueda. Hallazgo: la norma del sector es externalizar. **Segmento real redefinido**: productoras de publicidad, no las 45.600 agencias. Informe `2026-11-18_filtro-capa-c-publicidad.md`, aprobado.
+- **Nuevo frente, prioridad alta**: mapear productoras de publicidad en España (mismo método que productoras de cine) — da el número real para decidir si Pack 11 escala a campaña paga.
 - **Capa D sigue bloqueada**: sin censo oficial de escuelas de cine, fuente más cercana (ICAA, `cultura.gob.es`) bloqueada por red de la sesión. Pedido abierto para Nico: habilitar ese host.
 - Informe: `2026-11-18_tamano-mercado-capa-c-d.md`, aprobado, PDF en el panel.
 - **Canal de contenidos activado por primera vez.** redactor-contenidos entregó su primera pieza (ángulo de estandarización). Nuevo frente: pensar la segunda pieza (candidatos: SetHero vs. CINEPACK en alcance, o el hallazgo de España-animación/Italia-serie por formato).
