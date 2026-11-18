@@ -1672,6 +1672,7 @@ function HerramientaData({
           asegurar={asegurarSingle}
           onGuardar={guardarFila}
           onVisionar={visionar}
+          itemsPrecargados={herramienta.itemsPrecargados}
         />
       )}
 
@@ -8802,6 +8803,7 @@ function ChecklistTool({
   asegurar,
   onGuardar,
   onVisionar,
+  itemsPrecargados,
 }: {
   fila: Fila | undefined;
   editable: boolean;
@@ -8809,9 +8811,14 @@ function ChecklistTool({
   asegurar: () => Promise<Fila>;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onVisionar: (id: string) => void;
+  itemsPrecargados?: string[];
 }) {
   const t = useTranslations("hp");
+  const sinGuardar = !fila?.datos?.items;
   const items: Item[] = (() => {
+    if (sinGuardar && itemsPrecargados?.length) {
+      return itemsPrecargados.map((texto) => ({ texto, hecho: false }));
+    }
     try { return JSON.parse(fila?.datos?.items ?? "[]"); } catch { return []; }
   })();
   const [nuevo, setNuevo] = useState("");
