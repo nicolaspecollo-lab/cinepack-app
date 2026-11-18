@@ -39,7 +39,16 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Pendiente para vigia-competencia: revisar si Filmustage tiene casos publicados en Francia (handoff del cartógrafo).
 
 ## Cierres y nuevos frentes (17/11/2026, ciclo autónomo 08:55 UTC)
-- **Plan de marketing: feedback de Nico cerrado.** Capa C (publicidad) y Capa D (escuelas de cine) agregadas a la segmentación, con Packs 11/12 como fuente. Sin tamaño de mercado — nuevo frente abierto para analista-mercado-cine/cartografo-productoras: medir Capa C y D.
+- **Plan de marketing: feedback de Nico cerrado.** Capa C (publicidad) y Capa D (escuelas de cine) agregadas a la segmentación, con Packs 11/12 como fuente.
+
+## Cierre parcial: tamaño de mercado Capa C/D (18/11/2026, ciclo 04:54 UTC)
+- **Capa C cerrada con dato real**: 45.600 empresas de publicidad en España (INE-DIRCE 2024). Falta el filtro de relevancia (cuántas producen contenido propio) antes de evaluar campaña paga — próximo frente.
+
+## Filtro de Capa C resuelto, replanteado (18/11/2026, ciclo 08:54 UTC)
+- **No existe el dato pedido** (% de agencias con producción propia) — confirmado, no es hueco de búsqueda. Hallazgo: la norma del sector es externalizar. **Segmento real redefinido**: productoras de publicidad, no las 45.600 agencias. Informe `2026-11-18_filtro-capa-c-publicidad.md`, aprobado.
+- **Nuevo frente, prioridad alta**: mapear productoras de publicidad en España (mismo método que productoras de cine) — da el número real para decidir si Pack 11 escala a campaña paga.
+- **Capa D sigue bloqueada**: sin censo oficial de escuelas de cine, fuente más cercana (ICAA, `cultura.gob.es`) bloqueada por red de la sesión. Pedido abierto para Nico: habilitar ese host.
+- Informe: `2026-11-18_tamano-mercado-capa-c-d.md`, aprobado, PDF en el panel.
 - **Canal de contenidos activado por primera vez.** redactor-contenidos entregó su primera pieza (ángulo de estandarización). Nuevo frente: pensar la segunda pieza (candidatos: SetHero vs. CINEPACK en alcance, o el hallazgo de España-animación/Italia-serie por formato).
 - **Alemania (SPIO)/España histórica (espanadigital.gob.es)/Reino Unido (BFI): reintentado y sigue bloqueado por red de la sesión**, no por falta de fuente. No reintentar en el próximo ciclo sin que Nico habilite los hosts — evitar repetir el mismo resultado negativo.
 
