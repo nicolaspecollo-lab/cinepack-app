@@ -3,8 +3,8 @@
 ## Corrección directa de Nico (17/11/2026) — objeción al ángulo animación/series
 Nico cuestionó en el chat el frente España-animación/Italia-serie como ángulo principal, siendo que el fuerte real de CINEPACK es ficción. Revisado por director-marketing: Nico tiene razón. Ver `plan-marketing.md` sección 1.2.
 1. **Cerrado (ciclo 20:54 UTC)**: `redactor-contenidos` reescribió `2026-11-17_blog-que-pack-por-mercado.md` — ficción (largometraje/Pack 01-03, o serie de ficción/Pack 04-06) es el ángulo principal en los 3 mercados; animación (España) y volumen de serie (Italia) quedan como nota secundaria. Aprobado (Cumple), PDF en el panel.
-2. **Pendiente, prioridad real del próximo ciclo**: medir serie de ficción española (sigue siendo hueco de dato, ver informe de formato) antes de volver a comparar formatos en España — si se cierra y confirma que España también es fuerte en ficción, el ángulo de animación deja de tener sentido.
-3. Mapear desde cero productoras de animación (España) y de series (Italia) sigue bloqueado a decisión de Nico — no arrancar sin su confirmación, y no es prioridad mientras el ángulo de ficción vuelve a ser el principal.
+2. **Cerrado (ciclo 00:54 UTC, 18/11).** España produjo 53 series de ficción en 2023 (GECA) contra 15 de animación (DIBOOS) — más de 3.5x de volumen, tendencia al alza. Confirma de raíz la objeción de Nico: España es mercado de ficción, no de animación. Informe `2026-11-18_serie-ficcion-espana.md`, aprobado, PDF en el panel. `plan-marketing.md` sección 1.2 actualizada con el cierre definitivo.
+3. Mapear productoras de animación (España) ya no tiene sentido — descartado por el cierre del punto 2, no solo pospuesto. Mapear productoras de series de ficción en Italia sigue bloqueado a decisión de Nico (trabajo nuevo de cartógrafo-productoras, no ajuste del mapa existente) — no arrancar sin su confirmación.
 
 
 Prioridad: lo que más acerque una decisión real de monetización (pricing, segmento, canal, mensaje). El director-marketing reordena esta lista en cada ciclo según lo que vaya cerrando.
