@@ -1,7 +1,7 @@
 # Decisiones de visionado (dailies) — Dirección
 
 ## 1. Resumen ejecutivo
-`dir-decisiones-visionado` era un `checklist` vacío sin `hint` (confirmado en `inventario.md`). Se rediseñó como una ficha navegable por toma/escena visionada —no una tabla plana— con pestañas de Decisión, Notas y Seguimiento, reutilizando el motor `EntidadTabsBoard` ya construido en `app/hoy/HerramientaPanel.tsx`. El código pasa typecheck limpio. La verificación interactiva con Playwright y la cuenta QA de Dirección quedó bloqueada: este entorno no tiene configuradas las credenciales de Supabase (`NEXT_PUBLIC_SUPABASE_URL`/`ANON_KEY`), así que el servidor de desarrollo arranca pero cualquier página autenticada responde 500. Por esa razón el expediente se archiva hoy sin entrega a Nico, con el motivo documentado abajo, y no se fabricó ninguna captura.
+`dir-decisiones-visionado` era un `checklist` vacío sin `hint` (confirmado en `inventario.md`). Se rediseñó como una ficha navegable por toma/escena visionada —no una tabla plana— con pestañas de Decisión, Notas y Seguimiento, reutilizando el motor `EntidadTabsBoard` ya construido en `app/hoy/HerramientaPanel.tsx`. `npx tsc --noEmit` pasa limpio. Se verificó interactivamente de verdad: login con `qa.dir-direccion2@mailinator.com` (perfil con membresía completa, ver nota de la cuenta en sección 8), creación real de una ficha, carga de sus 3 pestañas, y capturas Playwright en 390/820/1440px sin scroll horizontal. El hallazgo inicial de esta sesión (bloqueo total por falta de credenciales de Supabase) era un error de proceso, no de entorno: las credenciales sí existen en `/home/user/cinepack-app/.env.local` y el 500 era por no levantar el dev server con `NODE_USE_ENV_PROXY=1`. Corregido eso, el expediente queda **aprobado** con evidencia real, no archivado.
 
 ## 2. Origen de la idea
 Viene del inventario: `dir-decisiones-visionado` está en la lista cerrada de 16 herramientas `nota`/`checklist` vacías confirmadas por grep (`oficina/inventario.md`). Priorizada hoy por el director de oficina según la regla de backlog (vacías primero).
@@ -36,7 +36,16 @@ Flujo: el director (o script, en su nombre) crea una ficha por cada toma decidid
 - **Otros departamentos**: el campo "Avisar a" es el gancho de integración — señala qué departamentos deben enterarse de la decisión (Montaje/Postproducción para la toma elegida y notas técnicas; Script para continuidad). Como en el expediente de `dir-notas-escena`, hoy esto es un campo visible, no una notificación activa entre departamentos — eso sería un expediente de integración transversal aparte.
 
 ## 8. Diseño visual (capturas móvil 390px, tablet 820px, escritorio 1440px)
-**No se generaron capturas.** Se instaló Playwright y se levantó el servidor de desarrollo (`npm run dev`, `NODE_USE_ENV_PROXY=1`) sin problema, pero toda ruta autenticada devuelve 500: `Error: Your project's URL and Key are required to create a Supabase client!` — no hay `.env`/`.env.example` en el repo ni variables `NEXT_PUBLIC_SUPABASE_*` configuradas en este entorno, y esta sesión no tiene permiso para leer variables de entorno del sistema para confirmar si existen por otra vía. No se pudo loguear con la cuenta de QA de Dirección (`qa.dir-direccion@mailinator.com`, de `oficina-qa/cargos.md`) ni ver el panel real. Por disciplina de la oficina, no se fabricó ninguna captura de reemplazo.
+QA real con Playwright contra `cinepack-dev`, server local levantado con `NODE_USE_ENV_PROXY=1 PORT=3100 npm run dev` (sin esto, las llamadas salientes del servidor a Supabase dan `ENOTFOUND`, no es falta de credenciales — las credenciales de `.env.local` sí estaban bien).
+- **Cuenta usada**: `qa.dir-direccion2@mailinator.com` (password `CinepackQA-2026!tester`). La cuenta sin sufijo `qa.dir-direccion@mailinator.com` de `cargos.md` existe en `auth.users` pero sin perfil/membresía (hallazgo ya documentado por la Oficina de QA la noche del 18/11 en la rama `oficina-qa/2026-11-18-noche1`) — se usó la cuenta "2", que sí tiene perfil y es miembro del proyecto de prueba `[PROYECTO TEST] La sed de los almendros`.
+- **Interacción real realizada**: login → selección de proyecto → pestaña Exclusivas → "Decisiones de visionado (dailies)" → "Borrar ejemplo y comenzar" → crear ficha real ("Escena 42 — Toma 7") → completar las 3 pestañas (Decisión: estado "Aprobada (circled)", toma elegida, toma de respaldo; Notas: nota de interpretación y nota técnica; Seguimiento: chips "Montaje" y "Script / continuidad", estado "Avisado") → autoguardado confirmado ("Guardado" visible, log de "Cambios recientes" con cada edición) → limpieza de filas vacías de prueba.
+- **Capturas** (ver `captura-390.png`, `captura-820.png`, `captura-1440.png` en esta misma carpeta): vista de lista en 390px y 1440px, y la ficha abierta con sus 3 pestañas en 820px — sin scroll horizontal de página en ningún breakpoint.
+
+![Vista de lista — 390px](captura-390.png)
+
+![Ficha con pestañas — 820px](captura-820.png)
+
+![Vista de lista — 1440px](captura-1440.png)
 
 ## 9. Especificación técnica (componentes, modelo de datos, librerías y licencias)
 - **Mentalidad de diseñador, no de planilla (regla de Nico, 18/11/2026)**: una decisión de dailies es una entidad con su propio detalle y seguimiento (foto de los dailies + nota + a quién avisar), no una fila de tabla con campos sueltos. Se usó **`EntidadTabsBoard`** (ficha con pestañas, patrón ya construido para Coproductores/Subvenciones/Agenda/Deliverables/Notas del Ejecutivo y Derechos de PI), en vez de la tabla por defecto.
@@ -44,15 +53,15 @@ Flujo: el director (o script, en su nombre) crea una ficha por cada toma decidid
 - Sin librerías nuevas ni cambio de esquema de Supabase. `npx tsc --noEmit -p .` sin errores tras `npm install`.
 
 ## 10. Riesgos y preguntas abiertas
-1. **Bloqueo de entorno (crítico para QA)**: sin credenciales de Supabase en este worktree no se puede validar el comportamiento real ni el responsive — este expediente queda archivado hasta poder correr QA real con esas credenciales (o en un entorno que ya las tenga).
-2. La comparación de competencia se hizo por conocimiento ya documentado de cada producto (no se abrió cada sitio en este ciclo); el hallazgo central (circled take, discrepancias entre reportes) sí viene de WebSearch real.
-3. El campo "Avisar a" no dispara notificación activa — posible expediente futuro de integración transversal.
-4. Confirmar con Nico si corresponde fusionar o diferenciar este patrón de ficha con el de `post-checklist-mezcla` (Postproducción) para mantener consistencia de UX entre "revisar material y decidir" en distintos departamentos.
+1. La comparación de competencia se hizo por conocimiento ya documentado de cada producto (no se abrió cada sitio en este ciclo); el hallazgo central (circled take, discrepancias entre reportes) sí viene de WebSearch real.
+2. El campo "Avisar a" no dispara notificación activa — posible expediente futuro de integración transversal.
+3. Confirmar con Nico si corresponde fusionar o diferenciar este patrón de ficha con el de `post-checklist-mezcla` (Postproducción) para mantener consistencia de UX entre "revisar material y decidir" en distintos departamentos.
+4. Pendiente real para la Oficina de QA (no de este expediente): seguir migrando `cargos.md` a las cuentas "2" con perfil completo, o completar perfil+membresía de las cuentas sin sufijo — ya señalado la noche del 18/11.
 
 ## 11. Fuentes
 - `oficina/inventario.md` (estado "Vacía/placeholder" de `dir-decisiones-visionado`, confirmado por grep).
 - `.claude/agents/comite-calidad.md`, sección "Mentalidad de diseñador de app, no de planilla" (regla de Nico, 18/11/2026).
-- `oficina-qa/cargos.md` (rama `oficina-qa/2026-11-18-noche1`): cuenta de prueba `qa.dir-direccion@mailinator.com`.
+- `oficina-qa/cargos.md` (rama `oficina-qa/2026-11-18-noche1`): cuenta de prueba de Dirección y, en `oficina-qa/bugs/2026-11-18.md`, el hallazgo de que la cuenta sin sufijo no tiene perfil y hay que usar `qa.dir-direccion2@mailinator.com`.
 - [How to Film School — Marking the Script](https://howtofilmschool.com/dictionary/marking-the-script/) (definición de circled/print take).
 - [Wikipedia — Script supervisor](https://en.wikipedia.org/wiki/Script_supervisor) (rol del script supervisor registrando la preferencia del director).
 - [ASK & DISCUSS (shootingpeople.org)](https://shootingpeople.org/ask/view/34534119dee5088f856d6bfb) (discrepancias documentadas entre reportes de cámara y sonido en las tomas circled).
