@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
+import { DEPARTAMENTOS } from "../constants";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
 import Icon from "../components/Icon";
@@ -5590,11 +5591,22 @@ export function ActasReunionBoard({
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
 }) {
-  const t = useTranslations("hp");
-  const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
-  const [busqueda, setBusqueda] = useState("");
   const colByKey = new Map(columnas.map((c) => [c.key, c]));
   const colTipo = colByKey.get("tipo_reunion");
+  const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [seleccionId, setSeleccionId] = useState<string | null>(null);
+  const idsPrevios = useRef(new Set(filas.map((f) => f.id)));
+
+  // Si aparece una fila nueva (recién creada), la seleccionamos automáticamente:
+  // si no, "Agregar acta" la crea pero el panel sigue mostrando la anterior,
+  // y cualquier edición inmediata termina guardándose en el acta equivocada.
+  useEffect(() => {
+    const idsActuales = new Set(filas.map((f) => f.id));
+    const nueva = filas.find((f) => !idsPrevios.current.has(f.id));
+    if (nueva) setSeleccionId(nueva.id);
+    idsPrevios.current = idsActuales;
+  }, [filas]);
 
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
@@ -5602,13 +5614,11 @@ export function ActasReunionBoard({
 
   const tiposVistos = Array.from(new Set([...(colTipo?.opciones ?? []), ...filas.map((f) => f.datos?.tipo_reunion).filter(Boolean) as string[]]));
 
-  // Buscador real: compara contra todo el contenido del acta, no solo el
-  // título, para que de verdad sirva como archivo administrativo consultable.
   const q = busqueda.trim().toLowerCase();
   function coincide(f: Fila): boolean {
     if (!q) return true;
     const campos = [
-      f.datos?.titulo, f.datos?.decisiones, f.datos?.pendientes, f.datos?.responsable_pendientes,
+      f.datos?.titulo, f.datos?.decisiones, f.datos?.pendientes, f.datos?.responsable_pendientes, f.datos?.departamento_reunion,
       ...actasChips(f.datos?.participantes),
     ];
     return campos.some((c) => (c ?? "").toLowerCase().includes(q));
@@ -5619,85 +5629,145 @@ export function ActasReunionBoard({
     .slice()
     .sort((a, b) => (b.datos?.fecha ?? "").localeCompare(a.datos?.fecha ?? ""));
 
+  const seleccionada = visibles.find((f) => f.id === seleccionId) ?? visibles[0] ?? null;
+
   if (filas.length === 0) {
     return (
-      <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p>{editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}</div>
+      <div className="hp-tabla-empty"><span className="hex"></span><p>Ningún acta registrada todavía.</p>{editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Registrar la primera acta</button>}</div>
     );
   }
 
   return (
-    <div className="hp-actas">
-      <div className="hp-actas-buscador">
-        <Icon name="search" />
-        <input
-          type="search"
-          placeholder="Buscar en el archivo de actas (título, decisiones, pendientes, participantes)…"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-        {busqueda && <button className="hp-actas-clear" onClick={() => setBusqueda("")} title={t("delete")}>✕</button>}
+    <div className="hp-actas2">
+      <div className="hp-actas2-sidebar">
+        <div className="hp-actas2-buscador">
+          <Icon name="search" />
+          <input
+            type="search"
+            placeholder="Buscar…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+          {busqueda && <button className="hp-actas-clear" onClick={() => setBusqueda("")} title="Borrar">✕</button>}
+        </div>
+
+        {tiposVistos.length > 0 && (
+          <div className="hp-actas2-filtros">
+            <button className={`hp-gd-fchip${!filtroTipo ? " on" : ""}`} onClick={() => setFiltroTipo(null)}>Todas ({filas.length})</button>
+            {tiposVistos.map((tipoNombre) => (
+              <button key={tipoNombre} className={`hp-gd-fchip${filtroTipo === tipoNombre ? " on" : ""}`} onClick={() => setFiltroTipo(tipoNombre)}>
+                {tipoNombre} ({filas.filter((f) => (f.datos?.tipo_reunion ?? "") === tipoNombre).length})
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="hp-actas2-list">
+          {visibles.map((f) => {
+            const tono = ACTAS_TIPO_TONO[f.datos?.tipo_reunion ?? ""] ?? "neutral";
+            const tienePendientes = (f.datos?.pendientes ?? "").trim().length > 0;
+            const activo = seleccionada?.id === f.id;
+            return (
+              <button key={f.id} className={`hp-actas2-item${activo ? " on" : ""}`} onClick={() => setSeleccionId(f.id)}>
+                <span className={`hp-actas-tag tono-${tono}`}>{f.datos?.tipo_reunion || "Sin tipo"}</span>
+                <span className="hp-actas2-item-titulo">{f.datos?.titulo || "Reunión sin título"}</span>
+                <span className="hp-actas2-item-meta">
+                  <span>{f.datos?.fecha || "—"}</span>
+                  {f.datos?.departamento_reunion && <span className="hp-actas2-item-depto">{f.datos.departamento_reunion}</span>}
+                  {tienePendientes && <span className="hp-actas2-item-dot" title="Tiene pendientes abiertos" />}
+                </span>
+              </button>
+            );
+          })}
+          {visibles.length === 0 && (
+            <p className="hp-actas-sin-resultados">Ningún acta coincide con la búsqueda o el filtro.</p>
+          )}
+        </div>
+
+        {editable && <button className="cp-btn cp-btn-acc hp-actas2-nueva" onClick={() => onCrear({ fecha: new Date().toISOString().slice(0, 10), tipo_reunion: "Producción", estado: "Borrador" })}>+ Registrar acta</button>}
       </div>
 
-      {tiposVistos.length > 0 && (
-        <div className="hp-gd-filtros">
-          <button className={`hp-gd-fchip${!filtroTipo ? " on" : ""}`} onClick={() => setFiltroTipo(null)}>Todas ({filas.length})</button>
-          {tiposVistos.map((tipoNombre) => (
-            <button key={tipoNombre} className={`hp-gd-fchip${filtroTipo === tipoNombre ? " on" : ""}`} onClick={() => setFiltroTipo(tipoNombre)}>
-              {tipoNombre} ({filas.filter((f) => (f.datos?.tipo_reunion ?? "") === tipoNombre).length})
-            </button>
-          ))}
-        </div>
-      )}
-
-      {q && <div className="hp-actas-resultados">{visibles.length} resultado{visibles.length === 1 ? "" : "s"} para &ldquo;{busqueda}&rdquo;</div>}
-
-      <div className="hp-actas-list">
-        {visibles.map((f) => {
-          const tono = ACTAS_TIPO_TONO[f.datos?.tipo_reunion ?? ""] ?? "neutral";
-          const participantes = actasChips(f.datos?.participantes);
-          return (
-            <details className="hp-actas-card" key={f.id}>
-              <summary className="hp-actas-summary">
-                <span className={`hp-actas-tag tono-${tono}`}>{f.datos?.tipo_reunion || "Sin tipo"}</span>
-                <span className="hp-actas-titulo">{f.datos?.titulo || "Reunión sin título"}</span>
-                <span className="hp-actas-fecha">{f.datos?.fecha || "—"}</span>
-                <EstadoSeg valor={f.datos?.estado || "Borrador"} opciones={colByKey.get("estado")?.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={editable} chip color />
-                {editable && <button className="hp-del" onClick={(e) => { e.preventDefault(); onBorrar(f.id); }} title={t("delete")}>✕</button>}
-              </summary>
-
-              <div className="hp-actas-detalle">
-                <div className="hp-actas-row">
-                  <label>Asunto de la reunión<input defaultValue={f.datos?.titulo ?? ""} placeholder="Ej. Reunión de producción — semana 3" readOnly={!editable} onBlur={(e) => set(f, "titulo", e.target.value)} /></label>
-                  <label>Tipo<EstadoSeg valor={f.datos?.tipo_reunion || "Producción"} opciones={colTipo?.opciones ?? []} onPick={(v) => set(f, "tipo_reunion", v)} editable={editable} chip color /></label>
-                  <label>Fecha<input type="date" defaultValue={f.datos?.fecha ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha", e.target.value)} /></label>
-                </div>
-
-                <label className="hp-actas-participantes">
-                  Participantes
-                  <ActasParticipantesEditor valores={participantes} editable={editable} onChange={(vs) => set(f, "participantes", JSON.stringify(vs))} />
-                </label>
-
-                <label>Decisiones tomadas<textarea rows={3} defaultValue={f.datos?.decisiones ?? ""} placeholder="Qué se decidió en la reunión." readOnly={!editable} onBlur={(e) => set(f, "decisiones", e.target.value)} /></label>
-
-                <div className="hp-actas-row">
-                  <label className="hp-actas-pendientes">Pendientes / tareas asignadas<textarea rows={2} defaultValue={f.datos?.pendientes ?? ""} placeholder="Qué queda abierto y quién lo sigue." readOnly={!editable} onBlur={(e) => set(f, "pendientes", e.target.value)} /></label>
-                  <label>Responsable del seguimiento<input defaultValue={f.datos?.responsable_pendientes ?? ""} placeholder="Nombre / cargo" readOnly={!editable} onBlur={(e) => set(f, "responsable_pendientes", e.target.value)} /></label>
-                </div>
-
-                <div className="hp-actas-row">
-                  <span className="hp-actas-archivo-label">Acta firmada / documento adjunto</span>
-                  <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
-                </div>
-              </div>
-            </details>
-          );
-        })}
-        {visibles.length === 0 && (
-          <p className="hp-actas-sin-resultados">Ningún acta coincide con la búsqueda o el filtro.</p>
+      <div className="hp-actas2-detalle">
+        {!seleccionada ? (
+          <div className="hp-actas2-vacio"><span className="hex"></span><p>Elegí un acta de la lista.</p></div>
+        ) : (
+          <ActasDetalle
+            key={seleccionada.id}
+            f={seleccionada}
+            colByKey={colByKey}
+            colTipo={colTipo}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            set={set}
+            onBorrar={onBorrar}
+          />
         )}
       </div>
+    </div>
+  );
+}
 
-      {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear({ fecha: new Date().toISOString().slice(0, 10), tipo_reunion: "Producción", estado: "Borrador" })}>+ Registrar acta</button></div>}
+function ActasDetalle({
+  f, colByKey, colTipo, editable, departamento, herramientaId, set, onBorrar,
+}: {
+  f: Fila;
+  colByKey: Map<string, Columna>;
+  colTipo: Columna | undefined;
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  set: (f: Fila, key: string, v: string) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const participantes = actasChips(f.datos?.participantes);
+  const deptosUsados = Array.from(new Set(DEPARTAMENTOS.concat(f.datos?.departamento_reunion ? [f.datos.departamento_reunion] : [])));
+  return (
+    <div className="hp-actas2-panel">
+      <div className="hp-actas2-head">
+        <input className="hp-actas2-titulo-input" defaultValue={f.datos?.titulo ?? ""} placeholder="Asunto de la reunión" readOnly={!editable} onBlur={(e) => set(f, "titulo", e.target.value)} />
+        {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar">✕</button>}
+      </div>
+
+      <div className="hp-actas2-chipsrow">
+        <EstadoSeg valor={f.datos?.tipo_reunion || "Producción"} opciones={colTipo?.opciones ?? []} onPick={(v) => set(f, "tipo_reunion", v)} editable={editable} chip color />
+        <EstadoSeg valor={f.datos?.estado || "Borrador"} opciones={colByKey.get("estado")?.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={editable} chip color />
+        <input type="date" className="hp-actas2-fecha" defaultValue={f.datos?.fecha ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha", e.target.value)} />
+      </div>
+
+      <div className="hp-actas2-depto">
+        <label>
+          Departamento
+          <input
+            list="hp-actas2-deptos"
+            defaultValue={f.datos?.departamento_reunion ?? ""}
+            placeholder="Elegir o escribir un departamento nuevo…"
+            readOnly={!editable}
+            onBlur={(e) => set(f, "departamento_reunion", e.target.value)}
+          />
+          <datalist id="hp-actas2-deptos">
+            {deptosUsados.map((d) => <option key={d} value={d} />)}
+          </datalist>
+        </label>
+        <span className="hp-actas2-depto-hint">¿No está en la lista? Escribilo igual: queda guardado como departamento del acta.</span>
+      </div>
+
+      <label className="hp-actas-participantes">
+        Participantes
+        <ActasParticipantesEditor valores={participantes} editable={editable} onChange={(vs) => set(f, "participantes", JSON.stringify(vs))} />
+      </label>
+
+      <label>Decisiones tomadas<textarea rows={3} defaultValue={f.datos?.decisiones ?? ""} placeholder="Qué se decidió en la reunión." readOnly={!editable} onBlur={(e) => set(f, "decisiones", e.target.value)} /></label>
+
+      <div className="hp-actas-row">
+        <label className="hp-actas-pendientes">Pendientes / tareas asignadas<textarea rows={2} defaultValue={f.datos?.pendientes ?? ""} placeholder="Qué queda abierto y quién lo sigue." readOnly={!editable} onBlur={(e) => set(f, "pendientes", e.target.value)} /></label>
+        <label>Responsable del seguimiento<input defaultValue={f.datos?.responsable_pendientes ?? ""} placeholder="Nombre / cargo" readOnly={!editable} onBlur={(e) => set(f, "responsable_pendientes", e.target.value)} /></label>
+      </div>
+
+      <div className="hp-actas-row">
+        <span className="hp-actas-archivo-label">Acta firmada / documento adjunto</span>
+        <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
+      </div>
     </div>
   );
 }

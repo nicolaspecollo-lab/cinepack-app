@@ -58,15 +58,28 @@ El componente reutiliza al 100% los tokens de `sistema-diseno.md` ya usados por 
 2. La tabla genérica (`stripHtml`, usado por buscador/orden/exportación de cualquier tabla con columnas `chips`/`repetible`) asumía que el valor de la celda siempre era un `string`, pero esas columnas guardan arrays reales — provocaba un crash (`stripHtml(...).toLowerCase is not a function`) al escribir en el buscador de CUALQUIER tabla con una columna de ese tipo, no solo esta. El mismo problema existía en el helper local `actasChips` de este componente. Ambos corregidos para aceptar arrays además de strings/JSON-string — reportado también para que el comité/desarrollador lo tenga presente en futuras herramientas con columnas `chips`.
 Verificación de código: `npx tsc --noEmit` limpio tras ambas correcciones.
 
-### Capturas reales (390 / 820 / 1440px)
-![Actas de reuniones — 390px](capturas/390px.png)
-![Actas de reuniones — 820px](capturas/820px.png)
-![Actas de reuniones — 1440px](capturas/1440px.png)
+### 8.1 Rediseño ronda 3 (20/11) — patrón "bandeja", sin texto explicativo, departamento editable
+Nico rebotó la ronda 2 con tres objeciones concretas: *"Está igual al diseño de otra herramienta"* (el acordeón `<details>` reutilizaba el mismo patrón visual de `GestionDocumentalBoard`, filtros `.hp-gd-fchip` incluidos — algo que esta misma sección 6 ya admitía como "referencia directa de patrón", exactamente lo que dejó de ser aceptable); *"quita el texto explicativo de la aplicación, me parece ridículo"*; y pidió un campo de **Departamento** por acta, editable, sin depender de una lista fija incompleta.
+
+Las tres se resolvieron de fondo, no con un retoque cosmético:
+1. **Patrón nuevo, no el mismo con otro color**: se reemplazó el acordeón de tarjetas apiladas por un patrón de **bandeja (inbox)** — lista compacta a la izquierda (una fila por acta, con tipo/título/fecha/departamento/indicador de pendientes) y panel de detalle a la derecha para el acta seleccionada. Es el mismo principio que un cliente de correo o un gestor de tickets, no el de un archivo documental con acordeones — deliberadamente otra familia de interacción, no una variación de `GestionDocumentalBoard`. `tablaTieneVistaBespoke`/`ActasReunionBoard` se reescribieron por completo; `ActasParticipantesEditor` se mantuvo tal cual (ya cumplía, nadie lo objetó).
+2. **Cero texto explicativo**: se quitó el `hint` de `dir-actas` en `app/herramientas.ts` (antes tenía una línea describiendo la herramienta) y el nuevo componente no tiene ningún bloque de introducción — el buscador y la lista son lo primero que se ve.
+3. **Departamento editable, de verdad**: columna nueva `departamento_reunion` (`tipo: "texto"`). En el panel de detalle es un `<input>` con `<datalist>` poblado con los 16 departamentos reales de `DEPARTAMENTOS` (`app/constants.ts`) más cualquier valor ya usado que no esté en esa lista — quien complete el acta puede elegir uno existente o escribir uno nuevo libremente (ej. "Coordinación de Drones"), sin que quede fuera de alcance ni perdido: el valor se guarda tal cual, igual que cualquier otro campo de texto del acta. No hace falta una tabla de departamentos nueva ni una migración — es la misma mecánica que ya usa cualquier columna `tipo: "texto"` del motor.
+
+**Bug real encontrado y corregido durante la verificación de esta ronda**: al crear una acta nueva (botón "+ Registrar acta"), el panel de detalle seguía mostrando el acta antes seleccionada en vez de pasar a la recién creada — cualquier edición inmediata después de crear (típicamente completar el departamento o el tipo) se guardaba por error en el acta equivocada. Se agregó en `ActasReunionBoard` un `useEffect` que detecta la fila nueva (comparando el conjunto de ids antes/después) y selecciona automáticamente esa fila. Verificado interactivamente: tras crear una acta y completar su departamento como primer paso, el detalle mostrado y editado es el de la fila nueva, y el acta anterior queda intacta.
+
+**Verificación real (Playwright, cuenta `qa.dir-secretaria2@mailinator.com`, proyecto de prueba)**: login real, navegación Exclusivas → "Actas de reuniones y archivo administrativo", selección de un acta existente y edición de su departamento (guardado confirmado con el toast "Guardado"), creación de una acta nueva y edición de un departamento personalizado fuera de la lista de 16 (confirmado que queda seleccionada la fila correcta, no la anterior), sin errores de consola, sin scroll horizontal en 390px. Capturas reales en 390/820/1440px, reemplazando las de la ronda 2.
+
+### Capturas reales (390 / 820 / 1440px) — ronda 3
+![Actas de reuniones — patrón bandeja, 390px](capturas/390px.png)
+![Actas de reuniones — patrón bandeja, 820px](capturas/820px.png)
+![Actas de reuniones — patrón bandeja, 1440px](capturas/1440px.png)
 
 ## 9. Especificación técnica
 - **Modelo de datos** (`app/herramientas.ts`, `dir-actas` pasa de `tipo: "nota"` a `tipo: "tabla"` con `columnas` reutilizando los tipos existentes de `ColTipo`, sin inventar ninguno):
   - `titulo` (texto) — asunto de la reunión.
   - `tipo_reunion` (estado, opciones: Producción / Seguridad / Cambios de guion / Dirección / Administrativa / Otra).
+  - `departamento_reunion` (texto, agregado en ronda 3) — departamento de la reunión; editable libremente, con sugerencias de los 16 departamentos de `DEPARTAMENTOS` vía `<datalist>`.
   - `fecha` (fecha).
   - `participantes` (chips).
   - `decisiones` (largo).
