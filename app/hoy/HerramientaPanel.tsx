@@ -5784,7 +5784,7 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "dir-decisiones-visionado"]);
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -5797,6 +5797,18 @@ type EntidadConfig = {
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
+  "dir-decisiones-visionado": {
+    titleKey: "escena",
+    subtitleKey: "decision",
+    listCols: ["toma_elegida", "fecha_visionado", "estado_aviso"],
+    addLabel: "+ Registrar visionado",
+    special: "buscador",
+    tabs: [
+      { label: "Decisión", keys: ["escena", "fecha_visionado", "decision", "toma_elegida", "tomas_backup"] },
+      { label: "Notas", keys: ["nota_interpretacion", "nota_tecnica", "motivo_repeticion"] },
+      { label: "Seguimiento", keys: ["avisar_a", "estado_aviso"] },
+    ],
+  },
   "ej-coproducciones": {
     titleKey: "empresa",
     subtitleKey: "pais",
