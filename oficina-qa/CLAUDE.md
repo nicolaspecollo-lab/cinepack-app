@@ -26,7 +26,7 @@ El `director-qa` pasa este mandato completo (no solo un link a este archivo) en 
 Mismo criterio que las otras dos oficinas: cada agente se marca `estado:"busy"` en el panel (ArtifactData, colección `agentes`, url `https://claude.ai/artifact/S99rUHDdJbz5u1amLjtdLK`) **al empezar** un paso real, con `tarea_actual` describiendo lo que está haciendo, y vuelve a `idle` al terminar.
 
 ## Horario
-Ciclo nocturno automático, todas las noches, **1:00–6:00 hora de Madrid** (ver trigger "Ciclo nocturno Oficina de QA CINEPACK").
+Ciclo nocturno automático, todas las noches, **1:00–3:00 hora de Madrid** (2 horas, regla de Nico 20/11/2026 para cuidar el límite de uso — antes era una ventana más larga). Ver trigger "Ciclo nocturno Oficina de QA CINEPACK". Con menos tiempo disponible, priorizar calidad real de la prueba (pocos cargos bien probados) sobre cubrir muchos cargos superficialmente.
 
 ## Estructura
 ```

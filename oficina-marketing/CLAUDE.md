@@ -2,6 +2,9 @@
 
 Oficina separada de la de Desarrollo de App (`/oficina/`). Trabaja de forma continua (no atada a un ciclo diario fijo) analizando mercado, competencia y datos de producción audiovisual para preparar el lanzamiento de CINEPACK.
 
+## ⏸️ EN PAUSA (regla de Nico, 20/11/2026)
+Esta oficina está **pausada hasta nuevo aviso** para ahorrar recursos y cuidar el límite de uso. El trigger "Ciclo autónomo Oficina de Marketing CINEPACK" quedó deshabilitado (`enabled:false`) — no corre solo. No lanzar ningún ciclo de esta oficina (agentes de marketing, comité, director-marketing) hasta que Nico lo reactive explícitamente.
+
 ## Personalidad y diálogo entre agentes (regla de Nico, 16/11/2026)
 Cada agente tiene su personalidad fija en `/oficina-marketing/personalidades.md` — léela y adoptala. En cada handoff real, escribí en el feed del panel en vivo un diálogo real (preguntas, propuestas, discrepancias dirigidas a otro agente por nombre), no solo reportes de tarea. El director-marketing se asegura de que ningún agente quede ocioso sin que se le asigne la siguiente tarea del backlog.
 
