@@ -48,6 +48,7 @@ const TiptapDocumentoEditor = dynamic(() => import("./TiptapDocumentoEditor"), {
 });
 
 export default function DocumentosProyectoPanel() {
+  const supabase = useState(() => createClient())[0];
   const [projectId, setProjectId] = useState<string | null>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocBlanco[]>([]);
@@ -56,14 +57,13 @@ export default function DocumentosProyectoPanel() {
   useEffect(() => {
     setProjectId(localStorage.getItem("cinepack-proyecto-id"));
     (async () => {
-      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setOwnerId(user?.id ?? null);
     })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function recargar(pid: string) {
-    setDocs(listarDocsCompartidosProyecto(pid));
+  async function recargar(pid: string) {
+    setDocs(await listarDocsCompartidosProyecto(supabase, pid));
   }
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function DocumentosProyectoPanel() {
 
   function guardarContenido(contenido: Record<string, unknown>) {
     if (!abierto) return;
-    guardarContenidoDocBlanco(projectId!, abierto.id, contenido);
+    guardarContenidoDocBlanco(supabase, abierto.id, contenido);
   }
 
   if (abierto) {
