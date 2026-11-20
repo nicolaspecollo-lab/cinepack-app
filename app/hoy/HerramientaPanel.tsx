@@ -237,6 +237,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "cast-tabla-disponibilidad" ||
     CAST_EVAL_IDS.has(id) ||
     id === "rep-notas-escenas-detalle" ||
+    id === "rep-notas-preparacion" ||
     id === "rep-vest-maq" ||
     id === "rep-pronunciacion" ||
     SON_MIC_IDS.has(id) ||
@@ -5784,7 +5785,7 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "rep-notas-preparacion"]);
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -5856,6 +5857,17 @@ const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
     tabs: [
       { label: "Contexto", keys: ["nombre", "area", "estado_tema", "contexto", "vinculo"] },
       { label: "Registros de decisiones", keys: ["registros"] },
+    ],
+  },
+  "rep-notas-preparacion": {
+    titleKey: "tema",
+    subtitleKey: "fecha",
+    listCols: ["fecha", "objetivo_escena"],
+    addLabel: "+ Agregar tema de preparación",
+    tabs: [
+      { label: "Research y objetivo", keys: ["tema", "fecha", "research_actor", "objetivo_escena"] },
+      { label: "Backstory y relaciones", keys: ["biografia_ficticia", "relaciones_personajes"] },
+      { label: "Para dirección", keys: ["preguntas_direccion"] },
     ],
   },
   "ej-derechos-pi": {
@@ -9202,6 +9214,24 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
       certificados: JSON.stringify([
         { locacion_proveedor: "Proveedor de grúa técnica", vigencia_desde: "2026-05-01", vigencia_hasta: "2026-08-10", estado: "Emitido" },
       ]),
+    },
+  ],
+  "rep-notas-preparacion": [
+    {
+      tema: "Escena 14 — confrontación con el padre", fecha: "2026-07-02",
+      research_actor: "Lectura sobre dinámicas de silencio en familias de posguerra (bibliografía aportada por dirección de actores) para entender por qué el personaje no grita.",
+      objetivo_escena: "Conseguir que el padre reconozca el error sin pedirlo directamente — el personaje busca validación, no disculpa.",
+      biografia_ficticia: "Creció cubriendo las ausencias del padre ante el resto de la familia; el resentimiento es antiguo, no nuevo.",
+      relaciones_personajes: "Con el padre: lealtad y resentimiento en tensión constante. Con la hermana menor: rol protector, casi maternal.",
+      preguntas_direccion: "¿La mirada final se sostiene o el personaje se da vuelta? Necesito definirlo antes del rodaje para ensayar la respiración.",
+    },
+    {
+      tema: "Arco general — primer tercio del guion", fecha: "2026-06-20",
+      research_actor: "Entrevistas a sobrevivientes de reconversión industrial (contexto social del personaje).",
+      objetivo_escena: "",
+      biografia_ficticia: "Trabajó 12 años en la fábrica antes del cierre; ese dato nunca se dice en el guion pero sostiene cada decisión.",
+      relaciones_personajes: "",
+      preguntas_direccion: "",
     },
   ],
   "ej-notas-ejecutivo": [

@@ -3336,7 +3336,19 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Reparto principal": {
       departamento: [fichaPersonaje, guionMarcado, calendarioCitaciones, vestMaqAsignado, contratoIndividual],
       cargo: [
-        { id: "rep-notas-preparacion", nombre: "Notas de preparación del personaje", tipo: "nota" },
+        {
+          id: "rep-notas-preparacion", nombre: "Notas de preparación del personaje", tipo: "tabla",
+          hint: "Una tarjeta por tema de preparación (no una nota de texto suelto): research del actor sobre el contexto del personaje, objetivos de escena, relaciones con otros personajes y preguntas pendientes para dirección — así cada tema se consulta por separado en rodaje en vez de buscarlo dentro de un bloque único de texto.",
+          columnas: [
+            { key: "tema", label: "Tema / escena de referencia" },
+            { key: "fecha", label: "Fecha", tipo: "fecha" as const },
+            { key: "research_actor", label: "Research del actor (contexto histórico, social, referencias)", tipo: "largo" },
+            { key: "objetivo_escena", label: "Objetivo del personaje en la escena", tipo: "largo" },
+            { key: "biografia_ficticia", label: "Biografía ficticia / backstory relevante", tipo: "largo" },
+            { key: "relaciones_personajes", label: "Relación con otros personajes", tipo: "largo" },
+            { key: "preguntas_direccion", label: "Preguntas pendientes para dirección de actores", tipo: "largo" },
+          ],
+        },
         {
           id: "rep-agenda-personal-principal", nombre: "Mi agenda de rodaje personal", tipo: "tabla",
           hint: "Tus días de rodaje, horario de citación y escenas de cada jornada.",
