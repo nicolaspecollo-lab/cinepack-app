@@ -1047,6 +1047,21 @@ function HerramientaData({
         )}</VistaConEjemplos>
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "dir-actas" && (
+        <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <ActasReunionBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
       {herramienta.tipo === "tabla" && DOC_STATUS_IDS.has(herramienta.id) && (
         <DocStatusBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -5517,6 +5532,193 @@ export function GestionDocumentalBoard({
   );
 }
 
+// ---- Actas de reuniones y archivo administrativo (Secretaría de rodaje) ----
+// El cargo no lleva "una nota": lleva un archivo de reuniones (producción,
+// seguridad, cambios de guion, administrativas) que tiene que quedar
+// BUSCABLE — la ronda de QA del 18/11 pidió explícitamente un buscador real
+// sobre el archivo, no una lista cronológica. Por eso: tarjetas agrupables
+// por tipo de reunión (como GestionDocumentalBoard) + una caja de búsqueda
+// de texto libre que filtra título/decisiones/pendientes/participantes a la
+// vez, no solo el título.
+const ACTAS_TIPO_TONO: Record<string, "ok" | "warn" | "bad" | "info" | "neutral"> = {
+  "Producción": "info",
+  "Seguridad": "bad",
+  "Cambios de guion": "warn",
+  "Dirección": "ok",
+  "Administrativa": "neutral",
+  "Otra": "neutral",
+};
+
+function actasChips(raw: string | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch { /* texto plano separado por comas, formato legado */ }
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+export function ActasReunionBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+  const colTipo = colByKey.get("tipo_reunion");
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const tiposVistos = Array.from(new Set([...(colTipo?.opciones ?? []), ...filas.map((f) => f.datos?.tipo_reunion).filter(Boolean) as string[]]));
+
+  // Buscador real: compara contra todo el contenido del acta, no solo el
+  // título, para que de verdad sirva como archivo administrativo consultable.
+  const q = busqueda.trim().toLowerCase();
+  function coincide(f: Fila): boolean {
+    if (!q) return true;
+    const campos = [
+      f.datos?.titulo, f.datos?.decisiones, f.datos?.pendientes, f.datos?.responsable_pendientes,
+      ...actasChips(f.datos?.participantes),
+    ];
+    return campos.some((c) => (c ?? "").toLowerCase().includes(q));
+  }
+
+  const porTipo = filtroTipo ? filas.filter((f) => (f.datos?.tipo_reunion ?? "") === filtroTipo) : filas;
+  const visibles = porTipo.filter(coincide)
+    .slice()
+    .sort((a, b) => (b.datos?.fecha ?? "").localeCompare(a.datos?.fecha ?? ""));
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty"><span className="hex"></span><p>{t("emptyTitle")}</p>{editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}</div>
+    );
+  }
+
+  return (
+    <div className="hp-actas">
+      <div className="hp-actas-buscador">
+        <Icon name="search" />
+        <input
+          type="search"
+          placeholder="Buscar en el archivo de actas (título, decisiones, pendientes, participantes)…"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+        {busqueda && <button className="hp-actas-clear" onClick={() => setBusqueda("")} title={t("delete")}>✕</button>}
+      </div>
+
+      {tiposVistos.length > 0 && (
+        <div className="hp-gd-filtros">
+          <button className={`hp-gd-fchip${!filtroTipo ? " on" : ""}`} onClick={() => setFiltroTipo(null)}>Todas ({filas.length})</button>
+          {tiposVistos.map((tipoNombre) => (
+            <button key={tipoNombre} className={`hp-gd-fchip${filtroTipo === tipoNombre ? " on" : ""}`} onClick={() => setFiltroTipo(tipoNombre)}>
+              {tipoNombre} ({filas.filter((f) => (f.datos?.tipo_reunion ?? "") === tipoNombre).length})
+            </button>
+          ))}
+        </div>
+      )}
+
+      {q && <div className="hp-actas-resultados">{visibles.length} resultado{visibles.length === 1 ? "" : "s"} para &ldquo;{busqueda}&rdquo;</div>}
+
+      <div className="hp-actas-list">
+        {visibles.map((f) => {
+          const tono = ACTAS_TIPO_TONO[f.datos?.tipo_reunion ?? ""] ?? "neutral";
+          const participantes = actasChips(f.datos?.participantes);
+          return (
+            <details className="hp-actas-card" key={f.id}>
+              <summary className="hp-actas-summary">
+                <span className={`hp-actas-tag tono-${tono}`}>{f.datos?.tipo_reunion || "Sin tipo"}</span>
+                <span className="hp-actas-titulo">{f.datos?.titulo || "Reunión sin título"}</span>
+                <span className="hp-actas-fecha">{f.datos?.fecha || "—"}</span>
+                <EstadoSeg valor={f.datos?.estado || "Borrador"} opciones={colByKey.get("estado")?.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={editable} chip color />
+                {editable && <button className="hp-del" onClick={(e) => { e.preventDefault(); onBorrar(f.id); }} title={t("delete")}>✕</button>}
+              </summary>
+
+              <div className="hp-actas-detalle">
+                <div className="hp-actas-row">
+                  <label>Asunto de la reunión<input defaultValue={f.datos?.titulo ?? ""} placeholder="Ej. Reunión de producción — semana 3" readOnly={!editable} onBlur={(e) => set(f, "titulo", e.target.value)} /></label>
+                  <label>Tipo<EstadoSeg valor={f.datos?.tipo_reunion || "Producción"} opciones={colTipo?.opciones ?? []} onPick={(v) => set(f, "tipo_reunion", v)} editable={editable} chip color /></label>
+                  <label>Fecha<input type="date" defaultValue={f.datos?.fecha ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha", e.target.value)} /></label>
+                </div>
+
+                <label className="hp-actas-participantes">
+                  Participantes
+                  <ActasParticipantesEditor valores={participantes} editable={editable} onChange={(vs) => set(f, "participantes", JSON.stringify(vs))} />
+                </label>
+
+                <label>Decisiones tomadas<textarea rows={3} defaultValue={f.datos?.decisiones ?? ""} placeholder="Qué se decidió en la reunión." readOnly={!editable} onBlur={(e) => set(f, "decisiones", e.target.value)} /></label>
+
+                <div className="hp-actas-row">
+                  <label className="hp-actas-pendientes">Pendientes / tareas asignadas<textarea rows={2} defaultValue={f.datos?.pendientes ?? ""} placeholder="Qué queda abierto y quién lo sigue." readOnly={!editable} onBlur={(e) => set(f, "pendientes", e.target.value)} /></label>
+                  <label>Responsable del seguimiento<input defaultValue={f.datos?.responsable_pendientes ?? ""} placeholder="Nombre / cargo" readOnly={!editable} onBlur={(e) => set(f, "responsable_pendientes", e.target.value)} /></label>
+                </div>
+
+                <div className="hp-actas-row">
+                  <span className="hp-actas-archivo-label">Acta firmada / documento adjunto</span>
+                  <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
+                </div>
+              </div>
+            </details>
+          );
+        })}
+        {visibles.length === 0 && (
+          <p className="hp-actas-sin-resultados">Ningún acta coincide con la búsqueda o el filtro.</p>
+        )}
+      </div>
+
+      {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear({ fecha: new Date().toISOString().slice(0, 10), tipo_reunion: "Producción", estado: "Borrador" })}>+ Registrar acta</button></div>}
+    </div>
+  );
+}
+
+function ActasParticipantesEditor({ valores, editable, onChange }: { valores: string[]; editable: boolean; onChange: (vs: string[]) => void }) {
+  const [nuevo, setNuevo] = useState("");
+  function agregar() {
+    const v = nuevo.trim();
+    if (!v) return;
+    onChange([...valores, v]);
+    setNuevo("");
+  }
+  return (
+    <div className="hp-actas-chips">
+      {valores.map((p, i) => (
+        <span className="hp-actas-chip" key={`${p}-${i}`}>
+          {p}
+          {editable && <button type="button" onClick={() => onChange(valores.filter((_, j) => j !== i))}>✕</button>}
+        </span>
+      ))}
+      {editable && (
+        <input
+          className="hp-actas-chip-input"
+          value={nuevo}
+          placeholder="Nombre / cargo + Enter"
+          onChange={(e) => setNuevo(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregar(); } }}
+          onBlur={agregar}
+        />
+      )}
+    </div>
+  );
+}
+
 // ---- Modelo financiero (proyección por ventana × 3 escenarios) ----
 // La pregunta real de un modelo financiero de cine no es "cuánto gano", es
 // "bajo qué escenario recupera cada socio su dinero". Por eso la tabla de
@@ -9167,6 +9369,36 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     { nombre: "Póliza responsabilidad civil 2025", categoria: "Seguros", fecha_documento: "2025-01-01", anios_conservacion: "5", permanencia: "Conservación temporal", estado_digitalizacion: "Solo copia" },
     { nombre: "Licencia municipal de rodaje", categoria: "Licencias", fecha_documento: "2026-06-10", anios_conservacion: "2", permanencia: "Conservación temporal", estado_digitalizacion: "Certificada" },
     { nombre: "Modelo 190 · IRPF 2025", categoria: "Fiscal", fecha_documento: "2026-01-31", anios_conservacion: "4", permanencia: "Conservación temporal", estado_digitalizacion: "Sin digitalizar" },
+  ],
+  "dir-actas": [
+    {
+      titulo: "Reunión de producción — semana 3", tipo_reunion: "Producción", fecha: "2026-07-13",
+      participantes: JSON.stringify(["Diego Aramburu (Jefe de producción)", "Marea Gil (1AD)", "Kepa Aguirre (Sonido)", "Ana Puig (Localizaciones)"]),
+      decisiones: "Se confirma el traslado del rodaje del puerto al faro el día 15 por previsión de temporal. Se aprueba el refuerzo de transporte con una furgoneta adicional.",
+      pendientes: "Reconfirmar permisos de la nueva localización con el ayuntamiento antes del jueves. Avisar a figuración del cambio de punto de encuentro.",
+      responsable_pendientes: "Ana Puig", estado: "Firmada",
+    },
+    {
+      titulo: "Reunión de seguridad — jornada en el faro (día 3)", tipo_reunion: "Seguridad", fecha: "2026-07-14",
+      participantes: JSON.stringify(["Marea Gil (1AD, oficial de seguridad)", "Sergi Roma (Maquinista)", "Equipo de cámara"]),
+      decisiones: "Zona del acantilado delimitada con cinta y vigía fijo durante los planos exteriores. Se revisa el plan de evacuación ante marea alta.",
+      pendientes: "Confirmar que el seguro de rodaje cubre trabajo a menos de 5m del borde — consultar con Legal.",
+      responsable_pendientes: "Diego Aramburu", estado: "Pendiente de firma",
+    },
+    {
+      titulo: "Reunión de cambios de guion — escenas 22 y 23", tipo_reunion: "Cambios de guion", fecha: "2026-07-10",
+      participantes: JSON.stringify(["Dirección", "Guion", "Script", "Producción ejecutiva"]),
+      decisiones: "Se aprueba la reescritura de la salida de Elsa (pases v5.0) para que tenga consecuencia narrativa sobre Marea. Afecta a 2 jornadas ya planificadas.",
+      pendientes: "Guion entrega páginas revisadas (azules) antes del viernes. Script actualiza el desglose de continuidad de esas escenas.",
+      responsable_pendientes: "Script", estado: "Firmada",
+    },
+    {
+      titulo: "Reunión administrativa — renovación de pólizas y permisos", tipo_reunion: "Administrativa", fecha: "2026-07-08",
+      participantes: JSON.stringify(["Secretaría de rodaje", "Administración", "Legal"]),
+      decisiones: "Se centraliza en Secretaría de rodaje el archivo físico y digital de permisos de localización vigentes, con copia a Gestión documental administrativa.",
+      pendientes: "Digitalizar y archivar el permiso de la escena del puerto, vence el 30/7.",
+      responsable_pendientes: "Secretaría de rodaje", estado: "Borrador",
+    },
   ],
   "ej-derechos-pi": [
     {

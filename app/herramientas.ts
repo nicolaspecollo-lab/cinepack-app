@@ -2671,7 +2671,21 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Secretaría de rodaje": {
       departamento: [],
       cargo: [
-        { id: "dir-actas", nombre: "Actas de reuniones y archivo administrativo", tipo: "nota" },
+        {
+          id: "dir-actas", nombre: "Actas de reuniones y archivo administrativo", tipo: "tabla",
+          hint: "Un acta por reunión (producción, seguridad, cambios de guion, administrativas), con archivo adjunto y buscador real sobre todo el contenido — no una nota de texto libre.",
+          columnas: [
+            { key: "titulo", label: "Asunto de la reunión" },
+            { key: "tipo_reunion", label: "Tipo de reunión", tipo: "estado", opciones: ["Producción", "Seguridad", "Cambios de guion", "Dirección", "Administrativa", "Otra"] },
+            { key: "fecha", label: "Fecha", tipo: "fecha" },
+            { key: "participantes", label: "Participantes", tipo: "chips" },
+            { key: "decisiones", label: "Decisiones tomadas", tipo: "largo" },
+            { key: "pendientes", label: "Pendientes / tareas asignadas", tipo: "largo" },
+            { key: "responsable_pendientes", label: "Responsable del seguimiento" },
+            { key: "estado", label: "Estado del acta", tipo: "estado", opciones: ["Borrador", "Pendiente de firma", "Firmada", "Archivada"] },
+            { key: "archivo", label: "Acta firmada / adjunto", tipo: "archivo" },
+          ],
+        },
       ],
     },
   },

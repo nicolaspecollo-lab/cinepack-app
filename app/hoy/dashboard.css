@@ -5700,6 +5700,56 @@
 }
 
 /* ===========================================================================
+   Actas de reuniones y archivo administrativo (Secretaría de rodaje) —
+   tarjetas plegables agrupadas por tipo de reunión + buscador real sobre
+   todo el contenido (pedido explícito de QA 18/11: no solo lista cronológica).
+   =========================================================================== */
+.cp-dash .hp-actas{ padding:4px var(--gutter) 30px; }
+.cp-dash .hp-actas .hp-actions{ padding-left:0; padding-right:0; }
+
+.cp-dash .hp-actas-buscador{ display:flex; align-items:center; gap:8px; background:var(--bg-2); border:1px solid var(--line); padding:9px 12px; margin-bottom:12px; }
+.cp-dash .hp-actas-buscador svg{ width:15px; height:15px; color:var(--muted); flex:none; }
+.cp-dash .hp-actas-buscador input{ flex:1; background:none; border:none; color:var(--text); font-family:'Courier New', monospace; font-size:12.5px; min-width:0; }
+.cp-dash .hp-actas-buscador input:focus{ outline:none; }
+.cp-dash .hp-actas-clear{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; }
+.cp-dash .hp-actas-resultados{ font-size:10.5px; color:var(--muted); margin:-4px 0 12px; }
+.cp-dash .hp-actas-sin-resultados{ font-size:12px; color:var(--muted); padding:18px 4px; text-align:center; }
+
+.cp-dash .hp-actas-list{ display:flex; flex-direction:column; gap:10px; }
+.cp-dash .hp-actas-card{ background:var(--bg-2); border:1px solid var(--line); }
+.cp-dash .hp-actas-card[open]{ border-color:var(--acc); }
+.cp-dash .hp-actas-summary{ display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; list-style:none; flex-wrap:wrap; }
+.cp-dash .hp-actas-summary::-webkit-details-marker{ display:none; }
+.cp-dash .hp-actas-tag{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:4px 9px; flex:none; }
+.cp-dash .hp-actas-tag.tono-ok{ background:color-mix(in srgb, var(--lime) 18%, transparent); color:var(--lime); }
+.cp-dash .hp-actas-tag.tono-warn{ background:color-mix(in srgb, var(--amber) 18%, transparent); color:var(--amber); }
+.cp-dash .hp-actas-tag.tono-bad{ background:color-mix(in srgb, var(--rose) 18%, transparent); color:var(--rose); }
+.cp-dash .hp-actas-tag.tono-info{ background:color-mix(in srgb, var(--blue) 18%, transparent); color:var(--blue); }
+.cp-dash .hp-actas-tag.tono-neutral{ background:var(--panel); color:var(--muted); border:1px solid var(--line); }
+.cp-dash .hp-actas-titulo{ flex:1 1 180px; font-weight:700; font-size:13px; font-family:'Poppins',sans-serif; min-width:0; }
+.cp-dash .hp-actas-fecha{ font-size:11px; color:var(--muted); flex:none; }
+
+.cp-dash .hp-actas-detalle{ padding:0 14px 14px; display:flex; flex-direction:column; gap:12px; border-top:1px solid var(--line); padding-top:12px; }
+.cp-dash .hp-actas-row{ display:flex; flex-wrap:wrap; gap:12px; }
+.cp-dash .hp-actas-row label, .cp-dash .hp-actas-detalle > label{ flex:1; min-width:160px; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); display:flex; flex-direction:column; gap:5px; }
+.cp-dash .hp-actas-pendientes{ flex:2; min-width:220px; }
+.cp-dash .hp-actas-row input, .cp-dash .hp-actas-row textarea, .cp-dash .hp-actas-detalle > label input, .cp-dash .hp-actas-detalle > label textarea{
+  background:var(--panel); border:1px solid var(--line); border-radius:0; color:var(--text);
+  font-family:'Courier New', monospace; font-size:12.5px; padding:7px 9px; text-transform:none; letter-spacing:normal; resize:vertical;
+}
+.cp-dash .hp-actas-archivo-label{ font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+
+.cp-dash .hp-actas-chips{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.cp-dash .hp-actas-chip{ display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line); padding:4px 9px; font-size:11.5px; color:var(--text); text-transform:none; letter-spacing:normal; }
+.cp-dash .hp-actas-chip button{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:10px; padding:0; }
+.cp-dash .hp-actas-chip-input{ flex:1; min-width:140px; background:var(--panel); border:1px solid var(--line); border-radius:0; color:var(--text); font-size:11.5px; padding:5px 9px; text-transform:none; letter-spacing:normal; }
+
+@media (max-width:640px){
+  .cp-dash .hp-actas-summary{ gap:7px; }
+  .cp-dash .hp-actas-fecha{ order:4; flex-basis:100%; }
+}
+
+/* ===========================================================================
    Pagos, nóminas, caja chica y rendiciones — 6 pestañas, cumplimiento legal
    de altas/bajas calculado (no un campo manual). Esquinas rectas (§10.2),
    margen lateral var(--gutter) desde el vamos (§10.15).
