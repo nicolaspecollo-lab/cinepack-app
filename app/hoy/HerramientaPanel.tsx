@@ -1018,6 +1018,10 @@ function HerramientaData({
         )}</VistaConEjemplos>
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "rrhh-plan-bienestar" && (
+        <RrhhEmpleadosAgrupados filas={filas.length > 0 ? filas : ghostFilas(EJEMPLOS_POR_ID[herramienta.id] ?? [])} />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "ej-pagos-nominas" && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PagosNominasBoard
@@ -1685,6 +1689,7 @@ function HerramientaData({
           asegurar={asegurarSingle}
           onGuardar={guardarFila}
           onVisionar={visionar}
+          itemsPrecargados={herramienta.itemsPrecargados}
         />
       )}
 
@@ -6084,7 +6089,104 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "dir-decisiones-visionado", "rrhh-plan-bienestar"]);
+
+// Debajo de las tarjetas de riesgo de "rrhh-plan-bienestar": todos los
+// empleados cargados a mano (sub-filas `empleados`, repetible) en una sola
+// lista, agrupable por necesidad formativa / tipo de riesgo / departamento /
+// cargo / nombre — pedido explícito de Nico (18/11/2026), no una tabla plana.
+type RrhhEmpleadoRow = {
+  nombre: string;
+  cargo: string;
+  departamento: string;
+  necesidad: string; // nombre del riesgo (fila padre)
+  tipoRiesgo: string; // columna "origen" de la fila padre
+};
+// Acento de color por tipo de riesgo (tarjetas de "rrhh-plan-bienestar"):
+// un color con nombre de la paleta real (cp-theme.css) por cada opción de
+// "Origen del riesgo", para que la tarjeta cerrada ya comunique de qué tipo
+// de riesgo se trata de un vistazo (borde + badge), sin tener que abrirla.
+const RRHH_ORIGEN_ACCENT: Record<string, string> = {
+  "Trabajo en altura": "orange",
+  "Proximidad a agua": "cyan",
+  "Menor en escena": "rose",
+  "Atrezzo/maquinaria": "violet",
+  "Secuencia de riesgo (especialistas)": "gold",
+  "Exposición prolongada/climática": "lime",
+  Otro: "indigo",
+};
+function rrhhAccent(origen: string): string {
+  return RRHH_ORIGEN_ACCENT[origen] || "indigo";
+}
+
+const RRHH_AGRUPADORES = [
+  { key: "necesidad", label: "Necesidad formativa" },
+  { key: "tipoRiesgo", label: "Tipo de riesgo" },
+  { key: "departamento", label: "Departamento" },
+  { key: "cargo", label: "Cargo" },
+] as const;
+
+function RrhhEmpleadosAgrupados({ filas }: { filas: Fila[] }) {
+  const [agrupador, setAgrupador] = useState<(typeof RRHH_AGRUPADORES)[number]["key"]>("necesidad");
+
+  const empleados: RrhhEmpleadoRow[] = [];
+  for (const f of filas) {
+    const subs = parseArr<Record<string, string>>(f.datos?.empleados);
+    for (const s of subs) {
+      if (!s?.nombre) continue;
+      empleados.push({
+        nombre: s.nombre,
+        cargo: s.cargo || "—",
+        departamento: s.departamento || "—",
+        necesidad: f.datos?.riesgo || "—",
+        tipoRiesgo: f.datos?.origen || "—",
+      });
+    }
+  }
+
+  if (empleados.length === 0) return null;
+
+  const grupos = new Map<string, RrhhEmpleadoRow[]>();
+  for (const e of empleados) {
+    const k = e[agrupador] || "—";
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k)!.push(e);
+  }
+
+  return (
+    <div className="hp-rrhh-emp">
+      <div className="hp-rrhh-emp-head">
+        <span className="hp-rrhh-emp-title">Empleados con formación pendiente ({empleados.length})</span>
+        <div className="hp-rrhh-emp-tabs">
+          {RRHH_AGRUPADORES.map((g) => (
+            <span
+              key={g.key}
+              className={`hp-rrhh-emp-tab${agrupador === g.key ? " on" : ""}`}
+              onClick={() => setAgrupador(g.key)}
+            >
+              Por {g.label.toLowerCase()}
+            </span>
+          ))}
+        </div>
+      </div>
+      {[...grupos.entries()].map(([grupo, items]) => (
+        <div className="hp-rrhh-emp-group" key={grupo}>
+          <div className="hp-rrhh-emp-group-title">{grupo} <span className="hp-rrhh-emp-count">{items.length}</span></div>
+          <div className="hp-rrhh-emp-rows">
+            {items.map((e, i) => (
+              <div className="hp-rrhh-emp-row" key={i}>
+                <span className="hp-rrhh-emp-nombre">{e.nombre}</span>
+                <span className="hp-rrhh-emp-meta">{e.cargo} · {e.departamento}</span>
+                {agrupador !== "necesidad" && <span className="hp-rrhh-emp-chip">{e.necesidad}</span>}
+                {agrupador !== "tipoRiesgo" && <span className="hp-rrhh-emp-chip">{e.tipoRiesgo}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -6097,6 +6199,29 @@ type EntidadConfig = {
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
+  "dir-decisiones-visionado": {
+    titleKey: "escena",
+    subtitleKey: "decision",
+    listCols: ["toma_elegida", "fecha_visionado", "estado_aviso"],
+    addLabel: "+ Registrar visionado",
+    special: "buscador",
+    tabs: [
+      { label: "Decisión", keys: ["escena", "fecha_visionado", "decision", "toma_elegida", "tomas_backup"] },
+      { label: "Notas", keys: ["nota_interpretacion", "nota_tecnica", "motivo_repeticion"] },
+      { label: "Seguimiento", keys: ["avisar_a", "estado_aviso"] },
+    ],
+  },
+  "rrhh-plan-bienestar": {
+    titleKey: "riesgo",
+    subtitleKey: "origen",
+    listCols: ["formacion_obligatoria", "estado"],
+    addLabel: "+ Agregar riesgo",
+    tabs: [
+      { label: "Normativa", keys: ["origen", "normativa", "cargos_afectados", "estado", "fuente"] },
+      { label: "Formación y medidas", keys: ["formacion_obligatoria", "medidas"] },
+      { label: "Empleados", keys: ["empleados"] },
+    ],
+  },
   "ej-coproducciones": {
     titleKey: "empresa",
     subtitleKey: "pais",
@@ -6468,14 +6593,50 @@ export function EntidadTabsBoard({
           {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : (
-        <div className="hp-etb-list">
-          {visibles.map((f) => (
-            <div className="hp-etb-row" key={f.id} onClick={() => { setAbiertoId(f.id); setTab(0); }}>
+        <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-list hp-etb-list-rail" : "hp-etb-list"}>
+          {visibles.map((f) => {
+            const isRrhh = herramientaId === "rrhh-plan-bienestar";
+            const rrhhOrigen = isRrhh ? (f.datos?.origen || "") : "";
+            const rrhhAccentColor = isRrhh ? rrhhAccent(rrhhOrigen) : "";
+            const rrhhEmpleadosN = isRrhh ? parseArr<Record<string, string>>(f.datos?.empleados).length : 0;
+            const rrhhFormacion = isRrhh ? (f.datos?.formacion_obligatoria || "") : "";
+            return (
+            <div
+              className={isRrhh ? "hp-etb-row hp-etb-row-card hp-rrhh-card" : "hp-etb-row"}
+              style={isRrhh ? { "--rrhh-accent": `var(--${rrhhAccentColor})` } as React.CSSProperties : undefined}
+              key={f.id}
+              onClick={() => { setAbiertoId(f.id); setTab(0); }}
+            >
+              {isRrhh && (
+                <div className="hp-rrhh-card-top">
+                  {rrhhOrigen && <span className="hp-rrhh-origen-badge">{rrhhOrigen}</span>}
+                  {rrhhFormacion === "Sí — hipótesis, validar con PRL externo" && (
+                    <Icon name="alert-triangle" className="hp-rrhh-warn-ico" />
+                  )}
+                </div>
+              )}
               <div className="hp-etb-row-title">
                 <div className="hp-etb-row-name">{f.datos?.[cfg.titleKey] || colTitle?.label || "—"}</div>
-                {cfg.subtitleKey && <div className="hp-etb-row-sub">{f.datos?.[cfg.subtitleKey] || ""}</div>}
+                {cfg.subtitleKey && (() => {
+                  const subCol = colByKey.get(cfg.subtitleKey);
+                  const subVal = f.datos?.[cfg.subtitleKey] || "";
+                  if (subVal && subCol?.tipo === "estado") {
+                    return <span className={`hp-etb-badge seg-${estadoTono(subVal)}`}>{subVal}</span>;
+                  }
+                  return <div className="hp-etb-row-sub">{subVal}</div>;
+                })()}
               </div>
-              {cfg.listCols.map((k) => {
+              {isRrhh && (
+                <div className="hp-rrhh-card-badges">
+                  <span className="hp-rrhh-emp-count-badge">
+                    <Icon name="users" /> {rrhhEmpleadosN} {rrhhEmpleadosN === 1 ? "empleado" : "empleados"}
+                  </span>
+                  {rrhhFormacion && (
+                    <span className={`hp-rrhh-formacion-badge tono-${estadoTono(rrhhFormacion)}`}>{rrhhFormacion.replace("Sí — ", "")}</span>
+                  )}
+                </div>
+              )}
+              {!isRrhh && cfg.listCols.map((k) => {
                 const c = colByKey.get(k);
                 if (!c) return null;
                 const v = f.datos?.[k] ?? "";
@@ -6492,6 +6653,9 @@ export function EntidadTabsBoard({
                   const n = parseArr<Record<string, string>>(v).length;
                   return <div className="hp-etb-row-cell" key={k}>{n} {c.label.toLowerCase()}</div>;
                 }
+                if (k === "toma_elegida" && v) {
+                  return <div className="hp-etb-row-take" key={k} title="Toma elegida (circled take)">● {v}</div>;
+                }
                 return <div className="hp-etb-row-cell" key={k}>{v || "—"}</div>;
               })}
               {cfg.special === "subvencion-risk" && (() => {
@@ -6504,7 +6668,7 @@ export function EntidadTabsBoard({
               })()}
               <span className="hp-etb-open">Abrir ›</span>
             </div>
-          ))}
+          );})}
         </div>
       )}
 
@@ -9103,6 +9267,7 @@ function ChecklistTool({
   asegurar,
   onGuardar,
   onVisionar,
+  itemsPrecargados,
 }: {
   fila: Fila | undefined;
   editable: boolean;
@@ -9110,9 +9275,14 @@ function ChecklistTool({
   asegurar: () => Promise<Fila>;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onVisionar: (id: string) => void;
+  itemsPrecargados?: string[];
 }) {
   const t = useTranslations("hp");
+  const sinGuardar = !fila?.datos?.items;
   const items: Item[] = (() => {
+    if (sinGuardar && itemsPrecargados?.length) {
+      return itemsPrecargados.map((texto) => ({ texto, hecho: false }));
+    }
     try { return JSON.parse(fila?.datos?.items ?? "[]"); } catch { return []; }
   })();
   const [nuevo, setNuevo] = useState("");
@@ -9392,6 +9562,49 @@ const EJ_MODELO: Ejemplo[] = [
 // reutilizan patrones compartidos (FichaEquipo / AgendaDia / DocStatusBoard).
 // Los componentes bespoke definen sus ejemplos inline; estos son para el resto.
 export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+  "dir-decisiones-visionado": [
+    {
+      escena: "Esc. 14 — Cocina, discusión", fecha_visionado: "2026-11-10", decision: "Aprobada (circled)",
+      toma_elegida: "Toma 7", tomas_backup: "Toma 4",
+      nota_interpretacion: "La 7 tiene el quiebre de voz más contenido; mejor arco con el plano anterior.",
+      nota_tecnica: "Cámara: foco impecable en la 7. Sonido: boom entra levemente en plano en la 4, por eso queda de backup.",
+      avisar_a: JSON.stringify(["Montaje", "Script / continuidad"]),
+      estado_aviso: "Confirmado por el destinatario",
+    },
+    {
+      escena: "Esc. 22 — Auto, de noche", fecha_visionado: "2026-11-12", decision: "A repetir",
+      toma_elegida: "", tomas_backup: "Toma 2 (de emergencia)",
+      nota_interpretacion: "Interpretación correcta en todas las tomas.",
+      nota_tecnica: "Discrepancia cámara/sonido: foco perdido en la 1 y la 3 (luz de calle muy baja); en la 2 el sonido tiene ruido de tránsito que tapa diálogo clave.",
+      motivo_repeticion: "Ninguna toma cumple foto + sonido a la vez. Se repite con reflector adicional y bloqueo de calle.",
+      avisar_a: JSON.stringify(["Fotografía", "Sonido", "Producción"]),
+      estado_aviso: "Avisado",
+    },
+    {
+      escena: "Esc. 31 — Oficina, despido", fecha_visionado: "2026-11-13", decision: "Backup",
+      toma_elegida: "", tomas_backup: "Toma 5",
+      nota_interpretacion: "La 5 queda como respaldo; falta ver la 6 y 7 (no transferidas aún) antes de circular.",
+      nota_tecnica: "Sonido limpio en la 5. Pendiente de confirmar foco en 6/7 con DIT.",
+      avisar_a: JSON.stringify(["Postproducción"]),
+      estado_aviso: "Sin avisar",
+    },
+    {
+      escena: "Esc. 8 — Balcón, amanecer", fecha_visionado: "2026-11-14", decision: "Pendiente de ver",
+      toma_elegida: "", tomas_backup: "",
+      nota_interpretacion: "",
+      nota_tecnica: "Dailies de esta escena llegan hoy a la tarde desde el laboratorio.",
+      avisar_a: JSON.stringify([]),
+      estado_aviso: "Sin avisar",
+    },
+    {
+      escena: "Esc. 45 — Hospital, despedida", fecha_visionado: "2026-11-15", decision: "Aprobada (circled)",
+      toma_elegida: "Toma 3", tomas_backup: "Toma 1, Toma 6",
+      nota_interpretacion: "La 3 es la única donde ambos actores llegan juntos al clímax emocional sin sobreactuar.",
+      nota_tecnica: "Cámara y sonido limpios en las tres. Se eligió por interpretación, no por técnica.",
+      avisar_a: JSON.stringify(["Montaje", "Script / continuidad", "Postproducción"]),
+      estado_aviso: "Avisado",
+    },
+  ],
   "ej-coproducciones": [
     {
       empresa: "Atlántida Films", pais: "Francia", rol: "Coproductor oficial", equity: "18", aportacion: "70000",
@@ -9418,6 +9631,72 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     {
       organismo: "Ibermedia", expediente: "IB-2026-0912", concedido: "80000", fecha_concesion: "2026-04-15", plazo_limite: "2026-07-01",
       partidas: JSON.stringify([{ partida: "Coproducción", presupuesto: "80000", justificado: "80000" }]),
+    },
+  ],
+  "rrhh-plan-bienestar": [
+    {
+      riesgo: "Doble de acción en pasarela sobre el embalse (secuencia 20)", origen: "Secuencia de riesgo (especialistas)",
+      normativa: "Ley 31/1995 de PRL, art. 19 — formación centrada en el puesto y en los riesgos específicos de la tarea real, no del guion.",
+      cargos_afectados: JSON.stringify(["Reparto secundario (dobles)", "Dirección", "Producción"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Evaluación en curso",
+      medidas: "Arnés con doble anclaje, red de seguridad bajo la pasarela, briefing de coordinador de especialistas antes de cada toma, ambulancia en set.",
+      fuente: "Risk XXI — PRL en rodajes con especialistas.",
+      empleados: JSON.stringify([
+        { nombre: "Rubén Castaños", cargo: "Doble de acción", departamento: "Reparto" },
+        { nombre: "Iker Mendoza", cargo: "Coordinador de especialistas", departamento: "Dirección" },
+        { nombre: "Laura Vidal", cargo: "Ayudante de dirección", departamento: "Dirección" },
+      ]),
+    },
+    {
+      riesgo: "Menor de 12 años en escena del funeral (secuencia 20)", origen: "Menor en escena",
+      normativa: "Autorización de la autoridad laboral + evaluación de riesgos individualizada de la tarea concreta (no genérica).",
+      cargos_afectados: JSON.stringify(["Casting (menores)", "Dirección", "Producción"]),
+      formacion_obligatoria: "Sí — hipótesis, validar con PRL externo", estado: "Pendiente de evaluar",
+      medidas: "Tutor legal y profesor en set, jornada reducida, zona de descanso propia, sin exposición a la secuencia de riesgo del embalse.",
+      fuente: "Geseme — hipótesis, no confirmado con fuente oficial BOE.",
+      empleados: JSON.stringify([
+        { nombre: "Noa Ferreiro (menor)", cargo: "Actriz infantil", departamento: "Reparto" },
+        { nombre: "Marina Ferreiro", cargo: "Tutora legal", departamento: "Reparto" },
+        { nombre: "Pablo Esteve", cargo: "Casting de menores", departamento: "Casting" },
+      ]),
+    },
+    {
+      riesgo: "Proximidad a agua en el embalse (grúa y cámara en orilla)", origen: "Proximidad a agua",
+      normativa: "Ley 31/1995, art. 20 — medidas de emergencia y primeros auxilios ante riesgo de inmersión.",
+      cargos_afectados: JSON.stringify(["Dirección de fotografía", "Maquinista", "Todo el equipo"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Cubierta",
+      medidas: "Chalecos salvavidas en la orilla, socorrista acuático en set, perímetro balizado, protocolo de rescate acordado con el coordinador de especialistas.",
+      fuente: "Ley 31/1995 de PRL.",
+      empleados: JSON.stringify([
+        { nombre: "Gonzalo Peix", cargo: "Director de fotografía", departamento: "Fotografía" },
+        { nombre: "Edurne Lantz", cargo: "Maquinista", departamento: "Fotografía" },
+        { nombre: "Tomás Abril", cargo: "Grip jefe", departamento: "Fotografía" },
+        { nombre: "Cora Salinas", cargo: "DIT", departamento: "Fotografía" },
+      ]),
+    },
+    {
+      riesgo: "Manejo de grúa Technocrane y generador en exterior", origen: "Atrezzo/maquinaria",
+      normativa: "III Convenio colectivo estatal de la industria audiovisual, BOE-A-2024-6846 — formación específica de maquinaria y seguro de accidentes.",
+      cargos_afectados: JSON.stringify(["Maquinista", "Eléctricos/Gaffer"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Evaluación en curso",
+      medidas: "Certificado de operador de grúa, inspección diaria de cables y anclajes, zona de exclusión bajo el brazo de la grúa.",
+      fuente: "BOE-A-2024-6846.",
+      empleados: JSON.stringify([
+        { nombre: "Edurne Lantz", cargo: "Maquinista", departamento: "Fotografía" },
+        { nombre: "Dario Nuñez", cargo: "Eléctrico / Gaffer", departamento: "Fotografía" },
+      ]),
+    },
+    {
+      riesgo: "Rodaje exterior en ola de calor (más de 10 jornadas seguidas)", origen: "Exposición prolongada/climática",
+      normativa: "Ley 31/1995, art. 19 — adaptación de la jornada a condiciones climáticas extremas.",
+      cargos_afectados: JSON.stringify(["Todo el equipo"]),
+      formacion_obligatoria: "No aplica", estado: "Pendiente de evaluar",
+      medidas: "Pausas de hidratación cada 60 min, carpas de sombra en set, reprogramar tomas de exterior fuera de las horas de máxima radiación.",
+      fuente: "Risk XXI.",
+      empleados: JSON.stringify([
+        { nombre: "Sofía Reyes", cargo: "Ayudante de producción", departamento: "Producción" },
+        { nombre: "Kepa Aguirre", cargo: "Técnico de sonido", departamento: "Sonido" },
+      ]),
     },
   ],
   "ej-agenda-ejecutivo": [

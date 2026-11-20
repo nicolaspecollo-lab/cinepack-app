@@ -1,5 +1,12 @@
 # Backlog — Oficina de Marketing CINEPACK
 
+## Corrección directa de Nico (17/11/2026) — objeción al ángulo animación/series
+Nico cuestionó en el chat el frente España-animación/Italia-serie como ángulo principal, siendo que el fuerte real de CINEPACK es ficción. Revisado por director-marketing: Nico tiene razón. Ver `plan-marketing.md` sección 1.2.
+1. **Cerrado (ciclo 20:54 UTC)**: `redactor-contenidos` reescribió `2026-11-17_blog-que-pack-por-mercado.md` — ficción (largometraje/Pack 01-03, o serie de ficción/Pack 04-06) es el ángulo principal en los 3 mercados; animación (España) y volumen de serie (Italia) quedan como nota secundaria. Aprobado (Cumple), PDF en el panel.
+2. **Cerrado (ciclo 00:54 UTC, 18/11).** España produjo 53 series de ficción en 2023 (GECA) contra 15 de animación (DIBOOS) — más de 3.5x de volumen, tendencia al alza. Confirma de raíz la objeción de Nico: España es mercado de ficción, no de animación. Informe `2026-11-18_serie-ficcion-espana.md`, aprobado, PDF en el panel. `plan-marketing.md` sección 1.2 actualizada con el cierre definitivo.
+3. Mapear productoras de animación (España) ya no tiene sentido — descartado por el cierre del punto 2, no solo pospuesto. Mapear productoras de series de ficción en Italia sigue bloqueado a decisión de Nico (trabajo nuevo de cartógrafo-productoras, no ajuste del mapa existente) — no arrancar sin su confirmación.
+
+
 Prioridad: lo que más acerque una decisión real de monetización (pricing, segmento, canal, mensaje). El director-marketing reordena esta lista en cada ciclo según lo que vaya cerrando.
 
 ## Cabos sueltos heredados del primer ciclo (16/11/2026) — prioridad alta
@@ -32,7 +39,16 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Pendiente para vigia-competencia: revisar si Filmustage tiene casos publicados en Francia (handoff del cartógrafo).
 
 ## Cierres y nuevos frentes (17/11/2026, ciclo autónomo 08:55 UTC)
-- **Plan de marketing: feedback de Nico cerrado.** Capa C (publicidad) y Capa D (escuelas de cine) agregadas a la segmentación, con Packs 11/12 como fuente. Sin tamaño de mercado — nuevo frente abierto para analista-mercado-cine/cartografo-productoras: medir Capa C y D.
+- **Plan de marketing: feedback de Nico cerrado.** Capa C (publicidad) y Capa D (escuelas de cine) agregadas a la segmentación, con Packs 11/12 como fuente.
+
+## Cierre parcial: tamaño de mercado Capa C/D (18/11/2026, ciclo 04:54 UTC)
+- **Capa C cerrada con dato real**: 45.600 empresas de publicidad en España (INE-DIRCE 2024). Falta el filtro de relevancia (cuántas producen contenido propio) antes de evaluar campaña paga — próximo frente.
+
+## Filtro de Capa C resuelto, replanteado (18/11/2026, ciclo 08:54 UTC)
+- **No existe el dato pedido** (% de agencias con producción propia) — confirmado, no es hueco de búsqueda. Hallazgo: la norma del sector es externalizar. **Segmento real redefinido**: productoras de publicidad, no las 45.600 agencias. Informe `2026-11-18_filtro-capa-c-publicidad.md`, aprobado.
+- **Nuevo frente, prioridad alta**: mapear productoras de publicidad en España (mismo método que productoras de cine) — da el número real para decidir si Pack 11 escala a campaña paga.
+- **Capa D sigue bloqueada**: sin censo oficial de escuelas de cine, fuente más cercana (ICAA, `cultura.gob.es`) bloqueada por red de la sesión. Pedido abierto para Nico: habilitar ese host.
+- Informe: `2026-11-18_tamano-mercado-capa-c-d.md`, aprobado, PDF en el panel.
 - **Canal de contenidos activado por primera vez.** redactor-contenidos entregó su primera pieza (ángulo de estandarización). Nuevo frente: pensar la segunda pieza (candidatos: SetHero vs. CINEPACK en alcance, o el hallazgo de España-animación/Italia-serie por formato).
 - **Alemania (SPIO)/España histórica (espanadigital.gob.es)/Reino Unido (BFI): reintentado y sigue bloqueado por red de la sesión**, no por falta de fuente. No reintentar en el próximo ciclo sin que Nico habilite los hosts — evitar repetir el mismo resultado negativo.
 
@@ -41,3 +57,11 @@ Prioridad: lo que más acerque una decisión real de monetización (pricing, seg
 - Horas de documental francés 2023: sin dato (solo cifra de ayuda en euros).
 - PDF del MiC italiano no verificado directamente (cinema.cultura.gov.it bloqueado por red de sesión).
 - Hallazgo de negocio: España destaca en animación (15 series, tendencia al alza desde 2021), Italia en volumen/presupuesto de serie de ficción (94 títulos) — candidato a cruzar con qué pack de pricing promocionar en cada mercado (pack animación para España, pack serie para Italia) en vez del genérico de largometraje.
+
+## Cierres y nuevos frentes (17/11/2026, ciclo retomado 15:10 UTC)
+- **Candidato de cruce pack/formato del punto anterior: ya resuelto como segunda pieza de contenido.** Blog "España hace animación, Italia hace series" aprobado (Cumple), con mapeo explícito a packs reales (07 para España, 04/06 para Italia). Queda pendiente de revisión de Nico en el panel.
+- **Nuevo frente, prioridad media**: cruzar el mapa de productoras ya construido (España/Francia/Italia) contra este hallazgo de formato — ¿cuántas productoras mapeadas son específicamente de animación (España) o serie de ficción (Italia)? Si el volumen es bajo, el mensaje queda en blog/SEO, no escala a campaña paga. Responsable sugerido: estratega-posicionamiento.
+
+## Cierre del cruce productoras/formato (17/11/2026, ciclo 16:54 UTC)
+- **Resuelto: el cruce ya se hizo, resultado = insuficiente para campaña paga.** Solo 1 productora española (animación) y 4 italianas (perfil TV) aparecen en los mapas ya construidos — pero esos mapas no filtraban por formato, así que no es una medición real de volumen. Informe aprobado: `2026-11-17_cruce-productoras-formato.md`.
+- **Nuevo frente, prioridad a decidir por Nico**: mapear desde cero productoras de animación (España) y de series de ficción (Italia) — trabajo nuevo de cartografo-productoras, no reutiliza el mapa existente. No arrancar sin confirmación de Nico (es inversión de tiempo nueva, no un ajuste del backlog ya priorizado).

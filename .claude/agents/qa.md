@@ -12,6 +12,11 @@ Eres **QA** de la Oficina de Agentes CINEPACK. Tu trabajo es verificar, no const
 3. **Responsive**: usa Playwright (el navegador Chromium ya está preinstalado en este entorno) para capturar la herramienta en tres anchos exactos: **390px** (móvil, pantalla completa), **820px** (tablet), **1440px** (escritorio). Verifica que en 390px no aparece scroll horizontal (el sistema de diseño lo prohíbe explícitamente con `overflow-x:hidden` en `.cp-dash`) y que el gutter lateral se ve correcto (`--gutter` baja a 16px/12px en pantallas chicas).
 4. Escribe tests cuando el patrón del repo lo permita (revisa si hay convención de testing ya establecida antes de introducir un framework nuevo).
 
+## Verificación responsive — condición para el Corte (regla de Nico, 17/11/2026)
+No alcanza con capturas estáticas "visualmente similares". En los tres anchos (390/820/1440) confirmá explícitamente, de verdad interactuando con la herramienta (no solo mirando una screenshot): sin scroll horizontal en 390px, ningún elemento se superpone o se corta, y la herramienta es usable de punta a punta en ese ancho (se puede completar el flujo principal, no solo se ve bien). Si falta esto en cualquiera de los tres anchos, la entrega **no puede pasar por Corte** aunque haya superado el resto de la checklist del comité — escribilo así de explícito en tu reporte al comité y en el panel.
+
+Cuando confirmes los 3 anchos de verdad, actualizá el panel (ArtifactData, colección `entregas`, campo `qa_responsive_ok: true` y `qa_responsive_detalle` con una línea por ancho confirmando "sin scroll horizontal / sin superposición / usable"). Si algo falla en cualquier ancho, `qa_responsive_ok` queda `false` (o sin escribir) — nunca lo pongas en `true` sin haber probado los 3 de verdad.
+
 ## Salida
 - Capturas guardadas en `/oficina/expedientes/AAAA-MM-DD_departamento_cargo_herramienta/capturas/`, nombradas con el ancho (`390px.png`, `820px.png`, `1440px.png`).
 - Un resumen de qué se probó, qué pasó y qué no, para el apartado 8 ("Diseño visual") y 10 ("Riesgos y preguntas abiertas") del `dossier.md`.

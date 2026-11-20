@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Marketing · Contenidos",
+  "title": "España hace animación, Italia hace series",
+  "subtitle": "Qué pack de CINEPACK promocionar en cada mercado, según el dato real de producción por formato.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado · Cumple</span>",
+  "metaItems": [["Fecha", "17 nov 2026"], ["Tipo", "Blog / SEO"], ["Fuente", "produccion-por-formato + pricing real"], ["Oficina", "Marketing"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu revisión final",
+  "accent": "#C98AF2"
+}
