@@ -6209,3 +6209,53 @@
   .cp-dash .docb-doc-toolbar{ gap:1px; padding:var(--sp-2) var(--gutter); }
   .cp-dash .docb-doc-editor .ProseMirror{ max-width:100%; }
 }
+
+/* Checklist de mezcla y masterización de audio: tarjetas por formato de
+   entrega con specs objetivo + checklist de QC con progreso visible. */
+.cp-dash .hp-mezcla-wrap{ padding:var(--sp-3) var(--gutter) var(--sp-4); }
+.cp-dash .hp-mezcla-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:var(--sp-3);
+}
+.cp-dash .hp-mezcla-card{
+  background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2);
+}
+.cp-dash .hp-mezcla-card.on{ border-color:var(--lime); }
+.cp-dash .hp-mezcla-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.cp-dash .hp-mezcla-formato{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-base); color:var(--text); }
+.cp-dash .hp-mezcla-progreso{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-mezcla-bar{ flex:1; height:6px; background:var(--hl2); }
+.cp-dash .hp-mezcla-bar-fill{ height:100%; background:var(--lime); transition:width 0.2s ease; }
+.cp-dash .hp-mezcla-progreso-txt{ font-size:var(--fs-xs); color:var(--muted); white-space:nowrap; font-weight:600; }
+.cp-dash .hp-mezcla-specs{ display:flex; flex-direction:column; gap:6px; }
+.cp-dash .hp-mezcla-spec, .cp-dash .hp-mezcla-tec, .cp-dash .hp-mezcla-notas{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical;
+}
+.cp-dash .hp-mezcla-spec:focus, .cp-dash .hp-mezcla-tec:focus, .cp-dash .hp-mezcla-notas:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-mezcla-qc{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .hp-mezcla-qc-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px; }
+.cp-dash .hp-mezcla-qc-item{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-mezcla-qc-check{
+  flex-shrink:0; width:18px; height:18px; border:1px solid var(--line); background:var(--hl1); color:var(--bg);
+  font-size:12px; line-height:1; cursor:pointer; padding:0;
+}
+.cp-dash .hp-mezcla-qc-item.on .hp-mezcla-qc-check{ background:var(--lime); border-color:var(--lime); color:var(--bg); }
+.cp-dash .hp-mezcla-qc-text{
+  flex:1; min-width:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  background:none; border:none; padding:2px 0; color:var(--text);
+}
+.cp-dash .hp-mezcla-qc-item.on .hp-mezcla-qc-text{ color:var(--muted); text-decoration:line-through; }
+.cp-dash .hp-mezcla-qc-text:focus{ outline:none; }
+.cp-dash .hp-mezcla-qc-del{ flex-shrink:0; background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; }
+.cp-dash .hp-mezcla-qc-del:hover{ color:var(--rose); }
+.cp-dash .hp-mezcla-qc-add{
+  align-self:flex-start; margin-top:2px; font-size:11px; font-family:'Poppins',sans-serif; color:var(--muted);
+  background:none; border:1px solid var(--line); padding:3px 7px; cursor:pointer;
+}
+.cp-dash .hp-mezcla-qc-add:hover{ border-color:var(--acc); color:var(--text); }
+.cp-dash .hp-mezcla-add{ align-items:flex-start; justify-content:center; gap:var(--sp-2); border-style:dashed; }
+.cp-dash .hp-mezcla-add-label{ font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .hp-mezcla-add-btn{ align-self:stretch; justify-content:center; }
+@media (max-width:640px){
+  .cp-dash .hp-mezcla-grid{ grid-template-columns:1fr; }
+}

@@ -3531,19 +3531,24 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "tabla",
-          hint: "Un registro por ítem de entrega de audio (stem, versión de mezcla, formato técnico), agrupado por tipo de entrega. Confirmá el spec exacto del distribuidor/festival antes de mezclar — no hay un único estándar de loudness entre plataformas (Netflix, Amazon, broadcast UE/EEUU y DCP difieren). No es la checklist de entregables generales (`checklistEntrega`) ni el calendario maestro — esto es específico de audio.",
-          // Agrupa por tipo de ítem (ya es la columna más usada para separar
-          // qué hay que entregar y a quién) en vez de mostrar una tabla
-          // plana de 25+ filas sin estructura — mismo patrón que Presupuesto.
-          agruparPor: "tipo_item",
+          hint: "Una tarjeta por formato de entrega (Stereo, 5.1, M&E, DCP, streaming/broadcast), con sus specs técnicos objetivo y un checklist de QC real con progreso verificable (\"4/7 verificado\"). Confirmá el spec exacto del distribuidor/festival antes de mezclar — no hay un único estándar de loudness entre plataformas (Netflix, Amazon, broadcast UE/EEUU y DCP difieren). No es la checklist de entregables generales (`checklistEntrega`) ni el calendario maestro — esto es específico de audio.",
+          // Vista bespoke en tarjetas (ChecklistMezclaBoard en HerramientaPanel):
+          // una fila = un formato de entrega, no un ítem suelto. El QC real
+          // vive en la columna "repetible" qc_items (sub-filas con su propio
+          // check), así cada tarjeta muestra su progreso real de verificación
+          // en vez de una tabla plana de ítems.
           columnas: [
-            { key: "item", label: "Ítem de entrega" },
-            { key: "tipo_item", label: "Tipo", tipo: "estado", opciones: ["Stem DME (diálogo)", "Stem DME (música)", "Stem DME (efectos)", "Mezcla final", "Versión DCP", "Versión streaming/broadcast"] },
-            { key: "spec_destino", label: "Spec objetivo (plataforma/festival)", tipo: "largo" },
-            { key: "formato_tecnico", label: "Formato técnico", tipo: "largo" },
-            { key: "loudness_verificado", label: "Loudness/true-peak verificado", tipo: "estado", opciones: ["Sí", "No", "En curso"] },
-            { key: "downmix_revisado", label: "Downmix 5.1→estéreo revisado (fase)", tipo: "estado", opciones: ["Sí", "No aplica", "Pendiente"] },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En mezcla", "Entregado"] },
+            { key: "formato", label: "Formato de entrega", tipo: "estado", opciones: ["Stereo 2.0", "5.1 Surround", "M&E (Music & Effects)", "DCP", "Streaming / Broadcast"] },
+            { key: "spec_objetivo", label: "Spec objetivo (plataforma/festival)", tipo: "largo" },
+            { key: "formato_tecnico", label: "Formato técnico (sample rate/bits/contenedor)", tipo: "texto" },
+            {
+              key: "qc_items", label: "Checklist de QC", tipo: "repetible",
+              sub: [
+                { key: "item", label: "Ítem de QC" },
+                { key: "verificado", label: "Verificado", tipo: "estado", opciones: ["No", "Sí"] },
+              ],
+            },
+            { key: "estado", label: "Estado general", tipo: "estado", opciones: ["Pendiente", "En mezcla", "Entregado"] },
             { key: "notas", label: "Notas" },
           ],
         },
