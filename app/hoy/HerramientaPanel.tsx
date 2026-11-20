@@ -9,7 +9,7 @@ import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
-import Icon from "../components/Icon";
+import Icon, { type IconName } from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
 import CpSelect from "../components/CpSelect";
 import CarpetaNavegable from "./CarpetaNavegable";
@@ -240,6 +240,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "rep-vest-maq" ||
     id === "rep-pronunciacion" ||
     SON_MIC_IDS.has(id) ||
+    id === "post-checklist-mezcla" ||
     id === "son-plan-directo" ||
     id === "son-control-baterias" ||
     id === "son-playlist-musica-temp" ||
@@ -1017,6 +1018,10 @@ function HerramientaData({
         )}</VistaConEjemplos>
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "rrhh-plan-bienestar" && (
+        <RrhhEmpleadosAgrupados filas={filas.length > 0 ? filas : ghostFilas(EJEMPLOS_POR_ID[herramienta.id] ?? [])} />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "ej-pagos-nominas" && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PagosNominasBoard
@@ -1419,6 +1424,17 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "post-checklist-mezcla" && (
+        <ChecklistMezclaBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "son-plan-directo" && (
         <PlanDirecto
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -1603,6 +1619,7 @@ function HerramientaData({
           }}
           moneda={meta?.datos?._moneda}
           onCambiarMoneda={cambiarMoneda}
+          agruparPor={herramienta.agruparPor}
         />
       )}
 
@@ -1672,6 +1689,7 @@ function HerramientaData({
           asegurar={asegurarSingle}
           onGuardar={guardarFila}
           onVisionar={visionar}
+          itemsPrecargados={herramienta.itemsPrecargados}
         />
       )}
 
@@ -1915,61 +1933,6 @@ function CeldaMoneyConFormula({
   );
 }
 
-// Mapea una opción de columna `notificaDepartamento` que no es literalmente
-// un nombre de departamento real (ej. "Script/Continuidad", que es un cargo
-// de Dirección) al {departamento, cargo} real que espera `consultas`. Las
-// opciones que ya son un departamento real quedan igual (cargo null = llega
-// a todo el departamento).
-const DEPTO_DESTINO_ALIAS: Record<string, { departamento: string; cargo: string | null }> = {
-  "Script/Continuidad": { departamento: "Dirección", cargo: "Script/Continuidad" },
-};
-
-// Dispara una consulta real (mismo mecanismo que ConsultasPanel: tabla
-// `consultas` + /api/consultas/notificar) dirigida al departamento/cargo
-// elegido en una celda `tipo:"estado", notificaDepartamento:true`. Pensado
-// para campos tipo "Pendiente para" — nunca se llama si el valor es
-// "Ninguno"/"—" o si no cambió de verdad. No bloquea el guardado de la
-// celda: si falla, se pierde solo la notificación, no el dato.
-async function dispararConsultaDesdeFila(opts: {
-  valorDestino: string;
-  herramientaNombre: string;
-  departamentoOrigen: string;
-  contexto: string; // ej. "Escena 14 — intención: ..."
-}) {
-  if (!opts.valorDestino || opts.valorDestino === "Ninguno" || opts.valorDestino === "—") return;
-  try {
-    const projectId = localStorage.getItem("cinepack-proyecto-id");
-    if (!projectId) return;
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: perfil } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
-    const destino = DEPTO_DESTINO_ALIAS[opts.valorDestino] ?? { departamento: opts.valorDestino, cargo: null };
-    const { data: nueva, error } = await supabase
-      .from("consultas")
-      .insert({
-        project_id: projectId,
-        autor_id: user.id,
-        autor_nombre: perfil?.full_name ?? "—",
-        de_departamento: opts.departamentoOrigen,
-        para_departamentos: [destino.departamento],
-        para_cargo: destino.cargo,
-        titulo: `Pendiente de ${opts.herramientaNombre}`,
-        texto: opts.contexto,
-      })
-      .select("id")
-      .single();
-    if (error || !nueva) return;
-    await fetch("/api/consultas/notificar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ consulta_id: nueva.id }),
-    }).catch(() => {});
-  } catch {
-    // silencioso: la celda ya se guardó, la notificación es best-effort
-  }
-}
-
 function Celda({
   col,
   valor,
@@ -2037,18 +2000,7 @@ function Celda({
           options={col.opciones ?? []}
           placeholder="—"
           permitirLibre={col.libre}
-          onChange={(v) => {
-            onChange(v);
-            onCommit();
-            if (col.notificaDepartamento && v !== valor) {
-              void dispararConsultaDesdeFila({
-                valorDestino: v,
-                herramientaNombre: herramientaId ?? col.label,
-                departamentoOrigen: departamento ?? "—",
-                contexto: `Fila de "${col.label}" (${herramientaId ?? "—"}) quedó marcada como pendiente para tu equipo.`,
-              });
-            }
-          }}
+          onChange={(v) => { onChange(v); onCommit(); }}
         />
       </div>
     );
@@ -3749,6 +3701,294 @@ function ControlGenerador({
         </div>
       )}
     </>
+  );
+}
+
+// ===========================================================================
+// SONORIZACIÓN FINAL — checklist de mezcla por formato de entrega
+// Nico rebotó 3 veces la tabla plana pidiendo explícitamente abandonar el
+// patrón tabla/checklist genérico: una tarjeta por formato de entrega, con
+// sus specs objetivo arriba y un checklist de QC real con progreso visible
+// ("4/7 verificado"), no columnas sueltas.
+// ===========================================================================
+type QcItem = { item: string; verificado: string };
+
+function qcProgreso(items: QcItem[]): { verificados: number; total: number } {
+  const total = items.length;
+  const verificados = items.filter((it) => it.verificado === "Sí").length;
+  return { verificados, total };
+}
+
+const FORMATO_ACCENT: Record<string, string> = {
+  "Stereo 2.0": "var(--cyan)",
+  "5.1 Surround": "var(--violet)",
+  "M&E (Music & Effects)": "var(--gold)",
+  DCP: "var(--indigo)",
+  "Streaming / Broadcast": "var(--orange)",
+};
+
+const FORMATO_ICON: Record<string, IconName> = {
+  "Stereo 2.0": "sound",
+  "5.1 Surround": "sound",
+  "M&E (Music & Effects)": "sliders",
+  DCP: "film",
+  "Streaming / Broadcast": "cloud",
+};
+
+const QC_SUGERIDOS: Record<string, string[]> = {
+  "Stereo 2.0": [
+    "Loudness integrado dentro del target (LUFS)",
+    "True peak dentro del límite (dBTP)",
+    "Fase mono-compatible verificada",
+    "Sync de audio/video verificado en todo el metraje",
+    "Sin clipping ni distorsión en picos",
+    "Fade in/out de cabeza y cola correctos",
+    "Exportado en el formato/contenedor pedido",
+  ],
+  "5.1 Surround": [
+    "Loudness integrado dentro del target (LUFS)",
+    "True peak por canal dentro del límite (dBTP)",
+    "Downmix a estéreo revisado (fase, sin cancelaciones)",
+    "LFE dentro del rango (sin exceso de graves)",
+    "Paneo e imagen surround consistentes",
+    "Sync de audio/video verificado en todo el metraje",
+    "Exportado en el formato/contenedor pedido",
+  ],
+  "M&E (Music & Effects)": [
+    "Diálogo completamente removido (sin residuos)",
+    "Música y efectos balanceados sin el diálogo",
+    "Loudness integrado dentro del target (LUFS)",
+    "Sync de audio/video verificado en todo el metraje",
+    "Sin huecos donde había diálogo (efectos de ambiente cubren)",
+    "Exportado en el formato/contenedor pedido",
+  ],
+  DCP: [
+    "Loudness/nivel de referencia de sala verificado",
+    "Canales mapeados correctamente (5.1/7.1 según spec del DCP)",
+    "Sync de audio/video verificado en todo el metraje",
+    "Sample rate y bit depth exactos al spec DCP (48kHz/24-bit)",
+    "Sin clipping ni distorsión en picos",
+    "Exportado y encapsulado según spec del laboratorio/festival",
+  ],
+  "Streaming / Broadcast": [
+    "Loudness integrado dentro del target de la plataforma (LUFS)",
+    "True peak dentro del límite de la plataforma (dBTP)",
+    "Sync de audio/video verificado en todo el metraje",
+    "Metadata de loudness embebida (si la plataforma la pide)",
+    "Sin clipping ni distorsión en picos",
+    "Exportado en el formato/contenedor pedido por la plataforma",
+  ],
+};
+
+function ChecklistMezclaBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const colFormato = columnas.find((c) => c.key === "formato");
+  const colSpec = columnas.find((c) => c.key === "spec_objetivo");
+  const colFormatoTec = columnas.find((c) => c.key === "formato_tecnico");
+  const colQc = columnas.find((c) => c.key === "qc_items");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colNotas = columnas.find((c) => c.key === "notas");
+  const formatosUsados = new Set(filas.map((f) => f.datos?.[colFormato?.key ?? "formato"] ?? ""));
+  const formatosDisponibles = (colFormato?.opciones ?? []).filter((op) => !formatosUsados.has(op));
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  function agregarFormato(formato: string) {
+    const sugeridos = QC_SUGERIDOS[formato] ?? [];
+    const qc: QcItem[] = sugeridos.map((item) => ({ item, verificado: "No" }));
+    onCrear({ formato, qc_items: JSON.stringify(qc) });
+  }
+
+  const totalFormatos = filas.length;
+  const formatosCompletos = filas.filter((f) => {
+    const qc = parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]);
+    const { verificados, total } = qcProgreso(qc);
+    return total > 0 && verificados === total;
+  }).length;
+  const qcGlobal = filas.reduce(
+    (acc, f) => {
+      const { verificados, total } = qcProgreso(parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]));
+      return { verificados: acc.verificados + verificados, total: acc.total + total };
+    },
+    { verificados: 0, total: 0 }
+  );
+  const pctGlobal = qcGlobal.total > 0 ? Math.round((qcGlobal.verificados / qcGlobal.total) * 100) : 0;
+
+  return (
+    <div className="hp-mezcla-wrap">
+      {totalFormatos > 0 && (
+        <div className="hp-mezcla-resumen">
+          <div className="hp-mezcla-resumen-stat">
+            <span className="hp-mezcla-resumen-n">{formatosCompletos}/{totalFormatos}</span>
+            <span className="hp-mezcla-resumen-l">formatos completos</span>
+          </div>
+          <div className="hp-mezcla-resumen-bar"><div className="hp-mezcla-resumen-bar-fill" style={{ width: `${pctGlobal}%` }} /></div>
+          <span className="hp-mezcla-resumen-pct">{pctGlobal}% QC verificado en total</span>
+        </div>
+      )}
+      <div className="hp-mezcla-grid">
+        {filas.map((f) => {
+          const formato = f.datos?.[colFormato?.key ?? "formato"] ?? "";
+          const accent = FORMATO_ACCENT[formato] ?? "var(--acc)";
+          const icono: IconName = FORMATO_ICON[formato] ?? "sound";
+          const qc = parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]);
+          const { verificados, total } = qcProgreso(qc);
+          const pct = total > 0 ? Math.round((verificados / total) * 100) : 0;
+          const completo = total > 0 && verificados === total;
+
+          function setQc(next: QcItem[]) {
+            set(f, colQc?.key ?? "qc_items", JSON.stringify(next));
+          }
+          function toggleItem(idx: number) {
+            if (!editable) return;
+            const next = qc.map((it, i) => (i === idx ? { ...it, verificado: it.verificado === "Sí" ? "No" : "Sí" } : it));
+            setQc(next);
+          }
+          function agregarItem() {
+            setQc([...qc, { item: "", verificado: "No" }]);
+          }
+          function borrarItem(idx: number) {
+            setQc(qc.filter((_, i) => i !== idx));
+          }
+
+          return (
+            <div className={`hp-mezcla-card${completo ? " on" : ""}`} key={f.id} style={{ "--formato-accent": accent } as React.CSSProperties}>
+              <div className="hp-mezcla-head">
+                <span className="hp-mezcla-icono" style={{ color: accent }}><Icon name={icono} /></span>
+                <span className="hp-mezcla-formato">{formato || "—"}</span>
+                {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar">✕</button>}
+              </div>
+
+              <div className="hp-mezcla-progreso">
+                <div className="hp-mezcla-bar"><div className="hp-mezcla-bar-fill" style={{ width: `${pct}%` }} /></div>
+                <span className="hp-mezcla-progreso-txt">{verificados}/{total} verificado{total === 1 ? "" : "s"}</span>
+              </div>
+
+              {colEstado && (
+                <EstadoSeg
+                  valor={f.datos?.[colEstado.key] ?? ""}
+                  opciones={colEstado.opciones ?? []}
+                  onPick={(v) => set(f, colEstado.key, v)}
+                  editable={editable}
+                  color
+                />
+              )}
+
+              <div className="hp-mezcla-specs">
+                {colSpec && (
+                  <textarea
+                    className="hp-mezcla-spec"
+                    defaultValue={f.datos?.[colSpec.key] ?? ""}
+                    placeholder={colSpec.label}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, colSpec.key, e.target.value)}
+                    rows={2}
+                  />
+                )}
+                {colFormatoTec && (
+                  <input
+                    className="hp-mezcla-tec"
+                    defaultValue={f.datos?.[colFormatoTec.key] ?? ""}
+                    placeholder={colFormatoTec.label}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, colFormatoTec.key, e.target.value)}
+                  />
+                )}
+              </div>
+
+              <div className="hp-mezcla-qc">
+                <span className="hp-mezcla-qc-label">Checklist de QC</span>
+                {qc.map((it, idx) => (
+                  <div className={`hp-mezcla-qc-item${it.verificado === "Sí" ? " on" : ""}`} key={idx}>
+                    <button
+                      type="button"
+                      className="hp-mezcla-qc-check"
+                      onClick={() => toggleItem(idx)}
+                      disabled={!editable}
+                      aria-pressed={it.verificado === "Sí"}
+                      title={it.verificado === "Sí" ? "Verificado" : "Marcar como verificado"}
+                    >
+                      {it.verificado === "Sí" ? "✓" : ""}
+                    </button>
+                    <input
+                      className="hp-mezcla-qc-text"
+                      defaultValue={it.item}
+                      placeholder="Ítem de QC"
+                      readOnly={!editable}
+                      onBlur={(e) => {
+                        const next = qc.map((q, i) => (i === idx ? { ...q, item: e.target.value } : q));
+                        setQc(next);
+                      }}
+                    />
+                    {editable && (
+                      <button className="hp-mezcla-qc-del" onClick={() => borrarItem(idx)} title="Eliminar ítem">✕</button>
+                    )}
+                  </div>
+                ))}
+                {editable && (
+                  <button className="hp-mezcla-qc-add" onClick={agregarItem}>+ Agregar ítem de QC</button>
+                )}
+              </div>
+
+              {colNotas && (
+                <textarea
+                  className="hp-mezcla-notas"
+                  defaultValue={f.datos?.[colNotas.key] ?? ""}
+                  placeholder={colNotas.label}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, colNotas.key, e.target.value)}
+                  rows={2}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {editable && formatosDisponibles.length > 0 && (
+        <div className="hp-mezcla-agregar">
+          <span className="hp-mezcla-agregar-label">Agregar tarjeta de formato</span>
+          <div className="hp-mezcla-agregar-row">
+            {formatosDisponibles.map((formato) => {
+              const accent = FORMATO_ACCENT[formato] ?? "var(--acc)";
+              const icono: IconName = FORMATO_ICON[formato] ?? "sound";
+              return (
+                <button
+                  key={formato}
+                  className="hp-mezcla-agregar-btn"
+                  style={{ "--formato-accent": accent } as React.CSSProperties}
+                  onClick={() => agregarFormato(formato)}
+                >
+                  <Icon name={icono} /> {formato}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {filas.length === 0 && !editable && (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>Sin tarjetas de formato todavía.</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -5849,7 +6089,104 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "dir-decisiones-visionado", "rrhh-plan-bienestar"]);
+
+// Debajo de las tarjetas de riesgo de "rrhh-plan-bienestar": todos los
+// empleados cargados a mano (sub-filas `empleados`, repetible) en una sola
+// lista, agrupable por necesidad formativa / tipo de riesgo / departamento /
+// cargo / nombre — pedido explícito de Nico (18/11/2026), no una tabla plana.
+type RrhhEmpleadoRow = {
+  nombre: string;
+  cargo: string;
+  departamento: string;
+  necesidad: string; // nombre del riesgo (fila padre)
+  tipoRiesgo: string; // columna "origen" de la fila padre
+};
+// Acento de color por tipo de riesgo (tarjetas de "rrhh-plan-bienestar"):
+// un color con nombre de la paleta real (cp-theme.css) por cada opción de
+// "Origen del riesgo", para que la tarjeta cerrada ya comunique de qué tipo
+// de riesgo se trata de un vistazo (borde + badge), sin tener que abrirla.
+const RRHH_ORIGEN_ACCENT: Record<string, string> = {
+  "Trabajo en altura": "orange",
+  "Proximidad a agua": "cyan",
+  "Menor en escena": "rose",
+  "Atrezzo/maquinaria": "violet",
+  "Secuencia de riesgo (especialistas)": "gold",
+  "Exposición prolongada/climática": "lime",
+  Otro: "indigo",
+};
+function rrhhAccent(origen: string): string {
+  return RRHH_ORIGEN_ACCENT[origen] || "indigo";
+}
+
+const RRHH_AGRUPADORES = [
+  { key: "necesidad", label: "Necesidad formativa" },
+  { key: "tipoRiesgo", label: "Tipo de riesgo" },
+  { key: "departamento", label: "Departamento" },
+  { key: "cargo", label: "Cargo" },
+] as const;
+
+function RrhhEmpleadosAgrupados({ filas }: { filas: Fila[] }) {
+  const [agrupador, setAgrupador] = useState<(typeof RRHH_AGRUPADORES)[number]["key"]>("necesidad");
+
+  const empleados: RrhhEmpleadoRow[] = [];
+  for (const f of filas) {
+    const subs = parseArr<Record<string, string>>(f.datos?.empleados);
+    for (const s of subs) {
+      if (!s?.nombre) continue;
+      empleados.push({
+        nombre: s.nombre,
+        cargo: s.cargo || "—",
+        departamento: s.departamento || "—",
+        necesidad: f.datos?.riesgo || "—",
+        tipoRiesgo: f.datos?.origen || "—",
+      });
+    }
+  }
+
+  if (empleados.length === 0) return null;
+
+  const grupos = new Map<string, RrhhEmpleadoRow[]>();
+  for (const e of empleados) {
+    const k = e[agrupador] || "—";
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k)!.push(e);
+  }
+
+  return (
+    <div className="hp-rrhh-emp">
+      <div className="hp-rrhh-emp-head">
+        <span className="hp-rrhh-emp-title">Empleados con formación pendiente ({empleados.length})</span>
+        <div className="hp-rrhh-emp-tabs">
+          {RRHH_AGRUPADORES.map((g) => (
+            <span
+              key={g.key}
+              className={`hp-rrhh-emp-tab${agrupador === g.key ? " on" : ""}`}
+              onClick={() => setAgrupador(g.key)}
+            >
+              Por {g.label.toLowerCase()}
+            </span>
+          ))}
+        </div>
+      </div>
+      {[...grupos.entries()].map(([grupo, items]) => (
+        <div className="hp-rrhh-emp-group" key={grupo}>
+          <div className="hp-rrhh-emp-group-title">{grupo} <span className="hp-rrhh-emp-count">{items.length}</span></div>
+          <div className="hp-rrhh-emp-rows">
+            {items.map((e, i) => (
+              <div className="hp-rrhh-emp-row" key={i}>
+                <span className="hp-rrhh-emp-nombre">{e.nombre}</span>
+                <span className="hp-rrhh-emp-meta">{e.cargo} · {e.departamento}</span>
+                {agrupador !== "necesidad" && <span className="hp-rrhh-emp-chip">{e.necesidad}</span>}
+                {agrupador !== "tipoRiesgo" && <span className="hp-rrhh-emp-chip">{e.tipoRiesgo}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -5862,6 +6199,29 @@ type EntidadConfig = {
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
+  "dir-decisiones-visionado": {
+    titleKey: "escena",
+    subtitleKey: "decision",
+    listCols: ["toma_elegida", "fecha_visionado", "estado_aviso"],
+    addLabel: "+ Registrar visionado",
+    special: "buscador",
+    tabs: [
+      { label: "Decisión", keys: ["escena", "fecha_visionado", "decision", "toma_elegida", "tomas_backup"] },
+      { label: "Notas", keys: ["nota_interpretacion", "nota_tecnica", "motivo_repeticion"] },
+      { label: "Seguimiento", keys: ["avisar_a", "estado_aviso"] },
+    ],
+  },
+  "rrhh-plan-bienestar": {
+    titleKey: "riesgo",
+    subtitleKey: "origen",
+    listCols: ["formacion_obligatoria", "estado"],
+    addLabel: "+ Agregar riesgo",
+    tabs: [
+      { label: "Normativa", keys: ["origen", "normativa", "cargos_afectados", "estado", "fuente"] },
+      { label: "Formación y medidas", keys: ["formacion_obligatoria", "medidas"] },
+      { label: "Empleados", keys: ["empleados"] },
+    ],
+  },
   "ej-coproducciones": {
     titleKey: "empresa",
     subtitleKey: "pais",
@@ -6233,14 +6593,50 @@ export function EntidadTabsBoard({
           {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : (
-        <div className="hp-etb-list">
-          {visibles.map((f) => (
-            <div className="hp-etb-row" key={f.id} onClick={() => { setAbiertoId(f.id); setTab(0); }}>
+        <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-list hp-etb-list-rail" : "hp-etb-list"}>
+          {visibles.map((f) => {
+            const isRrhh = herramientaId === "rrhh-plan-bienestar";
+            const rrhhOrigen = isRrhh ? (f.datos?.origen || "") : "";
+            const rrhhAccentColor = isRrhh ? rrhhAccent(rrhhOrigen) : "";
+            const rrhhEmpleadosN = isRrhh ? parseArr<Record<string, string>>(f.datos?.empleados).length : 0;
+            const rrhhFormacion = isRrhh ? (f.datos?.formacion_obligatoria || "") : "";
+            return (
+            <div
+              className={isRrhh ? "hp-etb-row hp-etb-row-card hp-rrhh-card" : "hp-etb-row"}
+              style={isRrhh ? { "--rrhh-accent": `var(--${rrhhAccentColor})` } as React.CSSProperties : undefined}
+              key={f.id}
+              onClick={() => { setAbiertoId(f.id); setTab(0); }}
+            >
+              {isRrhh && (
+                <div className="hp-rrhh-card-top">
+                  {rrhhOrigen && <span className="hp-rrhh-origen-badge">{rrhhOrigen}</span>}
+                  {rrhhFormacion === "Sí — hipótesis, validar con PRL externo" && (
+                    <Icon name="alert-triangle" className="hp-rrhh-warn-ico" />
+                  )}
+                </div>
+              )}
               <div className="hp-etb-row-title">
                 <div className="hp-etb-row-name">{f.datos?.[cfg.titleKey] || colTitle?.label || "—"}</div>
-                {cfg.subtitleKey && <div className="hp-etb-row-sub">{f.datos?.[cfg.subtitleKey] || ""}</div>}
+                {cfg.subtitleKey && (() => {
+                  const subCol = colByKey.get(cfg.subtitleKey);
+                  const subVal = f.datos?.[cfg.subtitleKey] || "";
+                  if (subVal && subCol?.tipo === "estado") {
+                    return <span className={`hp-etb-badge seg-${estadoTono(subVal)}`}>{subVal}</span>;
+                  }
+                  return <div className="hp-etb-row-sub">{subVal}</div>;
+                })()}
               </div>
-              {cfg.listCols.map((k) => {
+              {isRrhh && (
+                <div className="hp-rrhh-card-badges">
+                  <span className="hp-rrhh-emp-count-badge">
+                    <Icon name="users" /> {rrhhEmpleadosN} {rrhhEmpleadosN === 1 ? "empleado" : "empleados"}
+                  </span>
+                  {rrhhFormacion && (
+                    <span className={`hp-rrhh-formacion-badge tono-${estadoTono(rrhhFormacion)}`}>{rrhhFormacion.replace("Sí — ", "")}</span>
+                  )}
+                </div>
+              )}
+              {!isRrhh && cfg.listCols.map((k) => {
                 const c = colByKey.get(k);
                 if (!c) return null;
                 const v = f.datos?.[k] ?? "";
@@ -6257,6 +6653,9 @@ export function EntidadTabsBoard({
                   const n = parseArr<Record<string, string>>(v).length;
                   return <div className="hp-etb-row-cell" key={k}>{n} {c.label.toLowerCase()}</div>;
                 }
+                if (k === "toma_elegida" && v) {
+                  return <div className="hp-etb-row-take" key={k} title="Toma elegida (circled take)">● {v}</div>;
+                }
                 return <div className="hp-etb-row-cell" key={k}>{v || "—"}</div>;
               })}
               {cfg.special === "subvencion-risk" && (() => {
@@ -6269,7 +6668,7 @@ export function EntidadTabsBoard({
               })()}
               <span className="hp-etb-open">Abrir ›</span>
             </div>
-          ))}
+          );})}
         </div>
       )}
 
@@ -8868,6 +9267,7 @@ function ChecklistTool({
   asegurar,
   onGuardar,
   onVisionar,
+  itemsPrecargados,
 }: {
   fila: Fila | undefined;
   editable: boolean;
@@ -8875,9 +9275,14 @@ function ChecklistTool({
   asegurar: () => Promise<Fila>;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onVisionar: (id: string) => void;
+  itemsPrecargados?: string[];
 }) {
   const t = useTranslations("hp");
+  const sinGuardar = !fila?.datos?.items;
   const items: Item[] = (() => {
+    if (sinGuardar && itemsPrecargados?.length) {
+      return itemsPrecargados.map((texto) => ({ texto, hecho: false }));
+    }
     try { return JSON.parse(fila?.datos?.items ?? "[]"); } catch { return []; }
   })();
   const [nuevo, setNuevo] = useState("");
@@ -9157,6 +9562,49 @@ const EJ_MODELO: Ejemplo[] = [
 // reutilizan patrones compartidos (FichaEquipo / AgendaDia / DocStatusBoard).
 // Los componentes bespoke definen sus ejemplos inline; estos son para el resto.
 export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+  "dir-decisiones-visionado": [
+    {
+      escena: "Esc. 14 — Cocina, discusión", fecha_visionado: "2026-11-10", decision: "Aprobada (circled)",
+      toma_elegida: "Toma 7", tomas_backup: "Toma 4",
+      nota_interpretacion: "La 7 tiene el quiebre de voz más contenido; mejor arco con el plano anterior.",
+      nota_tecnica: "Cámara: foco impecable en la 7. Sonido: boom entra levemente en plano en la 4, por eso queda de backup.",
+      avisar_a: JSON.stringify(["Montaje", "Script / continuidad"]),
+      estado_aviso: "Confirmado por el destinatario",
+    },
+    {
+      escena: "Esc. 22 — Auto, de noche", fecha_visionado: "2026-11-12", decision: "A repetir",
+      toma_elegida: "", tomas_backup: "Toma 2 (de emergencia)",
+      nota_interpretacion: "Interpretación correcta en todas las tomas.",
+      nota_tecnica: "Discrepancia cámara/sonido: foco perdido en la 1 y la 3 (luz de calle muy baja); en la 2 el sonido tiene ruido de tránsito que tapa diálogo clave.",
+      motivo_repeticion: "Ninguna toma cumple foto + sonido a la vez. Se repite con reflector adicional y bloqueo de calle.",
+      avisar_a: JSON.stringify(["Fotografía", "Sonido", "Producción"]),
+      estado_aviso: "Avisado",
+    },
+    {
+      escena: "Esc. 31 — Oficina, despido", fecha_visionado: "2026-11-13", decision: "Backup",
+      toma_elegida: "", tomas_backup: "Toma 5",
+      nota_interpretacion: "La 5 queda como respaldo; falta ver la 6 y 7 (no transferidas aún) antes de circular.",
+      nota_tecnica: "Sonido limpio en la 5. Pendiente de confirmar foco en 6/7 con DIT.",
+      avisar_a: JSON.stringify(["Postproducción"]),
+      estado_aviso: "Sin avisar",
+    },
+    {
+      escena: "Esc. 8 — Balcón, amanecer", fecha_visionado: "2026-11-14", decision: "Pendiente de ver",
+      toma_elegida: "", tomas_backup: "",
+      nota_interpretacion: "",
+      nota_tecnica: "Dailies de esta escena llegan hoy a la tarde desde el laboratorio.",
+      avisar_a: JSON.stringify([]),
+      estado_aviso: "Sin avisar",
+    },
+    {
+      escena: "Esc. 45 — Hospital, despedida", fecha_visionado: "2026-11-15", decision: "Aprobada (circled)",
+      toma_elegida: "Toma 3", tomas_backup: "Toma 1, Toma 6",
+      nota_interpretacion: "La 3 es la única donde ambos actores llegan juntos al clímax emocional sin sobreactuar.",
+      nota_tecnica: "Cámara y sonido limpios en las tres. Se eligió por interpretación, no por técnica.",
+      avisar_a: JSON.stringify(["Montaje", "Script / continuidad", "Postproducción"]),
+      estado_aviso: "Avisado",
+    },
+  ],
   "ej-coproducciones": [
     {
       empresa: "Atlántida Films", pais: "Francia", rol: "Coproductor oficial", equity: "18", aportacion: "70000",
@@ -9183,6 +9631,72 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     {
       organismo: "Ibermedia", expediente: "IB-2026-0912", concedido: "80000", fecha_concesion: "2026-04-15", plazo_limite: "2026-07-01",
       partidas: JSON.stringify([{ partida: "Coproducción", presupuesto: "80000", justificado: "80000" }]),
+    },
+  ],
+  "rrhh-plan-bienestar": [
+    {
+      riesgo: "Doble de acción en pasarela sobre el embalse (secuencia 20)", origen: "Secuencia de riesgo (especialistas)",
+      normativa: "Ley 31/1995 de PRL, art. 19 — formación centrada en el puesto y en los riesgos específicos de la tarea real, no del guion.",
+      cargos_afectados: JSON.stringify(["Reparto secundario (dobles)", "Dirección", "Producción"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Evaluación en curso",
+      medidas: "Arnés con doble anclaje, red de seguridad bajo la pasarela, briefing de coordinador de especialistas antes de cada toma, ambulancia en set.",
+      fuente: "Risk XXI — PRL en rodajes con especialistas.",
+      empleados: JSON.stringify([
+        { nombre: "Rubén Castaños", cargo: "Doble de acción", departamento: "Reparto" },
+        { nombre: "Iker Mendoza", cargo: "Coordinador de especialistas", departamento: "Dirección" },
+        { nombre: "Laura Vidal", cargo: "Ayudante de dirección", departamento: "Dirección" },
+      ]),
+    },
+    {
+      riesgo: "Menor de 12 años en escena del funeral (secuencia 20)", origen: "Menor en escena",
+      normativa: "Autorización de la autoridad laboral + evaluación de riesgos individualizada de la tarea concreta (no genérica).",
+      cargos_afectados: JSON.stringify(["Casting (menores)", "Dirección", "Producción"]),
+      formacion_obligatoria: "Sí — hipótesis, validar con PRL externo", estado: "Pendiente de evaluar",
+      medidas: "Tutor legal y profesor en set, jornada reducida, zona de descanso propia, sin exposición a la secuencia de riesgo del embalse.",
+      fuente: "Geseme — hipótesis, no confirmado con fuente oficial BOE.",
+      empleados: JSON.stringify([
+        { nombre: "Noa Ferreiro (menor)", cargo: "Actriz infantil", departamento: "Reparto" },
+        { nombre: "Marina Ferreiro", cargo: "Tutora legal", departamento: "Reparto" },
+        { nombre: "Pablo Esteve", cargo: "Casting de menores", departamento: "Casting" },
+      ]),
+    },
+    {
+      riesgo: "Proximidad a agua en el embalse (grúa y cámara en orilla)", origen: "Proximidad a agua",
+      normativa: "Ley 31/1995, art. 20 — medidas de emergencia y primeros auxilios ante riesgo de inmersión.",
+      cargos_afectados: JSON.stringify(["Dirección de fotografía", "Maquinista", "Todo el equipo"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Cubierta",
+      medidas: "Chalecos salvavidas en la orilla, socorrista acuático en set, perímetro balizado, protocolo de rescate acordado con el coordinador de especialistas.",
+      fuente: "Ley 31/1995 de PRL.",
+      empleados: JSON.stringify([
+        { nombre: "Gonzalo Peix", cargo: "Director de fotografía", departamento: "Fotografía" },
+        { nombre: "Edurne Lantz", cargo: "Maquinista", departamento: "Fotografía" },
+        { nombre: "Tomás Abril", cargo: "Grip jefe", departamento: "Fotografía" },
+        { nombre: "Cora Salinas", cargo: "DIT", departamento: "Fotografía" },
+      ]),
+    },
+    {
+      riesgo: "Manejo de grúa Technocrane y generador en exterior", origen: "Atrezzo/maquinaria",
+      normativa: "III Convenio colectivo estatal de la industria audiovisual, BOE-A-2024-6846 — formación específica de maquinaria y seguro de accidentes.",
+      cargos_afectados: JSON.stringify(["Maquinista", "Eléctricos/Gaffer"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Evaluación en curso",
+      medidas: "Certificado de operador de grúa, inspección diaria de cables y anclajes, zona de exclusión bajo el brazo de la grúa.",
+      fuente: "BOE-A-2024-6846.",
+      empleados: JSON.stringify([
+        { nombre: "Edurne Lantz", cargo: "Maquinista", departamento: "Fotografía" },
+        { nombre: "Dario Nuñez", cargo: "Eléctrico / Gaffer", departamento: "Fotografía" },
+      ]),
+    },
+    {
+      riesgo: "Rodaje exterior en ola de calor (más de 10 jornadas seguidas)", origen: "Exposición prolongada/climática",
+      normativa: "Ley 31/1995, art. 19 — adaptación de la jornada a condiciones climáticas extremas.",
+      cargos_afectados: JSON.stringify(["Todo el equipo"]),
+      formacion_obligatoria: "No aplica", estado: "Pendiente de evaluar",
+      medidas: "Pausas de hidratación cada 60 min, carpas de sombra en set, reprogramar tomas de exterior fuera de las horas de máxima radiación.",
+      fuente: "Risk XXI.",
+      empleados: JSON.stringify([
+        { nombre: "Sofía Reyes", cargo: "Ayudante de producción", departamento: "Producción" },
+        { nombre: "Kepa Aguirre", cargo: "Técnico de sonido", departamento: "Sonido" },
+      ]),
     },
   ],
   "ej-agenda-ejecutivo": [

@@ -2,7 +2,7 @@
 // heredan color y tamaño via currentColor + font-size del padre). Sin
 // dependencias. Reemplazan los emojis/símbolos sueltos por iconografía pro.
 
-type IconName =
+export type IconName =
   | "bold" | "italic" | "underline" | "strikethrough" | "heading" | "paragraph"
   | "list" | "list-ordered" | "align-left" | "align-center" | "align-right"
   | "trash" | "x" | "eye" | "pencil" | "check" | "arrow-right" | "arrow-left"
@@ -12,7 +12,8 @@ type IconName =
   | "folder" | "paperclip" | "grip-vertical" | "upload" | "map-pin" | "clock"
   | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
   | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase"
-  | "camera" | "palette" | "sound" | "leaf" | "megaphone";
+  | "camera" | "palette" | "sound" | "leaf" | "megaphone"
+  | "link" | "quote" | "minus" | "undo" | "redo";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   bold: <><path d="M6 4h8a4 4 0 0 1 0 8H6z" /><path d="M6 12h9a4 4 0 0 1 0 8H6z" /></>,
@@ -79,6 +80,11 @@ const PATHS: Record<IconName, React.ReactNode> = {
   sound: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></>,
   leaf: <><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></>,
   megaphone: <><path d="m3 11 18-5v12L3 13" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></>,
+  link: <><path d="M9 17H7A5 5 0 0 1 7 7h2" /><path d="M15 7h2a5 5 0 1 1 0 10h-2" /><line x1="8" y1="12" x2="16" y2="12" /></>,
+  quote: <><path d="M9 7H6a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v2a2 2 0 0 1-2 2" /><path d="M19 7h-3a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v2a2 2 0 0 1-2 2" /></>,
+  minus: <><line x1="4" y1="12" x2="20" y2="12" /></>,
+  undo: <><path d="M4 7v6h6" /><path d="M20 18a8 8 0 0 0-8-8 8 8 0 0 0-6.3 3" /></>,
+  redo: <><path d="M20 7v6h-6" /><path d="M4 18a8 8 0 0 1 8-8 8 8 0 0 1 6.3 3" /></>,
 };
 
 export default function Icon({

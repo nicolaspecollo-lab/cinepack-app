@@ -26,7 +26,6 @@ export type Columna = {
   soloLectura?: boolean; // la celda se muestra siempre como texto plano, nunca editable (ej. un código calculado)
   sinAcento?: boolean;   // sin fondo de color por valor ("tono") ni data bar — para columnas donde ese acento no comunica nada real
   sub?: Columna[];     // para tipo "repetible": columnas de cada fila hija (hitos, documentos, historial...)
-  notificaDepartamento?: boolean; // tipo "estado" cuyas `opciones` son nombres de departamento: al cambiar a un valor real (no "Ninguno"/"—"), dispara una consulta real (tabla `consultas`, mismo mecanismo que ConsultasPanel) dirigida a ese departamento — ver `dispararConsultaDesdeFila` en HerramientaPanel.tsx.
 };
 
 export type Herramienta = {
@@ -37,6 +36,12 @@ export type Herramienta = {
   columnas?: Columna[]; // tabla / galería (campos extra de cada tarjeta)
   campos?: Columna[];   // ficha (pares clave/valor)
   estiloDoc?: string;   // nota (className de plantilla elegida al crear)
+  // Agrupa visualmente las filas por el valor de esta columna (fila
+  // divisoria cada vez que cambia, igual que Presupuesto agrupa por
+  // departamento) — declarativo, para cualquier tabla cuyo contenido tenga
+  // un eje natural de agrupación, sin tener que hardcodear un panel a medida.
+  agruparPor?: string;
+  itemsPrecargados?: string[]; // checklist: puntos reales del cargo que se cargan solos la primera vez, en vez de una lista vacía genérica
 };
 
 export type CargoTools = {
@@ -2610,21 +2615,25 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Dirección": {
       departamento: [calendarioEnsayos],
       cargo: [
+        { id: "dir-notas-escena", nombre: "Notas de dirección por escena", tipo: "nota" },
         {
-          id: "dir-notas-escena", nombre: "Notas de dirección por escena", tipo: "tabla",
-          hint: "Una nota por escena rodada: intención de dirección, qué toma usar y por qué, y qué queda pendiente para Guion/Script/Postproducción. No duplica Continuidad fotográfica (Script) ni Decisiones de visionado (dailies) — esto es la lectura del director, no la de continuidad ni la de montaje.",
+          id: "dir-decisiones-visionado",
+          nombre: "Decisiones de visionado (dailies)",
+          tipo: "tabla",
+          hint: "Ficha por toma visionada: circled take, notas y aviso a montaje/script/postpro.",
           columnas: [
-            { key: "escena", label: "Escena" },
-            { key: "fecha", label: "Fecha de rodaje", tipo: "fecha" as const },
-            { key: "intencion", label: "Intención de dirección", tipo: "largo" },
-            { key: "toma_elegida", label: "Toma recomendada" },
-            { key: "motivo_toma", label: "Por qué esa toma", tipo: "largo" },
-            { key: "pendiente_para", label: "Pendiente para", tipo: "estado", opciones: ["Guion", "Script/Continuidad", "Postproducción", "Ninguno"], notificaDepartamento: true },
-            { key: "nota_pendiente", label: "Detalle del pendiente", tipo: "largo" },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Por revisar", "Resuelta", "Pendiente de dailies"] },
+            { key: "escena", label: "Escena / toma" },
+            { key: "fecha_visionado", label: "Fecha de visionado", tipo: "fecha" as const },
+            { key: "decision", label: "Decisión", tipo: "estado", opciones: ["Aprobada (circled)", "Backup", "A repetir", "Pendiente de ver"] },
+            { key: "toma_elegida", label: "Toma elegida" },
+            { key: "tomas_backup", label: "Tomas de respaldo" },
+            { key: "nota_interpretacion", label: "Nota de interpretación", tipo: "largo" },
+            { key: "nota_tecnica", label: "Nota técnica (foto/sonido/arte)", tipo: "largo" },
+            { key: "motivo_repeticion", label: "Motivo si se repite", tipo: "largo" },
+            { key: "avisar_a", label: "Avisar a", tipo: "chips", opciones: ["Montaje", "Script / continuidad", "Postproducción", "Fotografía", "Sonido", "Producción"] },
+            { key: "estado_aviso", label: "Estado del aviso", tipo: "estado", opciones: ["Sin avisar", "Avisado", "Confirmado por el destinatario"] },
           ],
         },
-        { id: "dir-decisiones-visionado", nombre: "Decisiones de visionado (dailies)", tipo: "checklist" },
         ACCESOS,
       ],
     },
@@ -2918,7 +2927,22 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Auxiliar de cámara": {
       departamento: [inventarioCamara],
       cargo: [
-        { id: "foto-checklist-descarga", nombre: "Checklist de descarga, backup y etiquetado de tarjetas", tipo: "checklist" },
+        {
+          id: "foto-checklist-descarga", nombre: "Checklist de descarga, backup y etiquetado de tarjetas", tipo: "checklist",
+          hint: "Regla 3-2-1 (3 copias, 2 soportes distintos, 1 fuera del set) y verificación por checksum antes de formatear ninguna tarjeta — basado en la guía de gestión de material de Netflix y en cómo trabajan Silverstack/Hedge/Limecraft con manifiestos MHL.",
+          itemsPrecargados: [
+            "Verificar que hay tarjetas para cubrir al menos 2 días de rodaje antes de empezar (no formatear sobre el límite)",
+            "Copia 1: volcado al storage principal de rodaje con verificación por checksum (MD5/xxHash) activada",
+            "Copia 2: segunda copia en soporte físico distinto (no el mismo tipo de disco que la copia 1)",
+            "Copia 3: copia fuera del set (nube o disco que sale del lugar de rodaje ese mismo día) — la regla 3-2-1 no se cumple con 2 copias en el mismo sitio",
+            "Confirmar que se generó un manifiesto MHL en la carpeta raíz de cada tarjeta/rollo, no solo un resumen en pantalla",
+            "Comparar los checksums de las copias 2 y 3 contra los de la copia 1 (no asumir que copiar = verificar)",
+            "Inspección visual: abrir una muestra de los clips copiados y confirmar que reproducen bien, no solo que el tamaño de archivo coincide",
+            "Anotar en el reporte de cámara qué tarjetas quedan libres para reutilizar y cuáles se guardan hasta confirmación de montaje",
+            "Etiquetar físicamente cada tarjeta ya liberada (rollo, fecha, cámara) antes de devolverla al set",
+            "Nunca formatear una tarjeta sin las 3 copias confirmadas Y la verificación de checksum superada",
+          ],
+        },
       ],
     },
     "Maquinista": {
@@ -3014,7 +3038,20 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Ayudantía de dirección de arte": {
       departamento: [moodboardArte, planosDecorado, desgloseAtrezzo, desgloseVestuario],
       cargo: [
-        { id: "arte-checklist-tareas", nombre: "Checklist de seguimiento por escena/decorado", tipo: "checklist" },
+        {
+          id: "arte-checklist-tareas", nombre: "Checklist de seguimiento por escena/decorado", tipo: "checklist",
+          hint: "Las fotos de continuidad y el strike del decorado son las dos tareas que más se olvidan en rodajes reales según las guías de ayudante de dirección de arte y decorador de ScreenSkills/local44 — por eso están precargadas, no para completar todo en un día.",
+          itemsPrecargados: [
+            "Fotos de continuidad del decorado tomadas y subidas antes de que termine la jornada (acabados, attrezzo, envejecido)",
+            "Fotos de continuidad del día anterior revisadas contra el decorado actual antes de la llamada general",
+            "Desglose del decorado por escena entregado a attrezzo/decoración con lo que necesita cada una",
+            "Objetos sensibles (armas, vehículos, alcohol, comida, marcas, documentos, fotos) marcados para gestión/permiso especial",
+            "Confirmación de que el decorado coincide con el plano de arte aprobado antes de dar \"listo para rodar\"",
+            "Lista de attrezzo de la escena revisada contra el desglose de guion (nada de más, nada de menos)",
+            "Plan de strike del decorado preparado antes del último día de uso (qué se devuelve, qué se guarda, qué se descarta)",
+            "Devolución de attrezzo/alquileres y caja chica de decoración registrada al cierre del decorado",
+          ],
+        },
       ],
     },
     "Construcción de decorados": {
@@ -3288,7 +3325,18 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Protagonista": {
       departamento: [fichaPersonaje, guionMarcado, calendarioCitaciones, vestMaqAsignado, contratoIndividual],
       cargo: [
-        { id: "rep-diario-personaje", nombre: "Diario de personaje / preparación del rol", tipo: "nota" },
+        {
+          id: "rep-diario-personaje", nombre: "Diario de personaje / preparación del rol", tipo: "tabla",
+          hint: "Una entrada por escena rodada, no un cuaderno de texto suelto: estado emocional del personaje en ese punto de la historia, continuidad física para que coincida entre tomas separadas por días, y la entrada de diario en primera persona (técnica de \"character log\" descrita en bibliografía de interpretación para cine).",
+          columnas: [
+            { key: "escena", label: "Escena" },
+            { key: "fecha", label: "Fecha de rodaje", tipo: "fecha" as const },
+            { key: "momento_historia", label: "Momento de la historia para el personaje", tipo: "largo" },
+            { key: "estado_emocional", label: "Estado emocional", tipo: "estado", opciones: ["Calma", "Tensión", "Duelo", "Esperanza", "Ira", "Otro"] },
+            { key: "continuidad_fisica", label: "Continuidad física (vestuario, pelo, heridas, objetos)", tipo: "largo" },
+            { key: "entrada_diario", label: "Entrada de diario (en primera persona, como el personaje)", tipo: "largo" },
+          ],
+        },
         repNotasEscenasDetalle,
         repResearchPersonaje,
         repPronunciacion,
@@ -3538,7 +3586,29 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Sonorización final": {
       departamento: [versionesCorte, notasVisionadoPost],
       cargo: [
-        { id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "checklist" },
+        {
+          id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "tabla",
+          hint: "Una tarjeta por formato de entrega, con su checklist de QC y progreso verificable.",
+          // Vista bespoke en tarjetas (ChecklistMezclaBoard en HerramientaPanel):
+          // una fila = un formato de entrega, no un ítem suelto. El QC real
+          // vive en la columna "repetible" qc_items (sub-filas con su propio
+          // check), así cada tarjeta muestra su progreso real de verificación
+          // en vez de una tabla plana de ítems.
+          columnas: [
+            { key: "formato", label: "Formato de entrega", tipo: "estado", opciones: ["Stereo 2.0", "5.1 Surround", "M&E (Music & Effects)", "DCP", "Streaming / Broadcast"] },
+            { key: "spec_objetivo", label: "Spec objetivo (plataforma/festival)", tipo: "largo" },
+            { key: "formato_tecnico", label: "Formato técnico (sample rate/bits/contenedor)", tipo: "texto" },
+            {
+              key: "qc_items", label: "Checklist de QC", tipo: "repetible",
+              sub: [
+                { key: "item", label: "Ítem de QC" },
+                { key: "verificado", label: "Verificado", tipo: "estado", opciones: ["No", "Sí"] },
+              ],
+            },
+            { key: "estado", label: "Estado general", tipo: "estado", opciones: ["Pendiente", "En mezcla", "Entregado"] },
+            { key: "notas", label: "Notas" },
+          ],
+        },
       ],
     },
     "Coordinación de postproducción": {
@@ -3586,7 +3656,25 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Coordinación de bienestar": {
       departamento: [descansosLegales, protocoloRiesgos, canalIncidencias],
       cargo: [
-        { id: "rrhh-plan-bienestar", nombre: "Plan de bienestar y actividades del equipo", tipo: "checklist" },
+        {
+          id: "rrhh-plan-bienestar", nombre: "Seguridad laboral y formación obligatoria", tipo: "tabla",
+          hint: "Riesgo → normativa → formación obligatoria → empleados. No sustituye el protocolo de riesgos ni el canal de incidencias.",
+          columnas: [
+            { key: "riesgo", label: "Riesgo identificado" },
+            { key: "origen", label: "Origen del riesgo", tipo: "estado", opciones: ["Trabajo en altura", "Proximidad a agua", "Menor en escena", "Atrezzo/maquinaria", "Secuencia de riesgo (especialistas)", "Exposición prolongada/climática", "Otro"] },
+            { key: "normativa", label: "Normativa aplicable", tipo: "largo" },
+            { key: "cargos_afectados", label: "Cargos afectados", tipo: "chips", opciones: ["Maquinista", "Eléctricos/Gaffer", "DIT", "Dirección de fotografía", "Reparto secundario (dobles)", "Casting (menores)", "Dirección", "Producción", "Todo el equipo"] },
+            { key: "formacion_obligatoria", label: "Formación obligatoria", tipo: "estado", opciones: ["Sí — confirmada", "Sí — hipótesis, validar con PRL externo", "No aplica"] },
+            { key: "medidas", label: "Medidas de seguridad", tipo: "largo" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente de evaluar", "Evaluación en curso", "Cubierta"] },
+            { key: "fuente", label: "Fuente / nota", tipo: "largo" },
+            { key: "empleados", label: "Empleados que necesitan esta formación", tipo: "repetible", sub: [
+              { key: "nombre", label: "Nombre" },
+              { key: "cargo", label: "Cargo" },
+              { key: "departamento", label: "Departamento" },
+            ]},
+          ],
+        },
       ],
     },
   },

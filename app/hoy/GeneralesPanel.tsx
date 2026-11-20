@@ -13,6 +13,7 @@ import AccesosPanel from "./AccesosPanel";
 import PipelinePanel from "./PipelinePanel";
 import HerramientaPanel from "./HerramientaPanel";
 import OrdenRodajePanel from "./OrdenRodajePanel";
+import DocumentosProyectoPanel from "./DocumentosProyectoPanel";
 import CalendarioProyecto from "./CalendarioProyecto";
 import { GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
 import { createClient } from "@/lib/supabase/client";
@@ -24,7 +25,7 @@ export type Sub =
   | "comunicados" | "consultas" | "guion" | "guiontec"
   | "calendario" | "plan" | "orden" | "escena3d"
   | "espacio" | "visionado" | "equipo" | "accesos" | "pipeline"
-  | "contactos" | "wrap";
+  | "contactos" | "wrap" | "documentos";
 
 // Departamentos que pueden EDITAR cada herramienta general.
 // Ejecutivo siempre puede editar (se suma en canEdit abajo).
@@ -76,6 +77,7 @@ const SUBS: SubDef[] = [
   { id: "pipeline",       label: "Pipeline",             desc: "Financiación, acuerdos y entregables ejecutivos.",       editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo", "Producción"], cond: (d) => d === "Ejecutivo" || d === "Producción" },
   { id: "contactos",      label: "Contactos emergencia", desc: "Teléfonos y contactos clave para urgencias.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
   { id: "wrap",           label: "Checklist wrap",       desc: "Lista de control para el cierre del rodaje.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
+  { id: "documentos",     label: "Documentos",           desc: "Hojas y documentos en blanco compartidos con todo el proyecto.", editores: null,                                                      visores: "todos" },
 ];
 
 export default function GeneralesPanel({
@@ -160,6 +162,7 @@ export default function GeneralesPanel({
         {sub === "wrap" && (
           <HerramientaPanel departamento="General" herramienta={GENERAL_CHECKLIST_WRAP} fullName={fullName} editable={ce("wrap")} />
         )}
+        {sub === "documentos" && <DocumentosProyectoPanel />}
       </div>
     </div>
   );
