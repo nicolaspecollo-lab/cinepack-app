@@ -278,14 +278,9 @@ export default function HerramientasPanel({
       <button className={`gen-subtab ${creandoEspacio ? "on" : ""}`} onClick={abrirCreador}>
         + {t("workspaceCardTitle")}
       </button>
-      {/* Oculto hasta que docsBlanco.ts persista en Supabase real (hoy es
-          stub de localStorage, sin sync entre dispositivos/usuarios) —
-          Corte parcial del 20/11, pendiente expediente transversal. */}
-      {false && (
-        <button className={`gen-subtab ${docsBlancoAbierto ? "on" : ""}`} onClick={abrirDocsBlanco}>
-          + Hoja / Documento
-        </button>
-      )}
+      <button className={`gen-subtab ${docsBlancoAbierto ? "on" : ""}`} onClick={abrirDocsBlanco}>
+        + Hoja / Documento
+      </button>
       {cargoSubTools.map((h) => (
         <button
           key={h.id}

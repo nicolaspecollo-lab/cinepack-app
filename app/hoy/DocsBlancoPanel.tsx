@@ -8,14 +8,13 @@
 // tipada, es un lienzo de hoja de cálculo (Univer) o un documento rico
 // (TipTap) — ver arquitectura.md, sección 3 y 5.
 //
-// Persistencia de este prototipo: localStorage vía app/hoy/docsBlanco.ts
-// (documentado ahí como STUB, no Supabase real — ver SQL de migración en
-// supabase/migrations/20261116000000_docs_blanco.sql).
+// Persiste contra Supabase real — tabla public.docs_blanco (ver docsBlanco.ts).
 // ===========================================================================
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Icon from "../components/Icon";
+import { createClient } from "@/lib/supabase/client";
 import {
   type DocBlanco,
   type TipoDocBlanco,
@@ -47,6 +46,7 @@ export default function DocsBlancoPanel({
   fullName: string;
   ownerId: string;
 }) {
+  const supabase = useState(() => createClient())[0];
   const [projectId, setProjectId] = useState<string | null>(null);
   const [docs, setDocs] = useState<DocBlanco[]>([]);
   const [abierto, setAbierto] = useState<DocBlanco | null>(null);
@@ -55,8 +55,8 @@ export default function DocsBlancoPanel({
     setProjectId(localStorage.getItem("cinepack-proyecto-id"));
   }, []);
 
-  function recargar(pid: string) {
-    setDocs(listarDocsBlanco(pid, ownerId, departamento));
+  async function recargar(pid: string) {
+    setDocs(await listarDocsBlanco(supabase, pid, ownerId, departamento));
   }
 
   useEffect(() => {
@@ -67,9 +67,9 @@ export default function DocsBlancoPanel({
     return <div className="docb-loading">Elegí un proyecto para usar esta herramienta.</div>;
   }
 
-  function crear(tipo: TipoDocBlanco) {
+  async function crear(tipo: TipoDocBlanco) {
     const nombre = tipo === "hoja" ? "Hoja sin título" : "Documento sin título";
-    const doc = crearDocBlanco({
+    const doc = await crearDocBlanco(supabase, {
       projectId: projectId!,
       tipo,
       nombre,
@@ -78,7 +78,8 @@ export default function DocsBlancoPanel({
       departamento,
       contenidoInicial: {},
     });
-    recargar(projectId!);
+    if (!doc) return;
+    await recargar(projectId!);
     setAbierto(doc);
   }
 
@@ -92,30 +93,30 @@ export default function DocsBlancoPanel({
 
   function guardarContenido(contenido: Record<string, unknown>) {
     if (!abierto) return;
-    guardarContenidoDocBlanco(projectId!, abierto.id, contenido);
+    guardarContenidoDocBlanco(supabase, abierto.id, contenido);
   }
 
-  function renombrar(valor: string) {
+  async function renombrar(valor: string) {
     if (!abierto) return;
     const nombre = valor.trim() || (abierto.tipo === "hoja" ? "Hoja sin título" : "Documento sin título");
-    renombrarDocBlanco(projectId!, abierto.id, nombre);
+    await renombrarDocBlanco(supabase, abierto.id, nombre);
     setAbierto({ ...abierto, nombre });
-    recargar(projectId!);
+    await recargar(projectId!);
   }
 
-  function toggleCompartido() {
+  async function toggleCompartido() {
     if (!abierto) return;
     const visibilidad = abierto.visibilidad === "compartido" ? "privado" : "compartido";
-    cambiarVisibilidadDocBlanco(projectId!, abierto.id, visibilidad);
+    await cambiarVisibilidadDocBlanco(supabase, abierto.id, visibilidad);
     setAbierto({ ...abierto, visibilidad });
-    recargar(projectId!);
+    await recargar(projectId!);
   }
 
-  function borrar(d: DocBlanco) {
+  async function borrar(d: DocBlanco) {
     if (!confirm(`¿Eliminar "${d.nombre}"? No se puede deshacer.`)) return;
-    eliminarDocBlanco(projectId!, d.id);
+    await eliminarDocBlanco(supabase, d.id);
     if (abierto?.id === d.id) setAbierto(null);
-    recargar(projectId!);
+    await recargar(projectId!);
   }
 
   if (abierto) {

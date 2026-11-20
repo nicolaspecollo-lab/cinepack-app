@@ -77,10 +77,7 @@ const SUBS: SubDef[] = [
   { id: "pipeline",       label: "Pipeline",             desc: "Financiación, acuerdos y entregables ejecutivos.",       editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo", "Producción"], cond: (d) => d === "Ejecutivo" || d === "Producción" },
   { id: "contactos",      label: "Contactos emergencia", desc: "Teléfonos y contactos clave para urgencias.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
   { id: "wrap",           label: "Checklist wrap",       desc: "Lista de control para el cierre del rodaje.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
-  // Oculto hasta que docsBlanco.ts persista en Supabase real (hoy es stub de
-  // localStorage, sin sync entre dispositivos/usuarios) — Corte parcial del
-  // 20/11, pendiente expediente transversal.
-  // { id: "documentos",  label: "Documentos",           desc: "Hojas y documentos en blanco compartidos con todo el proyecto.", editores: null,                                                      visores: "todos" },
+  { id: "documentos",     label: "Documentos",           desc: "Hojas y documentos en blanco compartidos con todo el proyecto.", editores: null,                                                      visores: "todos" },
 ];
 
 export default function GeneralesPanel({

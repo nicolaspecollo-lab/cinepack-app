@@ -5,18 +5,17 @@
 -- Ver oficina/expedientes/2026-11-16_transversal_hoja-documento-blanco/arquitectura.md
 -- (apartado 3, modelo de datos, autor: arquitecto de integración).
 --
--- NOTA DE ALCANCE: esta migración NO fue corrida contra un proyecto Supabase
--- real en esta sesión (no hay entorno levantado) — queda pendiente de
--- verificación real antes de dar el expediente por cerrado (riesgo #3 del
--- apartado 6 de arquitectura.md). El prototipo de UI (app/hoy/DocsBlancoPanel.tsx,
--- app/hoy/docsBlanco.ts) persiste hoy en localStorage como stub, con el mismo
--- contrato de datos definido acá, para poder migrarlo a Supabase real sin
--- rediseñar la UI una vez este archivo se valide.
+-- NOTA DE ALCANCE (corrección 21/11/2026): esta migración tenía un bug real
+-- — `project_id` referenciaba `public.projects(id)`, una tabla que no existe
+-- en este proyecto (la tabla real es `public.proyectos`). Nico lo encontró
+-- al intentar aplicarla contra producción y la excluyó del Corte del 20/11
+-- hasta corregirlo. Corregido acá; probada contra `cinepack-dev` antes de
+-- pedir un Corte nuevo para hoja de cálculo / documento en blanco.
 -- ============================================================================
 
 create table if not exists public.docs_blanco (
   id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id),
+  project_id uuid not null references public.proyectos(id),
   tipo text not null check (tipo in ('hoja', 'documento')),
   nombre text not null,                  -- lo pone el usuario al crear
   contenido jsonb not null default '{}', -- snapshot Univer (hoja) / JSON ProseMirror TipTap (documento)
