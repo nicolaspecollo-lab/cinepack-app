@@ -36,6 +36,11 @@ export type Herramienta = {
   columnas?: Columna[]; // tabla / galería (campos extra de cada tarjeta)
   campos?: Columna[];   // ficha (pares clave/valor)
   estiloDoc?: string;   // nota (className de plantilla elegida al crear)
+  // Agrupa visualmente las filas por el valor de esta columna (fila
+  // divisoria cada vez que cambia, igual que Presupuesto agrupa por
+  // departamento) — declarativo, para cualquier tabla cuyo contenido tenga
+  // un eje natural de agrupación, sin tener que hardcodear un panel a medida.
+  agruparPor?: string;
   itemsPrecargados?: string[]; // checklist: puntos reales del cargo que se cargan solos la primera vez, en vez de una lista vacía genérica
 };
 
@@ -3581,7 +3586,29 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Sonorización final": {
       departamento: [versionesCorte, notasVisionadoPost],
       cargo: [
-        { id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "checklist" },
+        {
+          id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "tabla",
+          hint: "Una tarjeta por formato de entrega, con su checklist de QC y progreso verificable.",
+          // Vista bespoke en tarjetas (ChecklistMezclaBoard en HerramientaPanel):
+          // una fila = un formato de entrega, no un ítem suelto. El QC real
+          // vive en la columna "repetible" qc_items (sub-filas con su propio
+          // check), así cada tarjeta muestra su progreso real de verificación
+          // en vez de una tabla plana de ítems.
+          columnas: [
+            { key: "formato", label: "Formato de entrega", tipo: "estado", opciones: ["Stereo 2.0", "5.1 Surround", "M&E (Music & Effects)", "DCP", "Streaming / Broadcast"] },
+            { key: "spec_objetivo", label: "Spec objetivo (plataforma/festival)", tipo: "largo" },
+            { key: "formato_tecnico", label: "Formato técnico (sample rate/bits/contenedor)", tipo: "texto" },
+            {
+              key: "qc_items", label: "Checklist de QC", tipo: "repetible",
+              sub: [
+                { key: "item", label: "Ítem de QC" },
+                { key: "verificado", label: "Verificado", tipo: "estado", opciones: ["No", "Sí"] },
+              ],
+            },
+            { key: "estado", label: "Estado general", tipo: "estado", opciones: ["Pendiente", "En mezcla", "Entregado"] },
+            { key: "notas", label: "Notas" },
+          ],
+        },
       ],
     },
     "Coordinación de postproducción": {

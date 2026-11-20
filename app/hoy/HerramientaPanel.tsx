@@ -9,7 +9,7 @@ import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
-import Icon from "../components/Icon";
+import Icon, { type IconName } from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
 import CpSelect from "../components/CpSelect";
 import CarpetaNavegable from "./CarpetaNavegable";
@@ -240,6 +240,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "rep-vest-maq" ||
     id === "rep-pronunciacion" ||
     SON_MIC_IDS.has(id) ||
+    id === "post-checklist-mezcla" ||
     id === "son-plan-directo" ||
     id === "son-control-baterias" ||
     id === "son-playlist-musica-temp" ||
@@ -1423,6 +1424,17 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "post-checklist-mezcla" && (
+        <ChecklistMezclaBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "son-plan-directo" && (
         <PlanDirecto
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -1607,6 +1619,7 @@ function HerramientaData({
           }}
           moneda={meta?.datos?._moneda}
           onCambiarMoneda={cambiarMoneda}
+          agruparPor={herramienta.agruparPor}
         />
       )}
 
@@ -3688,6 +3701,294 @@ function ControlGenerador({
         </div>
       )}
     </>
+  );
+}
+
+// ===========================================================================
+// SONORIZACIÓN FINAL — checklist de mezcla por formato de entrega
+// Nico rebotó 3 veces la tabla plana pidiendo explícitamente abandonar el
+// patrón tabla/checklist genérico: una tarjeta por formato de entrega, con
+// sus specs objetivo arriba y un checklist de QC real con progreso visible
+// ("4/7 verificado"), no columnas sueltas.
+// ===========================================================================
+type QcItem = { item: string; verificado: string };
+
+function qcProgreso(items: QcItem[]): { verificados: number; total: number } {
+  const total = items.length;
+  const verificados = items.filter((it) => it.verificado === "Sí").length;
+  return { verificados, total };
+}
+
+const FORMATO_ACCENT: Record<string, string> = {
+  "Stereo 2.0": "var(--cyan)",
+  "5.1 Surround": "var(--violet)",
+  "M&E (Music & Effects)": "var(--gold)",
+  DCP: "var(--indigo)",
+  "Streaming / Broadcast": "var(--orange)",
+};
+
+const FORMATO_ICON: Record<string, IconName> = {
+  "Stereo 2.0": "sound",
+  "5.1 Surround": "sound",
+  "M&E (Music & Effects)": "sliders",
+  DCP: "film",
+  "Streaming / Broadcast": "cloud",
+};
+
+const QC_SUGERIDOS: Record<string, string[]> = {
+  "Stereo 2.0": [
+    "Loudness integrado dentro del target (LUFS)",
+    "True peak dentro del límite (dBTP)",
+    "Fase mono-compatible verificada",
+    "Sync de audio/video verificado en todo el metraje",
+    "Sin clipping ni distorsión en picos",
+    "Fade in/out de cabeza y cola correctos",
+    "Exportado en el formato/contenedor pedido",
+  ],
+  "5.1 Surround": [
+    "Loudness integrado dentro del target (LUFS)",
+    "True peak por canal dentro del límite (dBTP)",
+    "Downmix a estéreo revisado (fase, sin cancelaciones)",
+    "LFE dentro del rango (sin exceso de graves)",
+    "Paneo e imagen surround consistentes",
+    "Sync de audio/video verificado en todo el metraje",
+    "Exportado en el formato/contenedor pedido",
+  ],
+  "M&E (Music & Effects)": [
+    "Diálogo completamente removido (sin residuos)",
+    "Música y efectos balanceados sin el diálogo",
+    "Loudness integrado dentro del target (LUFS)",
+    "Sync de audio/video verificado en todo el metraje",
+    "Sin huecos donde había diálogo (efectos de ambiente cubren)",
+    "Exportado en el formato/contenedor pedido",
+  ],
+  DCP: [
+    "Loudness/nivel de referencia de sala verificado",
+    "Canales mapeados correctamente (5.1/7.1 según spec del DCP)",
+    "Sync de audio/video verificado en todo el metraje",
+    "Sample rate y bit depth exactos al spec DCP (48kHz/24-bit)",
+    "Sin clipping ni distorsión en picos",
+    "Exportado y encapsulado según spec del laboratorio/festival",
+  ],
+  "Streaming / Broadcast": [
+    "Loudness integrado dentro del target de la plataforma (LUFS)",
+    "True peak dentro del límite de la plataforma (dBTP)",
+    "Sync de audio/video verificado en todo el metraje",
+    "Metadata de loudness embebida (si la plataforma la pide)",
+    "Sin clipping ni distorsión en picos",
+    "Exportado en el formato/contenedor pedido por la plataforma",
+  ],
+};
+
+function ChecklistMezclaBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const colFormato = columnas.find((c) => c.key === "formato");
+  const colSpec = columnas.find((c) => c.key === "spec_objetivo");
+  const colFormatoTec = columnas.find((c) => c.key === "formato_tecnico");
+  const colQc = columnas.find((c) => c.key === "qc_items");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colNotas = columnas.find((c) => c.key === "notas");
+  const formatosUsados = new Set(filas.map((f) => f.datos?.[colFormato?.key ?? "formato"] ?? ""));
+  const formatosDisponibles = (colFormato?.opciones ?? []).filter((op) => !formatosUsados.has(op));
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  function agregarFormato(formato: string) {
+    const sugeridos = QC_SUGERIDOS[formato] ?? [];
+    const qc: QcItem[] = sugeridos.map((item) => ({ item, verificado: "No" }));
+    onCrear({ formato, qc_items: JSON.stringify(qc) });
+  }
+
+  const totalFormatos = filas.length;
+  const formatosCompletos = filas.filter((f) => {
+    const qc = parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]);
+    const { verificados, total } = qcProgreso(qc);
+    return total > 0 && verificados === total;
+  }).length;
+  const qcGlobal = filas.reduce(
+    (acc, f) => {
+      const { verificados, total } = qcProgreso(parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]));
+      return { verificados: acc.verificados + verificados, total: acc.total + total };
+    },
+    { verificados: 0, total: 0 }
+  );
+  const pctGlobal = qcGlobal.total > 0 ? Math.round((qcGlobal.verificados / qcGlobal.total) * 100) : 0;
+
+  return (
+    <div className="hp-mezcla-wrap">
+      {totalFormatos > 0 && (
+        <div className="hp-mezcla-resumen">
+          <div className="hp-mezcla-resumen-stat">
+            <span className="hp-mezcla-resumen-n">{formatosCompletos}/{totalFormatos}</span>
+            <span className="hp-mezcla-resumen-l">formatos completos</span>
+          </div>
+          <div className="hp-mezcla-resumen-bar"><div className="hp-mezcla-resumen-bar-fill" style={{ width: `${pctGlobal}%` }} /></div>
+          <span className="hp-mezcla-resumen-pct">{pctGlobal}% QC verificado en total</span>
+        </div>
+      )}
+      <div className="hp-mezcla-grid">
+        {filas.map((f) => {
+          const formato = f.datos?.[colFormato?.key ?? "formato"] ?? "";
+          const accent = FORMATO_ACCENT[formato] ?? "var(--acc)";
+          const icono: IconName = FORMATO_ICON[formato] ?? "sound";
+          const qc = parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]);
+          const { verificados, total } = qcProgreso(qc);
+          const pct = total > 0 ? Math.round((verificados / total) * 100) : 0;
+          const completo = total > 0 && verificados === total;
+
+          function setQc(next: QcItem[]) {
+            set(f, colQc?.key ?? "qc_items", JSON.stringify(next));
+          }
+          function toggleItem(idx: number) {
+            if (!editable) return;
+            const next = qc.map((it, i) => (i === idx ? { ...it, verificado: it.verificado === "Sí" ? "No" : "Sí" } : it));
+            setQc(next);
+          }
+          function agregarItem() {
+            setQc([...qc, { item: "", verificado: "No" }]);
+          }
+          function borrarItem(idx: number) {
+            setQc(qc.filter((_, i) => i !== idx));
+          }
+
+          return (
+            <div className={`hp-mezcla-card${completo ? " on" : ""}`} key={f.id} style={{ "--formato-accent": accent } as React.CSSProperties}>
+              <div className="hp-mezcla-head">
+                <span className="hp-mezcla-icono" style={{ color: accent }}><Icon name={icono} /></span>
+                <span className="hp-mezcla-formato">{formato || "—"}</span>
+                {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar">✕</button>}
+              </div>
+
+              <div className="hp-mezcla-progreso">
+                <div className="hp-mezcla-bar"><div className="hp-mezcla-bar-fill" style={{ width: `${pct}%` }} /></div>
+                <span className="hp-mezcla-progreso-txt">{verificados}/{total} verificado{total === 1 ? "" : "s"}</span>
+              </div>
+
+              {colEstado && (
+                <EstadoSeg
+                  valor={f.datos?.[colEstado.key] ?? ""}
+                  opciones={colEstado.opciones ?? []}
+                  onPick={(v) => set(f, colEstado.key, v)}
+                  editable={editable}
+                  color
+                />
+              )}
+
+              <div className="hp-mezcla-specs">
+                {colSpec && (
+                  <textarea
+                    className="hp-mezcla-spec"
+                    defaultValue={f.datos?.[colSpec.key] ?? ""}
+                    placeholder={colSpec.label}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, colSpec.key, e.target.value)}
+                    rows={2}
+                  />
+                )}
+                {colFormatoTec && (
+                  <input
+                    className="hp-mezcla-tec"
+                    defaultValue={f.datos?.[colFormatoTec.key] ?? ""}
+                    placeholder={colFormatoTec.label}
+                    readOnly={!editable}
+                    onBlur={(e) => set(f, colFormatoTec.key, e.target.value)}
+                  />
+                )}
+              </div>
+
+              <div className="hp-mezcla-qc">
+                <span className="hp-mezcla-qc-label">Checklist de QC</span>
+                {qc.map((it, idx) => (
+                  <div className={`hp-mezcla-qc-item${it.verificado === "Sí" ? " on" : ""}`} key={idx}>
+                    <button
+                      type="button"
+                      className="hp-mezcla-qc-check"
+                      onClick={() => toggleItem(idx)}
+                      disabled={!editable}
+                      aria-pressed={it.verificado === "Sí"}
+                      title={it.verificado === "Sí" ? "Verificado" : "Marcar como verificado"}
+                    >
+                      {it.verificado === "Sí" ? "✓" : ""}
+                    </button>
+                    <input
+                      className="hp-mezcla-qc-text"
+                      defaultValue={it.item}
+                      placeholder="Ítem de QC"
+                      readOnly={!editable}
+                      onBlur={(e) => {
+                        const next = qc.map((q, i) => (i === idx ? { ...q, item: e.target.value } : q));
+                        setQc(next);
+                      }}
+                    />
+                    {editable && (
+                      <button className="hp-mezcla-qc-del" onClick={() => borrarItem(idx)} title="Eliminar ítem">✕</button>
+                    )}
+                  </div>
+                ))}
+                {editable && (
+                  <button className="hp-mezcla-qc-add" onClick={agregarItem}>+ Agregar ítem de QC</button>
+                )}
+              </div>
+
+              {colNotas && (
+                <textarea
+                  className="hp-mezcla-notas"
+                  defaultValue={f.datos?.[colNotas.key] ?? ""}
+                  placeholder={colNotas.label}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, colNotas.key, e.target.value)}
+                  rows={2}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {editable && formatosDisponibles.length > 0 && (
+        <div className="hp-mezcla-agregar">
+          <span className="hp-mezcla-agregar-label">Agregar tarjeta de formato</span>
+          <div className="hp-mezcla-agregar-row">
+            {formatosDisponibles.map((formato) => {
+              const accent = FORMATO_ACCENT[formato] ?? "var(--acc)";
+              const icono: IconName = FORMATO_ICON[formato] ?? "sound";
+              return (
+                <button
+                  key={formato}
+                  className="hp-mezcla-agregar-btn"
+                  style={{ "--formato-accent": accent } as React.CSSProperties}
+                  onClick={() => agregarFormato(formato)}
+                >
+                  <Icon name={icono} /> {formato}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {filas.length === 0 && !editable && (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>Sin tarjetas de formato todavía.</p>
+        </div>
+      )}
+    </div>
   );
 }
 
