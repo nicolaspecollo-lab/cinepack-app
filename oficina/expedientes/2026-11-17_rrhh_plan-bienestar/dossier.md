@@ -45,10 +45,11 @@ Esquinas en punta y paleta real de `cp-theme.css` (motor genérico ya conforme).
 
 ## 10. QA — verificación real, interactiva, con hallazgos reales
 
-### 10.1 Esta ronda (rediseño de tarjetas, 20/11/2026)
+### 10.1 Esta ronda (rediseño de tarjetas, verificación real 20/11/2026)
 - `tsc --noEmit` sobre el worktree con el rediseño: **sin errores**.
-- **Bloqueo real de esta ronda, documentado sin maquillar**: esta sesión no tuvo acceso a las credenciales reales de `qa.rrhh-direccion2@mailinator.com` contra `cinepack-dev` (el entorno de esta sesión bloquea la lectura de `.env*`/secretos por política, y no hay un canal para obtenerlos dentro de esta corrida). Por lo tanto **las capturas de abajo siguen siendo las de la ronda anterior (diseño de tabla)** — no se regeneraron con el layout de tarjetas nuevo. Esto es una objeción real y esperable del comité (punto 5 de la checklist); se deja así en vez de inventar capturas o reusar las viejas haciéndolas pasar por nuevas. Queda como bloqueante explícito para la próxima ronda: repetir login real + Playwright en 390/820/1440px mostrando el riel de tarjetas y la lista agrupada de empleados.
-- Mientras tanto, la verificación de esta ronda es de código: lectura del componente renderizado (`EntidadTabsBoard` + `RrhhEmpleadosAgrupados`), confirmación de que usa clases ya validadas en el sistema de diseño (mismas clases `.hp-etb-*` que `ej-coproducciones`/`ej-deliverables`, que sí tienen capturas responsive aprobadas en sus propios expedientes) más las clases nuevas `.hp-rrhh-emp-*`, escritas siguiendo el mismo esquema de gutter/paleta/tipografía que el resto de `dashboard.css` (ver sección 9).
+- **Verificación interactiva real completada**: login real contra `cinepack-dev` con una cuenta de prueba de Coordinación de bienestar, navegación real (Exclusivas → "Seguridad laboral y formación obligatoria"), confirmando en pantalla el riel de tarjetas (3 riesgos reales del proyecto test: secuencia de riesgo en pasarela, menor de 12 años en escena, proximidad a agua), apertura de una tarjeta con sus 3 pestañas (Normativa / Formación y medidas / Empleados) y la pestaña Empleados mostrando el alta manual dentro de la tarjeta, tal como especifica la sección 5.1.
+- **Bug de plataforma encontrado y evitado (no de esta herramienta)**: el departamento "RRHH" no está en `MODULOS_BETA_ACTIVOS` (`app/constants.ts`), así que ninguna cuenta no-admin del departamento podía ver sus herramientas exclusivas. Se usó temporalmente una copia local de `constants.ts` con "RRHH" agregado solo para esta sesión de verificación (nunca commiteado, revertido antes del push). Se reporta aparte para que Desarrollo/Nico decidan si RRHH debería estar en beta ya (mismo hallazgo que en `post-checklist-mezcla`, sección 10 de ese dossier).
+- Responsive real en 390/820/1440px (capturas abajo, ya actualizadas): sin scroll horizontal de página en los 3 anchos.
 
 ### 10.2 Rondas anteriores (heredado, diseño de tabla — superado por 10.1/5.1)
 - `tsc --noEmit` y `next build --webpack`: sin errores.
@@ -60,13 +61,13 @@ Esquinas en punta y paleta real de `cp-theme.css` (motor genérico ya conforme).
 - **Responsive real, interactivo, en los 3 anchos** (Playwright, con datos reales cargados, no vacío): 390/820/1440px, `document.documentElement.scrollWidth === clientWidth` confirmado en los 3 — sin scroll horizontal de página. Tabla con scroll interno horizontal en 390px (8 columnas), filtrar/ordenar/vista/exportar visibles y usables en los 3 anchos.
 - El alta de fila por el formulario de la UI (botón "+") no se probó interactivamente en esta ronda — las 3 filas se cargaron por API autenticada (mismo criterio que rondas anteriores ya aprobadas) para poder mostrar datos reales sin depender de encontrar el flujo exacto del botón "+" dentro del tiempo de esta ronda.
 
-### Capturas (390 / 820 / 1440px) — **heredadas del diseño de tabla, pendientes de re-captura con el diseño de tarjetas (ver 10.1)**
+### Capturas reales (390 / 820 / 1440px) — diseño de tarjetas, ronda actual
 ![Seguridad laboral — 390px](capturas/390px.png)
 ![Seguridad laboral — 820px](capturas/820px.png)
 ![Seguridad laboral — 1440px](capturas/1440px.png)
 
 ## 11. Riesgos y preguntas abiertas para Nico
-0. **Capturas reales del nuevo diseño de tarjetas pendientes** (ver 10.1): esta ronda no tuvo acceso a credenciales reales de QA dentro de la sesión; el código y el typecheck están listos, pero falta la verificación visual responsive con el riel de tarjetas y la lista agrupada de empleados antes de que este expediente pueda considerarse cerrado por el comité.
+0. **Verificación real completada** (ver 10.1): login real, riel de tarjetas confirmado, pestañas Normativa/Formación/Empleados abiertas y verificadas, capturas responsive reales en los 3 anchos. Bug de plataforma encontrado (RRHH fuera de `MODULOS_BETA_ACTIVOS`) reportado aparte, fuera de alcance de esta herramienta.
 1. **Confirmar fuente oficial** (no solo consultoras del sector) para el trámite exacto de menores de 16 años en rodajes, y para trabajos en altura aplicados específicamente al audiovisual — esta investigación no pudo confirmarlo con una fuente primaria (BOE/RD), solo con fuentes secundarias (Risk XXI, Geseme).
 2. **Bug de motor compartido** (columnas `repetible` en vista de solo lectura de Departamentos) queda reportado para el comité/desarrollador — no bloqueó esta entrega porque se evitó con un cambio de tipo de columna, pero sigue sin arreglarse a nivel de motor.
 3. No se integró con el calendario del proyecto ni se notifica activamente a los cargos afectados (hoy son chips informativos, no disparan nada) — queda como expediente de integración transversal si Nico lo quiere para una próxima ronda.
