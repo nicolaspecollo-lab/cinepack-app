@@ -3629,7 +3629,25 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Coordinación de bienestar": {
       departamento: [descansosLegales, protocoloRiesgos, canalIncidencias],
       cargo: [
-        { id: "rrhh-plan-bienestar", nombre: "Plan de bienestar y actividades del equipo", tipo: "checklist" },
+        {
+          id: "rrhh-plan-bienestar", nombre: "Seguridad laboral y formación obligatoria", tipo: "tabla",
+          hint: "Riesgo → normativa → formación obligatoria → empleados. No sustituye el protocolo de riesgos ni el canal de incidencias.",
+          columnas: [
+            { key: "riesgo", label: "Riesgo identificado" },
+            { key: "origen", label: "Origen del riesgo", tipo: "estado", opciones: ["Trabajo en altura", "Proximidad a agua", "Menor en escena", "Atrezzo/maquinaria", "Secuencia de riesgo (especialistas)", "Exposición prolongada/climática", "Otro"] },
+            { key: "normativa", label: "Normativa aplicable", tipo: "largo" },
+            { key: "cargos_afectados", label: "Cargos afectados", tipo: "chips", opciones: ["Maquinista", "Eléctricos/Gaffer", "DIT", "Dirección de fotografía", "Reparto secundario (dobles)", "Casting (menores)", "Dirección", "Producción", "Todo el equipo"] },
+            { key: "formacion_obligatoria", label: "Formación obligatoria", tipo: "estado", opciones: ["Sí — confirmada", "Sí — hipótesis, validar con PRL externo", "No aplica"] },
+            { key: "medidas", label: "Medidas de seguridad", tipo: "largo" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente de evaluar", "Evaluación en curso", "Cubierta"] },
+            { key: "fuente", label: "Fuente / nota", tipo: "largo" },
+            { key: "empleados", label: "Empleados que necesitan esta formación", tipo: "repetible", sub: [
+              { key: "nombre", label: "Nombre" },
+              { key: "cargo", label: "Cargo" },
+              { key: "departamento", label: "Departamento" },
+            ]},
+          ],
+        },
       ],
     },
   },
