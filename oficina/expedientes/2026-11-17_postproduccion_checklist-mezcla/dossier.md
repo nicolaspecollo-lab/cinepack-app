@@ -6,7 +6,17 @@ El candidato original de hoy era `foto-dit-backup` (Backup y verificación de ma
 ## 1. Resumen ejecutivo
 `post-checklist-mezcla` era un checklist genérico sin estructura. Se convirtió en tabla con un registro por ítem de entrega de audio (stem, mezcla final, versión DCP/streaming), apoyada en la práctica real de entregables de audio para cine/streaming (loudness, true-peak, downmix, stems DME).
 
-**Ronda 2 (rebote de Nico — "faltan funciones típicas de tablas... necesito que me sorprendas"):** el problema real no era que faltaran funciones del motor (el buscador, el filtro por columna de estado y el orden por columna ya existían de forma genérica para toda tabla) — era que la herramienta no tenía ningún eje de estructura visible, se veía como una tabla plana sin nada que la distinga de un spreadsheet genérico. Se agregó **agrupación visual real** (`agruparPor`), reutilizando y generalizando el mismo mecanismo que ya usa Presupuesto para agrupar por departamento — antes solo estaba hardcodeado para esa herramienta, ahora es un campo declarativo (`Herramienta.agruparPor`) que cualquier tabla puede usar. Acá agrupa por "Tipo" (stems DME diálogo/música/efectos, mezcla final, versión DCP, versión streaming/broadcast), así el mezclador ve de un vistazo qué le falta por tipo de entrega en vez de escanear filas sueltas.
+**Ronda 2 (rebote de Nico — "faltan funciones típicas de tablas... necesito que me sorprendas"):** el problema real no era que faltaran funciones del motor (el buscador, el filtro por columna de estado y el orden por columna ya existían de forma genérica para toda tabla) — era que la herramienta no tenía ningún eje de estructura visible, se veía como una tabla plana sin nada que la distinga de un spreadsheet genérico. Se agregó **agrupación visual real** (`agruparPor`), reutilizando y generalizando el mismo mecanismo que ya usa Presupuesto para agrupar por departamento.
+
+**Ronda 3 (rebote de Nico, veredicto "le falta bastante" — "Cuadro de celdas. Que no quiero eso. Quiero que pienses como diseñador de una app... Sorprendeme."):** la agrupación de la ronda 2 seguía siendo, en el fondo, una tabla — el feedback de Nico fue explícito en que eso no alcanza. Se abandonó el patrón de tabla/celdas por completo: ahora la unidad de información es **una tarjeta por formato de entrega** (Stereo 2.0, 5.1 Surround, M&E, DCP, Streaming/Broadcast — no una fila por ítem suelto), cada una con su spec objetivo, formato técnico, estado general y un **checklist de QC real con progreso verificable** ("n/m verificado", barra de progreso). Al agregar una tarjeta de un formato se precarga un checklist de QC específico de ESE formato (ver tabla abajo) — no genérico. Esto cierra, con el mismo peso que los 7 puntos de comité, la objeción permanente "mentalidad de diseñador de app, no de planilla" que Nico agregó a `comite-calidad.md` el 18/11.
+
+| Formato | Checklist de QC precargado |
+|---|---|
+| Stereo 2.0 | Loudness/true-peak dentro del target, sin clipping, balance L/R, sync A/V |
+| 5.1 Surround | Loudness integrado, true peak por canal, downmix a estéreo revisado (fase, sin cancelaciones), LFE dentro de rango, paneo/imagen surround consistentes, sync A/V, exportado en el formato/contenedor pedido |
+| M&E (Music & Effects) | Ausencia total de diálogo, continuidad de música/efectos en los huecos de diálogo, niveles relativos música/efectos coherentes con la mezcla final, sync A/V |
+| DCP | Mapeo de canales según spec del formato (5.1/7.1), loudness dentro del rango de festival/distribuidor, sin oversampling/clipping, contenedor/formato de archivo validado |
+| Streaming / Broadcast | Loudness integrado según plataforma (Netflix/Amazon/broadcast UE-EEUU difieren), true-peak dentro de límite, metadata de loudness embebida, sync A/V |
 
 ## 2. Cargo y necesidad real
 Departamento Postproducción, cargo Sonorización final. Hoy no hay registro de qué entregables de audio están pendientes, con qué spec de loudness/formato, ni si el downmix 5.1→estéreo se revisó por fase — esto se resuelve hoy en notas sueltas del mezclador, sin visibilidad para Coordinación de postproducción.
@@ -20,8 +30,8 @@ Fuentes: [Audio Delivery Standards - Tools for Film](https://www.toolsforfilm.co
 ## 4. Normativa aplicable
 No aplica normativa española específica (son especificaciones técnicas de plataformas/distribución, no obligación legal).
 
-## 5. Diseño de la herramienta
-Tabla con columnas: Ítem de entrega, Tipo (Stem DME diálogo/música/efectos, Mezcla final, Versión DCP, Versión streaming/broadcast), Spec objetivo (texto largo), Formato técnico (texto largo), Loudness/true-peak verificado (Sí/No/En curso), Downmix 5.1→estéreo revisado por fase (Sí/No aplica/Pendiente), Estado (Pendiente/En mezcla/Entregado), Notas. **Agrupada visualmente por "Tipo"** (fila divisoria cada vez que cambia el tipo de entrega, igual que Presupuesto agrupa por departamento) — generalizamos ese mecanismo a un campo declarativo del motor en vez de dejarlo hardcodeado a una sola herramienta.
+## 5. Diseño de la herramienta (ronda 3 — tarjetas, no tabla)
+Vista bespoke `ChecklistMezclaBoard` (registrada en `tablaTieneVistaBespoke`, igual mecanismo que ya usan `ej-coproducciones`/los demás tableros a medida): una tarjeta horizontal por formato de entrega, con botones "Agregar tarjeta de formato" que precargan el checklist de QC específico de ese formato (ver tabla en sección 1). Cada tarjeta muestra spec objetivo, formato técnico, estado (Pendiente/En mezcla/Entregado), y el checklist de QC con cada ítem marcable (botón ✓/vacío), progreso "n/m verificado" + barra de progreso, y la posibilidad de agregar/borrar ítems de QC sueltos para casos no cubiertos por el precargado. El modelo de datos sigue siendo el motor genérico de `tipo: "tabla"` — una fila = una tarjeta/formato, con la columna `qc_items` de tipo `repetible` guardando el checklist como sub-filas; no hay tabla nueva de Supabase.
 
 ## 6. Integración en 3 niveles
 - **Departamento**: visible para Sonorización final, junto a `versionesCorte`/`notasVisionadoPost` (departamento) ya existentes.
@@ -35,13 +45,15 @@ Sin tabla nueva de Supabase: motor genérico de `tipo: "tabla"`. Privado del car
 Ninguna librería nueva.
 
 ## 9. Sistema de diseño
-Sin cambio de componente visual: renderer genérico ya conforme a `sistema-diseno.md`.
+Componente nuevo (`ChecklistMezclaBoard`, `app/hoy/HerramientaPanel.tsx`) con estilos propios (`.hp-mezcla-*`, `app/hoy/dashboard.css`) usando los tokens existentes del sistema (`--bg-2`, `--line`, `--lime`, `--acc`), responsive desde 640px.
 
 ## 10. QA
 - `tsc --noEmit` sobre todo el proyecto: sin errores de tipos.
-- `next build --webpack` completo: compila sin errores.
-- **Verificación responsive real, ronda 2 (post rebote "necesito que me sorprendas")**: login real contra `cinepack-dev` desde Exclusivas → "Checklist de mezcla y masterización de audio" (navegación real de la app, no un harness — esta vez entrando por el flujo real de pestañas, no por URL directa), con la fila real ya existente (mezcla final de la escena coral, 25+ pistas) mostrada **agrupada bajo el encabezado "MEZCLA FINAL"** — confirmación visual de que `agruparPor` funciona en producción, no solo en el código. Playwright real en 390/820/1440px: `document.documentElement.scrollWidth === clientWidth` en los 3 anchos (sin scroll horizontal de página), tabla usable con scroll interno propio.
-- No se agregaron tests nuevos.
+- **Verificación funcional e interactiva real, ronda 3 (post rebote "le falta bastante" / "sorprendeme")**: login real contra `cinepack-dev` con la cuenta de prueba de Sonorización final (`qa.post-sonorizacion3@mailinator.com`), navegación real por la app (Proyecto de prueba → Exclusivas → Checklist de mezcla y masterización de audio). Se agregó una tarjeta real de formato "5.1 Surround" (precarga de 7 ítems de QC específicos), se marcaron 4 de los 7 ítems como verificados y se confirmó en vivo que el contador pasa de "0/7 verificados" a **"4/7 verificados"** con barra de progreso y tachado visual de los ítems marcados — los cambios persistieron en Supabase (confirmación "✓ Guardado" en pantalla).
+- **Bug de plataforma encontrado y documentado (no de esta herramienta)**: el departamento "Postproducción" no estaba en `MODULOS_BETA_ACTIVOS` (`app/constants.ts`), así que ninguna cuenta no-admin del departamento podía ver NINGUNA herramienta exclusiva de cargo — esto bloqueaba la verificación y es independiente del rediseño. Se usó temporalmente una copia local de `constants.ts` con "Postproducción" agregado solo para esta sesión de verificación (nunca commiteado, revertido antes del push) para poder loguearse y probar con la cuenta real de QA sin escalar privilegios de esa cuenta. Se lo reporta como hallazgo aparte para que Desarrollo/Nico decidan si Postproducción debería estar en beta ya.
+- **Segundo bug de plataforma encontrado (tampoco de esta herramienta)**: en Exclusivas, un efecto que restaura "la última herramienta personal abierta" (`cinepack-open-personal-<depto>`) puede pisar la apertura de cualquier herramienta de cargo recién clickeada si el usuario alguna vez tuvo abierto el tablero personal "Tareas" — en la práctica, antes de este hallazgo, clickear cualquier pestaña de Exclusivas distinta de "Tareas" no hacía nada visible. No se tocó ese código en este expediente (fuera de alcance); se documenta para que Desarrollo lo revise aparte.
+- Responsive real en 390/820/1440px con las capturas de abajo: sin scroll horizontal de página en ningún ancho (`document.documentElement.scrollWidth === clientWidth` confirmado en los 3).
+- No se agregaron tests automatizados nuevos.
 
 ### Capturas reales (390 / 820 / 1440px)
 ![Checklist de mezcla — 390px](capturas/390px.png)
@@ -49,7 +61,8 @@ Sin cambio de componente visual: renderer genérico ya conforme a `sistema-disen
 ![Checklist de mezcla — 1440px](capturas/1440px.png)
 
 ## 11. Pendientes / preguntas abiertas para Nico
-1. Verificación visual responsive: **hecha** (ver sección 10). Sigue abierto el alta/edición end-to-end, bloqueado por falta de una cuenta de prueba real.
+1. Verificación funcional e interactiva real (ronda 3): **hecha** (ver sección 10) — alta de tarjeta, marcado de QC y persistencia confirmados con cuenta real.
 2. Las cifras de loudness citadas varían por fuente y por plataforma — no hay una única cifra "oficial" de CINEPACK; queda como campo de texto libre a completar por producción en cada proyecto, no como validación automática.
 3. No se integró con `checklistEntrega`/Distribución — expediente de integración transversal aparte si Nico lo quiere.
 4. `foto-dit-backup` quedó archivado por duplicado real con `foto-dit-log-backup` — no requiere acción, solo que Nico lo sepa (ver sección 0).
+5. **Dos bugs de plataforma encontrados durante esta verificación, fuera del alcance de este expediente** (ver sección 10): (a) "Postproducción" falta en `MODULOS_BETA_ACTIVOS`, bloqueando a cualquier cuenta no-admin del departamento de ver sus herramientas exclusivas; (b) el restore de "última herramienta personal abierta" en Exclusivas puede pisar la apertura de cualquier otra herramienta de cargo. Recomendado pasarlos a Desarrollo como bugs reales, no parte de este rediseño.

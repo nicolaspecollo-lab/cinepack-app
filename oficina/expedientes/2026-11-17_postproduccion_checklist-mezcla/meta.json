@@ -1,9 +1,9 @@
 {
   "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
   "title": "Checklist de mezcla y masterización de audio",
-  "subtitle": "Ronda 2: agrupación real por tipo de entrega (como Presupuesto agrupa por departamento), ya no una tabla plana. Loudness/downmix verificados en 390/820/1440px.",
+  "subtitle": "Ronda 3: rediseño completo en tarjetas por formato de entrega (Stereo/5.1/M&E/DCP/Streaming), cada una con checklist de QC real y progreso verificable. Ya no es una tabla/planilla.",
   "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
-  "metaItems": [["Fecha", "17 nov 2026"], ["Departamento", "Postproducción · Sonorización final"], ["Oficina", "Desarrollo"]],
+  "metaItems": [["Fecha", "20 nov 2026"], ["Departamento", "Postproducción · Sonorización final"], ["Oficina", "Desarrollo"], ["Ronda", "3"]],
   "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
   "footerNote": "pendiente de tu aprobación final",
   "accent": "#E8A330"
