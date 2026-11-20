@@ -58,6 +58,11 @@ El componente reutiliza al 100% los tokens de `sistema-diseno.md` ya usados por 
 2. La tabla genérica (`stripHtml`, usado por buscador/orden/exportación de cualquier tabla con columnas `chips`/`repetible`) asumía que el valor de la celda siempre era un `string`, pero esas columnas guardan arrays reales — provocaba un crash (`stripHtml(...).toLowerCase is not a function`) al escribir en el buscador de CUALQUIER tabla con una columna de ese tipo, no solo esta. El mismo problema existía en el helper local `actasChips` de este componente. Ambos corregidos para aceptar arrays además de strings/JSON-string — reportado también para que el comité/desarrollador lo tenga presente en futuras herramientas con columnas `chips`.
 Verificación de código: `npx tsc --noEmit` limpio tras ambas correcciones.
 
+### Capturas reales (390 / 820 / 1440px)
+![Actas de reuniones — 390px](capturas/390px.png)
+![Actas de reuniones — 820px](capturas/820px.png)
+![Actas de reuniones — 1440px](capturas/1440px.png)
+
 ## 9. Especificación técnica
 - **Modelo de datos** (`app/herramientas.ts`, `dir-actas` pasa de `tipo: "nota"` a `tipo: "tabla"` con `columnas` reutilizando los tipos existentes de `ColTipo`, sin inventar ninguno):
   - `titulo` (texto) — asunto de la reunión.
