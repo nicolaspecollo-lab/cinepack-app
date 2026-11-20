@@ -3574,7 +3574,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "rrhh-plan-bienestar", nombre: "Seguridad laboral y formación obligatoria", tipo: "tabla",
-          hint: "Sistema real de seguridad laboral: riesgos identificados del rodaje, normativa aplicable (Ley 31/1995 de Prevención de Riesgos Laborales, III Convenio colectivo estatal BOE-A-2024-6846, y normativa de menores en espectáculos/rodajes), qué cargos necesitan formación obligatoria y de qué tipo, y medidas de seguridad estándar del sector por riesgo — no una lista de actividades de bienestar. No sustituye el protocolo de riesgos (`rrhh-protocolo-riesgos`, de Dirección de RRHH) ni el canal de incidencias (`rrhh-incidencias`) — este es el registro vivo de riesgo→normativa→formación→medidas, específico de Coordinación de bienestar.",
+          hint: "Riesgo → normativa → formación obligatoria → empleados. No sustituye el protocolo de riesgos ni el canal de incidencias.",
           columnas: [
             { key: "riesgo", label: "Riesgo identificado" },
             { key: "origen", label: "Origen del riesgo", tipo: "estado", opciones: ["Trabajo en altura", "Proximidad a agua", "Menor en escena", "Atrezzo/maquinaria", "Secuencia de riesgo (especialistas)", "Exposición prolongada/climática", "Otro"] },

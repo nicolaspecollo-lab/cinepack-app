@@ -1018,7 +1018,7 @@ function HerramientaData({
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "rrhh-plan-bienestar" && (
-        <RrhhEmpleadosAgrupados filas={filas} />
+        <RrhhEmpleadosAgrupados filas={filas.length > 0 ? filas : ghostFilas(EJEMPLOS_POR_ID[herramienta.id] ?? [])} />
       )}
 
       {herramienta.tipo === "tabla" && herramienta.id === "ej-pagos-nominas" && (
@@ -5800,6 +5800,23 @@ type RrhhEmpleadoRow = {
   necesidad: string; // nombre del riesgo (fila padre)
   tipoRiesgo: string; // columna "origen" de la fila padre
 };
+// Acento de color por tipo de riesgo (tarjetas de "rrhh-plan-bienestar"):
+// un color con nombre de la paleta real (cp-theme.css) por cada opción de
+// "Origen del riesgo", para que la tarjeta cerrada ya comunique de qué tipo
+// de riesgo se trata de un vistazo (borde + badge), sin tener que abrirla.
+const RRHH_ORIGEN_ACCENT: Record<string, string> = {
+  "Trabajo en altura": "orange",
+  "Proximidad a agua": "cyan",
+  "Menor en escena": "rose",
+  "Atrezzo/maquinaria": "violet",
+  "Secuencia de riesgo (especialistas)": "gold",
+  "Exposición prolongada/climática": "lime",
+  Otro: "indigo",
+};
+function rrhhAccent(origen: string): string {
+  return RRHH_ORIGEN_ACCENT[origen] || "indigo";
+}
+
 const RRHH_AGRUPADORES = [
   { key: "necesidad", label: "Necesidad formativa" },
   { key: "tipoRiesgo", label: "Tipo de riesgo" },
@@ -6263,13 +6280,42 @@ export function EntidadTabsBoard({
         </div>
       ) : (
         <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-list hp-etb-list-rail" : "hp-etb-list"}>
-          {visibles.map((f) => (
-            <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-row hp-etb-row-card" : "hp-etb-row"} key={f.id} onClick={() => { setAbiertoId(f.id); setTab(0); }}>
+          {visibles.map((f) => {
+            const isRrhh = herramientaId === "rrhh-plan-bienestar";
+            const rrhhOrigen = isRrhh ? (f.datos?.origen || "") : "";
+            const rrhhAccentColor = isRrhh ? rrhhAccent(rrhhOrigen) : "";
+            const rrhhEmpleadosN = isRrhh ? parseArr<Record<string, string>>(f.datos?.empleados).length : 0;
+            const rrhhFormacion = isRrhh ? (f.datos?.formacion_obligatoria || "") : "";
+            return (
+            <div
+              className={isRrhh ? "hp-etb-row hp-etb-row-card hp-rrhh-card" : "hp-etb-row"}
+              style={isRrhh ? { "--rrhh-accent": `var(--${rrhhAccentColor})` } as React.CSSProperties : undefined}
+              key={f.id}
+              onClick={() => { setAbiertoId(f.id); setTab(0); }}
+            >
+              {isRrhh && (
+                <div className="hp-rrhh-card-top">
+                  {rrhhOrigen && <span className="hp-rrhh-origen-badge">{rrhhOrigen}</span>}
+                  {rrhhFormacion === "Sí — hipótesis, validar con PRL externo" && (
+                    <Icon name="alert-triangle" className="hp-rrhh-warn-ico" />
+                  )}
+                </div>
+              )}
               <div className="hp-etb-row-title">
                 <div className="hp-etb-row-name">{f.datos?.[cfg.titleKey] || colTitle?.label || "—"}</div>
                 {cfg.subtitleKey && <div className="hp-etb-row-sub">{f.datos?.[cfg.subtitleKey] || ""}</div>}
               </div>
-              {cfg.listCols.map((k) => {
+              {isRrhh && (
+                <div className="hp-rrhh-card-badges">
+                  <span className="hp-rrhh-emp-count-badge">
+                    <Icon name="users" /> {rrhhEmpleadosN} {rrhhEmpleadosN === 1 ? "empleado" : "empleados"}
+                  </span>
+                  {rrhhFormacion && (
+                    <span className={`hp-rrhh-formacion-badge tono-${estadoTono(rrhhFormacion)}`}>{rrhhFormacion.replace("Sí — ", "")}</span>
+                  )}
+                </div>
+              )}
+              {!isRrhh && cfg.listCols.map((k) => {
                 const c = colByKey.get(k);
                 if (!c) return null;
                 const v = f.datos?.[k] ?? "";
@@ -6298,7 +6344,7 @@ export function EntidadTabsBoard({
               })()}
               <span className="hp-etb-open">Abrir ›</span>
             </div>
-          ))}
+          );})}
         </div>
       )}
 
@@ -9212,6 +9258,72 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     {
       organismo: "Ibermedia", expediente: "IB-2026-0912", concedido: "80000", fecha_concesion: "2026-04-15", plazo_limite: "2026-07-01",
       partidas: JSON.stringify([{ partida: "Coproducción", presupuesto: "80000", justificado: "80000" }]),
+    },
+  ],
+  "rrhh-plan-bienestar": [
+    {
+      riesgo: "Doble de acción en pasarela sobre el embalse (secuencia 20)", origen: "Secuencia de riesgo (especialistas)",
+      normativa: "Ley 31/1995 de PRL, art. 19 — formación centrada en el puesto y en los riesgos específicos de la tarea real, no del guion.",
+      cargos_afectados: JSON.stringify(["Reparto secundario (dobles)", "Dirección", "Producción"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Evaluación en curso",
+      medidas: "Arnés con doble anclaje, red de seguridad bajo la pasarela, briefing de coordinador de especialistas antes de cada toma, ambulancia en set.",
+      fuente: "Risk XXI — PRL en rodajes con especialistas.",
+      empleados: JSON.stringify([
+        { nombre: "Rubén Castaños", cargo: "Doble de acción", departamento: "Reparto" },
+        { nombre: "Iker Mendoza", cargo: "Coordinador de especialistas", departamento: "Dirección" },
+        { nombre: "Laura Vidal", cargo: "Ayudante de dirección", departamento: "Dirección" },
+      ]),
+    },
+    {
+      riesgo: "Menor de 12 años en escena del funeral (secuencia 20)", origen: "Menor en escena",
+      normativa: "Autorización de la autoridad laboral + evaluación de riesgos individualizada de la tarea concreta (no genérica).",
+      cargos_afectados: JSON.stringify(["Casting (menores)", "Dirección", "Producción"]),
+      formacion_obligatoria: "Sí — hipótesis, validar con PRL externo", estado: "Pendiente de evaluar",
+      medidas: "Tutor legal y profesor en set, jornada reducida, zona de descanso propia, sin exposición a la secuencia de riesgo del embalse.",
+      fuente: "Geseme — hipótesis, no confirmado con fuente oficial BOE.",
+      empleados: JSON.stringify([
+        { nombre: "Noa Ferreiro (menor)", cargo: "Actriz infantil", departamento: "Reparto" },
+        { nombre: "Marina Ferreiro", cargo: "Tutora legal", departamento: "Reparto" },
+        { nombre: "Pablo Esteve", cargo: "Casting de menores", departamento: "Casting" },
+      ]),
+    },
+    {
+      riesgo: "Proximidad a agua en el embalse (grúa y cámara en orilla)", origen: "Proximidad a agua",
+      normativa: "Ley 31/1995, art. 20 — medidas de emergencia y primeros auxilios ante riesgo de inmersión.",
+      cargos_afectados: JSON.stringify(["Dirección de fotografía", "Maquinista", "Todo el equipo"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Cubierta",
+      medidas: "Chalecos salvavidas en la orilla, socorrista acuático en set, perímetro balizado, protocolo de rescate acordado con el coordinador de especialistas.",
+      fuente: "Ley 31/1995 de PRL.",
+      empleados: JSON.stringify([
+        { nombre: "Gonzalo Peix", cargo: "Director de fotografía", departamento: "Fotografía" },
+        { nombre: "Edurne Lantz", cargo: "Maquinista", departamento: "Fotografía" },
+        { nombre: "Tomás Abril", cargo: "Grip jefe", departamento: "Fotografía" },
+        { nombre: "Cora Salinas", cargo: "DIT", departamento: "Fotografía" },
+      ]),
+    },
+    {
+      riesgo: "Manejo de grúa Technocrane y generador en exterior", origen: "Atrezzo/maquinaria",
+      normativa: "III Convenio colectivo estatal de la industria audiovisual, BOE-A-2024-6846 — formación específica de maquinaria y seguro de accidentes.",
+      cargos_afectados: JSON.stringify(["Maquinista", "Eléctricos/Gaffer"]),
+      formacion_obligatoria: "Sí — confirmada", estado: "Evaluación en curso",
+      medidas: "Certificado de operador de grúa, inspección diaria de cables y anclajes, zona de exclusión bajo el brazo de la grúa.",
+      fuente: "BOE-A-2024-6846.",
+      empleados: JSON.stringify([
+        { nombre: "Edurne Lantz", cargo: "Maquinista", departamento: "Fotografía" },
+        { nombre: "Dario Nuñez", cargo: "Eléctrico / Gaffer", departamento: "Fotografía" },
+      ]),
+    },
+    {
+      riesgo: "Rodaje exterior en ola de calor (más de 10 jornadas seguidas)", origen: "Exposición prolongada/climática",
+      normativa: "Ley 31/1995, art. 19 — adaptación de la jornada a condiciones climáticas extremas.",
+      cargos_afectados: JSON.stringify(["Todo el equipo"]),
+      formacion_obligatoria: "No aplica", estado: "Pendiente de evaluar",
+      medidas: "Pausas de hidratación cada 60 min, carpas de sombra en set, reprogramar tomas de exterior fuera de las horas de máxima radiación.",
+      fuente: "Risk XXI.",
+      empleados: JSON.stringify([
+        { nombre: "Sofía Reyes", cargo: "Ayudante de producción", departamento: "Producción" },
+        { nombre: "Kepa Aguirre", cargo: "Técnico de sonido", departamento: "Sonido" },
+      ]),
     },
   ],
   "ej-agenda-ejecutivo": [

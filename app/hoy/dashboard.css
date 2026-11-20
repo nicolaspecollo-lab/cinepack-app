@@ -5890,6 +5890,43 @@
 .cp-dash .hp-etb-row-card .hp-etb-row-title{ width:100%; }
 .cp-dash .hp-etb-row-card .hp-etb-row-cats{ margin-top:6px; }
 .cp-dash .hp-etb-row-card .hp-etb-open{ margin-top:auto; align-self:flex-end; padding-top:10px; }
+
+/* Tarjetas de riesgo de "rrhh-plan-bienestar" — acento de color por tipo de
+   riesgo + badges visibles en la tarjeta cerrada (cantidad de empleados,
+   severidad de la formación), pedido explícito de Nico para que la tarjeta
+   comunique información de un vistazo sin tener que abrirla. */
+.cp-dash .hp-rrhh-card{
+  position:relative; padding:16px 16px 14px; gap:0; border-color:var(--line);
+  box-shadow:0 10px 24px var(--shadow);
+  transition:transform var(--dur,180ms) ease, box-shadow var(--dur,180ms) ease, border-color var(--dur,180ms) ease;
+}
+.cp-dash .hp-rrhh-card::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--rrhh-accent);
+}
+.cp-dash .hp-rrhh-card:hover{
+  transform:translateY(-3px); box-shadow:0 18px 36px var(--shadow); border-color:var(--rrhh-accent);
+}
+.cp-dash .hp-rrhh-card .hp-etb-row-name{
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:14.5px; letter-spacing:-0.01em; line-height:1.25;
+}
+.cp-dash .hp-rrhh-card .hp-etb-row-sub{ font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; margin-top:4px; }
+.cp-dash .hp-rrhh-card-top{ display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:10px; }
+.cp-dash .hp-rrhh-origen-badge{
+  font-family:'Poppins',sans-serif; font-size:9px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  padding:3px 9px; border:1px solid var(--rrhh-accent); color:var(--rrhh-accent);
+  background:color-mix(in srgb, var(--rrhh-accent) 14%, transparent);
+}
+.cp-dash .hp-rrhh-warn-ico{ color:var(--amber); font-size:15px; flex-shrink:0; }
+.cp-dash .hp-rrhh-card-badges{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; width:100%; }
+.cp-dash .hp-rrhh-emp-count-badge{
+  display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600; color:var(--text);
+  background:var(--panel); border:1px solid var(--line); padding:4px 9px;
+}
+.cp-dash .hp-rrhh-emp-count-badge svg{ font-size:12px; color:var(--muted); }
+.cp-dash .hp-rrhh-formacion-badge{ font-size:9.5px; font-weight:700; padding:4px 9px; text-transform:uppercase; letter-spacing:.03em; }
+.cp-dash .hp-rrhh-formacion-badge.tono-ok{ background:color-mix(in srgb, var(--lime) 18%, transparent); color:var(--lime); }
+.cp-dash .hp-rrhh-formacion-badge.tono-warn{ background:color-mix(in srgb, var(--amber) 18%, transparent); color:var(--amber); }
+.cp-dash .hp-rrhh-formacion-badge.tono-info, .cp-dash .hp-rrhh-formacion-badge.tono-neutral{ background:var(--panel); color:var(--muted); }
 .cp-dash .hp-etb-row{ display:flex; align-items:center; gap:14px; padding:11px 4px; border-bottom:1px solid var(--line); cursor:pointer; }
 .cp-dash .hp-etb-row:hover{ background:var(--bg-2); }
 .cp-dash .hp-etb-row-title{ flex:1; min-width:0; }
