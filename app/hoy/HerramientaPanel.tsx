@@ -1017,6 +1017,10 @@ function HerramientaData({
         )}</VistaConEjemplos>
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "rrhh-plan-bienestar" && (
+        <RrhhEmpleadosAgrupados filas={filas} />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "ej-pagos-nominas" && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <PagosNominasBoard
@@ -5783,7 +5787,87 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "rrhh-plan-bienestar"]);
+
+// Debajo de las tarjetas de riesgo de "rrhh-plan-bienestar": todos los
+// empleados cargados a mano (sub-filas `empleados`, repetible) en una sola
+// lista, agrupable por necesidad formativa / tipo de riesgo / departamento /
+// cargo / nombre — pedido explícito de Nico (18/11/2026), no una tabla plana.
+type RrhhEmpleadoRow = {
+  nombre: string;
+  cargo: string;
+  departamento: string;
+  necesidad: string; // nombre del riesgo (fila padre)
+  tipoRiesgo: string; // columna "origen" de la fila padre
+};
+const RRHH_AGRUPADORES = [
+  { key: "necesidad", label: "Necesidad formativa" },
+  { key: "tipoRiesgo", label: "Tipo de riesgo" },
+  { key: "departamento", label: "Departamento" },
+  { key: "cargo", label: "Cargo" },
+] as const;
+
+function RrhhEmpleadosAgrupados({ filas }: { filas: Fila[] }) {
+  const [agrupador, setAgrupador] = useState<(typeof RRHH_AGRUPADORES)[number]["key"]>("necesidad");
+
+  const empleados: RrhhEmpleadoRow[] = [];
+  for (const f of filas) {
+    const subs = parseArr<Record<string, string>>(f.datos?.empleados);
+    for (const s of subs) {
+      if (!s?.nombre) continue;
+      empleados.push({
+        nombre: s.nombre,
+        cargo: s.cargo || "—",
+        departamento: s.departamento || "—",
+        necesidad: f.datos?.riesgo || "—",
+        tipoRiesgo: f.datos?.origen || "—",
+      });
+    }
+  }
+
+  if (empleados.length === 0) return null;
+
+  const grupos = new Map<string, RrhhEmpleadoRow[]>();
+  for (const e of empleados) {
+    const k = e[agrupador] || "—";
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k)!.push(e);
+  }
+
+  return (
+    <div className="hp-rrhh-emp">
+      <div className="hp-rrhh-emp-head">
+        <span className="hp-rrhh-emp-title">Empleados con formación pendiente ({empleados.length})</span>
+        <div className="hp-rrhh-emp-tabs">
+          {RRHH_AGRUPADORES.map((g) => (
+            <span
+              key={g.key}
+              className={`hp-rrhh-emp-tab${agrupador === g.key ? " on" : ""}`}
+              onClick={() => setAgrupador(g.key)}
+            >
+              Por {g.label.toLowerCase()}
+            </span>
+          ))}
+        </div>
+      </div>
+      {[...grupos.entries()].map(([grupo, items]) => (
+        <div className="hp-rrhh-emp-group" key={grupo}>
+          <div className="hp-rrhh-emp-group-title">{grupo} <span className="hp-rrhh-emp-count">{items.length}</span></div>
+          <div className="hp-rrhh-emp-rows">
+            {items.map((e, i) => (
+              <div className="hp-rrhh-emp-row" key={i}>
+                <span className="hp-rrhh-emp-nombre">{e.nombre}</span>
+                <span className="hp-rrhh-emp-meta">{e.cargo} · {e.departamento}</span>
+                {agrupador !== "necesidad" && <span className="hp-rrhh-emp-chip">{e.necesidad}</span>}
+                {agrupador !== "tipoRiesgo" && <span className="hp-rrhh-emp-chip">{e.tipoRiesgo}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type EntidadTab = { label: string; keys: string[] };
 type EntidadConfig = {
@@ -5796,6 +5880,17 @@ type EntidadConfig = {
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
+  "rrhh-plan-bienestar": {
+    titleKey: "riesgo",
+    subtitleKey: "origen",
+    listCols: ["formacion_obligatoria", "estado"],
+    addLabel: "+ Agregar riesgo",
+    tabs: [
+      { label: "Normativa", keys: ["origen", "normativa", "cargos_afectados", "estado", "fuente"] },
+      { label: "Formación y medidas", keys: ["formacion_obligatoria", "medidas"] },
+      { label: "Empleados", keys: ["empleados"] },
+    ],
+  },
   "ej-coproducciones": {
     titleKey: "empresa",
     subtitleKey: "pais",
@@ -6167,9 +6262,9 @@ export function EntidadTabsBoard({
           {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : (
-        <div className="hp-etb-list">
+        <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-list hp-etb-list-rail" : "hp-etb-list"}>
           {visibles.map((f) => (
-            <div className="hp-etb-row" key={f.id} onClick={() => { setAbiertoId(f.id); setTab(0); }}>
+            <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-row hp-etb-row-card" : "hp-etb-row"} key={f.id} onClick={() => { setAbiertoId(f.id); setTab(0); }}>
               <div className="hp-etb-row-title">
                 <div className="hp-etb-row-name">{f.datos?.[cfg.titleKey] || colTitle?.label || "—"}</div>
                 {cfg.subtitleKey && <div className="hp-etb-row-sub">{f.datos?.[cfg.subtitleKey] || ""}</div>}

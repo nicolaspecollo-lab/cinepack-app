@@ -3584,6 +3584,11 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
             { key: "medidas", label: "Medidas de seguridad", tipo: "largo" },
             { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente de evaluar", "Evaluación en curso", "Cubierta"] },
             { key: "fuente", label: "Fuente / nota", tipo: "largo" },
+            { key: "empleados", label: "Empleados que necesitan esta formación", tipo: "repetible", sub: [
+              { key: "nombre", label: "Nombre" },
+              { key: "cargo", label: "Cargo" },
+              { key: "departamento", label: "Departamento" },
+            ]},
           ],
         },
       ],
