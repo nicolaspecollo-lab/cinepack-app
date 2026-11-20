@@ -3,6 +3,8 @@
 ## 1. Resumen ejecutivo
 `dir-decisiones-visionado` era un `checklist` vacío sin `hint` (confirmado en `inventario.md`). Se rediseñó como una ficha navegable por toma/escena visionada —no una tabla plana— con pestañas de Decisión, Notas y Seguimiento, reutilizando el motor `EntidadTabsBoard` ya construido en `app/hoy/HerramientaPanel.tsx`. `npx tsc --noEmit` pasa limpio. Se verificó interactivamente de verdad: login con `qa.dir-direccion2@mailinator.com` (perfil con membresía completa, ver nota de la cuenta en sección 8), creación real de una ficha, carga de sus 3 pestañas, y capturas Playwright en 390/820/1440px sin scroll horizontal. El hallazgo inicial de esta sesión (bloqueo total por falta de credenciales de Supabase) era un error de proceso, no de entorno: las credenciales sí existen en `/home/user/cinepack-app/.env.local` y el 500 era por no levantar el dev server con `NODE_USE_ENV_PROXY=1`. Corregido eso, el expediente queda **aprobado** con evidencia real, no archivado.
 
+**Corrección 20/11/2026 (veredicto "Lejos de lo esperado")**: Nico marcó que el hint dominaba la pantalla, que la ficha no tenía ningún nivel de diseño visual real y que probablemente faltaba variedad de datos de ejemplo. Se corrigieron los tres puntos (hint a una línea, badges de color por decisión + acento de color en la toma elegida en la tarjeta cerrada, 5 fichas de ejemplo variadas con discrepancias cámara/sonido) y se volvió a verificar con QA real (Playwright, misma cuenta, capturas nuevas en 390/820/1440px) — ver sección 8.1.
+
 ## 2. Origen de la idea
 Viene del inventario: `dir-decisiones-visionado` está en la lista cerrada de 16 herramientas `nota`/`checklist` vacías confirmadas por grep (`oficina/inventario.md`). Priorizada hoy por el director de oficina según la regla de backlog (vacías primero).
 
@@ -36,16 +38,23 @@ Flujo: el director (o script, en su nombre) crea una ficha por cada toma decidid
 - **Otros departamentos**: el campo "Avisar a" es el gancho de integración — señala qué departamentos deben enterarse de la decisión (Montaje/Postproducción para la toma elegida y notas técnicas; Script para continuidad). Como en el expediente de `dir-notas-escena`, hoy esto es un campo visible, no una notificación activa entre departamentos — eso sería un expediente de integración transversal aparte.
 
 ## 8. Diseño visual (capturas móvil 390px, tablet 820px, escritorio 1440px)
-QA real con Playwright contra `cinepack-dev`, server local levantado con `NODE_USE_ENV_PROXY=1 PORT=3100 npm run dev` (sin esto, las llamadas salientes del servidor a Supabase dan `ENOTFOUND`, no es falta de credenciales — las credenciales de `.env.local` sí estaban bien).
-- **Cuenta usada**: `qa.dir-direccion2@mailinator.com` (password `CinepackQA-2026!tester`). La cuenta sin sufijo `qa.dir-direccion@mailinator.com` de `cargos.md` existe en `auth.users` pero sin perfil/membresía (hallazgo ya documentado por la Oficina de QA la noche del 18/11 en la rama `oficina-qa/2026-11-18-noche1`) — se usó la cuenta "2", que sí tiene perfil y es miembro del proyecto de prueba `[PROYECTO TEST] La sed de los almendros`.
-- **Interacción real realizada**: login → selección de proyecto → pestaña Exclusivas → "Decisiones de visionado (dailies)" → "Borrar ejemplo y comenzar" → crear ficha real ("Escena 42 — Toma 7") → completar las 3 pestañas (Decisión: estado "Aprobada (circled)", toma elegida, toma de respaldo; Notas: nota de interpretación y nota técnica; Seguimiento: chips "Montaje" y "Script / continuidad", estado "Avisado") → autoguardado confirmado ("Guardado" visible, log de "Cambios recientes" con cada edición) → limpieza de filas vacías de prueba.
-- **Capturas** (ver `captura-390.png`, `captura-820.png`, `captura-1440.png` en esta misma carpeta): vista de lista en 390px y 1440px, y la ficha abierta con sus 3 pestañas en 820px — sin scroll horizontal de página en ningún breakpoint.
 
-![Vista de lista — 390px](captura-390.png)
+### 8.1 Corrección aplicada (20/11/2026, veredicto "Lejos de lo esperado")
+Nico calificó la entrega anterior "Lejos de lo esperado": el hint dominaba la pantalla, la ficha no tenía ningún nivel de diseño visual real, y probablemente faltaba variedad de datos de ejemplo. Se corrigieron los tres puntos:
+- **Hint**: de un párrafo de 2 líneas a una sola línea ("Ficha por toma visionada: circled take, notas y aviso a montaje/script/postpro.").
+- **Tarjeta cerrada con nivel visual real**: la "Decisión" ahora se muestra como *badge* de color (verde para "Aprobada (circled)", ámbar para "Pendiente de ver", rojo para "A repetir", neutral para "Backup" — misma heurística de tono que el resto de la app, tokens de `sistema-diseno.md`) en vez de texto plano; la "Toma elegida" se muestra con un punto de acento de color (`var(--acc)`) y tipografía de encabezado, visible sin abrir la ficha.
+- **Datos de ejemplo variados**: se precargaron 5 tomas/escenas de ejemplo con decisiones distintas (2 aprobadas/circled, 1 backup, 1 a repetir, 1 pendiente de ver), incluyendo las discrepancias cámara/sonido de la sección 4 (foco perdido vs. ruido de tránsito tapando diálogo en "Esc. 22 — Auto, de noche").
 
-![Ficha con pestañas — 820px](captura-820.png)
+QA real con Playwright contra `cinepack-dev`, server local levantado con `NODE_USE_ENV_PROXY=1 PORT=4123 npm run dev`.
+- **Cuenta usada**: `qa.dir-direccion2@mailinator.com` (password `CinepackQA-2026!tester`), perfil con membresía completa en `[PROYECTO TEST] La sed de los almendros`, cargo Dirección.
+- **Interacción real realizada**: login → selección de proyecto → pestaña Exclusivas → "Decisiones de visionado (dailies)" → vista de lista con las 5 fichas de ejemplo (badges de color visibles, toma elegida con acento) → apertura de la ficha "Esc. 22 — Auto, de noche" y recorrido de sus 3 pestañas (Decisión, Notas —con la nota técnica de discrepancia cámara/sonido—, Seguimiento).
+- **Capturas** (ver `captura-390.png`, `captura-820.png`, `captura-1440.png` en esta misma carpeta, todas nuevas de esta ronda): vista de lista con los 5 ejemplos y sus badges de color en 1440px; ficha abierta (pestaña Decisión) en 390px sin scroll horizontal; vista de lista en 820px. Confirmado por script (`document.documentElement.scrollWidth === clientWidth`) sin scroll horizontal en los tres anchos.
 
-![Vista de lista — 1440px](captura-1440.png)
+![Vista de lista con badges de color y 5 ejemplos — 1440px](captura-1440.png)
+
+![Ficha abierta (pestaña Decisión), sin scroll horizontal — 390px](captura-390.png)
+
+![Vista de lista — 820px](captura-820.png)
 
 ## 9. Especificación técnica (componentes, modelo de datos, librerías y licencias)
 - **Mentalidad de diseñador, no de planilla (regla de Nico, 18/11/2026)**: una decisión de dailies es una entidad con su propio detalle y seguimiento (foto de los dailies + nota + a quién avisar), no una fila de tabla con campos sueltos. Se usó **`EntidadTabsBoard`** (ficha con pestañas, patrón ya construido para Coproductores/Subvenciones/Agenda/Deliverables/Notas del Ejecutivo y Derechos de PI), en vez de la tabla por defecto.
