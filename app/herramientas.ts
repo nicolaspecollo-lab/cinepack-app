@@ -3338,15 +3338,19 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "rep-notas-preparacion", nombre: "Notas de preparación del personaje", tipo: "tabla",
-          hint: "Una tarjeta por tema de preparación (no una nota de texto suelto): research del actor sobre el contexto del personaje, objetivos de escena, relaciones con otros personajes y preguntas pendientes para dirección — así cada tema se consulta por separado en rodaje en vez de buscarlo dentro de un bloque único de texto.",
+          hint: "Una tarjeta por tema de preparación (no una nota de texto suelto): research del actor sobre el contexto del personaje, objetivos de escena, relaciones con otros personajes y preguntas pendientes para dirección — así cada tema se consulta por separado en rodaje en vez de buscarlo dentro de un bloque único de texto. Cubre las 3 fases reales de preparación de un actor de reparto principal (trabajo de mesa, ensayo, repaso antes de cada jornada de rodaje), no solo la etapa inicial.",
           columnas: [
-            { key: "tema", label: "Tema / escena de referencia" },
+            { key: "tema", label: "Tema de preparación" },
+            { key: "escena_guion", label: "Escena de guion (nº, igual convención que Guion/Dirección)" },
+            { key: "fase", label: "Fase de preparación", tipo: "estado", opciones: ["Trabajo de mesa", "Ensayo", "Repaso previo a rodaje", "Revisión post-toma"] },
             { key: "fecha", label: "Fecha", tipo: "fecha" as const },
             { key: "research_actor", label: "Research del actor (contexto histórico, social, referencias)", tipo: "largo" },
             { key: "objetivo_escena", label: "Objetivo del personaje en la escena", tipo: "largo" },
             { key: "biografia_ficticia", label: "Biografía ficticia / backstory relevante", tipo: "largo" },
             { key: "relaciones_personajes", label: "Relación con otros personajes", tipo: "largo" },
+            { key: "continuidad_emocional", label: "Continuidad emocional (dónde quedó el personaje en la escena anterior/siguiente)", tipo: "largo" },
             { key: "preguntas_direccion", label: "Preguntas pendientes para dirección de actores", tipo: "largo" },
+            { key: "privada", label: "Visibilidad", tipo: "estado", opciones: ["Privada (solo yo)", "Compartida con dirección de actores"] },
           ],
         },
         {
