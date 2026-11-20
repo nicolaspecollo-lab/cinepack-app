@@ -2615,7 +2615,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
           id: "dir-decisiones-visionado",
           nombre: "Decisiones de visionado (dailies)",
           tipo: "tabla",
-          hint: "Una ficha por toma/escena visionada: toma elegida (circled take), nota de interpretación, nota técnica, estado y a quién se avisa (montaje/script/postpro).",
+          hint: "Ficha por toma visionada: circled take, notas y aviso a montaje/script/postpro.",
           columnas: [
             { key: "escena", label: "Escena / toma" },
             { key: "fecha_visionado", label: "Fecha de visionado", tipo: "fecha" as const },
