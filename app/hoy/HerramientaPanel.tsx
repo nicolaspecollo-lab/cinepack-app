@@ -5788,7 +5788,7 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "rrhh-plan-bienestar"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "dir-decisiones-visionado", "rrhh-plan-bienestar"]);
 
 // Debajo de las tarjetas de riesgo de "rrhh-plan-bienestar": todos los
 // empleados cargados a mano (sub-filas `empleados`, repetible) en una sola
@@ -5898,6 +5898,18 @@ type EntidadConfig = {
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
+  "dir-decisiones-visionado": {
+    titleKey: "escena",
+    subtitleKey: "decision",
+    listCols: ["toma_elegida", "fecha_visionado", "estado_aviso"],
+    addLabel: "+ Registrar visionado",
+    special: "buscador",
+    tabs: [
+      { label: "Decisión", keys: ["escena", "fecha_visionado", "decision", "toma_elegida", "tomas_backup"] },
+      { label: "Notas", keys: ["nota_interpretacion", "nota_tecnica", "motivo_repeticion"] },
+      { label: "Seguimiento", keys: ["avisar_a", "estado_aviso"] },
+    ],
+  },
   "rrhh-plan-bienestar": {
     titleKey: "riesgo",
     subtitleKey: "origen",
@@ -6304,7 +6316,14 @@ export function EntidadTabsBoard({
               )}
               <div className="hp-etb-row-title">
                 <div className="hp-etb-row-name">{f.datos?.[cfg.titleKey] || colTitle?.label || "—"}</div>
-                {cfg.subtitleKey && <div className="hp-etb-row-sub">{f.datos?.[cfg.subtitleKey] || ""}</div>}
+                {cfg.subtitleKey && (() => {
+                  const subCol = colByKey.get(cfg.subtitleKey);
+                  const subVal = f.datos?.[cfg.subtitleKey] || "";
+                  if (subVal && subCol?.tipo === "estado") {
+                    return <span className={`hp-etb-badge seg-${estadoTono(subVal)}`}>{subVal}</span>;
+                  }
+                  return <div className="hp-etb-row-sub">{subVal}</div>;
+                })()}
               </div>
               {isRrhh && (
                 <div className="hp-rrhh-card-badges">
@@ -6332,6 +6351,9 @@ export function EntidadTabsBoard({
                 if (c.tipo === "repetible") {
                   const n = parseArr<Record<string, string>>(v).length;
                   return <div className="hp-etb-row-cell" key={k}>{n} {c.label.toLowerCase()}</div>;
+                }
+                if (k === "toma_elegida" && v) {
+                  return <div className="hp-etb-row-take" key={k} title="Toma elegida (circled take)">● {v}</div>;
                 }
                 return <div className="hp-etb-row-cell" key={k}>{v || "—"}</div>;
               })}
@@ -9239,6 +9261,49 @@ const EJ_MODELO: Ejemplo[] = [
 // reutilizan patrones compartidos (FichaEquipo / AgendaDia / DocStatusBoard).
 // Los componentes bespoke definen sus ejemplos inline; estos son para el resto.
 export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+  "dir-decisiones-visionado": [
+    {
+      escena: "Esc. 14 — Cocina, discusión", fecha_visionado: "2026-11-10", decision: "Aprobada (circled)",
+      toma_elegida: "Toma 7", tomas_backup: "Toma 4",
+      nota_interpretacion: "La 7 tiene el quiebre de voz más contenido; mejor arco con el plano anterior.",
+      nota_tecnica: "Cámara: foco impecable en la 7. Sonido: boom entra levemente en plano en la 4, por eso queda de backup.",
+      avisar_a: JSON.stringify(["Montaje", "Script / continuidad"]),
+      estado_aviso: "Confirmado por el destinatario",
+    },
+    {
+      escena: "Esc. 22 — Auto, de noche", fecha_visionado: "2026-11-12", decision: "A repetir",
+      toma_elegida: "", tomas_backup: "Toma 2 (de emergencia)",
+      nota_interpretacion: "Interpretación correcta en todas las tomas.",
+      nota_tecnica: "Discrepancia cámara/sonido: foco perdido en la 1 y la 3 (luz de calle muy baja); en la 2 el sonido tiene ruido de tránsito que tapa diálogo clave.",
+      motivo_repeticion: "Ninguna toma cumple foto + sonido a la vez. Se repite con reflector adicional y bloqueo de calle.",
+      avisar_a: JSON.stringify(["Fotografía", "Sonido", "Producción"]),
+      estado_aviso: "Avisado",
+    },
+    {
+      escena: "Esc. 31 — Oficina, despido", fecha_visionado: "2026-11-13", decision: "Backup",
+      toma_elegida: "", tomas_backup: "Toma 5",
+      nota_interpretacion: "La 5 queda como respaldo; falta ver la 6 y 7 (no transferidas aún) antes de circular.",
+      nota_tecnica: "Sonido limpio en la 5. Pendiente de confirmar foco en 6/7 con DIT.",
+      avisar_a: JSON.stringify(["Postproducción"]),
+      estado_aviso: "Sin avisar",
+    },
+    {
+      escena: "Esc. 8 — Balcón, amanecer", fecha_visionado: "2026-11-14", decision: "Pendiente de ver",
+      toma_elegida: "", tomas_backup: "",
+      nota_interpretacion: "",
+      nota_tecnica: "Dailies de esta escena llegan hoy a la tarde desde el laboratorio.",
+      avisar_a: JSON.stringify([]),
+      estado_aviso: "Sin avisar",
+    },
+    {
+      escena: "Esc. 45 — Hospital, despedida", fecha_visionado: "2026-11-15", decision: "Aprobada (circled)",
+      toma_elegida: "Toma 3", tomas_backup: "Toma 1, Toma 6",
+      nota_interpretacion: "La 3 es la única donde ambos actores llegan juntos al clímax emocional sin sobreactuar.",
+      nota_tecnica: "Cámara y sonido limpios en las tres. Se eligió por interpretación, no por técnica.",
+      avisar_a: JSON.stringify(["Montaje", "Script / continuidad", "Postproducción"]),
+      estado_aviso: "Avisado",
+    },
+  ],
   "ej-coproducciones": [
     {
       empresa: "Atlántida Films", pais: "Francia", rol: "Coproductor oficial", equity: "18", aportacion: "70000",
