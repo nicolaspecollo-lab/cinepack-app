@@ -58,8 +58,15 @@ function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
 // Las celdas de tipo "largo" guardan HTML (rich text). Para que búsqueda,
 // filtros y orden sigan comparando texto y no los tags, se normaliza a texto
 // plano. Fast-path: si no hay "<", se devuelve tal cual (celdas de texto plano).
-function stripHtml(s: string): string {
-  if (!s || s.indexOf("<") === -1) return s;
+function stripHtml(s: unknown): string {
+  if (s == null) return "";
+  if (typeof s !== "string") {
+    // Columnas no-texto (chips/repetible) guardan arrays/objetos en `datos`;
+    // búsqueda/orden/exportación necesitan texto plano, nunca deben recibir
+    // el valor crudo acá.
+    return Array.isArray(s) ? s.map((v) => (typeof v === "string" ? v : JSON.stringify(v))).join(" ") : String(s);
+  }
+  if (s.indexOf("<") === -1) return s;
   if (typeof document !== "undefined") {
     const tmp = document.createElement("div");
     tmp.innerHTML = s;
@@ -210,6 +217,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     DOC_STATUS_IDS.has(id) ||
     id === "ej-pagos-nominas" ||
     id === "ej-gestion-documental" ||
+    id === "dir-actas" ||
     ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
@@ -5549,8 +5557,13 @@ const ACTAS_TIPO_TONO: Record<string, "ok" | "warn" | "bad" | "info" | "neutral"
   "Otra": "neutral",
 };
 
-function actasChips(raw: string | undefined): string[] {
+function actasChips(raw: unknown): string[] {
   if (!raw) return [];
+  // Columnas tipo "chips" del motor genérico guardan un array real en
+  // `datos` (no un string serializado) — ver parseArr más abajo en este
+  // mismo archivo para el mismo patrón en otras vistas.
+  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
+  if (typeof raw !== "string") return [];
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
