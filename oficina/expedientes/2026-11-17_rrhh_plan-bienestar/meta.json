@@ -1,7 +1,7 @@
 {
   "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
   "title": "Seguridad laboral y formación obligatoria",
-  "subtitle": "Rebote atendido: de tabla de riesgos a tarjetas de riesgo navegables (normativa + formación + alta de empleados) con lista de empleados agrupada debajo.",
+  "subtitle": "Objeción visual de la ronda 4 atendida: hint de una línea, tarjetas con acento de color/badges por tipo de riesgo y datos de ejemplo ricos (5 riesgos, 14 empleados) verificados en vivo.",
   "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
   "metaItems": [["Fecha", "20 nov 2026"], ["Departamento", "RRHH"], ["Cargo", "Coordinación de bienestar"], ["Oficina", "Desarrollo"]],
   "logoPath": "/home/user/cinepack-app/app/apple-icon.png",

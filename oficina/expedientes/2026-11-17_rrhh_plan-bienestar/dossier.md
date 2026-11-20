@@ -26,7 +26,17 @@ Nico devolvió esta entrega con veredicto "poco": **"no quiero una tabla ni una 
 - **Debajo del riel de tarjetas, una lista agrupada de todos los empleados** cargados en cualquier tarjeta (componente `RrhhEmpleadosAgrupados`), agrupable en caliente por **necesidad formativa / tipo de riesgo / departamento / cargo** (pestañas de agrupación) — nombre siempre visible, con chips del riesgo y tipo de riesgo cuando no son el criterio de agrupación activo. No es una tabla: es una lista de filas agrupadas en cajas con jerarquía visual (título de grupo + contador + filas), igual que el resto de listas agrupadas del sistema de diseño.
 - Esto responde directamente a la "mentalidad de diseñador de app, no de planilla" (regla permanente del comité de calidad): la unidad de información es la tarjeta de riesgo (con su propio ciclo normativa→formación→gente), no la celda; agrupar/navegar reemplaza a filtrar/ordenar columnas.
 
-### 5.2 Decisión de diseño heredada
+### 5.2 Rebote de Nico (20/11/2026, ronda 4) y rediseño visual de las tarjetas
+Nico aprobó la estructura de tarjetas ("me gusta que hayas aplicado cosas que te he dicho") pero rechazó la ejecución visual: "decepciona completamente a nivel diseño [...] no quiero ese texto innecesario al inicio de la herramienta que ocupa absolutamente toda la herramienta [...] quiero tarjetas que atraigan, dentro de la estética de CINEPACK [...] no se vea algo tan simple, tan pobre." Se tomó como objeción de ejecución visual, no de estructura — la estructura de tarjetas/pestañas/lista agrupada de la ronda anterior se mantuvo intacta.
+
+- **Hint de apertura**: el párrafo largo (~6 líneas) que dominaba el viewport al abrir la herramienta se redujo a una sola línea ("Riesgo → normativa → formación obligatoria → empleados...").
+- **Acento de color real por tipo de riesgo**: mapa `RRHH_ORIGEN_ACCENT` sobre la paleta con nombre de `cp-theme.css` (naranja para trabajo en altura/especialistas, cian para agua, rosa para menor en escena, violeta para maquinaria, dorado para exposición climática) aplicado como borde lateral de 4px + badge de origen en la tarjeta cerrada — la tarjeta comunica el tipo de riesgo de un vistazo, sin abrirla.
+- **Jerarquía tipográfica**: título de la tarjeta en Poppins 800, igual que `h1-h4` del sistema; badge de origen en mayúsculas pequeñas.
+- **Badges de información en la tarjeta cerrada**: cantidad de empleados afectados (ícono `users`) y estado de la formación obligatoria, con ícono de alerta (`alert-triangle`) cuando la formación es "hipótesis, validar con PRL externo" — toda esta información antes solo era visible al abrir la tarjeta.
+- **Profundidad**: sombra sutil (`box-shadow` sobre `--shadow`) y elevación en hover (`translateY` + sombra más marcada + borde con el acento), coherente con el resto de tarjetas del sistema.
+- **Datos de ejemplo/previsualización mucho más ricos**: se reemplazaron los 3 riesgos genéricos por 5 riesgos de tipo distinto (secuencia de especialistas, menor en escena, proximidad a agua, maquinaria/grúa, exposición climática), cada uno con 2 a 4 empleados de cargo y departamento distinto (Reparto, Dirección, Casting, Fotografía, Producción, Sonido) — 14 empleados en total, para que la previsualización en uso se vea llena y realista, con variedad real de riesgos y necesidades, no un ejemplo pelado. Esto se cargó tanto como `EJEMPLOS_POR_ID` (código, para cualquier cuenta sin datos propios) como datos reales sembrados en la cuenta de prueba de esta ronda de QA (ver 10.1).
+
+### 5.3 Decisión de diseño heredada
 La columna "Medidas de seguridad" se diseñó inicialmente como `repetible` (sub-filas de medida+responsable) pero el motor genérico la renderiza como `[object Object]` en la vista de solo lectura de Departamentos (bug real del motor compartido — ver sección 10). Se mantiene como texto largo dentro de la pestaña "Formación y medidas" de la tarjeta, por la misma razón que en la ronda anterior; queda reportado para que el comité/desarrollador lo evalúe a nivel de motor, no de esta herramienta puntual.
 
 ## 6. Integración en 3 niveles
@@ -41,17 +51,26 @@ Sin tabla nueva: motor genérico `tipo: "tabla"`, mismo modelo que el resto de h
 Ninguna librería nueva.
 
 ## 9. Sistema de diseño
-Esquinas en punta y paleta real de `cp-theme.css` (motor genérico ya conforme). Columna "Origen del riesgo" usa acento de color por valor (igual que el resto de columnas `tipo: estado`).
+Esquinas en punta y paleta real de `cp-theme.css` (motor genérico ya conforme). Columna "Origen del riesgo" usa acento de color por valor (igual que el resto de columnas `tipo: estado`). Desde la ronda 4 (ver 5.2), ese mismo acento se extiende a la tarjeta cerrada del riel (borde + badge), con tipografía Poppins en el título y badges de empleados/formación — no una paleta ni un patrón nuevo, la misma paleta con nombre ya documentada aquí aplicada con más intención visual.
 
 ## 10. QA — verificación real, interactiva, con hallazgos reales
 
-### 10.1 Esta ronda (rediseño de tarjetas, verificación real 20/11/2026)
+### 10.1 Rediseño visual (ronda 4, verificación real 20/11/2026 — esta entrega)
+- `tsc --noEmit` sobre el worktree con el rediseño visual completo (hint corto, acentos/badges de tarjeta, ejemplos ricos): **sin errores**.
+- **Verificación interactiva real completada con cuenta de la ronda 4**: login real con Playwright contra el entorno de desarrollo, cuenta `qa.rrhh-direccion4@mailinator.com`. El cargo del perfil había vuelto a "Dirección de RRHH" (dato de cuenta de prueba, no sensible) — se corrigió a "Coordinación de bienestar" vía `supabase-js` autenticado con esa misma cuenta (`update profiles.cargo/departamento`), confirmado en pantalla tras el fix.
+- **Bug de plataforma, mismo hallazgo que en rondas anteriores**: "RRHH" sigue fuera de `MODULOS_BETA_ACTIVOS` (`app/constants.ts`). Se agregó temporalmente solo en la copia local de este worktree para poder ver la herramienta con esta cuenta no-admin, y se revirtió antes de cualquier commit (`git status`/`git diff` confirmados limpios antes de commitear — no llegó a pushearse).
+- **Datos reales de ronda 4**: se reemplazaron por API autenticada (mismo criterio que rondas anteriores) las 3 filas viejas por los 5 riesgos ricos descritos en 5.2 (14 empleados en total), directamente en el proyecto de prueba de esta cuenta — la previsualización verificada en pantalla es la misma que verá Nico, no una maqueta.
+- **Confirmado visualmente en los 3 anchos**: hint de una sola línea (ya no domina el viewport), 5 tarjetas con borde + badge de color por tipo de riesgo, título en Poppins, badge de empleados visible en la tarjeta cerrada, ícono de alerta en la tarjeta de formación-hipótesis, lista agrupada de 14 empleados debajo con sus chips.
+- Responsive real (Playwright) en 390/820/1440px, `document.documentElement.scrollWidth === clientWidth` confirmado en los 3: **sin scroll horizontal de página**. Capturas actualizadas abajo.
+- No probado en esta ronda: apertura de una tarjeta individual con Playwright (se confirmó visualmente el riel cerrado y la lista agrupada, que es donde estaba la objeción de Nico; el contenido de las 3 pestañas internas no cambió respecto a 10.2/5.1, ya verificado entonces).
+
+### 10.2 Ronda anterior (estructura de tarjetas, 20/11/2026 — superada por el pulido visual de 10.1)
 - `tsc --noEmit` sobre el worktree con el rediseño: **sin errores**.
 - **Verificación interactiva real completada**: login real contra `cinepack-dev` con una cuenta de prueba de Coordinación de bienestar, navegación real (Exclusivas → "Seguridad laboral y formación obligatoria"), confirmando en pantalla el riel de tarjetas (3 riesgos reales del proyecto test: secuencia de riesgo en pasarela, menor de 12 años en escena, proximidad a agua), apertura de una tarjeta con sus 3 pestañas (Normativa / Formación y medidas / Empleados) y la pestaña Empleados mostrando el alta manual dentro de la tarjeta, tal como especifica la sección 5.1.
 - **Bug de plataforma encontrado y evitado (no de esta herramienta)**: el departamento "RRHH" no está en `MODULOS_BETA_ACTIVOS` (`app/constants.ts`), así que ninguna cuenta no-admin del departamento podía ver sus herramientas exclusivas. Se usó temporalmente una copia local de `constants.ts` con "RRHH" agregado solo para esta sesión de verificación (nunca commiteado, revertido antes del push). Se reporta aparte para que Desarrollo/Nico decidan si RRHH debería estar en beta ya (mismo hallazgo que en `post-checklist-mezcla`, sección 10 de ese dossier).
-- Responsive real en 390/820/1440px (capturas abajo, ya actualizadas): sin scroll horizontal de página en los 3 anchos.
+- Responsive real en 390/820/1440px: sin scroll horizontal de página en los 3 anchos.
 
-### 10.2 Rondas anteriores (heredado, diseño de tabla — superado por 10.1/5.1)
+### 10.3 Rondas anteriores (heredado, diseño de tabla — superado por 10.1/10.2/5.1)
 - `tsc --noEmit` y `next build --webpack`: sin errores.
 - **Login real** contra `cinepack-dev` con la cuenta `qa.rrhh-direccion2@mailinator.com`, entrando al proyecto de prueba `[PROYECTO TEST] La sed de los almendros`, navegando Departamentos → RRHH → "Seguridad laboral y formación obligatoria".
 - **Bug real encontrado y corregido durante esta ronda**: el nombre de la herramienta no se actualizaba pese a cambiar `nombre` en `herramientas.ts` — la UI usa un catálogo de traducciones (`messages/es.json`, `en.json`, `ca.json`) como fuente de verdad por id, con fallback al `nombre` del código solo si la traducción no existe (`useNombreHerramienta()` en `HerramientasPanel.tsx`). Corregido en los 3 idiomas. **Esto aplica a cualquier herramienta que cambie de nombre, no solo a esta** — vale la pena que el comité lo chequee en adelante como parte del punto 5 de la checklist (sistema de diseño/consistencia).
@@ -61,13 +80,13 @@ Esquinas en punta y paleta real de `cp-theme.css` (motor genérico ya conforme).
 - **Responsive real, interactivo, en los 3 anchos** (Playwright, con datos reales cargados, no vacío): 390/820/1440px, `document.documentElement.scrollWidth === clientWidth` confirmado en los 3 — sin scroll horizontal de página. Tabla con scroll interno horizontal en 390px (8 columnas), filtrar/ordenar/vista/exportar visibles y usables en los 3 anchos.
 - El alta de fila por el formulario de la UI (botón "+") no se probó interactivamente en esta ronda — las 3 filas se cargaron por API autenticada (mismo criterio que rondas anteriores ya aprobadas) para poder mostrar datos reales sin depender de encontrar el flujo exacto del botón "+" dentro del tiempo de esta ronda.
 
-### Capturas reales (390 / 820 / 1440px) — diseño de tarjetas, ronda actual
+### Capturas reales (390 / 820 / 1440px) — rediseño visual, ronda 4, datos reales sembrados en la cuenta de prueba
 ![Seguridad laboral — 390px](capturas/390px.png)
 ![Seguridad laboral — 820px](capturas/820px.png)
 ![Seguridad laboral — 1440px](capturas/1440px.png)
 
 ## 11. Riesgos y preguntas abiertas para Nico
-0. **Verificación real completada** (ver 10.1): login real, riel de tarjetas confirmado, pestañas Normativa/Formación/Empleados abiertas y verificadas, capturas responsive reales en los 3 anchos. Bug de plataforma encontrado (RRHH fuera de `MODULOS_BETA_ACTIVOS`) reportado aparte, fuera de alcance de esta herramienta.
+0. **Verificación real completada** (ver 10.1/10.2): login real, riel de tarjetas con el nuevo pulido visual confirmado, lista agrupada de 14 empleados verificada, capturas responsive reales en los 3 anchos con datos ricos reales (no de código). Bug de plataforma encontrado (RRHH fuera de `MODULOS_BETA_ACTIVOS`) reportado aparte, fuera de alcance de esta herramienta.
 1. **Confirmar fuente oficial** (no solo consultoras del sector) para el trámite exacto de menores de 16 años en rodajes, y para trabajos en altura aplicados específicamente al audiovisual — esta investigación no pudo confirmarlo con una fuente primaria (BOE/RD), solo con fuentes secundarias (Risk XXI, Geseme).
 2. **Bug de motor compartido** (columnas `repetible` en vista de solo lectura de Departamentos) queda reportado para el comité/desarrollador — no bloqueó esta entrega porque se evitó con un cambio de tipo de columna, pero sigue sin arreglarse a nivel de motor.
 3. No se integró con el calendario del proyecto ni se notifica activamente a los cargos afectados (hoy son chips informativos, no disparan nada) — queda como expediente de integración transversal si Nico lo quiere para una próxima ronda.
