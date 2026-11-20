@@ -9,7 +9,7 @@ import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
-import Icon from "../components/Icon";
+import Icon, { type IconName } from "../components/Icon";
 import ToolMenu from "../components/ToolMenu";
 import CpSelect from "../components/CpSelect";
 import CarpetaNavegable from "./CarpetaNavegable";
@@ -3714,6 +3714,22 @@ function qcProgreso(items: QcItem[]): { verificados: number; total: number } {
   return { verificados, total };
 }
 
+const FORMATO_ACCENT: Record<string, string> = {
+  "Stereo 2.0": "var(--cyan)",
+  "5.1 Surround": "var(--violet)",
+  "M&E (Music & Effects)": "var(--gold)",
+  DCP: "var(--indigo)",
+  "Streaming / Broadcast": "var(--orange)",
+};
+
+const FORMATO_ICON: Record<string, IconName> = {
+  "Stereo 2.0": "sound",
+  "5.1 Surround": "sound",
+  "M&E (Music & Effects)": "sliders",
+  DCP: "film",
+  "Streaming / Broadcast": "cloud",
+};
+
 const QC_SUGERIDOS: Record<string, string[]> = {
   "Stereo 2.0": [
     "Loudness integrado dentro del target (LUFS)",
@@ -3793,11 +3809,38 @@ function ChecklistMezclaBoard({
     onCrear({ formato, qc_items: JSON.stringify(qc) });
   }
 
+  const totalFormatos = filas.length;
+  const formatosCompletos = filas.filter((f) => {
+    const qc = parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]);
+    const { verificados, total } = qcProgreso(qc);
+    return total > 0 && verificados === total;
+  }).length;
+  const qcGlobal = filas.reduce(
+    (acc, f) => {
+      const { verificados, total } = qcProgreso(parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]));
+      return { verificados: acc.verificados + verificados, total: acc.total + total };
+    },
+    { verificados: 0, total: 0 }
+  );
+  const pctGlobal = qcGlobal.total > 0 ? Math.round((qcGlobal.verificados / qcGlobal.total) * 100) : 0;
+
   return (
     <div className="hp-mezcla-wrap">
+      {totalFormatos > 0 && (
+        <div className="hp-mezcla-resumen">
+          <div className="hp-mezcla-resumen-stat">
+            <span className="hp-mezcla-resumen-n">{formatosCompletos}/{totalFormatos}</span>
+            <span className="hp-mezcla-resumen-l">formatos completos</span>
+          </div>
+          <div className="hp-mezcla-resumen-bar"><div className="hp-mezcla-resumen-bar-fill" style={{ width: `${pctGlobal}%` }} /></div>
+          <span className="hp-mezcla-resumen-pct">{pctGlobal}% QC verificado en total</span>
+        </div>
+      )}
       <div className="hp-mezcla-grid">
         {filas.map((f) => {
           const formato = f.datos?.[colFormato?.key ?? "formato"] ?? "";
+          const accent = FORMATO_ACCENT[formato] ?? "var(--acc)";
+          const icono: IconName = FORMATO_ICON[formato] ?? "sound";
           const qc = parseArr<QcItem>(f.datos?.[colQc?.key ?? "qc_items"]);
           const { verificados, total } = qcProgreso(qc);
           const pct = total > 0 ? Math.round((verificados / total) * 100) : 0;
@@ -3819,8 +3862,9 @@ function ChecklistMezclaBoard({
           }
 
           return (
-            <div className={`hp-mezcla-card${completo ? " on" : ""}`} key={f.id}>
+            <div className={`hp-mezcla-card${completo ? " on" : ""}`} key={f.id} style={{ "--formato-accent": accent } as React.CSSProperties}>
               <div className="hp-mezcla-head">
+                <span className="hp-mezcla-icono" style={{ color: accent }}><Icon name={icono} /></span>
                 <span className="hp-mezcla-formato">{formato || "—"}</span>
                 {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar">✕</button>}
               </div>
@@ -3909,18 +3953,29 @@ function ChecklistMezclaBoard({
             </div>
           );
         })}
-
-        {editable && formatosDisponibles.length > 0 && (
-          <div className="hp-mezcla-card hp-mezcla-add">
-            <span className="hp-mezcla-add-label">Agregar tarjeta de formato</span>
-            {formatosDisponibles.map((formato) => (
-              <button key={formato} className="cp-btn cp-btn-acc hp-mezcla-add-btn" onClick={() => agregarFormato(formato)}>
-                + {formato}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {editable && formatosDisponibles.length > 0 && (
+        <div className="hp-mezcla-agregar">
+          <span className="hp-mezcla-agregar-label">Agregar tarjeta de formato</span>
+          <div className="hp-mezcla-agregar-row">
+            {formatosDisponibles.map((formato) => {
+              const accent = FORMATO_ACCENT[formato] ?? "var(--acc)";
+              const icono: IconName = FORMATO_ICON[formato] ?? "sound";
+              return (
+                <button
+                  key={formato}
+                  className="hp-mezcla-agregar-btn"
+                  style={{ "--formato-accent": accent } as React.CSSProperties}
+                  onClick={() => agregarFormato(formato)}
+                >
+                  <Icon name={icono} /> {formato}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {filas.length === 0 && !editable && (
         <div className="hp-tabla-empty">

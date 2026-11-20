@@ -3531,7 +3531,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         {
           id: "post-checklist-mezcla", nombre: "Checklist de mezcla y masterización de audio", tipo: "tabla",
-          hint: "Una tarjeta por formato de entrega (Stereo, 5.1, M&E, DCP, streaming/broadcast), con sus specs técnicos objetivo y un checklist de QC real con progreso verificable (\"4/7 verificado\"). Confirmá el spec exacto del distribuidor/festival antes de mezclar — no hay un único estándar de loudness entre plataformas (Netflix, Amazon, broadcast UE/EEUU y DCP difieren). No es la checklist de entregables generales (`checklistEntrega`) ni el calendario maestro — esto es específico de audio.",
+          hint: "Una tarjeta por formato de entrega, con su checklist de QC y progreso verificable.",
           // Vista bespoke en tarjetas (ChecklistMezclaBoard en HerramientaPanel):
           // una fila = un formato de entrega, no un ítem suelto. El QC real
           // vive en la columna "repetible" qc_items (sub-filas con su propio

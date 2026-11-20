@@ -2,7 +2,7 @@
 // heredan color y tamaño via currentColor + font-size del padre). Sin
 // dependencias. Reemplazan los emojis/símbolos sueltos por iconografía pro.
 
-type IconName =
+export type IconName =
   | "bold" | "italic" | "underline" | "strikethrough" | "heading" | "paragraph"
   | "list" | "list-ordered" | "align-left" | "align-center" | "align-right"
   | "trash" | "x" | "eye" | "pencil" | "check" | "arrow-right" | "arrow-left"
