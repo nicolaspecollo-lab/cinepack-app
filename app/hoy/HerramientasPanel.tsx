@@ -429,7 +429,10 @@ export default function HerramientasPanel({
         ) : esNotasEnsayo ? (
           <NotasEnsayoPanel
             fullName={fullName}
-            editable={seccion === "cargo" && (!!isAdmin || (!!cargo && cargo === cargoJefe))}
+            editable={
+              seccion === "cargo" &&
+              (!!isAdmin || cargo === "Dirección de actores" || (!!cargo && cargo === cargoJefe))
+            }
           />
         ) : (
           <HerramientaPanel departamento={departamento} herramienta={abierta} fullName={fullName} editable={seccion === "cargo"} />

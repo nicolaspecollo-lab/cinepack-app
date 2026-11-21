@@ -61,7 +61,7 @@ Simplificación respecto a la arquitectura, documentada como riesgo: el campo `a
 La "cabecera de arco" (arco/objetivo del personaje) se guarda repetida en cada sesión del mismo personaje — no hay una tabla aparte de "personaje" en este prototipo (la arquitectura apunta a que, a futuro, esto debería leerse de `rep-ficha-personaje.arco`/`.objetivo` en modo solo lectura; por ahora se edita directo acá, documentado como integración pendiente, no implementada en este ciclo).
 
 ### 9.4 Permisos (implementado en el prototipo)
-- Edición: igual criterio que `PlanSonidoPanel`/`MoodboardFotoPanel` (`seccion === "cargo"` y, dentro de esa sección, `isAdmin` o `cargo === cargoJefe`).
+- Edición: `seccion === "cargo"` y, dentro de esa sección, `isAdmin`, o `cargo === "Dirección de actores"` (cargo dueño real de la herramienta), o `cargo === cargoJefe` (jefe de departamento). Ver sección 10 sobre el bug corregido en esta condición.
 - Visibilidad de filas "Privada": filtrada en **cliente**, comparando `created_by` de la fila contra `supabase.auth.getUser()`. Esto es la base funcional del prototipo, no la policy de RLS a nivel de fila que pide la arquitectura (sección 4) — ese es trabajo de migración de base de datos, fuera del alcance de este ciclo (no se tocó ninguna migración ni `cinepack-dev`).
 
 ### 9.5 Librerías
@@ -69,3 +69,18 @@ Ninguna nueva. Todo el panel es composición de React/CSS propios del sistema de
 
 ### 9.6 `npx tsc --noEmit`
 Pasa limpio, sin errores, sobre la rama `oficina/2026-11-21-dir-notas-ensayo`.
+
+## 10. Riesgos y preguntas abiertas
+
+### 10.1 Bug bloqueante encontrado por QA — condición `editable` excluía al cargo dueño (corregido)
+QA reportó, probando con la cuenta `qa.dir-actores2@mailinator.com` (cargo real "Dirección de actores"), que el golden path completo estaba bloqueado: sin botón de alta, sin siembra de ejemplos, mensaje de "no editable" para el cargo dueño de la herramienta.
+
+Causa: en `app/hoy/HerramientasPanel.tsx`, la condición `editable` de `dir-notas-ensayo` era
+`seccion === "cargo" && (!!isAdmin || (!!cargo && cargo === cargoJefe))`, donde `cargoJefe` es el jefe de **todo** el departamento "Dirección" (cargo "Dirección"), no el cargo "Dirección de actores" para el que se construyó la herramienta (ver `arquitectura.md` línea ~83, que pide explícitamente que ambos puedan editar).
+
+Corrección aplicada (puntual, solo en el bloque de `dir-notas-ensayo`):
+`editable={seccion === "cargo" && (!!isAdmin || cargo === "Dirección de actores" || (!!cargo && cargo === cargoJefe))}`.
+No se modificó el comportamiento de `PlanSonidoPanel`, `MoodboardFotoPanel` ni `MoodboardPanel`.
+
+### 10.2 Riesgo abierto — mismo patrón sin verificar en otros paneles del bloque
+QA señaló que `PlanSonidoPanel`, `MoodboardFotoPanel` y `MoodboardPanel` usan una condición `editable` con la misma forma (`isAdmin || cargo === cargoJefe`, sin contemplar el cargo dueño real de cada herramienta). No se revisó ni se tocó ninguno de los tres en este ciclo — queda fuera de alcance de este expediente. Se deja anotado para que el director-oficina decida si corresponde abrir un expediente aparte para auditar y, si aplica, corregir ese mismo patrón en esos tres paneles.
