@@ -397,7 +397,19 @@ pasar a `comite-calidad`. **Aprobado por comité en ronda 1, sin
 objeciones**, condicionado a que estas secciones (1-5, 7-8) se completaran
 antes del dossier final — ya completadas arriba.
 
-## 12. Fuentes
+## 12. Corrección por feedback directo de Nico (21/11/2026)
+
+Nico calificó "le falta un poco" con 3 pedidos concretos, los tres aplicados de inmediato:
+
+1. **Quitar el texto introductorio.** El `hint` largo de `app/herramientas.ts` (explica qué es la herramienta) ya no se renderiza para `rep-notas-escenas` — se agregó una excepción puntual en `HerramientaPanel.tsx` (mismo patrón ya usado para `ej-presupuesto-costos`), sin borrar el campo `hint` en sí (sigue sirviendo de documentación interna).
+2. **Botón de acceso directo a la escena en el guion.** Nuevo componente `VerEscenaGuion`: botón sutil ("Ver en el guion", icono `file-text`, borde fino sin relleno) en la cabecera de cada grupo de escena. Al tocarlo, consulta en vivo (nunca escribe) `herramienta_filas` de `guion-desglose-escenas` filtrando por el número de escena, y muestra locación/personajes/resumen en un popover liviano — no navega a otra pantalla (no existe hoy un mecanismo de deep-link entre herramientas de distintos departamentos; construir eso es un cambio de arquitectura más grande que excede el alcance de esta corrección puntual). Si la escena todavía no está en el desglose, lo dice explícitamente en vez de fallar en silencio — verificado así en QA real.
+3. **Color por concepto.** Nuevo mapa `MC_CONCEPTO_TONO`: posición física (marca de posición, dirección de mirada, entrada/salida de cuadro) en cian, vestuario/prop en ámbar, interpretación/gesto en verde — reutiliza los tokens `--cyan`/`--amber`/`--lime` y las clases `tono-*` ya existentes en `dashboard.css`, no se inventó paleta nueva. Las notas personales quedan sin acento fuerte a propósito (no son una categoría de continuidad, son volcado libre).
+
+Verificado con Playwright (cuenta `qa.rep-secundario2@mailinator.com`, 1440px y 390px): botón "Ver en el guion" funciona y consulta datos reales, colores por campo visibles y consistentes en ambos anchos, sin scroll horizontal ni superposición. `npx tsc --noEmit` limpio.
+
+![Corrección 21/11: sin texto introductorio, botón "Ver en el guion", color por concepto](capturas/correccion-21nov-1440.png)
+
+## 13. Fuentes
 
 - [Stand-In Central — "Stand-in 101: standing on your mark"](https://standincentral.com/2018/03/28/stand-in-101-standing-on-your-mark/)
 - [The Black and Blue — "Marking actors should be simple right?"](https://www.theblackandblue.com/?p=8388)

@@ -750,7 +750,7 @@ function HerramientaData({
           de conceptos/montos): el hint ya se explica en el Tablero, y acá
           solo resta altura para que la grilla empiece más arriba — pedido
           explícito de Nicolás. */}
-      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && (
+      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && (
         <p className="hp-hint">{herramienta.hint}</p>
       )}
 
@@ -13048,6 +13048,79 @@ const EJ_MARCAS_CONTINUIDAD: Ejemplo[] = [
   },
 ];
 
+// Popover liviano "Ver escena en el guion" (pedido explícito de Nico,
+// 21/11/2026): lee en vivo (nunca escribe) la fila de `guion-desglose-escenas`
+// que coincide con el número de escena del grupo, y muestra locación/
+// personajes/resumen sin salir de la herramienta. No navega a otra pantalla
+// (no existe hoy un mecanismo de deep-link entre herramientas de distintos
+// departamentos) — es una consulta puntual, acotada y real.
+function VerEscenaGuion({ escena }: { escena: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, setEstado] = useState<"idle" | "cargando" | "ok" | "vacio" | "error">("idle");
+  const [datos, setDatos] = useState<{ loc: string; personajes: string; resumen: string } | null>(null);
+
+  async function abrir() {
+    setAbierto((v) => !v);
+    if (estado !== "idle") return;
+    setEstado("cargando");
+    try {
+      const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+      if (!projectId) { setEstado("error"); return; }
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("herramienta_filas")
+        .select("datos")
+        .eq("project_id", projectId)
+        .eq("herramienta_id", "guion-desglose-escenas")
+        .eq("datos->>escena", escena)
+        .limit(1)
+        .maybeSingle();
+      if (!data) { setEstado("vacio"); return; }
+      const d = data.datos as Record<string, string>;
+      setDatos({ loc: d.loc ?? "", personajes: d.personajes ?? "", resumen: stripHtml(d.resumen ?? "") });
+      setEstado("ok");
+    } catch {
+      setEstado("error");
+    }
+  }
+
+  return (
+    <div className="hp-mc-guion-wrap">
+      <button type="button" className="hp-mc-guion-btn" onClick={abrir} title="Ver esta escena en el guion">
+        <Icon name="file-text" size={12} /> Ver en el guion
+      </button>
+      {abierto && (
+        <div className="hp-mc-guion-pop">
+          {estado === "cargando" && <p>Buscando la escena…</p>}
+          {estado === "error" && <p>No se pudo consultar el desglose de guion ahora.</p>}
+          {estado === "vacio" && <p>Esta escena todavía no está en el desglose de guion.</p>}
+          {estado === "ok" && datos && (
+            <>
+              {datos.loc && <div><dt>Locación</dt><dd>{datos.loc}</dd></div>}
+              {datos.personajes && <div><dt>Personajes</dt><dd>{datos.personajes}</dd></div>}
+              {datos.resumen && <div><dt>Resumen</dt><dd>{datos.resumen}</dd></div>}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Color por concepto (pedido explícito de Nico, 21/11/2026: "no es lo mismo
+// acotaciones de vestuario, que de personaje, que de continuidad emotiva —
+// sino parece todo lo mismo"). Reusa las clases .seg-*/tono-* ya existentes
+// en dashboard.css, no se inventa paleta nueva.
+const MC_CONCEPTO_TONO: Record<string, string> = {
+  marca_posicion: "info", // posición física en plató
+  direccion_mirada: "info",
+  entrada_salida: "info",
+  vestuario_prop: "warn", // vestuario / prop en mano
+  ultima_frase_gesto: "ok", // interpretación / gesto
+  tomas_relevantes: "neutral", // referencia técnica de rodaje
+  notas_libres: "neutral", // notas personales, sin acento fuerte
+};
+
 function MarcasContinuidad({
   columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar,
 }: {
@@ -13079,7 +13152,7 @@ function MarcasContinuidad({
 
   function campoCorto(f: Fila, key: string, ed: boolean) {
     return (
-      <label className="hp-mc-field" key={key}>
+      <label className={`hp-mc-field tono-${MC_CONCEPTO_TONO[key] ?? "neutral"}`} key={key}>
         <span>{gLbl(columnas, key)}</span>
         <input className="hp-mc-in" defaultValue={gVal(f, key)} placeholder={ed ? "—" : ""} readOnly={!ed} onBlur={(e) => set(f, key, e.target.value)} />
       </label>
@@ -13087,7 +13160,7 @@ function MarcasContinuidad({
   }
   function campoLargo(f: Fila, key: string, ed: boolean, rows = 2) {
     return (
-      <label className="hp-mc-field hp-mc-field-wide" key={key}>
+      <label className={`hp-mc-field hp-mc-field-wide tono-${MC_CONCEPTO_TONO[key] ?? "neutral"}`} key={key}>
         <span>{gLbl(columnas, key)}</span>
         <textarea className="hp-mc-ta" defaultValue={stripHtml(gVal(f, key))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={rows} onBlur={(e) => set(f, key, e.target.value)} />
       </label>
@@ -13186,6 +13259,7 @@ function MarcasContinuidad({
                 <span className="hex"></span>
                 <span className="hp-mc-group-title">{t("mcScene", { n: escena })}</span>
                 {anteriores.length > 0 && <span className="hp-mc-group-count">{t("mcTimesShot", { n: fs.length })}</span>}
+                {escena !== t("noScene") && <VerEscenaGuion escena={escena} />}
               </div>
               <div className="hp-mc-group-body">
                 {FichaActual(actual)}
