@@ -49,7 +49,7 @@ export type CargoTools = {
   cargo: Herramienta[];
 };
 
-const ESTADO_DOC = ["Borrador", "En revisión", "Aprobado", "Bloqueado"];
+export const ESTADO_DOC = ["Borrador", "En revisión", "Aprobado", "Bloqueado"];
 
 // Herramienta "Accesos del equipo" — la maneja GestionAccesosPanel, aquí solo marca presencia.
 const ACCESOS: Herramienta = {
@@ -1056,6 +1056,32 @@ const derechosBTS: Herramienta = {
     { key: "territorio", label: "Territorio / Plataformas" },
     { key: "vigencia", label: "Vigencia" },
     { key: "estado", label: "Estado de firmas", tipo: "estado", opciones: ["Pendiente", "Parcial", "Completo"] },
+  ],
+};
+
+// Memoria de making of: dos bloques enlazados por escena, no una nota suelta
+// (ver oficina/expedientes/2026-11-21_makingof_memoria/arquitectura.md §4).
+// Bloque A (criterios editoriales) vive en la fila meta (orden:-1, patrón ya
+// usado por Presupuesto/Actas para guardar "cabecera" de un tablero) y
+// Bloque B (flag por escena, el requisito real de QA) son las filas de la
+// tabla. Se renderiza con un panel a medida (MoMemoriaBoard, en
+// HerramientaPanel.tsx) porque el motor genérico no tiene un modo que
+// muestre documento + tablero de escenas en la misma pantalla sin tabs.
+const memoriaMakingOf: Herramienta = {
+  id: "mo-memoria",
+  nombre: "Memoria de making of",
+  tipo: "tabla",
+  hint: "Línea editorial del BTS + flag de restricción por escena: sin este flag no hay forma sistemática de saber qué NO publicar (requisito real de QA).",
+  columnas: [
+    { key: "escena", label: "Escena", soloLectura: true },
+    { key: "flag_redes", label: "Restricción para redes", tipo: "estado",
+      opciones: ["Apta", "No apta", "Requiere consentimiento", "Uso exclusivo de prensa"] },
+    { key: "motivo", label: "Motivo", tipo: "largo" },
+    { key: "origen_restriccion", label: "Origen del flag", tipo: "estado",
+      opciones: ["Dirección de making of", "RRHH (menores)", "Producción (seguridad)", "Dirección"] },
+    { key: "consentimiento_vinculado", label: "Consentimiento relacionado", tipo: "link" },
+    { key: "revisado_por", label: "Revisado por" },
+    { key: "fecha_revision", label: "Fecha de revisión", tipo: "fecha" },
   ],
 };
 
@@ -3427,7 +3453,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Dirección de making of": {
       departamento: [calEditorial, coberturaBTS, materialGrabado, calPublicaciones, derechosBTS],
       cargo: [
-        { id: "mo-memoria", nombre: "Memoria de making of", tipo: "nota", hint: "Línea editorial y criterios." },
+        memoriaMakingOf,
         btsInventarioMaterial,
         btsPlanContenido,
         btsContactosPrensa,
