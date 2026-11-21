@@ -1,8 +1,87 @@
 # Dossier — `mo-memoria` ("Memoria de making of")
 
-> Este archivo arranca con solo las secciones que le corresponden al desarrollador
-> (6 y la parte de componentes de 9). El resto (1-5, 7-8, cierre) lo completa el
-> director-oficina/comité a partir de `investigacion.md` y `arquitectura.md`.
+Oficina de Agentes CINEPACK. 21/11/2026.
+
+## 1. Resumen ejecutivo
+
+"Memoria de making of" es la herramienta exclusiva del cargo **Dirección de
+making of**: dos bloques enlazados en una sola pantalla — el documento de
+línea editorial del BTS (tono, objetivo, qué priorizar/evitar) y el tablero
+de restricciones por escena con un flag crítico (Apta / No apta / Requiere
+consentimiento / Uso exclusivo de prensa). Resuelve el requisito real de QA
+más sensible de la jornada: sin este flag, no hay forma sistemática de saber
+qué NO se puede publicar — con riesgo concreto en el proyecto de prueba de
+difundir material de una escena con una menor de 12 años o de una secuencia
+de riesgo con doble de acción. Aprobada por comité en ronda 2 (un bug de
+color crítico y un bug de carga de datos encontrados y corregidos en el
+camino). Pendiente de calificación de Nico.
+
+## 2. Origen de la idea
+
+`mo-memoria` ya estaba reservada en el catálogo de la app (`app/herramientas.ts`,
+departamento Making of, cargo Dirección de making of) como placeholder vacío
+(`tipo: "nota"`, hint "Línea editorial y criterios."), marcada "Vacía" en
+`inventario.md`. No es una herramienta inventada hoy: es una de las tres
+entradas del backlog de placeholders por cargo que la Oficina de Desarrollo
+eligió trabajar en el ciclo diario del 21/11/2026, junto con `dir-notas-ensayo`
+y `rep-notas-escenas`.
+
+## 3. El cargo
+
+La "memoria" o documento de línea editorial de making of (también "brief
+editorial"/"guía de criterios BTS" en la jerga de equipos de contenidos de
+rodaje) es, en la práctica del sector, el documento que Dirección de making
+of redacta y acuerda con Dirección de la película y Producción antes o al
+inicio del rodaje: tono y objetivo del material BTS, qué se puede y qué no
+se puede filmar (escenas sensibles, menores, escenas de riesgo, zonas
+restringidas), consentimientos de cámara, y criterios de cobertura. No se
+encontró fuente académica o de sindicato español que use literalmente este
+término con esa estructura — se marca como hipótesis razonada por analogía
+con guías de producción de BTS y, sobre todo, con el requisito real y no
+inventado de la cuenta de QA del cargo (`oficina-qa/cargos.md`, fila 42):
+*"Exige que el plan de cobertura BTS distinga qué escenas son aptas para
+redes (la del menor, no) — si no hay flag de restricción, bug serio."*
+Lo usan, en cadena: Dirección de making of (redacta), cámara de making
+of/edición/community management (consultan antes de cubrir o publicar), y
+después del rodaje, prensa/distribución (qué material está autorizado para
+EPK/dossier de prensa).
+
+## 4. Necesidades y dolores (con fuente)
+
+- No se encontró documentación de sindicatos/asociaciones españolas sobre
+  cómo se gestiona hoy sin software la línea editorial de making of — se
+  marca como hipótesis, por analogía con otros documentos de criterios
+  internos no regulados del propio inventario (ej. Actas de reuniones de
+  Secretaría de rodaje), que hoy se resuelve con un documento compartido por
+  email/WhatsApp, sin versión controlada ni vínculo a las escenas reales.
+- El dolor concreto y **verificado, no hipótesis**, es el de QA: sin un flag
+  de restricción por escena, el equipo no tiene forma sistemática de saber
+  qué puede publicar — con riesgo real y documentado en el proyecto de
+  prueba de publicar la escena con la menor de 12 años (`desglose-guion.md`
+  línea 11: "Sobrina de 12 años en 6 escenas — RRHH/Producción, Dirección")
+  o la secuencia de riesgo con doble de acción, coordinador de especialistas
+  y protocolo de rescate acuático (línea 12 del mismo desglose).
+- Normativa relevante: autorización de menores en rodaje (Estatuto de los
+  Trabajadores art. 6.4, RD 1435/1985 y su sustituto BOE-A-2026-16173, fecha
+  de vigencia sin confirmar); RGPD/LOPDGDD y Ley Orgánica 1/1996 de
+  protección del menor en cuanto al uso de su imagen en contenido BTS
+  destinado a redes/prensa — marcado como aplicación general razonada, no
+  cláusula específica verificada para making of.
+
+## 5. Estado del arte
+
+Ninguna herramienta de competencia investigada (StudioBinder, Yamdu, Movie
+Magic, SetHero, Celtx) tiene documentada públicamente una función de línea
+editorial/BTS con control de consentimientos y restricciones de escena — son
+herramientas de producción cinematográfica (scheduling, budgeting, call
+sheets), no de gestión de contenido editorial/social media. La búsqueda de
+StudioBinder específicamente no devolvió ninguna función de "making of" ni
+"behind the scenes". Para el resto, la ausencia se marca como **no
+confirmada individualmente** (pendiente de una ronda de búsqueda dirigida
+por producto) — dato más firme: CINEPACK ya tuvo que construir sus propias
+herramientas de departamento para esto (`mo-cal-editorial`,
+`mo-cobertura-bts`, `mo-material`, `mo-derechos-bts`), consistente con que no
+exista una solución externa a integrar.
 
 ## 6. Propuesta
 
@@ -47,6 +126,54 @@ porque el motor genérico no tiene un modo "documento + tabla visibles juntos".
    escudo en acento rojo, y ofrece adoptar los 5 ejemplos reales del proyecto de
    prueba (la menor, la secuencia de riesgo, y 3 escenas sin restricción) o arrancar
    en blanco.
+
+## 7. Integración
+
+- **Con el propio departamento (Making of)**: las otras herramientas ya
+  construidas del departamento (`mo-cobertura-bts`, `mo-material`,
+  `mo-cal-publicaciones`) son ejecutoras de lo que `mo-memoria` decide —
+  deberían poder leer (nunca editar) el flag de restricción por `escena_id`
+  antes de programar cobertura, filtrar material grabado, o pasar una pieza
+  a "Publicado". `mo-derechos-bts` es distinto y no se fusiona: esa es la
+  cesión de imagen general del equipo/reparto para el making of; `mo-memoria`
+  es el criterio editorial + flag por escena concreta, que puede enlazar
+  (campo `link`, no duplicar) a la fila de `mo-derechos-bts` correspondiente.
+  Estas lecturas cruzadas con las otras herramientas de Making of quedan
+  como recomendación de integración futura, no como requisito de esta
+  primera entrega.
+- **Con el proyecto completo**: el tablero de restricciones lee en vivo (no
+  copia) el desglose real de escenas, `guion-desglose-escenas` — cada fila
+  guarda solo `escena_id`, nunca un campo de texto libre tecleado a mano
+  ("Escena 45-50"), para que el flag nunca quede huérfano de su escena real.
+  No escribe en `GENERAL_PLAN_RODAJE`/`GENERAL_ORDEN_RODAJE`, pero podría en
+  el futuro leer la jornada de una escena desde ahí para agrupar el tablero
+  "por jornada de rodaje", igual que ya hace `mo-cobertura-bts`.
+- **Con otros departamentos**: hoy no existe, verificable en este repo de
+  muestreo, ninguna herramienta estructurada de RRHH que marque "escena con
+  menor" ni de Producción que marque "escena de riesgo" — es un hueco real
+  del inventario, no algo resuelto. Por eso el campo `origen_restriccion`
+  permite registrar de dónde vino el criterio (Dirección de making
+  of/RRHH/Producción/Dirección) sin depender de que esa integración exista
+  todavía. Cadena de uso hacia Difusión/Distribución (qué material está
+  autorizado para EPK/dossier de prensa) documentada mas no construida en
+  este ciclo — oportunidad para un expediente futuro de Difusión.
+
+## 8. Diseño visual
+
+Panel a medida `MoMemoriaBoard`: una sola pantalla, mobile-first, con el
+documento de criterios (Bloque A) arriba y el tablero de escenas (Bloque B)
+abajo — nunca detrás de una pestaña, siguiendo la regla de que ninguna
+herramienta es una pantalla plana. Bloque A reutiliza el badge de `ESTADO_DOC`
+(Borrador/En revisión/Aprobado/Bloqueado) ya existente en otros documentos
+versionados del repo. Bloque B: tarjetas de escena con buscador y chips de
+filtro por flag, borde izquierdo de color + chip del mismo color consistente
+(verde "Apta", rojo "No apta", ámbar "Requiere consentimiento", cian "Uso
+exclusivo de prensa") — el único lugar de la herramienta donde el color
+comunica algo crítico, por eso no se desactiva el acento. Icono `shield`
+nuevo (mismo trazo 1.75px que el resto del set) para el encabezado del
+tablero y el estado vacío. Mobile-first real: grid de tarjetas cae a 1
+columna en ≤640px, buscador pasa a ancho completo, verificado sin scroll
+horizontal en 390/820/1440px.
 
 ## 9. Componentes (parte de desarrollo)
 
@@ -144,3 +271,23 @@ porque el motor genérico no tiene un modo "documento + tabla visibles juntos".
   No se construyó ni se modificó para este expediente; se menciona acá solo para
   que quede explícito que no es una funcionalidad que este expediente deba
   reclamar como propia en la sección 9.
+
+Aprobado por comité en ronda 2, tras confirmar la limpieza de datos de
+prueba y la captura regenerada. Sin objeciones abiertas.
+
+## 11. Fuentes
+
+- [BOE-A-1985-17303 — Real Decreto 1435/1985 (consolidado)](https://www.boe.es/buscar/pdf/1985/BOE-A-1985-17303-consolidado.pdf)
+- [BOE-A-2026-16173 — norma que deroga y sustituye el RD 1435/1985 (BOE 25/07/2026)](https://www.boe.es/boe/dias/2026/07/25/pdfs/BOE-A-2026-16173.pdf)
+- [Guía "Proceso rodaje con menores" — Comunidad de Madrid, Film Madrid](https://gestiona3.madrid.org/filmmadrid/descargas/Proceso_rodaje_con_menores_CAM_2024.pdf)
+- [BOE-A-2024-6846 — III Convenio colectivo estatal de la industria de producción audiovisual (técnicos)](https://BOE.ES/boe/dias/2024/04/06/pdfs/BOE-A-2024-6846.pdf)
+- [BOE-A-2025-9881 — sentencia sobre nulidad parcial del convenio](https://www.boe.es/boe/dias/2025/05/19/pdfs/BOE-A-2025-9881.pdf)
+- [Filmora — Cómo hacer un vídeo behind the scenes](https://filmora.wondershare.es/entertainment-video/how-to-make-behind-the-scenes-video.html)
+- [Tutsplus — Cómo elegir un sujeto documental (criterios de cobertura)](https://photography.tutsplus.com/es/articles/how-to-find-and-choose-a-documentary-subject--cms-22446)
+- `app/herramientas.ts`, `oficina/inventario.md`, `oficina-qa/cargos.md` (fila 42), `oficina-qa/proyecto-test/` (desglose-guion.md, guion.md, plan-rodaje-esquema.md, reparto-ficticio.md, presupuesto-aproximado.md)
+
+### Pendientes de verificación explícitos
+- Confirmación dirigida, producto por producto, de que Yamdu/Movie Magic/SetHero/Celtx no tienen función de línea editorial/BTS.
+- Cláusula específica del convenio sectorial sobre uso de imagen en making of/BTS — no encontrada.
+- Fecha de entrada en vigor de BOE-A-2026-16173.
+- Integración de lectura cruzada con RRHH/Producción/Difusión (sección 7) — ninguna de esas herramientas existe hoy de forma estructurada para enlazar.
