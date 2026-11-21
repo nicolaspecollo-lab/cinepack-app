@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
+  "title": "Memoria de making of",
+  "subtitle": "Dirección de making of: línea editorial del BTS + flag de restricción por escena, verificado en vivo con cuenta de prueba real.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
+  "metaItems": [["Fecha", "21 nov 2026"], ["Departamento", "Making of · Dirección de making of"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#FF7F6B"
+}
