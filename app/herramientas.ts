@@ -2411,6 +2411,36 @@ const repPronunciacion: Herramienta = {
   ],
 };
 
+// Marcas de continuidad (Reparto secundario) — continuidad FÍSICA observable
+// (posición en plató, vestuario/prop en mano, entrada/salida, mirada), nunca
+// el interior del personaje (eso vive en rep-notas-escenas-detalle, cargos de
+// Protagonista/Reparto principal). El id se conserva (rep-notas-escenas) pero
+// el nombre visible pasa a "Marcas de continuidad" — ver arquitectura del
+// expediente 2026-11-21_reparto_notas-escenas.
+// Vista bespoke en HerramientaPanel.tsx (MarcasContinuidad): el motor
+// genérico de tabla no agrupa por escena ordenando por la aparición MÁS
+// RECIENTE ni deja la ficha anterior siempre visible al lado de la nueva —
+// que es el núcleo del valor real ("¿cómo estaba la última vez que rodé
+// esta escena?") para un actor que vuelve a su personaje semanas después.
+const repMarcasContinuidad: Herramienta = {
+  id: "rep-notas-escenas",
+  nombre: "Marcas de continuidad",
+  tipo: "tabla",
+  hint: "Tu copia personal de continuidad física por escena: marca de plató, vestuario/prop en mano, entrada y salida de cuadro, mirada y última palabra antes del corte. Agrupada por escena y ordenada por la jornada más reciente — para que al volver a rodar tu personaje, semanas o meses después, veas de entrada cómo estabas la última vez.",
+  columnas: [
+    { key: "escena", label: "Escena" },
+    { key: "fecha_jornada", label: "Fecha de rodaje", tipo: "fecha" },
+    { key: "marca_posicion", label: "Marca de posición" },
+    { key: "foto_marca", label: "Foto de la marca / posición", tipo: "archivo" as const },
+    { key: "vestuario_prop", label: "Vestuario / prop en mano", tipo: "largo" },
+    { key: "entrada_salida", label: "Entrada y salida de cuadro", tipo: "largo" },
+    { key: "direccion_mirada", label: "Dirección de mirada/cuerpo" },
+    { key: "ultima_frase_gesto", label: "Última palabra o gesto antes del corte" },
+    { key: "tomas_relevantes", label: "Toma(s) de referencia" },
+    { key: "notas_libres", label: "Notas personales", tipo: "largo" },
+  ],
+};
+
 // ===========================================================================
 // NUEVAS HERRAMIENTAS — MAKING OF (BTS CREW)
 // ===========================================================================
@@ -3375,7 +3405,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     },
     "Reparto secundario": {
       departamento: [fichaPersonaje, calendarioCitaciones, vestMaqAsignado, contratoIndividual],
-      cargo: [{ id: "rep-notas-escenas", nombre: "Notas de escenas y marcas", tipo: "nota" }],
+      cargo: [repMarcasContinuidad],
     },
     "Figuración": {
       departamento: [calendarioCitaciones, vestMaqAsignado],
