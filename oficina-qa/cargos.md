@@ -4,6 +4,8 @@ Fuente: `/oficina/inventario.md` (17 departamentos reales de CINEPACK). Convenci
 
 **Nota (18/11/2026):** los emails de esta tabla ya tienen sufijo numérico (2/3/4) — las cuentas base sin sufijo se crearon antes de que el trigger `on_auth_user_created` funcionara en `cinepack-dev` y quedaron sin fila de `profiles`/membresía. Las 51 cuentas listadas acá SÍ tienen perfil completo y ya son miembro del proyecto de prueba.
 
+**Corrección (21/11/2026):** la afirmación de arriba ("SÍ tienen perfil completo") ya no es confiable — se encontraron 2 cuentas más (`qa.ej-legal2`, `qa.sost-direccion4`) con `profiles` vacío pese a tener sufijo y ser miembro del proyecto. Se completaron esas 2 esta noche, pero el resto de la tabla no está re-verificado. Antes de asumir que una cuenta está lista para probar, confirmarlo (login real + chequeo de `profiles`), no darlo por hecho solo porque tiene sufijo numérico.
+
 | # | Departamento | Cargo | Herramienta(s) principal(es) | Cuenta de prueba | Personalidad exigente/proactiva |
 |---|---|---|---|---|---|
 | 1 | Ejecutivo | Producción ejecutiva | Presupuesto, Plan de financiación, Gestión de coproductores, Deliverables | qa.ej-produccion-ejecutiva2@mailinator.com | Previsora y numérica: si un capítulo del presupuesto no cuadra con el desglose de guion, lo señala como bug de integración, no lo deja pasar. |
