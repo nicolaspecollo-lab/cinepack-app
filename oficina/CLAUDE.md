@@ -7,7 +7,7 @@ Lee también `stack.md`, `sistema-diseno.md`, `inventario.md`, `backlog.md` ante
 ## Inviolables
 1. Este repo (`nicolaspecollo-lab/cinepack-app`) **es** el repo real de CINEPACK — no hay un repo paralelo separado. Todo el trabajo de expediente vive en su propia rama con PR en borrador.
 2. `main` queda intocable salvo que Nico dé **Corte** explícito con `corte_alcance.main:true` para esa entrega puntual (regla de Nico, 20/11/2026 — aclaración explícita: "Corte" significa merge real a `main`, para que la herramienta pase a la app de verdad, el mismo mecanismo que ya se usó en `dir-notas-escena`, commit `887aa77`). El merge de un expediente validado a `claude/oficina-agentes-cinepack-jv179i` (la rama de trabajo de esta oficina) SÍ es automático en cuanto Nico lo valida con "cumple"/"supera" — ver "Cola de merge" abajo — pero eso **no** autoriza por sí solo tocar `main`; `main` solo se toca con el Corte explícito de esa entrega.
-3. Ritmo fijo (regla de Nico, 16/11/2026): **3 herramientas por día**, entregadas a las **10:00 hora de Madrid**. Si alguna no llega al nivel exigido para esa hora, se entrega 1 o 2 y se explica el motivo de la que falta — nunca relleno, pero el objetivo ya no es "hasta completar 2 sin reloj": es 3 a las 10:00, todos los días.
+3. Ritmo fijo (regla de Nico, 16/11/2026; hora actualizada 21/11/2026): **3 herramientas por día**, entregadas a las **7:00 hora de Madrid** (antes 10:00). Si alguna no llega al nivel exigido para esa hora, se entrega 1 o 2 y se explica el motivo de la que falta — nunca relleno, pero el objetivo ya no es "hasta completar 2 sin reloj": es 3 a las 7:00, todos los días.
 4. Nada inventado: toda afirmación de investigación lleva fuente o se marca "hipótesis". Prohibido inventar datos, testimonios, estadísticas o funciones de competidores.
 5. Sin duplicados: comprobar contra `inventario.md` y los expedientes ya entregados antes de proponer una herramienta.
 6. Sistema de diseño al 100%: solo colores/tipografías/componentes que salgan de `sistema-diseno.md`. Mobile-first: en móvil ocupa toda la pantalla. Prohibido el "cuadro vacío genérico" — cada herramienta llega ya trabajada y específica del cargo.
@@ -35,7 +35,7 @@ Si un mismo expediente agrupa **más de una herramienta distinta y nombrable** (
 - **Ambición y profundidad**: cubre varias fases/aristas reales del cargo, no una pantalla plana resuelta con lo obvio; contenido precargado exhaustivo y específico; integración que abre posibilidades reales. Si la herramienta es "una herramienta más" sin la complejidad que amerita, es objeción igual que cualquiera de las anteriores.
 Si no supera las 2 rondas: se archiva con el motivo, no se entrega a Nico.
 
-## Ciclo diario (10:00 hora de Madrid, todos los días)
+## Ciclo diario (7:00 hora de Madrid, todos los días)
 1. Director lee backlog/expedientes/partes y elige 3 herramientas. 2. Agente de departamento define necesidad + investigador documenta (con fuentes). 3. Arquitecto diseña integración y modelo de datos. 4. Desarrollador construye el prototipo en `oficina/AAAA-MM-DD-<herramienta>`. 5. QA prueba y genera capturas en 390/820/1440px (Playwright). 6. Comité revisa (máx. 2 rondas). 7. `dossier.pdf` con la plantilla de marca. 8. PR en borrador contra `claude/oficina-agentes-cinepack-jv179i` (nunca contra `main`), con dossier y PDF adjuntos. 9. Actualizar backlog, inventario y parte diario.
 
 ## Revisión de Nico y cola de merge
