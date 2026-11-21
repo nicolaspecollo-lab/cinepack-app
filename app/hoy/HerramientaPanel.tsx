@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
-import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
+import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT, ESTADO_DOC } from "../herramientas";
 import { DEPARTAMENTOS } from "../constants";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
@@ -260,7 +260,8 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "mkt-plan" ||
     id === "dif-medios" ||
     id === "dist-festivales" ||
-    id === "mo-cal-publicaciones"
+    id === "mo-cal-publicaciones" ||
+    id === "mo-memoria"
   );
 }
 
@@ -275,6 +276,7 @@ export function EstadoSeg({
   editable,
   chip = false,
   color = false,
+  tono,
 }: {
   valor: string;
   opciones: string[];
@@ -282,17 +284,23 @@ export function EstadoSeg({
   editable: boolean;
   chip?: boolean;
   color?: boolean;
+  // Mapeo explícito opción -> tono, para campos cuyo vocabulario no es el
+  // genérico de estadoTono() (p. ej. mo-memoria: Apta/No apta/Requiere
+  // consentimiento/Uso exclusivo de prensa). Si no se pasa, se mantiene el
+  // comportamiento por defecto (estadoTono(op)) para no afectar otros paneles.
+  tono?: (op: string) => string;
 }) {
   return (
     <div className={`cp-seg ${chip ? "cp-seg-chip" : ""}`} role="group">
       {opciones.map((op) => {
         const on = valor === op;
+        const t = tono ? tono(op) : estadoTono(op);
         return (
           <button
             key={op}
             type="button"
             disabled={!editable}
-            className={`cp-seg-cell ${on ? "cp-seg-on" : ""} ${on && color ? `seg-${estadoTono(op)}` : ""}`}
+            className={`cp-seg-cell ${on ? "cp-seg-on" : ""} ${on && color ? `seg-${t}` : ""}`}
             onClick={() => onPick(on ? "" : op)}
           >
             {op || "—"}
@@ -589,6 +597,16 @@ function HerramientaData({
     const next = [...actuales, { key: slugCampo(label), label, tipo } as Columna];
     if (meta) await guardarFila(meta.id, { ...meta.datos, _extra: JSON.stringify(next) });
     else await crearFila({ _extra: JSON.stringify(next) }, -1);
+  }
+
+  // Guarda campos sueltos en la fila meta (orden:-1) — mismo patrón que
+  // _extra/_moneda arriba. Usado por Memoria de making of (Bloque A: el
+  // documento de criterios editoriales) para no tener que inventar otra
+  // tabla cuando el requisito real (QA) es que el Bloque B siga siendo
+  // "una fila por escena".
+  async function guardarMeta(parcial: Record<string, string>) {
+    if (meta) await guardarFila(meta.id, { ...meta.datos, ...parcial });
+    else await crearFila(parcial, -1);
   }
 
   // Moneda de las columnas "money" de esta tabla — compartida por todo el
@@ -1075,6 +1093,21 @@ function HerramientaData({
         />
         )}</VistaConEjemplos>
       )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "mo-memoria" && (
+        <MoMemoriaBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          ejemplos={EJEMPLOS_POR_ID[herramienta.id]}
+          meta={meta?.datos ?? null}
+          onGuardarMeta={guardarMeta}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
 
       {herramienta.tipo === "tabla" && DOC_STATUS_IDS.has(herramienta.id) && (
         <DocStatusBoard
@@ -5197,6 +5230,361 @@ export function FinanciacionPipeline({
         </div>
       )}
     </>
+  );
+}
+
+// ---- Memoria de making of: documento de criterios + tablero de escenas ----
+// Panel a medida (no la Tabla genérica ni DocStatusBoard): esta herramienta
+// es, por diseño del arquitecto, DOS bloques que viven en la misma pantalla
+// — un documento de línea editorial (Bloque A, guardado en la fila meta) y
+// un tablero de escenas con flag de restricción (Bloque B, una fila por
+// escena). Ninguna vista del motor genérico muestra documento + tabla
+// juntos sin esconder uno detrás de una pestaña, y acá la regla es "sin
+// tabs ocultos, ambos visibles" — de ahí el panel propio.
+const MO_MEMORIA_FLAG_TONO: Record<string, "ok" | "warn" | "bad" | "info"> = {
+  Apta: "ok",
+  "No apta": "bad",
+  "Requiere consentimiento": "warn",
+  "Uso exclusivo de prensa": "info",
+};
+const MO_MEMORIA_FLAGS = ["Apta", "No apta", "Requiere consentimiento", "Uso exclusivo de prensa"];
+
+type EscenaDesglose = { escena: string; loc: string };
+
+function MoMemoriaBoard({
+  columnas,
+  filas,
+  editable,
+  ejemplos,
+  meta,
+  onGuardarMeta,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  ejemplos?: Ejemplo[];
+  meta: Record<string, string> | null;
+  onGuardarMeta: (parcial: Record<string, string>) => void;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(ejemplos ?? []);
+  const editableFilas = editable && hayFilas;
+  const colByKey = useMemo(() => Object.fromEntries(columnas.map((c) => [c.key, c])), [columnas]);
+
+  const [filtro, setFiltro] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [escenasDesglose, setEscenasDesglose] = useState<EscenaDesglose[]>([]);
+  const [nuevaEscena, setNuevaEscena] = useState("");
+  const [agregando, setAgregando] = useState(false);
+
+  // Lee (nunca escribe) el desglose real de escenas, para que "Agregar
+  // escena" sea un selector contra el guion, no un campo de texto libre
+  // tecleado a mano — requisito explícito del arquitecto (§2 de la
+  // arquitectura: "si se pierde esa referencia, el flag queda huérfano").
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+      if (!projectId) return;
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("herramienta_filas")
+        .select("datos")
+        .eq("project_id", projectId)
+        .eq("herramienta_id", "guion-desglose-escenas")
+        .order("orden", { ascending: true });
+      if (!activo || !data) return;
+      setEscenasDesglose(
+        (data as { datos: Record<string, string> }[])
+          .map((r) => ({ escena: r.datos?.escena ?? "", loc: r.datos?.loc ?? "" }))
+          .filter((e) => e.escena)
+      );
+    })();
+    return () => { activo = false; };
+  }, []);
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  function crearDesdeSeleccion() {
+    if (!nuevaEscena) return;
+    onCrear({ escena: nuevaEscena, flag_redes: "Apta", origen_restriccion: "Dirección de making of" });
+    setNuevaEscena("");
+    setAgregando(false);
+  }
+
+  const visibles = filasEff.filter((f) => {
+    if (filtro && (f.datos?.flag_redes ?? "") !== filtro) return false;
+    if (busqueda) {
+      const q = busqueda.toLowerCase();
+      const hay = `${f.datos?.escena ?? ""} ${f.datos?.motivo ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const conteos = MO_MEMORIA_FLAGS.map((flag) => ({
+    flag,
+    n: filasEff.filter((f) => (f.datos?.flag_redes ?? "") === flag).length,
+  }));
+
+  const colMotivo = colByKey["motivo"];
+  const colOrigen = colByKey["origen_restriccion"];
+  const colConsent = colByKey["consentimiento_vinculado"];
+  const colRevisadoPor = colByKey["revisado_por"];
+  const colFechaRev = colByKey["fecha_revision"];
+
+  const docEstado = meta?.estado || "Borrador";
+
+  return (
+    <div className="hp-momem">
+      {/* Bloque A — documento de criterios y línea editorial.
+          key={meta ? "doc-ready" : "doc-pending"}: fuerza a React a
+          remontar los <textarea>/<input> (defaultValue, no controlados) la
+          única vez que `meta` pasa de null (todavía cargando) a objeto real
+          — sin esto, si este panel monta antes de que el fetch de la fila
+          meta resuelva, los campos quedan pintados con "" para siempre
+          aunque el dato real ya haya llegado (hallazgo reproducido 21/11/2026,
+          mismo mecanismo que el bug de "Esta jornada" en rep-notas-escenas). */}
+      <section className="hp-momem-doc" key={meta ? "doc-ready" : "doc-pending"}>
+        <div className="hp-momem-doc-head">
+          <h4><Icon name="file-text" /> Línea editorial del making of</h4>
+          <EstadoSeg
+            valor={docEstado}
+            opciones={ESTADO_DOC}
+            onPick={(v) => onGuardarMeta({ estado: v })}
+            editable={editable}
+            chip
+            color
+          />
+        </div>
+        <div className="hp-momem-doc-grid">
+          <label className="hp-momem-doc-field">
+            <span>Tono y objetivo del BTS</span>
+            <textarea
+              rows={2}
+              defaultValue={meta?.tono_objetivo ?? ""}
+              placeholder="Ej: making of documental de proceso, uso promocional y de archivo institucional."
+              readOnly={!editable}
+              onBlur={(e) => onGuardarMeta({ tono_objetivo: e.target.value })}
+            />
+          </label>
+          <label className="hp-momem-doc-field">
+            <span>Criterios de cobertura (priorizar / evitar)</span>
+            <textarea
+              rows={3}
+              defaultValue={meta?.criterios_cobertura ?? ""}
+              placeholder="Ej: priorizar ensayos, cambios de luz, bastidores de maquillaje. Evitar momentos de concentración del reparto."
+              readOnly={!editable}
+              onBlur={(e) => onGuardarMeta({ criterios_cobertura: e.target.value })}
+            />
+          </label>
+          <label className="hp-momem-doc-field">
+            <span>Zonas / momentos restringidos (en general, no por escena)</span>
+            <textarea
+              rows={2}
+              defaultValue={meta?.zonas_restringidas ?? ""}
+              placeholder="Ej: camerinos, pausas de concentración antes de escenas emocionales."
+              readOnly={!editable}
+              onBlur={(e) => onGuardarMeta({ zonas_restringidas: e.target.value })}
+            />
+          </label>
+          <div className="hp-momem-doc-meta">
+            <label>
+              <span>Versión</span>
+              <input
+                type="text"
+                defaultValue={meta?.version ?? ""}
+                placeholder="v1"
+                readOnly={!editable}
+                onBlur={(e) => onGuardarMeta({ version: e.target.value })}
+              />
+            </label>
+            <label>
+              <span>Aprobado por</span>
+              <input
+                type="text"
+                defaultValue={meta?.aprobado_por ?? ""}
+                placeholder="Dirección / Producción"
+                readOnly={!editable}
+                onBlur={(e) => onGuardarMeta({ aprobado_por: e.target.value })}
+              />
+            </label>
+            <label>
+              <span>Fecha de aprobación</span>
+              <input
+                type="date"
+                defaultValue={meta?.fecha_aprobacion ?? ""}
+                readOnly={!editable}
+                onBlur={(e) => onGuardarMeta({ fecha_aprobacion: e.target.value })}
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* Bloque B — tablero de escenas con flag de restricción */}
+      <section className="hp-momem-tablero">
+        <div className="hp-momem-tablero-head">
+          <h4><Icon name="shield" /> Restricciones por escena</h4>
+          {editable && (
+            <button className="cp-btn cp-btn-acc" onClick={() => setAgregando((v) => !v)}>
+              <Icon name="plus" /> Agregar escena
+            </button>
+          )}
+        </div>
+
+        {agregando && (
+          <div className="hp-momem-add">
+            {escenasDesglose.length > 0 ? (
+              <CpSelect
+                value={nuevaEscena}
+                onChange={setNuevaEscena}
+                placeholder="Elegí una escena del desglose…"
+                options={escenasDesglose.map((e) => ({
+                  value: `${e.escena}${e.loc ? ` — ${e.loc}` : ""}`,
+                  label: `${e.escena}${e.loc ? ` — ${e.loc}` : ""}`,
+                }))}
+              />
+            ) : (
+              <input
+                type="text"
+                className="hp-momem-add-fallback"
+                placeholder="Nº de escena / locación (no se encontró el desglose de Guion)"
+                value={nuevaEscena}
+                onChange={(e) => setNuevaEscena(e.target.value)}
+              />
+            )}
+            <button className="cp-btn cp-btn-acc" disabled={!nuevaEscena} onClick={crearDesdeSeleccion}>Agregar</button>
+          </div>
+        )}
+
+        {hayFilas && (
+          <div className="hp-momem-filtros">
+            <button className={`hp-gd-fchip${!filtro ? " on" : ""}`} onClick={() => setFiltro(null)}>Todas ({filasEff.length})</button>
+            {conteos.map(({ flag, n }) => (
+              <button
+                key={flag}
+                className={`hp-gd-fchip hp-momem-fchip tono-${MO_MEMORIA_FLAG_TONO[flag]}${filtro === flag ? " on" : ""}`}
+                onClick={() => setFiltro(filtro === flag ? null : flag)}
+              >
+                {flag} ({n})
+              </button>
+            ))}
+            <span className="hp-momem-buscar">
+              <Icon name="search" />
+              <input
+                type="search"
+                placeholder="Buscar escena o motivo…"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+            </span>
+          </div>
+        )}
+
+        {filasEff.length === 0 ? (
+          <div className="hp-tabla-empty hp-momem-empty">
+            <span className="hp-momem-empty-icon"><Icon name="shield" /></span>
+            <p>Todavía no marcaste ninguna escena. Acá vas a registrar, escena por escena, cuáles NO se pueden publicar en redes (menores, escenas de riesgo, consentimientos pendientes) — para que cámara de making of y community management nunca tengan que adivinarlo.</p>
+            {editable && <button className="cp-btn cp-btn-acc" onClick={() => setAgregando(true)}>+ Marcar la primera escena</button>}
+          </div>
+        ) : visibles.length === 0 ? (
+          <p className="hp-actas-sin-resultados">Ninguna escena coincide con el filtro o la búsqueda.</p>
+        ) : (
+          <div className={`hp-momem-grid ${!hayFilas ? "cp-ghost-grid" : ""}`}>
+            {visibles.map((f) => {
+              const flag = f.datos?.flag_redes || "";
+              const tono = MO_MEMORIA_FLAG_TONO[flag] ?? "neutral";
+              return (
+                <div className={`hp-momem-card tono-border-${tono}`} key={f.id}>
+                  <div className="hp-momem-card-head">
+                    <span className="hp-momem-card-escena">{f.datos?.escena || "Escena sin nombre"}</span>
+                    {editableFilas && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Borrar">✕</button>}
+                  </div>
+                  <div className="hp-momem-card-flag">
+                    <EstadoSeg
+                      valor={flag}
+                      opciones={MO_MEMORIA_FLAGS}
+                      onPick={(v) => set(f, "flag_redes", v)}
+                      editable={editableFilas}
+                      chip
+                      color
+                      tono={(op) => MO_MEMORIA_FLAG_TONO[op] ?? "neutral"}
+                    />
+                  </div>
+                  {colMotivo && (
+                    <textarea
+                      className="hp-momem-card-motivo"
+                      rows={2}
+                      defaultValue={f.datos?.motivo ?? ""}
+                      placeholder="Motivo (ej. menor de edad en escena, escena de riesgo con doble de acción)"
+                      readOnly={!editableFilas}
+                      onBlur={(e) => set(f, "motivo", e.target.value)}
+                    />
+                  )}
+                  <div className="hp-momem-card-specs">
+                    {colOrigen && (
+                      <label>
+                        <span>{colOrigen.label}</span>
+                        <EstadoSeg
+                          valor={f.datos?.origen_restriccion ?? ""}
+                          opciones={colOrigen.opciones ?? []}
+                          onPick={(v) => set(f, "origen_restriccion", v)}
+                          editable={editableFilas}
+                          chip
+                        />
+                      </label>
+                    )}
+                    {colConsent && (
+                      <label>
+                        <span>{colConsent.label}</span>
+                        <input
+                          type="text"
+                          defaultValue={f.datos?.consentimiento_vinculado ?? ""}
+                          placeholder="Link a Derechos de uso de material BTS"
+                          readOnly={!editableFilas}
+                          onBlur={(e) => set(f, "consentimiento_vinculado", e.target.value)}
+                        />
+                      </label>
+                    )}
+                    {colRevisadoPor && (
+                      <label>
+                        <span>{colRevisadoPor.label}</span>
+                        <input
+                          type="text"
+                          defaultValue={f.datos?.revisado_por ?? ""}
+                          readOnly={!editableFilas}
+                          onBlur={(e) => set(f, "revisado_por", e.target.value)}
+                        />
+                      </label>
+                    )}
+                    {colFechaRev && (
+                      <label>
+                        <span>{colFechaRev.label}</span>
+                        <input
+                          type="date"
+                          defaultValue={f.datos?.fecha_revision ?? ""}
+                          readOnly={!editableFilas}
+                          onBlur={(e) => set(f, "fecha_revision", e.target.value)}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -9847,6 +10235,58 @@ const EJ_MODELO: Ejemplo[] = [
 // reutilizan patrones compartidos (FichaEquipo / AgendaDia / DocStatusBoard).
 // Los componentes bespoke definen sus ejemplos inline; estos son para el resto.
 export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
+  // Dato real del proyecto de prueba (no inventado): Lúa Brizal, menor de 12
+  // años con permiso de trabajo de menor (escenas 45-50), y la secuencia de
+  // riesgo con doble de acción sobre el canal de desagüe (escenas 51-55) —
+  // ambas "No apta"/"Requiere consentimiento". El resto son escenas sin
+  // restricción, para que se vea la variedad real, no solo el caso crítico.
+  "mo-memoria": [
+    {
+      escena: "Esc. 45-50 — Casa de los Brizal (menor en escena)",
+      flag_redes: "No apta",
+      motivo: "Lúa Brizal (ficticia), sobrina de Marta, 12 años — permiso de trabajo de menor, tutor/docente en set. El BTS de making of necesita autorización de imagen adicional y distinta del permiso de trabajo, que hoy no está firmada.",
+      origen_restriccion: "RRHH (menores)",
+      consentimiento_vinculado: "",
+      revisado_por: "Dirección de making of",
+      fecha_revision: "2026-11-18",
+    },
+    {
+      escena: "Esc. 51-55 — Pasarela sobre canal de desagüe (de noche)",
+      flag_redes: "No apta",
+      motivo: "Secuencia de riesgo físico con doble de acción, coordinador de especialistas y protocolo de rescate acuático. No se publica hasta confirmar con Producción que el material no expone el procedimiento de seguridad.",
+      origen_restriccion: "Producción (seguridad)",
+      consentimiento_vinculado: "",
+      revisado_por: "Dirección de making of",
+      fecha_revision: "2026-11-18",
+    },
+    {
+      escena: "Esc. 8 — Muelle, amanecer",
+      flag_redes: "Apta",
+      motivo: "Plano general de ambiente, sin reparto principal en primer plano. Buen material de clima para redes.",
+      origen_restriccion: "Dirección de making of",
+      consentimiento_vinculado: "",
+      revisado_por: "Dirección de making of",
+      fecha_revision: "2026-11-10",
+    },
+    {
+      escena: "Esc. 14 — Cocina, discusión",
+      flag_redes: "Apta",
+      motivo: "Ensayo de bloqueo con el reparto adulto, ambos con cesión de imagen BTS firmada y vigente.",
+      origen_restriccion: "Dirección de making of",
+      consentimiento_vinculado: "Derechos de uso de material BTS — reparto principal",
+      revisado_por: "Dirección de making of",
+      fecha_revision: "2026-11-12",
+    },
+    {
+      escena: "Esc. 31 — Oficina, despido",
+      flag_redes: "Uso exclusivo de prensa",
+      motivo: "Escena clave de trama (spoiler). Material autorizado solo para kit de prensa/EPK bajo embargo, no para redes antes del estreno.",
+      origen_restriccion: "Dirección",
+      consentimiento_vinculado: "",
+      revisado_por: "Dirección de making of",
+      fecha_revision: "2026-11-13",
+    },
+  ],
   "dir-decisiones-visionado": [
     {
       escena: "Esc. 14 — Cocina, discusión", fecha_visionado: "2026-11-10", decision: "Aprobada (circled)",
