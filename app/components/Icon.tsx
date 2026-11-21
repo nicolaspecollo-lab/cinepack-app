@@ -13,7 +13,7 @@ export type IconName =
   | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
   | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase"
   | "camera" | "palette" | "sound" | "leaf" | "megaphone"
-  | "link" | "quote" | "minus" | "undo" | "redo";
+  | "link" | "quote" | "minus" | "undo" | "redo" | "shield";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   bold: <><path d="M6 4h8a4 4 0 0 1 0 8H6z" /><path d="M6 12h9a4 4 0 0 1 0 8H6z" /></>,
@@ -85,6 +85,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   minus: <><line x1="4" y1="12" x2="20" y2="12" /></>,
   undo: <><path d="M4 7v6h6" /><path d="M20 18a8 8 0 0 0-8-8 8 8 0 0 0-6.3 3" /></>,
   redo: <><path d="M20 7v6h-6" /><path d="M4 18a8 8 0 0 1 8-8 8 8 0 0 1 6.3 3" /></>,
+  shield: <><path d="M12 2 4 5v6c0 5.2 3.4 8.4 8 11 4.6-2.6 8-5.8 8-11V5Z" /><path d="m9 12 2 2 4-4" /></>,
 };
 
 export default function Icon({
