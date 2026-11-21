@@ -136,3 +136,11 @@ porque el motor genérico no tiene un modo "documento + tabla visibles juntos".
   sin `key` ligado al estado de carga) existe en otros paneles bespoke del motor,
   ya que apareció de forma independiente en dos herramientas distintas el mismo
   día.
+- **Aclaración para comité** (visible en la captura de 1440px durante la limpieza
+  de datos de prueba): el banner "Cambios recientes" con botón "Deshacer" que
+  aparece al borrar una fila **no es un componente nuevo de `mo-memoria`** — es
+  una capacidad genérica ya existente del motor de filas (`crearFila`/
+  `guardarFila`/`borrarFila`), compartida por cualquier herramienta tipo `tabla`.
+  No se construyó ni se modificó para este expediente; se menciona acá solo para
+  que quede explícito que no es una funcionalidad que este expediente deba
+  reclamar como propia en la sección 9.
