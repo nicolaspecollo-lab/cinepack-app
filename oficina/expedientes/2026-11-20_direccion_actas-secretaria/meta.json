@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
+  "title": "Actas de reuniones y archivo administrativo",
+  "subtitle": "Secretaría de rodaje: de nota vacía a archivo de actas por tipo de reunión con tarjetas y buscador real, verificado en vivo con cuenta de prueba real.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
+  "metaItems": [["Fecha", "20 nov 2026"], ["Departamento", "Dirección · Secretaría de rodaje"], ["Oficina", "Desarrollo"], ["Ronda", "3 — rediseño"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#E8A330"
+}

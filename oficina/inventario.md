@@ -28,7 +28,7 @@ Herramienta de departamento: Calendario de ensayos, Partes de script/continuidad
 - **2ª Asistencia de dirección**: Listado de figuración/extras por escena — **Consolidada** (tabla con columnas propias).
 - **Script**: Continuidad fotográfica (**Circunstancial** — tipo `galeria` con hint "Galería + notas de raccord", sin campos detallados vistos).
 - **Dirección de actores**: Notas de ensayo por actor/personaje (**Vacía** — `nota` sin hint).
-- **Secretaría de rodaje**: Actas de reuniones y archivo administrativo (**Vacía** — `nota` sin hint).
+- **Secretaría de rodaje**: Actas de reuniones y archivo administrativo (~~**Vacía**~~ → **Consolidada** 20/11, PR #12 — tarjetas por tipo de reunión con buscador real, ver `expedientes/2026-11-20_direccion_actas-secretaria/`).
 
 ## 3. Producción
 - **Dirección de producción**, **Jefatura de producción**, **Asistencia de producción**, **Coordinación de producción**, **Jefatura de locaciones**, **Scouting**, **Logística**, **Driver**.
@@ -109,7 +109,7 @@ Herramientas de departamento: Plan de distribución, Listado de festivales (seed
 ## Resumen cuantitativo (primera pasada, sujeto a confirmación por los agentes de departamento)
 - Herramientas de departamento (compartidas) revisadas: ~45, la gran mayoría **Consolidadas**.
 - Herramientas `nota`/`checklist` sin `hint` identificadas como **Vacía/placeholder** (lista cerrada, confirmada por grep, 16 casos; actualizado 17/11: 3 entregadas hoy, pendientes de calificación — ver `entregas` en el panel):
-  ~~`dir-notas-escena`~~, ~~`dir-decisiones-visionado`~~, `dir-control-horarios` (2ª Asistencia), `dir-notas-ensayo`, `dir-actas`, `prod-tareas-admin`, ~~`foto-checklist-descarga`~~, ~~`foto-dit-backup`~~, ~~`arte-checklist-tareas`~~, ~~`rep-diario-personaje`~~, `rep-notas-preparacion`, `rep-notas-escenas`, `rep-instrucciones-figuracion`, ~~`post-checklist-mezcla`~~, ~~`rrhh-plan-bienestar`~~, `mo-memoria`, además de `gen-checklist-wrap`. (Actualizado 18/11: las 3 recién tachadas se entregaron hoy, pendientes de calificación — ver `entregas` en el panel. Actualizado 20/11: `dir-decisiones-visionado` entregada con QA real — ver `oficina/expedientes/2026-11-20_direccion_decisiones-visionado/`.)
+  ~~`dir-notas-escena`~~, ~~`dir-decisiones-visionado`~~, `dir-control-horarios` (2ª Asistencia), `dir-notas-ensayo`, ~~`dir-actas`~~, `prod-tareas-admin`, ~~`foto-checklist-descarga`~~, ~~`foto-dit-backup`~~, ~~`arte-checklist-tareas`~~, ~~`rep-diario-personaje`~~, `rep-notas-preparacion`, `rep-notas-escenas`, `rep-instrucciones-figuracion`, ~~`post-checklist-mezcla`~~, ~~`rrhh-plan-bienestar`~~, `mo-memoria`, además de `gen-checklist-wrap`. (Actualizado 18/11: las 3 recién tachadas se entregaron hoy, pendientes de calificación — ver `entregas` en el panel. Actualizado 20/11: `dir-decisiones-visionado` entregada con QA real — ver `oficina/expedientes/2026-11-20_direccion_decisiones-visionado/`; `dir-actas` entregado, PR #12, ver `oficina/expedientes/2026-11-20_direccion_actas-secretaria/`. Actualizado 21/11: ambas calificadas "Cumple" por Nico.)
 - No existe en el repo ningún precargado de ítems de checklist (`CHECKLIST_ITEMS`/similar) — confirma que todo tipo `checklist`/`nota` sin `hint` es, literalmente, un cuadro vacío genérico hoy.
 - Herramienta transversal "Hoja y documento en blanco" (sección 7 del encargo): **Consolidada** (16/11, PR #5, aprobada por el comité). Univer (hoja) + TipTap (documento). Ver `expedientes/2026-11-16_transversal_hoja-documento-blanco/`.
 
