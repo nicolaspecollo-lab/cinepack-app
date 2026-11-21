@@ -2713,7 +2713,33 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Dirección de actores": {
       departamento: [calendarioEnsayos],
       cargo: [
-        { id: "dir-notas-ensayo", nombre: "Notas de ensayo por actor/personaje", tipo: "nota" },
+        {
+          id: "dir-notas-ensayo",
+          nombre: "Notas de ensayo por actor/personaje",
+          // Dato: tabla (una fila = una sesión de ensayo de un personaje).
+          // Vista: panel a medida (NotasEnsayoPanel.tsx), agrupada por
+          // personaje y mostrada como línea de tiempo — ver justificación
+          // en ese archivo y en arquitectura.md sección 1. Las columnas de
+          // acá siguen existiendo para que el dato quede tipado y legible
+          // en exportaciones/backoffice, aunque HerramientasPanel nunca
+          // monte la grilla genérica para este id.
+          tipo: "tabla",
+          hint: "Una sesión de ensayo por personaje, agrupada y mostrada como línea de tiempo — con el arco del personaje siempre visible arriba.",
+          columnas: [
+            { key: "personaje", label: "Personaje" },
+            { key: "actor", label: "Actor/Actriz" },
+            { key: "arco_personaje", label: "Arco del personaje", tipo: "largo" },
+            { key: "objetivo_personaje", label: "Objetivo del personaje", tipo: "largo" },
+            { key: "fecha", label: "Fecha de ensayo", tipo: "fecha" },
+            { key: "escenas", label: "Escenas trabajadas", tipo: "chips" },
+            { key: "objetivo_escena", label: "Objetivo de la escena", tipo: "largo" },
+            { key: "ajuste_interpretacion", label: "Ajuste de interpretación trabajado", tipo: "largo" },
+            { key: "continuidad_arco", label: "Continuidad del arco desde el ensayo anterior", tipo: "largo" },
+            { key: "pendiente_proximo", label: "Pendiente para el próximo ensayo", tipo: "largo" },
+            { key: "adjunto_nota", label: "Adjunto (audio/foto de ensayo)", tipo: "archivo" },
+            { key: "privada", label: "Visibilidad", tipo: "estado", opciones: ["Visible al equipo", "Privada"] },
+          ],
+        },
       ],
     },
     "Secretaría de rodaje": {

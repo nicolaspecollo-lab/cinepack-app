@@ -6444,6 +6444,112 @@
   .cp-dash .hp-mezcla-grid{ grid-template-columns:1fr; }
 }
 
+/* ===========================================================================
+   NOTAS DE ENSAYO POR ACTOR/PERSONAJE — Dirección de actores
+   Acento propio: --coral (ningún otro panel lo usa como acento fijo hoy,
+   ver sistema-diseno.md). Nivel 1 = tarjetas por personaje; nivel 2 = línea
+   de tiempo vertical de sesiones, con cabecera de arco fija arriba.
+   =========================================================================== */
+.cp-dash .ens-hex{ background:var(--coral) !important; }
+.cp-dash .ens-btn-acc{ color:var(--coral); border-color:var(--coral); }
+.cp-dash .ens-btn-acc:hover{ background:var(--coral); color:#0D0D12; }
+.cp-dash .ens-guardado{ margin:0 var(--gutter); }
+.cp-dash .ens-wrap{ padding:var(--sp-4) var(--gutter) var(--sp-6); display:flex; flex-direction:column; gap:var(--sp-4); }
+
+/* Nivel 1 — selector de personaje, tarjetas (nunca filas de tabla). */
+.cp-dash .ens-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:var(--sp-3); }
+.cp-dash .ens-card{
+  position:relative; text-align:left; display:flex; flex-direction:column; gap:0;
+  background:var(--bg-2); border:1px solid var(--line); padding:0 0 var(--sp-3);
+  cursor:pointer; font-family:inherit; color:var(--text); overflow:hidden;
+  transition:border-color var(--dur) ease, transform var(--dur) ease;
+}
+.cp-dash .ens-card:hover{ border-color:var(--coral); transform:translateY(-2px); }
+.cp-dash .ens-card-retrato{ position:relative; width:100%; aspect-ratio:4/3; background:var(--bg); overflow:hidden; }
+.cp-dash .ens-card-retrato img,
+.cp-dash .ens-card-retrato .ens-retrato-svg{ width:100%; height:100%; object-fit:cover; display:block; }
+.cp-dash .ens-card-rol{
+  position:absolute; left:8px; bottom:8px; color:#10110f; font-family:'Poppins',sans-serif; font-weight:700;
+  font-size:var(--fs-xs); letter-spacing:0.03em; text-transform:uppercase; padding:3px 8px;
+}
+.cp-dash .ens-tag-priv{ position:absolute; right:8px; top:8px; }
+.cp-dash .ens-card-id{
+  display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  padding:var(--sp-3) var(--sp-4) 2px;
+}
+.cp-dash .ens-card-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-md); }
+.cp-dash .ens-card-actor{ color:var(--muted); font-size:var(--fs-sm); }
+.cp-dash .ens-card-meta{ display:flex; align-items:center; gap:6px; color:var(--muted); font-size:var(--fs-xs); padding:0 var(--sp-4); margin-top:2px; }
+.cp-dash .ens-card-pend{
+  margin:4px var(--sp-4) 0; padding-top:8px; border-top:1px dashed var(--line); font-size:var(--fs-sm); color:var(--text);
+  display:flex; align-items:flex-start; gap:6px; line-height:1.4;
+}
+.cp-dash .ens-card-pend svg{ flex-shrink:0; margin-top:2px; color:var(--coral); }
+.cp-dash .ens-tag-priv{
+  display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:var(--amber);
+  border:1px solid rgba(232,163,48,0.4); background:rgba(232,163,48,0.1); padding:2px 6px; flex-shrink:0;
+}
+
+/* Cabecera de arco, fija arriba del nivel 2. */
+.cp-dash .ens-arco{ background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--coral); padding:var(--sp-4); display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .ens-arco-retrato{ display:flex; flex-direction:column; gap:var(--sp-3); margin-bottom:var(--sp-2); }
+.cp-dash .ens-arco-retrato-img{ width:112px; height:140px; flex-shrink:0; border:1px solid var(--line); overflow:hidden; align-self:flex-start; }
+.cp-dash .ens-arco-retrato-img img,
+.cp-dash .ens-arco-retrato-img .ens-retrato-svg{ width:100%; height:100%; object-fit:cover; display:block; }
+.cp-dash .ens-arco-retrato-campos{ display:flex; flex-direction:column; gap:var(--sp-2); flex:1; min-width:0; }
+@media (min-width:640px){
+  .cp-dash .ens-arco-retrato{ flex-direction:row; align-items:flex-start; }
+}
+.cp-dash .ens-arco-row{ display:flex; flex-direction:column; gap:3px; }
+.cp-dash .ens-arco-lbl{ font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); font-family:'Poppins',sans-serif; }
+.cp-dash .ens-arco-val{ font-size:var(--fs-base); margin:0; }
+.cp-dash .ens-arco-in, .cp-dash .ens-arco-ta{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-base);
+  padding:7px 9px; resize:vertical; width:100%;
+}
+.cp-dash .ens-arco-in:focus, .cp-dash .ens-arco-ta:focus{ outline:none; border-color:var(--coral); }
+.cp-dash .ens-arco-cambio{
+  display:flex; gap:8px; align-items:flex-start; background:rgba(241,142,128,0.1); border:1px solid rgba(241,142,128,0.35);
+  padding:var(--sp-3); margin-top:4px;
+}
+.cp-dash .ens-arco-cambio svg{ color:var(--coral); flex-shrink:0; margin-top:2px; }
+.cp-dash .ens-arco-cambio-lbl{ display:block; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.04em; color:var(--coral); font-family:'Poppins',sans-serif; margin-bottom:3px; }
+.cp-dash .ens-arco-cambio p{ margin:0; font-size:var(--fs-base); line-height:1.5; }
+
+/* Nivel 2 — línea de tiempo vertical de sesiones de ensayo. */
+.cp-dash .ens-timeline{ display:flex; flex-direction:column; gap:0; position:relative; padding-left:16px; border-left:2px solid var(--line); }
+.cp-dash .ens-sesion{ position:relative; padding-bottom:var(--sp-4); }
+.cp-dash .ens-sesion:last-child{ padding-bottom:0; }
+.cp-dash .ens-sesion-dot{ position:absolute; left:-21px; top:14px; width:9px; height:9px; border-radius:50%; background:var(--coral); }
+.cp-dash .ens-sesion-card{ background:var(--bg-2); border:1px solid var(--line); margin-left:var(--sp-3); }
+.cp-dash .ens-sesion-priv .ens-sesion-dot{ background:var(--amber); }
+.cp-dash .ens-sesion-head{
+  width:100%; display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:none; border:none; cursor:pointer;
+  padding:var(--sp-3) var(--sp-3); color:var(--text); font-family:inherit; text-align:left;
+}
+.cp-dash .ens-sesion-head:hover{ background:var(--hl1); }
+.cp-dash .ens-sesion-fecha{ display:inline-flex; align-items:center; gap:5px; font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); flex-shrink:0; }
+.cp-dash .ens-sesion-escenas{ display:flex; gap:5px; flex-wrap:wrap; flex:1; min-width:0; }
+.cp-dash .ens-chip{ background:var(--hl2); border:1px solid var(--line); padding:2px 8px; font-size:var(--fs-xs); }
+.cp-dash .ens-chip-vacio{ color:var(--muted); font-style:italic; }
+.cp-dash .ens-sesion-chev{ margin-left:auto; flex-shrink:0; color:var(--muted); }
+.cp-dash .ens-sesion-body{ display:flex; flex-direction:column; gap:var(--sp-3); padding:0 var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
+.cp-dash .ens-field{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .ens-field > span{ font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); font-family:'Poppins',sans-serif; }
+.cp-dash .ens-field input, .cp-dash .ens-field textarea, .cp-dash .ens-field select{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-base);
+  padding:7px 9px; width:100%; resize:vertical;
+}
+.cp-dash .ens-field input:focus, .cp-dash .ens-field textarea:focus, .cp-dash .ens-field select:focus{ outline:none; border-color:var(--coral); }
+.cp-dash .ens-field-select select{ max-width:220px; }
+.cp-dash .ens-field-ro > p{ margin:0; font-size:var(--fs-base); line-height:1.5; }
+.cp-dash .ens-btn-del{ align-self:flex-start; }
+@media (max-width:640px){
+  .cp-dash .ens-timeline{ padding-left:12px; }
+  .cp-dash .ens-sesion-card{ margin-left:var(--sp-2); }
+  .cp-dash .ens-field-select select{ max-width:none; }
+}
+
 /* ---- Memoria de making of (mo-memoria): documento + tablero de escenas ---- */
 .cp-dash .hp-momem{ display:flex; flex-direction:column; gap:var(--sp-5); }
 .cp-dash .hp-momem-doc{
