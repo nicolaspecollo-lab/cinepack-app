@@ -5344,8 +5344,15 @@ function MoMemoriaBoard({
 
   return (
     <div className="hp-momem">
-      {/* Bloque A — documento de criterios y línea editorial */}
-      <section className="hp-momem-doc">
+      {/* Bloque A — documento de criterios y línea editorial.
+          key={meta ? "doc-ready" : "doc-pending"}: fuerza a React a
+          remontar los <textarea>/<input> (defaultValue, no controlados) la
+          única vez que `meta` pasa de null (todavía cargando) a objeto real
+          — sin esto, si este panel monta antes de que el fetch de la fila
+          meta resuelva, los campos quedan pintados con "" para siempre
+          aunque el dato real ya haya llegado (hallazgo reproducido 21/11/2026,
+          mismo mecanismo que el bug de "Esta jornada" en rep-notas-escenas). */}
+      <section className="hp-momem-doc" key={meta ? "doc-ready" : "doc-pending"}>
         <div className="hp-momem-doc-head">
           <h4><Icon name="file-text" /> Línea editorial del making of</h4>
           <EstadoSeg

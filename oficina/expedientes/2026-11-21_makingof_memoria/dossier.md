@@ -106,3 +106,33 @@ porque el motor genérico no tiene un modo "documento + tabla visibles juntos".
   herramientas). Queda como riesgo documentado para una iteración futura (posible
   columna derivada de solo lectura en Plan de cobertura BTS que lea el flag de
   `mo-memoria` por escena); no se aborda en este expediente.
+- **Bug encontrado y corregido — Bloque A quedaba vacío en un login fresco pese a
+  tener datos reales guardados.** Tras confirmar el fix de color en modo edición
+  real (Bloque A editado, flag de una escena cambiado a "Apta", toast "Guardado"
+  visible), una sesión de login completamente nueva con la misma cuenta mostró el
+  documento de criterios vacío en vez del texto real recién guardado — la misma
+  clase de síntoma que reportó por separado el QA de `rep-notas-escenas` el mismo
+  día ("ejemplos/datos vacíos vs. datos reales entre cargas"). Investigado a fondo
+  esta vez (no quedó como hipótesis sin confirmar): causa raíz confirmada por
+  analogía exacta con el bug ya diagnosticado en `rep-notas-escenas` (ver su propio
+  dossier, §11, Bug 3) — el bloque de Bloque A (`<section className="hp-momem-doc">`
+  en `MoMemoriaBoard`, `app/hoy/HerramientaPanel.tsx`) usa `<textarea>`/`<input>`
+  no controlados (`defaultValue={meta?.campo ?? ""}`) sin ningún `key` que dependa
+  de si `meta` ya cargó. Si el panel monta antes de que resuelva el fetch de la
+  fila `meta` (`meta` todavía `null`), React pinta los campos con `""` y, cuando
+  `meta` llega después con los datos reales, los mismos `<textarea>` ya montados
+  no se refrescan (comportamiento esperado de `defaultValue` en React) — el
+  documento queda vacío para siempre en esa carga aunque el dato real exista en
+  Supabase. **Corregido**: se agregó `key={meta ? "doc-ready" : "doc-pending"}`
+  a la sección del Bloque A, forzando el remonte de los campos la única vez que
+  `meta` pasa de `null` a objeto real. Verificado con Playwright: edité Bloque A,
+  confirmé el guardado, y repetí login fresco + recarga **4 veces seguidas** — las
+  4 veces el texto real apareció correctamente (antes del fix, el síntoma era
+  intermitente, no reproducible el 100% de las veces, lo que es consistente con
+  una condición de carrera en el momento en que `meta` resuelve). `npx tsc
+  --noEmit` limpio tras el cambio. No se tocó `rep-notas-escenas` desde este
+  expediente — ese fix ya se aplicó por separado en su propio dossier — pero
+  recomiendo que el director-oficina revise si el mismo patrón (`defaultValue`
+  sin `key` ligado al estado de carga) existe en otros paneles bespoke del motor,
+  ya que apareció de forma independiente en dos herramientas distintas el mismo
+  día.
