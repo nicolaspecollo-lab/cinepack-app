@@ -4886,7 +4886,11 @@
   .cp-dash .hp-mc-prev-wrap{ flex:1 1 45%; }
 }
 .cp-dash .hp-mc-actual{ position:relative; background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--acc); padding:var(--sp-4); display:flex; flex-direction:column; gap:var(--sp-3); }
-.cp-dash .hp-mc-actual-head{ display:flex; align-items:center; gap:var(--sp-3); }
+.cp-dash .hp-mc-actual-head{ display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap; }
+.cp-dash .hp-mc-esc{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-mc-esc>span{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-xs); letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+.cp-dash .hp-mc-esc-in{ font-family:'Courier New',monospace; font-size:var(--fs-base); color:var(--text); background:var(--bg); border:1px solid var(--line); padding:4px var(--sp-2); width:3.5em; text-align:center; }
+.cp-dash .hp-mc-esc-in[readonly]{ background:transparent; border-color:transparent; padding:4px 0; width:auto; }
 .cp-dash .hp-mc-fecha{ font-family:'Courier New',monospace; font-size:var(--fs-base); color:var(--text); background:var(--bg); border:1px solid var(--line); padding:4px var(--sp-2); }
 .cp-dash .hp-mc-fecha[readonly]{ background:transparent; border-color:transparent; padding:4px 0; }
 .cp-dash .hp-mc-actual-tag{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-xs); letter-spacing:.07em; text-transform:uppercase; color:var(--acc); }

@@ -13100,6 +13100,16 @@ function MarcasContinuidad({
       <div className="hp-mc-actual">
         {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
         <div className="hp-mc-actual-head">
+          <label className="hp-mc-esc">
+            <span>{gLbl(columnas, "escena")}</span>
+            <input
+              className="hp-mc-esc-in"
+              defaultValue={gVal(f, "escena")}
+              placeholder="1"
+              readOnly={!ed}
+              onBlur={(e) => set(f, "escena", e.target.value)}
+            />
+          </label>
           <input
             type="date"
             className="hp-mc-fecha"

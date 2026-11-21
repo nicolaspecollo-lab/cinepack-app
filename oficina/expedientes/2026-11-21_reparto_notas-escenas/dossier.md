@@ -123,3 +123,71 @@ nuevo.
   `delete`, `ejChip`, `noScene`, `noDate`).
 
 - Verificación: `npx tsc --noEmit` limpio (sin errores) tras los cambios.
+
+## 10. Correcciones de QA (2026-11-21)
+
+QA encontró 2 problemas reales en el commit inicial, corregidos antes de
+pasar a comité:
+
+- **Bug 1 (crítico) — `escena` no era editable.** `FichaActual` (la tarjeta
+  "Esta jornada" dentro de `MarcasContinuidad`) renderizaba
+  `marca_posicion`, `direccion_mirada`, `ultima_frase_gesto`,
+  `tomas_relevantes`, `vestuario_prop`, `entrada_salida` y `notas_libres`,
+  pero nunca un campo para `escena`, pese a que la columna existe en el
+  modelo de datos. El botón "+ Añadir escena" (`onCrear({})`) crea la fila
+  sin escena asignada, y como nada en la vista permitía corregirla después,
+  esa fila quedaba agrupada para siempre bajo "Sin escena" — rompiendo el
+  valor central de la herramienta (agrupar y comparar por escena a lo largo
+  del rodaje). Corrección: se agregó un campo de texto editable `escena` en
+  la cabecera de `FichaActual` (`hp-mc-esc`/`hp-mc-esc-in`, mismos tokens de
+  estilo que el resto del panel — `var(--sp-*)`, `var(--fs-*)`,
+  `var(--line)`, familia Courier New para el input, igual que `hp-mc-fecha`),
+  junto a la fecha de jornada, de forma que al crear una ficha desde "+
+  Añadir escena" el actor puede asignarle su número de escena de inmediato
+  y la fila se reagrupa correctamente al guardar (`onBlur` → `set(f,
+  "escena", ...)`, mismo patrón que el resto de los campos del panel).
+  Nota: filas ya creadas sin escena antes de este fix (si existen en datos
+  reales) siguen apareciendo bajo "Sin escena" hasta que alguien les
+  complete el campo manualmente — no se hizo migración de datos, es
+  autocorrectivo desde la UI.
+
+- **Bug 2 — línea de depuración en el commit.** `MarcasContinuidad` tenía
+  `if (typeof window !== 'undefined') { (window).__qaMC = { filasLen:
+  filas.length, filas }; }`, que rompía `npx tsc --noEmit` (`Property
+  '__qaMC' does not exist`) y agregaba errores a `npm run lint`. Se quitó
+  por completo. De paso se encontró y quitó un segundo rastro de
+  instrumentación de depuración, `console.log('QA-LOAD', ...)` dentro de
+  `load()` (el fetch genérico de filas en `HerramientaData`, usado por
+  todas las herramientas tipo `tabla`/`galeria`/`nota`/etc., no solo por
+  esta) — tampoco pertenecía al commit final.
+
+  Verificación tras ambas correcciones: `npx tsc --noEmit` limpio (ya no
+  tira el error de `__qaMC`); `npm run lint` da el mismo total de errores
+  en `HerramientaPanel.tsx` antes y después del fix (55, todos
+  preexistentes y ajenos a `MarcasContinuidad`) — no se introdujeron
+  errores nuevos atribuibles a este archivo.
+
+- **Riesgo abierto (no bloqueante, para que QA reverifique) —
+  inconsistencia "ejemplos" vs. "fila real huérfana".** QA reportó que la
+  vista alterna entre mostrar los ejemplos (`EJ_MARCAS_CONTINUIDAD`) y
+  mostrar una fila real sin escena en cargas repetidas del mismo usuario.
+  Hipótesis más probable, no confirmada con reproducción propia en esta
+  sesión: antes de la corrección del Bug 1, cualquier fila creada con "+
+  Añadir escena" quedaba grabada en la base con `escena` vacía (fila
+  huérfana real, no un ejemplo). Como `hayFilas = filas.length > 0`
+  decide entre ejemplos (`ghostFilas`) y datos reales, y el `useEffect`
+  que dispara `load()` en `HerramientaData` depende de `departamento` y
+  `herramienta.id` (línea ~377-379 de `HerramientaPanel.tsx`), si esos
+  valores llegan en un primer render con un valor transitorio distinto
+  (p. ej. `departamento` resuelto async desde el perfil del usuario antes
+  de montar este panel) el primer fetch puede traer 0 filas → se muestran
+  ejemplos — y un segundo fetch, tras resolverse `departamento`
+  correctamente, trae la fila huérfana real, dando la sensación de
+  alternancia entre "ejemplos" y "una fila real" que describe QA. No se
+  pudo confirmar esta hipótesis con una reproducción determinística en el
+  tiempo disponible de esta corrección. Con el Bug 1 ya resuelto no deberían
+  crearse más filas huérfanas desde ahora, pero el riesgo de carga
+  inconsistente del `departamento`/`herramienta.id` en el primer render de
+  `HerramientaData` queda como riesgo abierto a reverificar por QA — si
+  persiste con datos ya correctamente escenados, hay que instrumentar el
+  valor de `departamento` en el primer vs. segundo render de `load()`.
