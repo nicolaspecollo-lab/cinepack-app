@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
+  "title": "Marcas de continuidad",
+  "subtitle": "Reparto secundario: continuidad física de personaje por escena, con ficha anterior siempre visible al volver a rodar, verificado en vivo con cuenta de prueba real.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
+  "metaItems": [["Fecha", "21 nov 2026"], ["Departamento", "Reparto · Reparto secundario"], ["Oficina", "Desarrollo"], ["Ronda", "1 — aprobado"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#FF7F6B"
+}
