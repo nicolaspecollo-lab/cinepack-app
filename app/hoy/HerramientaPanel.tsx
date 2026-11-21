@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { safeKey } from "../lib/storageKey";
 import type { Herramienta, Columna, ColTipo } from "../herramientas";
 import { REVISION_COLORES, VALORACION_NIVELES, VALORACION_CATEGORIAS, TRADUCCION_ESTADOS, CAPITULOS_PRESUPUESTO as CAPITULOS_PRESUPUESTO_EXPORT } from "../herramientas";
+import { DEPARTAMENTOS } from "../constants";
 import GestionAccesosPanel from "./GestionAccesosPanel";
 import RegistroActividadPanel from "./RegistroActividadPanel";
 import Icon, { type IconName } from "../components/Icon";
@@ -58,8 +59,15 @@ function timeAgo(iso: string, t: ReturnType<typeof useTranslations>) {
 // Las celdas de tipo "largo" guardan HTML (rich text). Para que búsqueda,
 // filtros y orden sigan comparando texto y no los tags, se normaliza a texto
 // plano. Fast-path: si no hay "<", se devuelve tal cual (celdas de texto plano).
-function stripHtml(s: string): string {
-  if (!s || s.indexOf("<") === -1) return s;
+function stripHtml(s: unknown): string {
+  if (s == null) return "";
+  if (typeof s !== "string") {
+    // Columnas no-texto (chips/repetible) guardan arrays/objetos en `datos`;
+    // búsqueda/orden/exportación necesitan texto plano, nunca deben recibir
+    // el valor crudo acá.
+    return Array.isArray(s) ? s.map((v) => (typeof v === "string" ? v : JSON.stringify(v))).join(" ") : String(s);
+  }
+  if (s.indexOf("<") === -1) return s;
   if (typeof document !== "undefined") {
     const tmp = document.createElement("div");
     tmp.innerHTML = s;
@@ -210,6 +218,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     DOC_STATUS_IDS.has(id) ||
     id === "ej-pagos-nominas" ||
     id === "ej-gestion-documental" ||
+    id === "dir-actas" ||
     ENTIDAD_TABS_IDS.has(id) ||
     id === "ej-modelo-financiero" ||
     id === "prod-stripboard" ||
@@ -1040,6 +1049,21 @@ function HerramientaData({
       {herramienta.tipo === "tabla" && herramienta.id === "ej-gestion-documental" && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <GestionDocumentalBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "dir-actas" && (
+        <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <ActasReunionBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
@@ -5822,6 +5846,267 @@ export function GestionDocumentalBoard({
   );
 }
 
+// ---- Actas de reuniones y archivo administrativo (Secretaría de rodaje) ----
+// El cargo no lleva "una nota": lleva un archivo de reuniones (producción,
+// seguridad, cambios de guion, administrativas) que tiene que quedar
+// BUSCABLE — la ronda de QA del 18/11 pidió explícitamente un buscador real
+// sobre el archivo, no una lista cronológica. Por eso: tarjetas agrupables
+// por tipo de reunión (como GestionDocumentalBoard) + una caja de búsqueda
+// de texto libre que filtra título/decisiones/pendientes/participantes a la
+// vez, no solo el título.
+const ACTAS_TIPO_TONO: Record<string, "ok" | "warn" | "bad" | "info" | "neutral"> = {
+  "Producción": "info",
+  "Seguridad": "bad",
+  "Cambios de guion": "warn",
+  "Dirección": "ok",
+  "Administrativa": "neutral",
+  "Otra": "neutral",
+};
+
+function actasChips(raw: unknown): string[] {
+  if (!raw) return [];
+  // Columnas tipo "chips" del motor genérico guardan un array real en
+  // `datos` (no un string serializado) — ver parseArr más abajo en este
+  // mismo archivo para el mismo patrón en otras vistas.
+  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
+  if (typeof raw !== "string") return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch { /* texto plano separado por comas, formato legado */ }
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+export function ActasReunionBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const colByKey = new Map(columnas.map((c) => [c.key, c]));
+  const colTipo = colByKey.get("tipo_reunion");
+  const [filtroTipo, setFiltroTipo] = useState<string | null>(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [seleccionId, setSeleccionId] = useState<string | null>(null);
+  const idsPrevios = useRef(new Set(filas.map((f) => f.id)));
+
+  // Si aparece una fila nueva (recién creada), la seleccionamos automáticamente:
+  // si no, "Agregar acta" la crea pero el panel sigue mostrando la anterior,
+  // y cualquier edición inmediata termina guardándose en el acta equivocada.
+  useEffect(() => {
+    const idsActuales = new Set(filas.map((f) => f.id));
+    const nueva = filas.find((f) => !idsPrevios.current.has(f.id));
+    if (nueva) setSeleccionId(nueva.id);
+    idsPrevios.current = idsActuales;
+  }, [filas]);
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const tiposVistos = Array.from(new Set([...(colTipo?.opciones ?? []), ...filas.map((f) => f.datos?.tipo_reunion).filter(Boolean) as string[]]));
+
+  const q = busqueda.trim().toLowerCase();
+  function coincide(f: Fila): boolean {
+    if (!q) return true;
+    const campos = [
+      f.datos?.titulo, f.datos?.decisiones, f.datos?.pendientes, f.datos?.responsable_pendientes, f.datos?.departamento_reunion,
+      ...actasChips(f.datos?.participantes),
+    ];
+    return campos.some((c) => (c ?? "").toLowerCase().includes(q));
+  }
+
+  const porTipo = filtroTipo ? filas.filter((f) => (f.datos?.tipo_reunion ?? "") === filtroTipo) : filas;
+  const visibles = porTipo.filter(coincide)
+    .slice()
+    .sort((a, b) => (b.datos?.fecha ?? "").localeCompare(a.datos?.fecha ?? ""));
+
+  const seleccionada = visibles.find((f) => f.id === seleccionId) ?? visibles[0] ?? null;
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty"><span className="hex"></span><p>Ningún acta registrada todavía.</p>{editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Registrar la primera acta</button>}</div>
+    );
+  }
+
+  return (
+    <div className="hp-actas2">
+      <div className="hp-actas2-sidebar">
+        <div className="hp-actas2-buscador">
+          <Icon name="search" />
+          <input
+            type="search"
+            placeholder="Buscar…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+          {busqueda && <button className="hp-actas-clear" onClick={() => setBusqueda("")} title="Borrar">✕</button>}
+        </div>
+
+        {tiposVistos.length > 0 && (
+          <div className="hp-actas2-filtros">
+            <button className={`hp-gd-fchip${!filtroTipo ? " on" : ""}`} onClick={() => setFiltroTipo(null)}>Todas ({filas.length})</button>
+            {tiposVistos.map((tipoNombre) => (
+              <button key={tipoNombre} className={`hp-gd-fchip${filtroTipo === tipoNombre ? " on" : ""}`} onClick={() => setFiltroTipo(tipoNombre)}>
+                {tipoNombre} ({filas.filter((f) => (f.datos?.tipo_reunion ?? "") === tipoNombre).length})
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="hp-actas2-list">
+          {visibles.map((f) => {
+            const tono = ACTAS_TIPO_TONO[f.datos?.tipo_reunion ?? ""] ?? "neutral";
+            const tienePendientes = (f.datos?.pendientes ?? "").trim().length > 0;
+            const activo = seleccionada?.id === f.id;
+            return (
+              <button key={f.id} className={`hp-actas2-item${activo ? " on" : ""}`} onClick={() => setSeleccionId(f.id)}>
+                <span className={`hp-actas-tag tono-${tono}`}>{f.datos?.tipo_reunion || "Sin tipo"}</span>
+                <span className="hp-actas2-item-titulo">{f.datos?.titulo || "Reunión sin título"}</span>
+                <span className="hp-actas2-item-meta">
+                  <span>{f.datos?.fecha || "—"}</span>
+                  {f.datos?.departamento_reunion && <span className="hp-actas2-item-depto">{f.datos.departamento_reunion}</span>}
+                  {tienePendientes && <span className="hp-actas2-item-dot" title="Tiene pendientes abiertos" />}
+                </span>
+              </button>
+            );
+          })}
+          {visibles.length === 0 && (
+            <p className="hp-actas-sin-resultados">Ningún acta coincide con la búsqueda o el filtro.</p>
+          )}
+        </div>
+
+        {editable && <button className="cp-btn cp-btn-acc hp-actas2-nueva" onClick={() => onCrear({ fecha: new Date().toISOString().slice(0, 10), tipo_reunion: "Producción", estado: "Borrador" })}>+ Registrar acta</button>}
+      </div>
+
+      <div className="hp-actas2-detalle">
+        {!seleccionada ? (
+          <div className="hp-actas2-vacio"><span className="hex"></span><p>Elegí un acta de la lista.</p></div>
+        ) : (
+          <ActasDetalle
+            key={seleccionada.id}
+            f={seleccionada}
+            colByKey={colByKey}
+            colTipo={colTipo}
+            editable={editable}
+            departamento={departamento}
+            herramientaId={herramientaId}
+            set={set}
+            onBorrar={onBorrar}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ActasDetalle({
+  f, colByKey, colTipo, editable, departamento, herramientaId, set, onBorrar,
+}: {
+  f: Fila;
+  colByKey: Map<string, Columna>;
+  colTipo: Columna | undefined;
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  set: (f: Fila, key: string, v: string) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const participantes = actasChips(f.datos?.participantes);
+  const deptosUsados = Array.from(new Set(DEPARTAMENTOS.concat(f.datos?.departamento_reunion ? [f.datos.departamento_reunion] : [])));
+  return (
+    <div className="hp-actas2-panel">
+      <div className="hp-actas2-head">
+        <input className="hp-actas2-titulo-input" defaultValue={f.datos?.titulo ?? ""} placeholder="Asunto de la reunión" readOnly={!editable} onBlur={(e) => set(f, "titulo", e.target.value)} />
+        {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar">✕</button>}
+      </div>
+
+      <div className="hp-actas2-chipsrow">
+        <EstadoSeg valor={f.datos?.tipo_reunion || "Producción"} opciones={colTipo?.opciones ?? []} onPick={(v) => set(f, "tipo_reunion", v)} editable={editable} chip color />
+        <EstadoSeg valor={f.datos?.estado || "Borrador"} opciones={colByKey.get("estado")?.opciones ?? []} onPick={(v) => set(f, "estado", v)} editable={editable} chip color />
+        <input type="date" className="hp-actas2-fecha" defaultValue={f.datos?.fecha ?? ""} readOnly={!editable} onBlur={(e) => set(f, "fecha", e.target.value)} />
+      </div>
+
+      <div className="hp-actas2-depto">
+        <label>
+          Departamento
+          <input
+            list="hp-actas2-deptos"
+            defaultValue={f.datos?.departamento_reunion ?? ""}
+            placeholder="Elegir o escribir un departamento nuevo…"
+            readOnly={!editable}
+            onBlur={(e) => set(f, "departamento_reunion", e.target.value)}
+          />
+          <datalist id="hp-actas2-deptos">
+            {deptosUsados.map((d) => <option key={d} value={d} />)}
+          </datalist>
+        </label>
+        <span className="hp-actas2-depto-hint">¿No está en la lista? Escribilo igual: queda guardado como departamento del acta.</span>
+      </div>
+
+      <label className="hp-actas-participantes">
+        Participantes
+        <ActasParticipantesEditor valores={participantes} editable={editable} onChange={(vs) => set(f, "participantes", JSON.stringify(vs))} />
+      </label>
+
+      <label>Decisiones tomadas<textarea rows={3} defaultValue={f.datos?.decisiones ?? ""} placeholder="Qué se decidió en la reunión." readOnly={!editable} onBlur={(e) => set(f, "decisiones", e.target.value)} /></label>
+
+      <div className="hp-actas-row">
+        <label className="hp-actas-pendientes">Pendientes / tareas asignadas<textarea rows={2} defaultValue={f.datos?.pendientes ?? ""} placeholder="Qué queda abierto y quién lo sigue." readOnly={!editable} onBlur={(e) => set(f, "pendientes", e.target.value)} /></label>
+        <label>Responsable del seguimiento<input defaultValue={f.datos?.responsable_pendientes ?? ""} placeholder="Nombre / cargo" readOnly={!editable} onBlur={(e) => set(f, "responsable_pendientes", e.target.value)} /></label>
+      </div>
+
+      <div className="hp-actas-row">
+        <span className="hp-actas-archivo-label">Acta firmada / documento adjunto</span>
+        <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
+      </div>
+    </div>
+  );
+}
+
+function ActasParticipantesEditor({ valores, editable, onChange }: { valores: string[]; editable: boolean; onChange: (vs: string[]) => void }) {
+  const [nuevo, setNuevo] = useState("");
+  function agregar() {
+    const v = nuevo.trim();
+    if (!v) return;
+    onChange([...valores, v]);
+    setNuevo("");
+  }
+  return (
+    <div className="hp-actas-chips">
+      {valores.map((p, i) => (
+        <span className="hp-actas-chip" key={`${p}-${i}`}>
+          {p}
+          {editable && <button type="button" onClick={() => onChange(valores.filter((_, j) => j !== i))}>✕</button>}
+        </span>
+      ))}
+      {editable && (
+        <input
+          className="hp-actas-chip-input"
+          value={nuevo}
+          placeholder="Nombre / cargo + Enter"
+          onChange={(e) => setNuevo(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); agregar(); } }}
+          onBlur={agregar}
+        />
+      )}
+    </div>
+  );
+}
+
 // ---- Modelo financiero (proyección por ventana × 3 escenarios) ----
 // La pregunta real de un modelo financiero de cine no es "cuánto gano", es
 // "bajo qué escenario recupera cada socio su dinero". Por eso la tabla de
@@ -9740,6 +10025,36 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
     { nombre: "Póliza responsabilidad civil 2025", categoria: "Seguros", fecha_documento: "2025-01-01", anios_conservacion: "5", permanencia: "Conservación temporal", estado_digitalizacion: "Solo copia" },
     { nombre: "Licencia municipal de rodaje", categoria: "Licencias", fecha_documento: "2026-06-10", anios_conservacion: "2", permanencia: "Conservación temporal", estado_digitalizacion: "Certificada" },
     { nombre: "Modelo 190 · IRPF 2025", categoria: "Fiscal", fecha_documento: "2026-01-31", anios_conservacion: "4", permanencia: "Conservación temporal", estado_digitalizacion: "Sin digitalizar" },
+  ],
+  "dir-actas": [
+    {
+      titulo: "Reunión de producción — semana 3", tipo_reunion: "Producción", fecha: "2026-07-13",
+      participantes: JSON.stringify(["Diego Aramburu (Jefe de producción)", "Marea Gil (1AD)", "Kepa Aguirre (Sonido)", "Ana Puig (Localizaciones)"]),
+      decisiones: "Se confirma el traslado del rodaje del puerto al faro el día 15 por previsión de temporal. Se aprueba el refuerzo de transporte con una furgoneta adicional.",
+      pendientes: "Reconfirmar permisos de la nueva localización con el ayuntamiento antes del jueves. Avisar a figuración del cambio de punto de encuentro.",
+      responsable_pendientes: "Ana Puig", estado: "Firmada",
+    },
+    {
+      titulo: "Reunión de seguridad — jornada en el faro (día 3)", tipo_reunion: "Seguridad", fecha: "2026-07-14",
+      participantes: JSON.stringify(["Marea Gil (1AD, oficial de seguridad)", "Sergi Roma (Maquinista)", "Equipo de cámara"]),
+      decisiones: "Zona del acantilado delimitada con cinta y vigía fijo durante los planos exteriores. Se revisa el plan de evacuación ante marea alta.",
+      pendientes: "Confirmar que el seguro de rodaje cubre trabajo a menos de 5m del borde — consultar con Legal.",
+      responsable_pendientes: "Diego Aramburu", estado: "Pendiente de firma",
+    },
+    {
+      titulo: "Reunión de cambios de guion — escenas 22 y 23", tipo_reunion: "Cambios de guion", fecha: "2026-07-10",
+      participantes: JSON.stringify(["Dirección", "Guion", "Script", "Producción ejecutiva"]),
+      decisiones: "Se aprueba la reescritura de la salida de Elsa (pases v5.0) para que tenga consecuencia narrativa sobre Marea. Afecta a 2 jornadas ya planificadas.",
+      pendientes: "Guion entrega páginas revisadas (azules) antes del viernes. Script actualiza el desglose de continuidad de esas escenas.",
+      responsable_pendientes: "Script", estado: "Firmada",
+    },
+    {
+      titulo: "Reunión administrativa — renovación de pólizas y permisos", tipo_reunion: "Administrativa", fecha: "2026-07-08",
+      participantes: JSON.stringify(["Secretaría de rodaje", "Administración", "Legal"]),
+      decisiones: "Se centraliza en Secretaría de rodaje el archivo físico y digital de permisos de localización vigentes, con copia a Gestión documental administrativa.",
+      pendientes: "Digitalizar y archivar el permiso de la escena del puerto, vence el 30/7.",
+      responsable_pendientes: "Secretaría de rodaje", estado: "Borrador",
+    },
   ],
   "ej-derechos-pi": [
     {
