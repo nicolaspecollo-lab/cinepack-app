@@ -19,9 +19,22 @@ export const NOTAS_ENSAYO_HERRAMIENTA_ID = "dir-notas-ensayo";
 export const VISIBILIDAD = ["Visible al equipo", "Privada"] as const;
 export type Visibilidad = (typeof VISIBILIDAD)[number];
 
+// Rol del personaje en el reparto — pedido explícito de Nico (21/11/2026,
+// feedback sobre la previsualización): tiene que verse en la card de cada
+// personaje, no solo en la ficha abierta.
+export const ROL_PERSONAJE = ["Protagonista", "Secundario", "Reparto", "Figurante"] as const;
+export type RolPersonaje = (typeof ROL_PERSONAJE)[number];
+
 export type SesionEnsayo = {
   personaje: string;
   actor: string;
+  rol: RolPersonaje | "";
+  // URL de la foto retrato real del actor/actriz (campo real, editable —
+  // en producción se sube la foto real). Si está vacío, la previsualización
+  // muestra un retrato ilustrado generado localmente a partir del nombre
+  // (ver retratoIlustrado en NotasEnsayoPanel.tsx), nunca un ícono genérico
+  // de iniciales en un círculo plano.
+  foto_url: string;
   // Cabecera de arco — se repite en cada sesión del mismo personaje (mismo
   // mecanismo que usa el resto del motor para herramientas "de cargo" sin
   // tabla dedicada por entidad): la vista toma el valor de la sesión más
@@ -46,6 +59,8 @@ export function datosASesion(datos: DatosFila): SesionEnsayo {
   return {
     personaje: limpiar(datos.personaje),
     actor: limpiar(datos.actor),
+    rol: (ROL_PERSONAJE.find((r) => r === datos.rol) ?? "") as RolPersonaje | "",
+    foto_url: limpiar(datos.foto_url),
     arco_personaje: limpiar(datos.arco_personaje),
     objetivo_personaje: limpiar(datos.objetivo_personaje),
     fecha: limpiar(datos.fecha),
@@ -63,6 +78,8 @@ export function sesionADatos(s: SesionEnsayo): DatosFila {
   return {
     personaje: s.personaje,
     actor: s.actor,
+    rol: s.rol,
+    foto_url: s.foto_url,
     arco_personaje: s.arco_personaje,
     objetivo_personaje: s.objetivo_personaje,
     fecha: s.fecha,
@@ -88,6 +105,7 @@ export const SESIONES_EJEMPLO: SesionEnsayo[] = [
   // --- Marta Oliveira — protagonista, arco de negación a aceptación ---
   {
     personaje: "Marta Oliveira", actor: "Irene Calvo",
+    rol: "Protagonista", foto_url: "",
     arco_personaje: "De la negación del diagnóstico de su padre a aceptar que tiene que volver al pueblo y hacerse cargo.",
     objetivo_personaje: "Que cada decisión de Marta se lea como huida hacia adelante, nunca como indiferencia.",
     fecha: "2026-09-02",
@@ -101,6 +119,7 @@ export const SESIONES_EJEMPLO: SesionEnsayo[] = [
   },
   {
     personaje: "Marta Oliveira", actor: "Irene Calvo",
+    rol: "Protagonista", foto_url: "",
     arco_personaje: "De la negación del diagnóstico de su padre a aceptar que tiene que volver al pueblo y hacerse cargo.",
     objetivo_personaje: "Que cada decisión de Marta se lea como huida hacia adelante, nunca como indiferencia.",
     fecha: "2026-09-16",
@@ -114,6 +133,7 @@ export const SESIONES_EJEMPLO: SesionEnsayo[] = [
   },
   {
     personaje: "Marta Oliveira", actor: "Irene Calvo",
+    rol: "Protagonista", foto_url: "",
     arco_personaje: "De la negación del diagnóstico de su padre a aceptar que tiene que volver al pueblo y hacerse cargo.",
     objetivo_personaje: "Que cada decisión de Marta se lea como huida hacia adelante, nunca como indiferencia.",
     fecha: "2026-10-05",
@@ -129,6 +149,7 @@ export const SESIONES_EJEMPLO: SesionEnsayo[] = [
   // --- Tomás Reguera — antagonista, arco de seguridad a duda ---
   {
     personaje: "Tomás Reguera", actor: "Pablo Yagüe",
+    rol: "Secundario", foto_url: "",
     arco_personaje: "Empieza convencido de que la venta del terreno es lo único razonable; termina sin poder defenderlo ni ante sí mismo.",
     objetivo_personaje: "Tomás nunca es un villano de manual — cada escena tiene que dejar una grieta pequeña en su seguridad, no una revelación grande al final.",
     fecha: "2026-09-09",
@@ -142,6 +163,7 @@ export const SESIONES_EJEMPLO: SesionEnsayo[] = [
   },
   {
     personaje: "Tomás Reguera", actor: "Pablo Yagüe",
+    rol: "Secundario", foto_url: "",
     arco_personaje: "Empieza convencido de que la venta del terreno es lo único razonable; termina sin poder defenderlo ni ante sí mismo.",
     objetivo_personaje: "Tomás nunca es un villano de manual — cada escena tiene que dejar una grieta pequeña en su seguridad, no una revelación grande al final.",
     fecha: "2026-09-23",
@@ -157,6 +179,7 @@ export const SESIONES_EJEMPLO: SesionEnsayo[] = [
   // --- Nadia Reguera — secundaria, nota de preparación personal (privada) ---
   {
     personaje: "Nadia Reguera", actor: "Celia Moutinho",
+    rol: "Reparto", foto_url: "",
     arco_personaje: "Hija de Tomás, quince años. Empieza del lado de su padre por lealtad; en el tercio final elige quedarse con Marta.",
     objetivo_personaje: "Que su cambio de lado se sienta ganado escena a escena, no una decisión de guion que cae de golpe.",
     fecha: "2026-09-30",

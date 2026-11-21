@@ -21,9 +21,11 @@ import { PrintHeader } from "./HerramientaPanel";
 import {
   NOTAS_ENSAYO_DEPARTAMENTO,
   VISIBILIDAD,
+  ROL_PERSONAJE,
   escenasALista,
   type SesionEnsayo,
   type Visibilidad,
+  type RolPersonaje,
 } from "./notasEnsayoFilas";
 import { useNotasEnsayoFilas, type FilaSesion } from "./useNotasEnsayoFilas";
 
@@ -32,6 +34,8 @@ type Props = { fullName: string; editable: boolean };
 const SESION_VACIA: SesionEnsayo = {
   personaje: "",
   actor: "",
+  rol: "",
+  foto_url: "",
   arco_personaje: "",
   objetivo_personaje: "",
   fecha: new Date().toISOString().slice(0, 10),
@@ -43,6 +47,51 @@ const SESION_VACIA: SesionEnsayo = {
   adjunto_nota: "",
   privada: "Visible al equipo",
 };
+
+const ROL_TONO: Record<RolPersonaje | "", string> = {
+  Protagonista: "var(--coral)",
+  Secundario: "var(--amber)",
+  Reparto: "var(--cyan)",
+  Figurante: "var(--lime)",
+  "": "var(--muted)",
+};
+
+// Hash determinístico simple (nombre → número) para que el mismo personaje
+// siempre genere el mismo retrato ilustrado — nunca un color al azar en cada
+// render.
+function hashNombre(nombre: string): number {
+  let h = 0;
+  for (let i = 0; i < nombre.length; i++) h = (h * 31 + nombre.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+// Retrato ilustrado de respaldo: cuando todavía no hay foto real subida, la
+// previsualización nunca cae en un círculo plano de iniciales — muestra un
+// busto ilustrado con una paleta propia por personaje (derivada del nombre),
+// como un retrato de casting dibujado a mano. En cuanto se carga `foto_url`
+// real, esto se reemplaza por la foto.
+function RetratoIlustrado({ nombre, rol }: { nombre: string; rol: RolPersonaje | "" }) {
+  const h = hashNombre(nombre || "?");
+  const hue = h % 360;
+  const bustoHue = (hue + 28) % 360;
+  return (
+    <svg viewBox="0 0 120 150" className="ens-retrato-svg" aria-hidden="true">
+      <defs>
+        <linearGradient id={`ens-bg-${h}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={`hsl(${hue},48%,30%)`} />
+          <stop offset="100%" stopColor={`hsl(${hue},40%,16%)`} />
+        </linearGradient>
+      </defs>
+      <rect width="120" height="150" fill={`url(#ens-bg-${h})`} />
+      <circle cx="60" cy="54" r="26" fill={`hsl(${bustoHue},38%,62%)`} />
+      <path
+        d="M14 150c0-30 20-50 46-50s46 20 46 50z"
+        fill={`hsl(${bustoHue},34%,48%)`}
+      />
+      <rect x="0" y="140" width="120" height="10" fill={ROL_TONO[rol]} opacity="0.9" />
+    </svg>
+  );
+}
 
 function fechaCorta(iso: string): string {
   if (!iso) return "sin fecha";
@@ -114,6 +163,8 @@ export default function NotasEnsayoPanel({ fullName, editable }: Props) {
           ...SESION_VACIA,
           personaje: personajeBase.datos.personaje,
           actor: personajeBase.datos.actor,
+          rol: personajeBase.datos.rol,
+          foto_url: personajeBase.datos.foto_url,
           arco_personaje: personajeBase.datos.arco_personaje,
           objetivo_personaje: personajeBase.datos.objetivo_personaje,
         }
@@ -189,18 +240,30 @@ export default function NotasEnsayoPanel({ fullName, editable }: Props) {
             <div className="ens-grid">
               {personajes.map(({ nombre, filas }) => {
                 const ultima = filas[0];
+                const rol = ultima?.datos.rol ?? "";
                 return (
                   <button key={nombre} className="ens-card" onClick={() => setPersonajeAbierto(nombre)}>
-                    <span className="ens-card-bar" />
-                    <div className="ens-card-top">
-                      <span className="ens-card-nombre">{nombre}</span>
+                    <div className="ens-card-retrato">
+                      {ultima?.datos.foto_url ? (
+                        <img src={ultima.datos.foto_url} alt={`Retrato de ${ultima.datos.actor || nombre}`} />
+                      ) : (
+                        <RetratoIlustrado nombre={nombre} rol={rol} />
+                      )}
                       {ultima?.datos.privada === "Privada" && (
                         <span className="ens-tag-priv" title="Tiene notas privadas">
                           <Icon name="key" size={11} />
                         </span>
                       )}
+                      {rol && (
+                        <span className="ens-card-rol" style={{ background: ROL_TONO[rol] }}>
+                          {rol}
+                        </span>
+                      )}
                     </div>
-                    <span className="ens-card-actor">{ultima?.datos.actor || "Sin actor asignado"}</span>
+                    <div className="ens-card-id">
+                      <span className="ens-card-nombre">{nombre}</span>
+                      <span className="ens-card-actor">{ultima?.datos.actor || "Sin actor asignado"}</span>
+                    </div>
                     <div className="ens-card-meta">
                       <Icon name="clock" size={12} />
                       <span>{filas.length} sesión{filas.length === 1 ? "" : "es"} · última {fechaCorta(ultima?.datos.fecha ?? "")}</span>
@@ -255,6 +318,43 @@ export default function NotasEnsayoPanel({ fullName, editable }: Props) {
             reciente y se repite hacia abajo). */}
         {cabecera && (
           <div className="ens-arco">
+            <div className="ens-arco-retrato">
+              <div className="ens-arco-retrato-img">
+                {cabecera.datos.foto_url ? (
+                  <img src={cabecera.datos.foto_url} alt={`Retrato de ${cabecera.datos.actor || personajeAbierto}`} />
+                ) : (
+                  <RetratoIlustrado nombre={personajeAbierto} rol={cabecera.datos.rol} />
+                )}
+              </div>
+              <div className="ens-arco-retrato-campos">
+                <div className="ens-arco-row">
+                  <span className="ens-arco-lbl">Rol en el reparto</span>
+                  {editable ? (
+                    <CpSelect
+                      value={cabecera.datos.rol}
+                      onChange={(v) => cambiar(cabecera, "rol", v as RolPersonaje)}
+                      options={ROL_PERSONAJE.map((r) => ({ value: r, label: r }))}
+                      placeholder="Sin asignar"
+                    />
+                  ) : (
+                    <span className="ens-arco-val">{cabecera.datos.rol || "—"}</span>
+                  )}
+                </div>
+                <div className="ens-arco-row">
+                  <span className="ens-arco-lbl">URL de la foto retrato</span>
+                  {editable ? (
+                    <input
+                      className="ens-arco-in"
+                      defaultValue={cabecera.datos.foto_url}
+                      placeholder="Pegar URL de la foto real del actor/actriz"
+                      onBlur={(e) => cambiar(cabecera, "foto_url", e.target.value)}
+                    />
+                  ) : (
+                    <span className="ens-arco-val">{cabecera.datos.foto_url || "—"}</span>
+                  )}
+                </div>
+              </div>
+            </div>
             <div className="ens-arco-row">
               <span className="ens-arco-lbl">Actor/actriz</span>
               {editable ? (
