@@ -81,3 +81,28 @@ porque el motor genérico no tiene un modo "documento + tabla visibles juntos".
   `--amber`/`--rose`/`--cyan`), mobile-first (grid de tarjetas cae a 1 columna a
   ≤640px, buscador pasa a ancho completo).
 - Verificado: `npx tsc --noEmit` limpio.
+
+## 10. Seguimiento post-QA
+
+- **Bug corregido (hallazgo de QA, pixel-sampling):** el chip de flag del selector
+  (`EstadoSeg` dentro de `MoMemoriaBoard`) seguía delegando en `estadoTono(op)`
+  genérico en vez de usar `MO_MEMORIA_FLAG_TONO`, mientras que el borde izquierdo
+  de la tarjeta sí usaba el mapeo explícito. Resultado: "No apta" salía cian en
+  vez de rojo y "Apta" salía gris en vez de verde — inconsistente, y crítico
+  porque este es el campo que decide si una escena con una menor de por medio
+  puede publicarse. Corrección: se agregó a `EstadoSeg` un prop opcional
+  `tono?: (op: string) => string` (una función, no un valor único, porque cada
+  opción del selector tiene su propio color); si no se pasa, el componente
+  mantiene exactamente su comportamiento anterior (`estadoTono(op)`), así que no
+  afecta a los demás paneles que ya usan `EstadoSeg`. `MoMemoriaBoard` ahora le
+  pasa `tono={(op) => MO_MEMORIA_FLAG_TONO[op] ?? "neutral"}`, con lo que el chip
+  y el borde de la tarjeta quedan consistentes (verde/ámbar/rojo/cian según
+  corresponda). Verificado contra las clases `.seg-ok/.seg-warn/.seg-bad/
+  .seg-info/.seg-neutral` ya definidas en `dashboard.css`.
+- **Pendiente señalado por QA, no resuelto hoy:** "Plan de cobertura BTS" no tiene
+  integración automática con el flag de `mo-memoria` — el cruce entre qué escenas
+  tiene cobertura el equipo de BTS y cuáles están marcadas "No apta"/"Requiere
+  consentimiento" es 100% manual (una persona tiene que mirar las dos
+  herramientas). Queda como riesgo documentado para una iteración futura (posible
+  columna derivada de solo lectura en Plan de cobertura BTS que lea el flag de
+  `mo-memoria` por escena); no se aborda en este expediente.

@@ -276,6 +276,7 @@ export function EstadoSeg({
   editable,
   chip = false,
   color = false,
+  tono,
 }: {
   valor: string;
   opciones: string[];
@@ -283,17 +284,23 @@ export function EstadoSeg({
   editable: boolean;
   chip?: boolean;
   color?: boolean;
+  // Mapeo explícito opción -> tono, para campos cuyo vocabulario no es el
+  // genérico de estadoTono() (p. ej. mo-memoria: Apta/No apta/Requiere
+  // consentimiento/Uso exclusivo de prensa). Si no se pasa, se mantiene el
+  // comportamiento por defecto (estadoTono(op)) para no afectar otros paneles.
+  tono?: (op: string) => string;
 }) {
   return (
     <div className={`cp-seg ${chip ? "cp-seg-chip" : ""}`} role="group">
       {opciones.map((op) => {
         const on = valor === op;
+        const t = tono ? tono(op) : estadoTono(op);
         return (
           <button
             key={op}
             type="button"
             disabled={!editable}
-            className={`cp-seg-cell ${on ? "cp-seg-on" : ""} ${on && color ? `seg-${estadoTono(op)}` : ""}`}
+            className={`cp-seg-cell ${on ? "cp-seg-on" : ""} ${on && color ? `seg-${t}` : ""}`}
             onClick={() => onPick(on ? "" : op)}
           >
             {op || "—"}
@@ -5502,6 +5509,7 @@ function MoMemoriaBoard({
                       editable={editableFilas}
                       chip
                       color
+                      tono={(op) => MO_MEMORIA_FLAG_TONO[op] ?? "neutral"}
                     />
                   </div>
                   {colMotivo && (
