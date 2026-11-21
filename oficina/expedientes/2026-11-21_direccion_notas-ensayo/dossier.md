@@ -140,6 +140,17 @@ Nico calificó la entrega "Le falta un poco" pidiendo específicamente una previ
 - Verificado interactuando de verdad (Playwright, cuenta `qa.dir-actores2@mailinator.com`, proyecto de prueba real, 1440px y 390px): edición de rol vía `CpSelect`, edición de `foto_url` con autoguardado ("Guardado" visible), render correcto del retrato ilustrado y de una foto real cargada por URL, chip de rol visible y legible en ambos anchos, sin scroll horizontal ni superposición. `npx tsc --noEmit` limpio.
 - Pendiente de decisión de Nico: si quiere que se intente de nuevo la generación de fotos con IA, hace falta habilitar en el entorno de esta sesión el acceso de red a un host de generación de imágenes (o pasar las fotos ya generadas por fuera para cargarlas vía `foto_url`).
 
+### 10.6 Corrección por segundo feedback de Nico (21/11/2026) — capturas desactualizadas en el PDF + fotos con IA habilitadas
+
+Nico rebotó de nuevo: el PDF seguía mostrando las capturas de la sección 8 (anteriores a la corrección 10.5), así que no se veía el rediseño de previsualización ya aplicado; y pidió de nuevo imágenes de actores "reales" generadas con IA.
+
+- Nico aprobó que esta sesión pidiera acceso de red a un host de generación de imágenes — se agregó `image.pollinations.ai` a la lista de hosts permitidos del entorno (aprobación explícita registrada, no unilateral).
+- Se generaron fotos retrato reales con IA para los personajes adultos del proyecto de prueba: Marta Oliveira (protagonista) y Tomás Reguera (secundario), cargadas en su campo real `foto_url`.
+- **Límite deliberado, no técnico**: Nadia Reguera (personaje secundario de 15 años en los datos de ejemplo) mantiene el retrato ilustrado, no uno generado con IA — no se genera una imagen fotorrealista de un personaje menor de edad, sea o no ficticio, porque el modelo de generación no tiene forma de verificar que es ficción y el riesgo de ese tipo de contenido no se asume bajo ninguna circunstancia. Esto no es una limitación del entorno: es un límite de seguridad que esta sesión no cruza aunque el acceso técnico ya esté habilitado.
+- Captura actualizada de la previsualización real con las 3 cards (dos con foto generada por IA, una con retrato ilustrado):
+
+![Previsualización con retratos reales (Marta y Tomás con foto generada por IA; Nadia con retrato ilustrado por ser personaje menor de edad)](capturas/preview-personajes.png)
+
 ## 11. Fuentes
 1. Programa "Dirección de actores", Grado en Artes Escénicas, Universidad Nebrija — https://alumni.nebrija.com/carreras-universitarias/grado-artes-escenicas/pdf-asignaturas/direccion-de-actores.pdf
 2. Programa "Dirección de actores", Grado en Comunicación Audiovisual (plan anterior), Universidad Nebrija — https://www.nebrija.com/carreras-universitarias/grado-en-comunicacion-audiovisual/pdf-asignaturas/plan-anterior/direccion-actores.pdf
