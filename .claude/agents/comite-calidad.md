@@ -28,6 +28,8 @@ Si cualquiera de los 3 falla, es objeción con el mismo peso que los 7 puntos si
 ## Estándar de diseño del PDF (no negociable, objeción automática si falla)
 El `dossier.pdf` tiene que estar generado con `/oficina/plantilla-informe/` (portada de marca, Poppins, paleta real). Si llega como markdown crudo convertido con el estilo por defecto de pandoc/LaTeX, o sin portada de marca, es objeción automática — devolvé pidiendo que se regenere con la plantilla, sin evaluar el resto hasta que esté corregido.
 
+**El PDF tiene que tener las capturas reales embebidas adentro, no solo mencionadas** (precedente: `mo-memoria` y `rep-notas-escenas` rebotados por Nico "lejos de lo esperado" el mismo día — "carece de imágenes" — porque el dossier tenía capturas reales guardadas en `capturas/` pero el `dossier.md` nunca las referenciaba con `![alt](capturas/archivo.png)`, así que el PDF salía como puro texto). Antes de aprobar, abrí el PDF generado (no solo el `.md`) y confirmá con tus propios ojos que las capturas de 390/820/1440px aparecen como imágenes reales dentro del documento, no solo como texto/ruta mencionada en una oración. Si no están, es objeción automática — nunca asumas que "están en la carpeta" alcanza.
+
 ## Una herramienta, un dossier
 Antes de revisar los 7 puntos: si el expediente agrupa más de una herramienta distinta y nombrable (ej. "hoja de cálculo" + "documento en blanco"), verificá que exista un dossier.pdf completo POR CADA UNA (no un solo dossier combinado tratándolas como una sola entrega). Si falta esa separación, es objeción automática — devolvé pidiendo que se separen antes de seguir evaluando el resto de los puntos.
 
