@@ -246,6 +246,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "cast-tabla-disponibilidad" ||
     CAST_EVAL_IDS.has(id) ||
     id === "rep-notas-escenas-detalle" ||
+    id === "rep-notas-escenas" ||
     id === "rep-vest-maq" ||
     id === "rep-pronunciacion" ||
     SON_MIC_IDS.has(id) ||
@@ -1407,6 +1408,19 @@ function HerramientaData({
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
           editable={editable}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "rep-notas-escenas" && (
+        <MarcasContinuidad
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
           onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
@@ -12979,6 +12993,207 @@ function ActorScenes({ columnas, filas, editable, onCrear, onGuardar, onBorrar }
         })}
       </div>
       {editable && hayFilas && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addScene")}</button></div>}
+    </div>
+  );
+}
+
+// ---- Marcas de continuidad (Reparto secundario) ----
+// Continuidad FÍSICA observable por escena para el propio actor: dónde
+// estaba, qué llevaba/sostenía, cómo entraba/salía de cuadro. El eje real
+// no es la fila, es la ESCENA en el tiempo: agrupamos por escena y, dentro
+// de cada grupo, la jornada MÁS RECIENTE queda arriba como ficha editable
+// ("esta jornada"); cualquier jornada anterior de esa misma escena se
+// muestra siempre al lado, de solo lectura, para resolver de un vistazo
+// "¿cómo estaba la última vez que rodé esto?" sin tener que ir a buscarlo.
+const EJ_MARCAS_CONTINUIDAD: Ejemplo[] = [
+  {
+    escena: "8", fecha_jornada: "2026-07-15",
+    marca_posicion: "Cinta azul, a 3 pasos del poste de amarre izquierdo, de cara al muelle.",
+    vestuario_prop: "Chubasquero amarillo gastado, boina gris, pipa apagada en la mano derecha (atrezzo, no se enciende).",
+    entrada_salida: "Entra por la izquierda del muelle cargando una red; sale por el mismo lado hacia el almacén cuando Marea lo llama.",
+    direccion_mirada: "Mirada al horizonte hasta que Marea grita su nombre; gira la cabeza a cámara.",
+    ultima_frase_gesto: "\"Aquí no hay farero desde el 58\" — escupe al suelo justo después.",
+    tomas_relevantes: "Toma 4 (la buena, según script).",
+    notas_libres: "Probar la boina un poco más calada la próxima vez, en el monitor se veía la frente muy despejada.",
+  },
+  {
+    escena: "5", fecha_jornada: "2026-07-16",
+    marca_posicion: "Cinta roja junto a la escalera de caracol, pie derecho sobre el tercer escalón.",
+    vestuario_prop: "Jersey de lana marrón con un agujero pequeño en el codo izquierdo, farol de aceite encendido en la mano izquierda.",
+    entrada_salida: "Sube por la escalera desde fuera de cuadro; se detiene en el escalón marcado, no sigue subiendo.",
+    direccion_mirada: "Mira hacia arriba, hacia la luz del faro, nunca a Marea hasta la última línea.",
+    ultima_frase_gesto: "\"Ya no me quema\" — levanta el farol a la altura de los ojos.",
+    tomas_relevantes: "Toma 2.",
+    notas_libres: "El agujero del codo izquierdo del jersey tiene que verse igual la próxima vez que rodemos esta escena.",
+  },
+  {
+    escena: "5", fecha_jornada: "2026-10-02",
+    marca_posicion: "Misma cinta roja (reutilizada), mismo escalón — confirmado contra la ficha de julio.",
+    vestuario_prop: "Mismo jersey marrón, mismo agujero en el codo izquierdo (vestuario lo guardó aparte para este pickup). Farol apagado esta vez, por guion.",
+    entrada_salida: "Igual que la jornada anterior: sube por la escalera desde fuera de cuadro y se detiene en el mismo escalón.",
+    direccion_mirada: "Igual, mirada arriba hasta la última línea — esta vez además mira el farol apagado un segundo antes de hablar.",
+    ultima_frase_gesto: "\"Ya no me quema\" — esta vez no levanta el farol, lo deja caer.",
+    tomas_relevantes: "Toma 1 (pickup único).",
+    notas_libres: "Cambié el gesto final por pedido de dirección: en vez de levantar el farol, lo deja caer. Avisar si hace falta repetir para raccord con el resto de la secuencia.",
+  },
+  {
+    escena: "19", fecha_jornada: "2026-08-03",
+    marca_posicion: "Cinta verde a la derecha de la verja, de perfil respecto a cámara.",
+    vestuario_prop: "Mismo chubasquero amarillo que en la esc. 8, esta vez sin boina ni pipa.",
+    entrada_salida: "Entra caminando desde el camino de tierra; no sale de cuadro, queda fijo mirando el coche irse.",
+    direccion_mirada: "Sigue el coche con la mirada de izquierda a derecha hasta que desaparece.",
+    ultima_frase_gesto: "Sin diálogo — asiente una sola vez con la cabeza.",
+    tomas_relevantes: "Toma 6.",
+    notas_libres: "Sin prop en mano esta vez, a diferencia de la esc. 8 — confirmar con vestuario que es intencional antes de rodar el resto de la secuencia.",
+  },
+];
+
+function MarcasContinuidad({
+  columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar,
+}: {
+  columnas: Columna[]; filas: Fila[]; editable: boolean; departamento: string; herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const set = (f: Fila, k: string, v: string) => onGuardar(f.id, { ...f.datos, [k]: v }, f);
+  const colFoto = columnas.find((c) => c.tipo === "archivo");
+  const hayFilas = filas.length > 0;
+  const base = hayFilas ? filas : ghostFilas(EJ_MARCAS_CONTINUIDAD);
+
+  // Una ficha sin fecha todavía (recién creada) se trata como la más
+  // reciente: es la que se está llenando ahora mismo, tiene que quedar
+  // arriba como ficha editable, no perderse detrás de jornadas ya cerradas.
+  const dateKey = (f: Fila) => gVal(f, "fecha_jornada") || "9999-99-99";
+
+  const grupos = Object.entries(
+    base.reduce<Record<string, Fila[]>>((acc, f) => {
+      const esc = gVal(f, "escena").trim() || t("noScene");
+      (acc[esc] ??= []).push(f);
+      return acc;
+    }, {})
+  )
+    .map(([escena, fs]) => [escena, [...fs].sort((a, b) => dateKey(b).localeCompare(dateKey(a)))] as const)
+    .sort((a, b) => dateKey(b[1][0]).localeCompare(dateKey(a[1][0])));
+
+  function campoCorto(f: Fila, key: string, ed: boolean) {
+    return (
+      <label className="hp-mc-field" key={key}>
+        <span>{gLbl(columnas, key)}</span>
+        <input className="hp-mc-in" defaultValue={gVal(f, key)} placeholder={ed ? "—" : ""} readOnly={!ed} onBlur={(e) => set(f, key, e.target.value)} />
+      </label>
+    );
+  }
+  function campoLargo(f: Fila, key: string, ed: boolean, rows = 2) {
+    return (
+      <label className="hp-mc-field hp-mc-field-wide" key={key}>
+        <span>{gLbl(columnas, key)}</span>
+        <textarea className="hp-mc-ta" defaultValue={stripHtml(gVal(f, key))} placeholder={ed ? "—" : ""} readOnly={!ed} rows={rows} onBlur={(e) => set(f, key, e.target.value)} />
+      </label>
+    );
+  }
+
+  function FichaActual(f: Fila) {
+    const gh = esGhost(f); const ed = editable && !gh;
+    return (
+      <div className="hp-mc-actual">
+        {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
+        <div className="hp-mc-actual-head">
+          <input
+            type="date"
+            className="hp-mc-fecha"
+            defaultValue={gVal(f, "fecha_jornada")}
+            readOnly={!ed}
+            onBlur={(e) => set(f, "fecha_jornada", e.target.value)}
+          />
+          <span className="hp-mc-actual-tag">{t("mcCurrent")}</span>
+          {ed && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
+        </div>
+        <div className="hp-mc-grid">
+          {campoCorto(f, "marca_posicion", ed)}
+          {campoCorto(f, "direccion_mirada", ed)}
+          {campoCorto(f, "ultima_frase_gesto", ed)}
+          {campoCorto(f, "tomas_relevantes", ed)}
+        </div>
+        {campoLargo(f, "vestuario_prop", ed)}
+        {campoLargo(f, "entrada_salida", ed)}
+        {campoLargo(f, "notas_libres", ed, 3)}
+        {colFoto && (
+          <div className="hp-mc-foto">
+            <span className="hp-mc-foto-lbl">{colFoto.label}</span>
+            <ArchivoCell
+              path={gVal(f, colFoto.key)}
+              editable={ed}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              filaId={f.id}
+              colKey={colFoto.key}
+              onSave={(v) => set(f, colFoto.key, v)}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function FichaAnterior(f: Fila) {
+    const fecha = gVal(f, "fecha_jornada");
+    return (
+      <div className="hp-mc-prev" key={f.id}>
+        <div className="hp-mc-prev-head">
+          <span className="hp-mc-prev-tag">{t("mcPrevious")}</span>
+          <span className="hp-mc-prev-fecha">{fecha || t("noDate")}</span>
+        </div>
+        <dl className="hp-mc-prev-list">
+          <div><dt>{gLbl(columnas, "marca_posicion")}</dt><dd>{gVal(f, "marca_posicion") || "—"}</dd></div>
+          <div><dt>{gLbl(columnas, "vestuario_prop")}</dt><dd>{stripHtml(gVal(f, "vestuario_prop")) || "—"}</dd></div>
+          <div><dt>{gLbl(columnas, "entrada_salida")}</dt><dd>{stripHtml(gVal(f, "entrada_salida")) || "—"}</dd></div>
+          <div><dt>{gLbl(columnas, "direccion_mirada")}</dt><dd>{gVal(f, "direccion_mirada") || "—"}</dd></div>
+          <div><dt>{gLbl(columnas, "ultima_frase_gesto")}</dt><dd>{gVal(f, "ultima_frase_gesto") || "—"}</dd></div>
+          {gVal(f, "tomas_relevantes") && <div><dt>{gLbl(columnas, "tomas_relevantes")}</dt><dd>{gVal(f, "tomas_relevantes")}</dd></div>}
+          {stripHtml(gVal(f, "notas_libres")) && <div><dt>{gLbl(columnas, "notas_libres")}</dt><dd>{stripHtml(gVal(f, "notas_libres"))}</dd></div>}
+        </dl>
+      </div>
+    );
+  }
+
+  return (
+    <div className="hp-mc-wrap">
+      {!hayFilas && editable && <AdoptarEjemplos ejemplos={EJ_MARCAS_CONTINUIDAD} onCrear={onCrear} />}
+      <div className="hp-mc-groups">
+        {grupos.map(([escena, fs]) => {
+          const [actual, ...anteriores] = fs;
+          return (
+            <div className="hp-mc-group" key={escena}>
+              <div className="hp-mc-group-head">
+                <span className="hex"></span>
+                <span className="hp-mc-group-title">{t("mcScene", { n: escena })}</span>
+                {anteriores.length > 0 && <span className="hp-mc-group-count">{t("mcTimesShot", { n: fs.length })}</span>}
+              </div>
+              <div className="hp-mc-group-body">
+                {FichaActual(actual)}
+                {anteriores.length > 0 && (
+                  <div className="hp-mc-prev-wrap">{anteriores.map(FichaAnterior)}</div>
+                )}
+              </div>
+              {editable && hayFilas && (
+                <button
+                  className="hp-mc-reshoot"
+                  onClick={() => onCrear({ escena: escena === t("noScene") ? "" : escena })}
+                >
+                  {t("mcAddShoot")}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {editable && hayFilas && (
+        <div className="hp-actions">
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear({})}>{t("mcAddScene")}</button>
+        </div>
+      )}
     </div>
   );
 }
