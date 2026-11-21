@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente pendiente de revisión",
+  "title": "Notas de ensayo por actor/personaje",
+  "subtitle": "Dirección de actores: cuaderno de dirección digital, vista por personaje con línea de tiempo de ensayos y continuidad de arco, verificado en vivo con cuenta de prueba real.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu revisión</span>",
+  "metaItems": [["Fecha", "21 nov 2026"], ["Departamento", "Dirección · Dirección de actores"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#FF7F6B"
+}
