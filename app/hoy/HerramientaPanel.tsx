@@ -13097,7 +13097,13 @@ function MarcasContinuidad({
   function FichaActual(f: Fila) {
     const gh = esGhost(f); const ed = editable && !gh;
     return (
-      <div className="hp-mc-actual">
+      // key={f.id}: fuerza a React a desmontar y remontar los inputs
+      // (defaultValue, no controlados) cuando cambia la fila real detrás de
+      // esta ficha — sin esto, si el primer render pinta el ejemplo/ghost y
+      // luego llegan los datos reales de Supabase, los <input> quedan
+      // "pegados" al texto del ejemplo aunque el dato real ya cargó (hallazgo
+      // de QA post-fix, 21/11/2026).
+      <div className="hp-mc-actual" key={f.id}>
         {gh && <span className="cp-ej-chip">{t("ejChip")}</span>}
         <div className="hp-mc-actual-head">
           <label className="hp-mc-esc">

@@ -191,3 +191,53 @@ pasar a comité:
   `HerramientaData` queda como riesgo abierto a reverificar por QA — si
   persiste con datos ya correctamente escenados, hay que instrumentar el
   valor de `departamento` en el primer vs. segundo render de `load()`.
+
+## 11. QA post-fix (2026-11-21, segunda pasada, commit b9e0be0)
+
+QA reverificó de punta a punta contra `cinepack-dev` real (`qa.rep-secundario2@mailinator.com`),
+interactuando (no solo capturas), en 390/820/1440px:
+
+- **Bug 1 y Bug 2 confirmados resueltos**: campo `escena` editable probado
+  end-to-end (ficha existente + ficha nueva vía "+ Añadir escena", ambas
+  reagrupadas correctamente tras recarga, confirmado además por inspección
+  directa de `herramienta_filas` en Supabase); sin rastro de `__qaMC` ni
+  `console.log('QA-LOAD'...)`. `npx tsc --noEmit` limpio; `npm run lint`
+  sin errores nuevos atribuibles a `MarcasContinuidad`.
+- **Responsive (regla de Nico) cumplida en los 3 anchos**, interactuando de
+  verdad: edición real del campo escena en 390px con persistencia
+  confirmada, sin scroll horizontal ni superposición en ningún ancho. Nota
+  menor no atribuible a esta herramienta: el widget flotante global "N" se
+  superpone levemente sobre la etiqueta "TOMA(S) DE REFERENCIA" en 390px —
+  reportado para `sistema-diseno.md`, no bloqueante.
+- **Bug 3 (nuevo, corregido en esta sesión) — valores de la ficha actual
+  quedaban "pegados" al ejemplo tras la carga real.** QA acotó con más
+  precisión el riesgo abierto de la sección 10: no era solo un parpadeo
+  cosmético de encabezado — en algunas cargas, el grupo de escena mostraba
+  ya el encabezado correcto (escena/fecha/"Rodada N veces") con datos
+  reales, pero los `<input>`/`<textarea>` de "Esta jornada" seguían
+  mostrando el texto de `EJ_MARCAS_CONTINUIDAD` ("jersey marrón", "farol",
+  etc.). Causa confirmada: `FichaActual` se invoca como función
+  (`{FichaActual(actual)}`, no `<FichaActual .../>`) y su `<div
+  className="hp-mc-actual">` raíz no llevaba `key`; cuando el primer
+  render pintaba el ejemplo/ghost y un render posterior traía la fila real
+  en la misma posición del árbol, React reutilizaba los `input`
+  (`defaultValue`, no controlados) en vez de remontarlos, y el texto
+  quedaba desincronizado del dato real aunque el agrupado sí se
+  recalculaba bien — riesgo serio porque un actor podía creer que esas
+  marcas de continuidad eran las suyas. **Corregido**: se agregó
+  `key={f.id}` al `<div className="hp-mc-actual">` para forzar el
+  remonte de los campos cuando cambia la fila real detrás de la ficha.
+  `npx tsc --noEmit` limpio tras el cambio.
+- **Hallazgo de entorno, preexistente, no introducido por este expediente
+  — `MODULOS_BETA_ACTIVOS` bloquea a Reparto.** "Reparto" no está en la
+  lista de departamentos beta (`app/constants.ts`) y ningún usuario real
+  no-admin de ese departamento puede hoy editar nada en Exclusivas (se
+  bloquea silenciosamente, sin error visible). QA necesitó un bypass
+  temporal local, revertido antes de terminar, solo para poder ejercer el
+  flujo de edición real pedido por Nico. No se tocó este archivo en este
+  expediente — queda para que el director-oficina decida si Reparto debe
+  sumarse a la lista beta o si hace falta una cuenta QA con `is_admin` para
+  probar departamentos aún no-beta.
+
+Con el Bug 3 corregido y verificado, este expediente queda listo para
+pasar a `comite-calidad`.
