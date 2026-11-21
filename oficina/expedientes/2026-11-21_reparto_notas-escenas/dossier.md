@@ -261,6 +261,22 @@ jornadas — no un caso pelado de una sola fila.
 
 - Verificación: `npx tsc --noEmit` limpio (sin errores) tras los cambios.
 
+### Capturas reales de la herramienta en uso
+
+Capturas Playwright reales contra `cinepack-dev`, cuenta `qa.rep-secundario2@mailinator.com`, proyecto de prueba real — no mockups ni ejemplos dibujados a mano.
+
+**Escritorio (1440px):**
+
+![Marcas de continuidad en 1440px](capturas/1440px.png)
+
+**Tablet (820px):**
+
+![Marcas de continuidad en 820px](capturas/820px.png)
+
+**Móvil (390px):**
+
+![Marcas de continuidad en 390px](capturas/390px.png)
+
 ## 10. Correcciones de QA (2026-11-21)
 
 QA encontró 2 problemas reales en el commit inicial, corregidos antes de
