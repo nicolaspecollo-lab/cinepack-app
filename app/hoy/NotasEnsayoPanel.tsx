@@ -16,6 +16,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "../components/Icon";
+import CpSelect from "../components/CpSelect";
 import { PrintHeader } from "./HerramientaPanel";
 import {
   NOTAS_ENSAYO_DEPARTAMENTO,
@@ -395,11 +396,12 @@ function SesionCard({
                 </label>
                 <label className="ens-field ens-field-select">
                   <span>Visibilidad</span>
-                  <select defaultValue={d.privada} onChange={(e) => onCambiar("privada", e.target.value as Visibilidad)}>
-                    {VISIBILIDAD.map((v) => (
-                      <option key={v} value={v}>{v}</option>
-                    ))}
-                  </select>
+                  <CpSelect
+                    value={d.privada}
+                    options={[...VISIBILIDAD]}
+                    placeholder="Visibilidad"
+                    onChange={(v) => onCambiar("privada", v as Visibilidad)}
+                  />
                 </label>
                 <button className="cp-btn hp-btn-danger ens-btn-del" onClick={onBorrar}>
                   <Icon name="trash" size={13} /> Borrar sesión
