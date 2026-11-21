@@ -209,6 +209,22 @@ horizontal en 390/820/1440px.
   ≤640px, buscador pasa a ancho completo).
 - Verificado: `npx tsc --noEmit` limpio.
 
+### Capturas reales de la herramienta en uso
+
+Capturas Playwright reales contra `cinepack-dev`, cuenta `qa.mo-direccion2@mailinator.com`, proyecto de prueba real — no mockups ni ejemplos dibujados a mano.
+
+**Escritorio (1440px):**
+
+![Memoria de making of en 1440px](capturas/1440px.png)
+
+**Tablet (820px):**
+
+![Memoria de making of en 820px](capturas/820px.png)
+
+**Móvil (390px):**
+
+![Memoria de making of en 390px](capturas/390px.png)
+
 ## 10. Seguimiento post-QA
 
 - **Bug corregido (hallazgo de QA, pixel-sampling):** el chip de flag del selector
