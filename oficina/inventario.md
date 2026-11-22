@@ -33,7 +33,7 @@ Herramienta de departamento: Calendario de ensayos, Partes de script/continuidad
 ## 3. Producción
 - **Dirección de producción**, **Jefatura de producción**, **Asistencia de producción**, **Coordinación de producción**, **Jefatura de locaciones**, **Scouting**, **Logística**, **Driver**.
 - Herramientas de departamento detectadas: Stripboard (**Consolidada**), Catering y dietas (**Consolidada**), Parte de producción diario (**Consolidada**), Control de transporte y vehículos (**Consolidada**).
-- Cargo "Producción ejecutiva" tiene: Tareas administrativas diarias (**Vacía** — `checklist` sin hint).
+- Cargo "Asistencia de producción" tiene: Tareas administrativas diarias (**Vacía** — `checklist` sin hint). **Corrección 22/11/2026**: esta línea decía antes "Producción ejecutiva" por error de etiquetado — esa herramienta pertenece al departamento Producción (rodaje), no a Ejecutivo; el cargo "Producción ejecutiva" (Ejecutivo) tiene sus 6 herramientas propias ya Consolidadas y ninguna vacía.
 - **Driver**: Checklist de vehículos, combustible y mantenimiento (**Circunstancial** — `checklist` con hint pero sin estructura de datos propia).
 - Resto de cargos (Jefatura/Asistencia/Coordinación de producción, Jefatura de locaciones, Scouting): **pendiente de detalle fino** — el registro completo de estos cargos no se volcó línea a línea en este reconocimiento por volumen; confirmar con el agente de departamento de Producción antes del primer ciclo.
 
