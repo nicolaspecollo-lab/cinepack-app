@@ -2063,6 +2063,14 @@ function Celda({
     if (!editable) {
       return <span className={`hp-cell-select-ro tono-${tono}`}>{valor || "—"}</span>;
     }
+    // Mismo problema que tenía la celda `fecha` (ver comentario más abajo):
+    // `onChange(v)` hace `setDraft` async y `onCommit` leía `draft` del
+    // closure del render actual, que todavía no lo había absorbido. Con una
+    // sola columna `estado` por fila rara vez se notaba, pero con DOS+
+    // columnas `estado` editadas rápido en la misma fila, el primer cambio
+    // se perdía tras reload. Usamos `onSave` (mismo camino que
+    // ArchivoCell/LinkCell/fecha) para grabar con el valor nuevo pasado
+    // directo, sin depender de `draft`.
     return (
       <div className={`hp-cell-cpselect tono-${tono}`}>
         <CpSelect
@@ -2070,7 +2078,7 @@ function Celda({
           options={col.opciones ?? []}
           placeholder="—"
           permitirLibre={col.libre}
-          onChange={(v) => { onChange(v); onCommit(); }}
+          onChange={(v) => { if (onSave) onSave(v); else { onChange(v); onCommit(); } }}
         />
       </div>
     );
