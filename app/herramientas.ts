@@ -2972,6 +2972,10 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
           nombre: "Checklist de vehículos, combustible y mantenimiento",
           tipo: "tabla",
           hint: "Registro por vehículo y fecha de revisión: kilometraje, combustible, ITV, incidencias y estado. Una fila por vehículo y fecha de revisión, no un checklist genérico sí/no.",
+          // Agrupa por vehículo (eje estable) para ver de un vistazo el
+          // historial completo de mantenimiento de una misma unidad —
+          // ver "Decisión de agrupación (ronda 2)" en necesidad.md del expediente.
+          agruparPor: "vehiculo",
           columnas: [
             { key: "fecha", label: "Fecha de revisión", tipo: "fecha" },
             { key: "vehiculo", label: "Vehículo / Matrícula" },
