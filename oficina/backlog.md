@@ -12,6 +12,14 @@ No es de un departamento: la usa cualquier cargo para crear su propia hoja/docum
 
 **No existe hoy ni como herramienta ni como librería instalada** (confirmado: `package.json`/`package-lock.json` no tienen Univer, FortuneSheet, Handsontable ni TipTap). El arquitecto-integracion debe comparar estas opciones (y cualquier otra candidata que surja) en: licencia, coste, rendimiento en móvil (el sistema de diseño es mobile-first con gutter de 16px/12px en pantallas chicas — una librería pesada o no táctil sería un mal encaje), y encaje con el stack (React 19, Next 16, exportación ya cubierta en parte por `exceljs`/`jspdf`/`pdf-lib`, que ya están instalados y podrían evitar reinventar la exportación). **Pregunta abierta, no resuelta aquí**: no se evaluó aún ninguna librería — queda explícitamente para el ciclo de trabajo del arquitecto, no se debe asumir una opción de antemano.
 
+## Ciclo 22/11/2026 — ✅ 3 ENTREGADAS (PR #16, pendientes de calificación de Nico)
+Elegidas deliberadamente dentro de departamentos ya habilitados en beta (Dirección, Producción), tras el hallazgo de QA nocturna de que departamentos fuera de esa lista (`MODULOS_BETA_ACTIVOS`) no pueden abrir ninguna herramienta real. Ver `oficina-qa/bugs/2026-11-22.md`.
+- `prod-tareas-admin` (Tareas administrativas diarias, Asistencia de producción) — corrige además un error de etiquetado de departamento en `inventario.md`.
+- `dir-control-horarios` → renombrada "Avisos y confirmaciones de citación al equipo" (Asistencia de dirección).
+- `prod-checklist-vehiculos` (Checklist de vehículos, combustible y mantenimiento, Driver) — agrupada por vehículo.
+
+De paso, QA encontró y el desarrollador corrigió 2 bugs reales del motor genérico de tabla (`HerramientaPanel.tsx`), no exclusivos de estas 3 herramientas: columna `fecha` no persistía (`4d0d5b0`), y columnas `estado` perdían ediciones por race condition cuando se tocaban 2+ en la misma fila rápido (`56fa4f8`). Ambos reverificados.
+
 ## 1-4. Herramientas vacías/placeholder de cargos clave (sección 2.3, prioridad por impacto de lanzamiento)
 **Actualizado 17/11**: los 3 primeros de esta lista (`dir-notas-escena`, `rrhh-plan-bienestar`, `foto-dit-backup`) se entregaron hoy — ver `oficina/expedientes/2026-11-17_*` y `entregas` en el panel, pendientes de calificación de Nico. `post-checklist-mezcla` también entregado y rehecho (ver 17/11).
 **Actualizado 18/11**: `foto-checklist-descarga`, `arte-checklist-tareas` y `rep-diario-personaje` entregados hoy — ver `oficina/expedientes/2026-11-18_tres-herramientas-vacias/`. **Pendiente real para la próxima noche de QA**: sumar a `qa.foto-aux-camara@...`, `qa.arte-ayudantia@...` y `qa.rep-protagonista@...` como miembros reales del proyecto de prueba — el "Modo de prueba" de la cuenta admin no alcanza para QA de escritura (no afecta RLS, por diseño). Siguientes candidatos: `dir-decisiones-visionado`, `dir-notas-ensayo`, `rep-notas-preparacion`.
