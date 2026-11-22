@@ -2704,7 +2704,20 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Asistencia de dirección": {
       departamento: [calendarioEnsayos],
       cargo: [
-        { id: "dir-control-horarios", nombre: "Control de horarios y avisos al equipo", tipo: "checklist" },
+        {
+          id: "dir-control-horarios",
+          nombre: "Avisos y confirmaciones de citación al equipo",
+          tipo: "tabla",
+          hint: "Centro de avisos operativos al equipo (citación, cambios de horario de último momento) con confirmación de recepción por destinatario. No es un registro de tiempos/overtime (ver Control de horarios y avisos al equipo (1AD)).",
+          columnas: [
+            { key: "mensaje", label: "Aviso / mensaje", tipo: "largo" },
+            { key: "destinatario", label: "Destinatario o departamento" },
+            { key: "fecha_envio", label: "Fecha y hora de envío", tipo: "fecha" },
+            { key: "canal", label: "Canal", tipo: "estado", opciones: ["WhatsApp", "Llamada", "Presencial", "Callsheet"] },
+            { key: "estado_confirmacion", label: "Estado de confirmación", tipo: "estado", opciones: ["Pendiente", "Confirmado", "No leído"] },
+            { key: "confirmado_por", label: "Quién confirmó" },
+          ],
+        },
       ],
     },
     "2ª Asistencia de dirección": {
@@ -2843,7 +2856,21 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Asistencia de producción": {
       departamento: [parteDiario],
       cargo: [
-        { id: "prod-tareas-admin", nombre: "Tareas administrativas diarias", tipo: "checklist" },
+        {
+          id: "prod-tareas-admin",
+          nombre: "Tareas administrativas diarias",
+          tipo: "tabla",
+          hint: "Gestiones puntuales delegadas: trámites, compras de caja chica, documentación, proveedores menores. No es para préstamos de material (ver Control de material prestado o alquilado) ni para logística pre-rodaje (ver Checklist de preparación de jornada).",
+          columnas: [
+            { key: "tarea", label: "Tarea / gestión" },
+            { key: "categoria", label: "Categoría", tipo: "estado", opciones: ["Trámite", "Compra/caja chica", "Documentación", "Proveedor", "Logística", "Otro"] },
+            { key: "responsable", label: "Responsable" },
+            { key: "fecha_limite", label: "Fecha límite", tipo: "fecha" },
+            { key: "prioridad", label: "Prioridad", tipo: "estado", opciones: ["Alta", "Media", "Baja"] },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Bloqueada", "Completada"] },
+            { key: "notas", label: "Notas / contexto", tipo: "largo" },
+          ],
+        },
       ],
     },
     "Coordinación de producción": {
@@ -2940,7 +2967,24 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Driver": {
       departamento: [],
       cargo: [
-        { id: "prod-checklist-vehiculos", nombre: "Checklist de vehículos, combustible y mantenimiento", tipo: "checklist" },
+        {
+          id: "prod-checklist-vehiculos",
+          nombre: "Checklist de vehículos, combustible y mantenimiento",
+          tipo: "tabla",
+          hint: "Registro por vehículo y fecha de revisión: kilometraje, combustible, ITV, incidencias y estado. Una fila por vehículo y fecha de revisión, no un checklist genérico sí/no.",
+          columnas: [
+            { key: "fecha", label: "Fecha de revisión", tipo: "fecha" },
+            { key: "vehiculo", label: "Vehículo / Matrícula" },
+            { key: "kilometraje", label: "Kilometraje actual", tipo: "num" },
+            { key: "combustible", label: "Nivel de combustible al cierre", tipo: "estado", opciones: ["Lleno", "3/4", "1/2", "1/4", "Vacío"] },
+            { key: "ultima_itv", label: "Fecha última ITV/revisión técnica", tipo: "fecha" },
+            { key: "proxima_revision", label: "Próxima revisión programada", tipo: "fecha" },
+            { key: "incidencias", label: "Incidencias / averías detectadas", tipo: "largo" },
+            { key: "estado", label: "Estado del vehículo", tipo: "estado", opciones: ["Operativo", "En taller", "Fuera de servicio"] },
+            { key: "responsable", label: "Driver responsable" },
+            { key: "foto", label: "Foto de incidencia/estado", tipo: "archivo" },
+          ],
+        },
       ],
     },
   },
