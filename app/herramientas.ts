@@ -2865,7 +2865,31 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Asistencia de producción": {
       departamento: [parteDiario],
       cargo: [
-        { id: "prod-tareas-admin", nombre: "Tareas administrativas diarias", tipo: "checklist" },
+        {
+          // Era tipo "checklist" genérico (sin columnas propias). Nico lo
+          // rebotó dos veces como "Lejos de lo esperado" pidiendo un tablero
+          // a medida en vez de una tabla más (ver desarrollador.md, "Panel a
+          // medida por defecto"). Pasa a tabla con columnas reales de
+          // gestión administrativa (trámites/pagos/seguros/permisos), con
+          // vista a medida TareasAdminBoard (board agrupado por urgencia,
+          // tarjetas con subtareas, notas y adjunto) — ver HerramientaPanel.
+          id: "prod-tareas-admin", nombre: "Tareas administrativas diarias", tipo: "tabla",
+          hint: "Trámites, pagos, seguros y gestiones del día a día de producción, agrupados por urgencia real (vencida/hoy/semana/sin fecha), con subtareas y adjuntos por gestión.",
+          columnas: [
+            { key: "tarea", label: "Tarea / Gestión" },
+            {
+              key: "categoria", label: "Categoría", tipo: "estado",
+              opciones: ["Trámites", "Pagos", "Seguros", "Permisos", "Documentación legal", "Logística administrativa"],
+            },
+            { key: "prioridad", label: "Prioridad", tipo: "estado", opciones: ["Alta", "Media", "Baja"] },
+            { key: "vencimiento", label: "Vencimiento", tipo: "fecha" },
+            { key: "responsable", label: "Responsable" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Bloqueada", "Hecha"] },
+            { key: "subtareas", label: "Subtareas", tipo: "largo" },
+            { key: "notas", label: "Notas", tipo: "largo" },
+            { key: "adjunto", label: "Adjunto", tipo: "archivo" as const },
+          ],
+        },
       ],
     },
     "Coordinación de producción": {
