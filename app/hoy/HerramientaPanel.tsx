@@ -9584,7 +9584,12 @@ function GaleriaTool({
         />
         {columnas.map((c) => (
           <label className="hp-gfield" key={c.key}>
-            <span>{c.label}</span>
+            <span>
+              {c.label}
+              {herramientaId === "dir-continuidad-foto" && c.key === "escena" && (f.datos?.escena ?? "").trim() && (
+                <VerContinuidadArte escena={f.datos?.escena ?? ""} />
+              )}
+            </span>
             {c.tipo === "archivo" ? (
               <ArchivoCell
                 path={f.datos?.[c.key] ?? ""}
@@ -13560,6 +13565,91 @@ const MC_CONCEPTO_TONO: Record<string, string> = {
   tomas_relevantes: "neutral", // referencia técnica de rodaje
   notas_libres: "neutral", // notas personales, sin acento fuerte
 };
+
+function VerContinuidadArte({ escena }: { escena: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, setEstado] = useState<"idle" | "cargando" | "ok" | "vacio" | "error">("idle");
+  const [vestuario, setVestuario] = useState<Record<string, string>[]>([]);
+  const [maquillaje, setMaquillaje] = useState<Record<string, string>[]>([]);
+
+  async function abrir() {
+    setAbierto((v) => !v);
+    if (estado !== "idle") return;
+    setEstado("cargando");
+    try {
+      const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+      if (!projectId) { setEstado("error"); return; }
+      const supabase = createClient();
+      const [vRes, mRes] = await Promise.all([
+        supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "arte-continuidad-vestuario")
+          .eq("datos->>escena", escena)
+          .limit(5),
+        supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "arte-continuidad-maquillaje")
+          .eq("datos->>escena", escena)
+          .limit(5),
+      ]);
+      const v = (vRes.data ?? []).map((r) => r.datos as Record<string, string>);
+      const m = (mRes.data ?? []).map((r) => r.datos as Record<string, string>);
+      setVestuario(v);
+      setMaquillaje(m);
+      setEstado(v.length === 0 && m.length === 0 ? "vacio" : "ok");
+    } catch {
+      setEstado("error");
+    }
+  }
+
+  return (
+    <div className="hp-mc-guion-wrap">
+      <button type="button" className="hp-mc-guion-btn" onClick={abrir} title="Ver continuidad de Arte para esta escena">
+        <Icon name="file-text" size={12} /> Ver continuidad de Arte
+      </button>
+      {abierto && (
+        <div className="hp-mc-guion-pop">
+          {estado === "cargando" && <p>Buscando continuidad de Arte para esta escena…</p>}
+          {estado === "error" && <p>No se pudo consultar la continuidad de Arte ahora.</p>}
+          {estado === "vacio" && <p>Arte todavía no registró continuidad de vestuario ni maquillaje para esta escena.</p>}
+          {estado === "ok" && (
+            <>
+              {vestuario.length > 0 && (
+                <div>
+                  <dt>Vestuario</dt>
+                  {vestuario.map((d, i) => (
+                    <dd key={i}>
+                      {d.personaje ?? "—"} — {d.look ?? ""}{" "}
+                      {d.cambio && (
+                        <span className={`seg seg-${MC_CONCEPTO_TONO.vestuario_prop}`}>{d.cambio}</span>
+                      )}
+                      {d.nota ? ` · ${d.nota}` : ""}
+                    </dd>
+                  ))}
+                </div>
+              )}
+              {maquillaje.length > 0 && (
+                <div>
+                  <dt>Maquillaje</dt>
+                  {maquillaje.map((d, i) => (
+                    <dd key={i}>
+                      {d.personaje ?? "—"} — {d.tipo ?? ""}
+                      {d.nota ? ` · ${d.nota}` : ""}
+                    </dd>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function MarcasContinuidad({
   columnas, filas, editable, departamento, herramientaId, onCrear, onGuardar, onBorrar,

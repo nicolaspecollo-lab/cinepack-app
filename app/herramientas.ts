@@ -2728,10 +2728,17 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       departamento: [partesScript],
       cargo: [
         {
-          id: "dir-continuidad-foto", nombre: "Continuidad fotográfica", tipo: "galeria", hint: "Galería + notas de raccord.",
+          id: "dir-continuidad-foto", nombre: "Continuidad fotográfica", tipo: "galeria",
+          hint: "Foto de referencia vs. foto actual por escena/toma, para detectar discrepancias de raccord (continuity photos) y clasificar qué tan grave es.",
           columnas: [
-            { key: "escena", label: "Escena / Toma" },
-            { key: "raccord", label: "Notas de raccord", tipo: "largo" },
+            { key: "escena", label: "Escena" },
+            { key: "toma", label: "Toma" },
+            { key: "foto_referencia", label: "Foto de referencia", tipo: "archivo" as const },
+            { key: "foto_actual", label: "Foto actual / toma en revisión", tipo: "archivo" as const },
+            { key: "elemento_afectado", label: "Elemento afectado", tipo: "estado", opciones: ["Vestuario", "Prop", "Maquillaje/Peinado", "Posición/Marca", "Iluminación", "Otro"] },
+            { key: "discrepancia", label: "Notas de discrepancia", tipo: "largo" },
+            { key: "severidad", label: "Severidad", tipo: "estado", opciones: ["Leve", "Moderada", "Grave / requiere repetir toma"] },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente de revisar", "Resuelto en set", "Aceptado como salto", "Pendiente de VFX/montaje"] },
           ],
         },
         dirScriptLog,
