@@ -29,3 +29,26 @@ Cubre las 6 categorías reales del cargo con fechas, prioridades y estados disti
 - **Sin librerías nuevas**: reusa `Icon` (set propio, iconos `id-card`/`briefcase`/`shield`/`key`/`file-text`/`folder`/`clock`/`chevron-up`/`chevron-down`/`plus` ya existentes en `app/components/Icon.tsx` — ninguno nuevo), `EstadoSeg` (control segmentado ya resuelto), `ArchivoCell` (subida de adjuntos ya resuelta contra Supabase Storage), `parseArr` (parseo de JSON embebido ya usado en Checklist de mezcla).
 - **CSS**: clases `.hp-tad-*` nuevas en `app/hoy/dashboard.css`, siguiendo el mismo esquema de tokens que `.hp-mezcla-*` (`var(--gutter)`, `var(--sp-*)`, `var(--fs-*)`, acentos con nombre `--blue/--gold/--teal/--violet/--rose/--lime`), grid `repeat(auto-fill, minmax(280px, 1fr))` que colapsa a 1 columna bajo 640px.
 - **Sin texto introductorio**: `hint` se mantiene solo como documentación interna (no se renderiza en ningún caso — regla endurecida 25/11, ya aplicada globalmente en `HerramientaPanel.tsx`).
+
+## Nota — ronda de corrección de QA (25/11/2026, commit `8e5e530`)
+
+La primera entrega de `TareasAdminBoard` llegó a comité con dos bugs reales encontrados en la verificación de QA (cuenta `qa.prod-asistencia2@mailinator.com`), ambos corregidos antes de esta versión:
+
+1. **Sin vía de edición de título/categoría/prioridad**: la tarjeta abierta permitía editar responsable, fecha, subtareas, notas y adjunto, pero no el propio título de la gestión ni su categoría o prioridad — una vez creada, una tarea quedaba mal clasificada para siempre. Corregido: los tres campos ahora son editables desde el detalle de la tarjeta, igual que el resto.
+2. **Condición de carrera en guardado concurrente**: al editar dos campos de la misma tarjeta en sucesión rápida (p. ej. marcar una subtarea y luego escribir una nota), el segundo guardado podía pisar al primero y perder la edición previa si la respuesta del servidor llegaba desordenada. Corregido: el guardado ahora serializa las escrituras por fila en vez de disparar peticiones en paralelo sin orden garantizado.
+
+Las capturas de este expediente (`capturas/390px.png`, `820px.png`, `1440px.png` y sus variantes `-opened`) se regeneraron después de esta corrección contra `cinepack-dev` y muestran el contenido de ejemplo real `EJ_TAREAS_ADMIN` (8 gestiones: seguro de responsabilidad civil vencido, nómina de la semana al día, permiso de rodaje bloqueado, alta en Seguridad Social, devolución de IVA, contrato de cesión de imagen archivado, alquiler de furgón y tasa de dron), agrupadas por urgencia con sus chips de categoría y prioridad visibles. La entrega anterior de capturas mostraba por error datos sucios de pruebas de QA ("Responsable 820px", "testfile.txt") y tarjetas sin título/categoría — señalado por el comité y corregido en esta ronda.
+
+### Capturas (regeneradas, `EJ_TAREAS_ADMIN`)
+
+![Tablero cerrado — 1440px, 8 gestiones agrupadas por urgencia](capturas/1440px.png)
+
+![Tarjeta abierta — 1440px, detalle editable (título/categoría/prioridad/subtareas/notas)](capturas/1440px-opened.png)
+
+![Tablero cerrado — 820px](capturas/820px.png)
+
+![Tarjeta abierta — 820px](capturas/820px-opened.png)
+
+![Tablero cerrado — 390px](capturas/390px.png)
+
+![Tarjeta abierta — 390px](capturas/390px-opened.png)
