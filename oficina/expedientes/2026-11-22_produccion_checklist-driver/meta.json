@@ -1,10 +1,10 @@
 {
-  "kicker": "Oficina de Desarrollo de App · Expediente aprobado",
+  "kicker": "Oficina de Desarrollo de App · Expediente en ronda de revisión",
   "title": "Checklist de vehículos, combustible y mantenimiento",
-  "subtitle": "Driver (Producción): registro por vehículo y fecha de revisión, agrupado por vehículo, con bug de persistencia de columnas \"estado\" corregido y reverificado en vivo.",
-  "badge": "<span class=\"badge badge-ok\">Aprobado · Ronda 2</span>",
-  "metaItems": [["Fecha", "22 nov 2026"], ["Departamento", "Producción · Driver"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado"]],
+  "subtitle": "Driver (Producción): rediseño en tarjeta por matrícula con historial de kilometraje, combustible/gastos y carnet/responsable (ronda 3, rebote de Nico sobre la tabla de celdas de ronda 2).",
+  "badge": "<span class=\"badge badge-warn\">Ronda 3 · Pendiente de comité</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Producción · Driver"], ["Oficina", "Desarrollo"], ["Ronda", "3 — rediseño en tarjetas"]],
   "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
   "footerNote": "pendiente de tu aprobación final",
-  "accent": "#E8A330"
+  "accent": "#5F70ED"
 }

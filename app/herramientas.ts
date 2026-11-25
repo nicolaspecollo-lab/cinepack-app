@@ -2997,25 +2997,52 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       departamento: [],
       cargo: [
         {
-          id: "prod-checklist-vehiculos",
-          nombre: "Checklist de vehículos, combustible y mantenimiento",
-          tipo: "tabla",
-          hint: "Registro por vehículo y fecha de revisión: kilometraje, combustible, ITV, incidencias y estado. Una fila por vehículo y fecha de revisión, no un checklist genérico sí/no.",
-          // Agrupa por vehículo (eje estable) para ver de un vistazo el
-          // historial completo de mantenimiento de una misma unidad —
-          // ver "Decisión de agrupación (ronda 2)" en necesidad.md del expediente.
-          agruparPor: "vehiculo",
+          id: "prod-checklist-vehiculos", nombre: "Checklist de vehículos, combustible y mantenimiento", tipo: "tabla",
+          hint: "Rediseño 25/11/2026 (rebote de Nico sobre la versión en tabla de celdas): una tarjeta por matrícula con alerta de un vistazo (carnet vencido / revisión vencida / mantenimiento urgente); al abrir, historial cronológico por vehículo — kilometraje con foto de odómetro, tickets de combustible/gastos con monto + foto, carnet y responsable de conducción (con historial de responsables, no solo el actual), y el checklist técnico de mantenimiento. Usa el motor EntidadTabsBoard ya aprobado (tarjeta → modal con pestañas), no la tabla genérica — mismo patrón que rrhh-plan-bienestar, con rama propia de tarjeta/alerta para este cargo.",
           columnas: [
-            { key: "fecha", label: "Fecha de revisión", tipo: "fecha" },
-            { key: "vehiculo", label: "Vehículo / Matrícula" },
-            { key: "kilometraje", label: "Kilometraje actual", tipo: "num" },
-            { key: "combustible", label: "Nivel de combustible al cierre", tipo: "estado", opciones: ["Lleno", "3/4", "1/2", "1/4", "Vacío"] },
-            { key: "ultima_itv", label: "Fecha última ITV/revisión técnica", tipo: "fecha" },
-            { key: "proxima_revision", label: "Próxima revisión programada", tipo: "fecha" },
-            { key: "incidencias", label: "Incidencias / averías detectadas", tipo: "largo" },
-            { key: "estado", label: "Estado del vehículo", tipo: "estado", opciones: ["Operativo", "En taller", "Fuera de servicio"] },
-            { key: "responsable", label: "Driver responsable" },
-            { key: "foto", label: "Foto de incidencia/estado", tipo: "archivo" },
+            { key: "matricula", label: "Matrícula", tipo: "texto" },
+            { key: "modelo", label: "Modelo", tipo: "texto" },
+            { key: "anio", label: "Año", tipo: "num" },
+            { key: "responsable_actual", label: "Responsable actual", tipo: "texto" },
+            { key: "km_actual", label: "Kilometraje actual", tipo: "num" },
+            { key: "revision_tecnica", label: "Próxima revisión técnica", tipo: "fecha" },
+            { key: "carnet_vencimiento", label: "Vencimiento carnet del responsable", tipo: "fecha" },
+            {
+              key: "historial_km", label: "Registros de kilometraje", tipo: "repetible",
+              sub: [
+                { key: "fecha", label: "Fecha", tipo: "fecha" },
+                { key: "km", label: "Kilometraje", tipo: "num" },
+                { key: "foto", label: "Foto del odómetro", tipo: "archivo" },
+                { key: "nota", label: "Nota", tipo: "texto" },
+              ],
+            },
+            {
+              key: "historial_gastos", label: "Combustible y otros gastos", tipo: "repetible",
+              sub: [
+                { key: "fecha", label: "Fecha", tipo: "fecha" },
+                { key: "tipo_gasto", label: "Tipo", tipo: "estado", opciones: ["Combustible", "Peaje", "Parking", "Lavado", "Taller", "Otro"], libre: true },
+                { key: "monto", label: "Monto", tipo: "money" },
+                { key: "foto", label: "Foto del ticket", tipo: "archivo" },
+              ],
+            },
+            {
+              key: "historial_responsables", label: "Responsables de conducción", tipo: "repetible",
+              sub: [
+                { key: "fecha_desde", label: "Responsable desde", tipo: "fecha" },
+                { key: "nombre", label: "Nombre", tipo: "texto" },
+                { key: "carnet_foto", label: "Foto del carnet de conducir", tipo: "archivo" },
+                { key: "vencimiento_carnet", label: "Vencimiento del carnet", tipo: "fecha" },
+              ],
+            },
+            {
+              key: "mantenimiento", label: "Mantenimiento / checklist técnico", tipo: "repetible",
+              sub: [
+                { key: "fecha", label: "Fecha", tipo: "fecha" },
+                { key: "item", label: "Punto revisado", tipo: "estado", opciones: ["Aceite y filtros", "Frenos", "Neumáticos", "Luces", "Batería", "Líquido refrigerante", "Correa de distribución", "Aire acondicionado", "Otro"], libre: true },
+                { key: "estado", label: "Estado", tipo: "estado", opciones: ["OK", "Revisar", "Urgente"] },
+                { key: "nota", label: "Nota / taller", tipo: "largo" },
+              ],
+            },
           ],
         },
       ],

@@ -7863,7 +7863,7 @@ const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
     addLabel: "+ Agregar vehículo",
     special: "vehiculo-alerta",
     tabs: [
-      { label: "Resumen", keys: ["modelo", "anio", "responsable_actual", "km_actual", "revision_tecnica", "carnet_vencimiento"] },
+      { label: "Resumen", keys: ["matricula", "modelo", "anio", "responsable_actual", "km_actual", "revision_tecnica", "carnet_vencimiento"] },
       { label: "Kilometraje", keys: ["historial_km"] },
       { label: "Combustible y gastos", keys: ["historial_gastos"] },
       { label: "Carnet y responsable", keys: ["historial_responsables"] },
@@ -11852,16 +11852,16 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
       responsable_actual: "Rubén Castaños", km_actual: "102340",
       revision_tecnica: "2026-11-30", carnet_vencimiento: "2026-10-05",
       historial_km: JSON.stringify([
-        { fecha: "2026-07-02", km: "98900", foto: "", nota: "Recorrido base–Faro de Punta Alta (camino de tierra)." },
-        { fecha: "2026-07-17", km: "102340", foto: "", nota: "Incluye traslados a localización del embalse." },
+        { fecha: "2026-07-02", km: "98900", foto: "bbb3808a-c926-4d06-99ca-38075405e931/produccion/herramientas/prod-checklist-vehiculos/veh-7830lmn/historial_km/1795625333-odometro-98900km.jpg", nota: "Recorrido base–Faro de Punta Alta (camino de tierra)." },
+        { fecha: "2026-07-17", km: "102340", foto: "bbb3808a-c926-4d06-99ca-38075405e931/produccion/herramientas/prod-checklist-vehiculos/veh-7830lmn/historial_km/1795625333-odometro-102340km.jpg", nota: "Incluye traslados a localización del embalse." },
       ]),
       historial_gastos: JSON.stringify([
-        { fecha: "2026-07-03", tipo_gasto: "Combustible", monto: "88.00", foto: "" },
-        { fecha: "2026-07-09", tipo_gasto: "Taller", monto: "65.00", foto: "", },
-        { fecha: "2026-07-16", tipo_gasto: "Parking", monto: "12.50", foto: "" },
+        { fecha: "2026-07-03", tipo_gasto: "Combustible", monto: "88.00", foto: "bbb3808a-c926-4d06-99ca-38075405e931/produccion/herramientas/prod-checklist-vehiculos/veh-7830lmn/historial_gastos/1795625333-ticket-combustible.jpg" },
+        { fecha: "2026-07-09", tipo_gasto: "Taller", monto: "65.00", foto: "bbb3808a-c926-4d06-99ca-38075405e931/produccion/herramientas/prod-checklist-vehiculos/veh-7830lmn/historial_gastos/1795625333-ticket-taller.jpg" },
+        { fecha: "2026-07-16", tipo_gasto: "Parking", monto: "12.50", foto: "bbb3808a-c926-4d06-99ca-38075405e931/produccion/herramientas/prod-checklist-vehiculos/veh-7830lmn/historial_gastos/1795625333-ticket-parking.jpg" },
       ]),
       historial_responsables: JSON.stringify([
-        { fecha_desde: "2026-02-01", nombre: "Rubén Castaños", carnet_foto: "", vencimiento_carnet: "2026-10-05" },
+        { fecha_desde: "2026-02-01", nombre: "Rubén Castaños", carnet_foto: "bbb3808a-c926-4d06-99ca-38075405e931/produccion/herramientas/prod-checklist-vehiculos/veh-7830lmn/historial_responsables/1795625333-carnet-ruben-castanos.jpg", vencimiento_carnet: "2026-10-05" },
       ]),
       mantenimiento: JSON.stringify([
         { fecha: "2026-06-10", item: "Neumáticos", estado: "Urgente", nota: "Neumático trasero izquierdo con desgaste irregular por el camino de tierra del faro — cambiar antes de volver a ir." },
@@ -11899,7 +11899,7 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
       ]),
       historial_gastos: JSON.stringify([
         { fecha: "2026-06-22", tipo_gasto: "Combustible", monto: "79.90", foto: "" },
-        { fecha: "2026-07-10", tipo_gasto: "Taller", monto: "210.00", foto: "", },
+        { fecha: "2026-07-10", tipo_gasto: "Taller", monto: "210.00", foto: "" },
       ]),
       historial_responsables: JSON.stringify([
         { fecha_desde: "2025-09-01", nombre: "Iker Mendoza", carnet_foto: "", vencimiento_carnet: "2026-01-20" },
