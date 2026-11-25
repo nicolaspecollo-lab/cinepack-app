@@ -6739,6 +6739,14 @@
 .cp-dash .ch1-chip-ot.fuerte{ color:var(--rose); border:1px solid rgba(240,122,122,0.5); background:rgba(240,122,122,0.14); }
 .cp-dash .ch1-chip-ot.tenue{ color:var(--amber); border:1px solid rgba(232,163,48,0.4); background:rgba(232,163,48,0.1); }
 
+/* Tarjeta "Agregar día" (Bug 2a, 25/11/2026) — vía de creación manual que
+   nunca depende de gen-plan-rodaje ni de filas ya existentes. */
+.cp-dash .ch1-card-add{
+  align-items:center; justify-content:center; gap:var(--sp-2); color:var(--lime); border-style:dashed;
+  min-height:120px;
+}
+.cp-dash .ch1-card-add:hover{ background:rgba(174,255,109,0.08); }
+
 /* Estado vacío — accesos directos a departamentos reales, nunca un
    formulario en blanco genérico. */
 .cp-dash .ch1-empty{ align-items:flex-start; text-align:left; }

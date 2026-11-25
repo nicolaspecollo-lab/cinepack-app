@@ -150,15 +150,40 @@ export default function ControlHorarios1ADPanel({ fullName, editable }: Props) {
     let id = filaId;
     if (!id) id = await crearDia({ dia_fecha: fecha, departamentos: [] });
     if (!id) return;
-    const actual = filas.find((f) => f.fecha === fecha)?.dia ?? { dia_fecha: fecha, departamentos: [] };
-    const nuevo: DiaControlHorarios = { ...actual, departamentos: [...actual.departamentos, nuevoDepartamentoDia(departamento)] };
-    guardarDia(id, nuevo);
+    guardarDia(id, (actual) => ({ ...actual, departamentos: [...actual.departamentos, nuevoDepartamentoDia(departamento)] }));
     avisarGuardado();
   }
 
-  function cambiarDia(filaId: string, dia: DiaControlHorarios) {
-    guardarDia(filaId, dia);
+  // Recibe una función de actualización (nunca un `DiaControlHorarios` ya
+  // armado a partir de una instantánea de render) para que `guardarDia`
+  // la aplique siempre contra el último valor real conocido (ver Bug 1).
+  function cambiarDia(filaId: string, actualizar: (dia: DiaControlHorarios) => DiaControlHorarios) {
+    guardarDia(filaId, actualizar);
     avisarGuardado();
+  }
+
+  // Bug 2(a) — vía de creación manual de un día nuevo, sin depender de que
+  // `gen-plan-rodaje` tenga datos ni de que ya existan filas válidas: pide
+  // la fecha (default razonable: el día siguiente a la última jornada
+  // conocida, o mañana si todavía no hay ninguna) y crea la fila
+  // `dia_fecha`/`departamentos` directamente.
+  async function agregarDiaManual() {
+    const ultimaFecha = filas.length ? filas[filas.length - 1].fecha : null;
+    const base = ultimaFecha ? new Date(ultimaFecha + "T00:00:00") : new Date();
+    if (ultimaFecha) base.setDate(base.getDate() + 1);
+    const sugerida = base.toISOString().slice(0, 10);
+    const fecha = window.prompt("Fecha de la nueva jornada (AAAA-MM-DD):", sugerida);
+    if (!fecha) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      window.alert("Fecha inválida — usá el formato AAAA-MM-DD.");
+      return;
+    }
+    if (filas.some((f) => f.fecha === fecha)) {
+      setFechaAbierta(fecha);
+      return;
+    }
+    const id = await crearDia({ dia_fecha: fecha, departamentos: [] });
+    if (id) setFechaAbierta(fecha);
   }
 
   if (loading) return null;
@@ -194,9 +219,20 @@ export default function ControlHorarios1ADPanel({ fullName, editable }: Props) {
               <span className="hex"></span>
               <h4>Todavía no hay jornadas de rodaje</h4>
               <p>Cargá el plan de rodaje para que las jornadas aparezcan acá automáticamente.</p>
+              {editable && (
+                <button className="cp-btn ch1-btn-acc" onClick={agregarDiaManual}>
+                  <Icon name="plus" size={13} /> Agregar día
+                </button>
+              )}
             </div>
           ) : (
             <div className="ch1-grid">
+              {editable && (
+                <button className="ch1-card ch1-card-add" onClick={agregarDiaManual}>
+                  <Icon name="plus" size={18} />
+                  <span>Agregar día</span>
+                </button>
+              )}
               {filas.map(({ fecha, diaLabel, dia }) => {
                 const overtime = overtimeDia(dia);
                 const wrap = wrapMasTardio(dia);
@@ -287,16 +323,24 @@ export default function ControlHorarios1ADPanel({ fullName, editable }: Props) {
                   dep={dep}
                   eje={eje}
                   editable={editable}
-                  onCambiar={(nuevo) => {
+                  // Nunca se arma el `DepartamentoDia` nuevo contra `dep`/`dia`
+                  // capturados en este render (ver Bug 1): se manda una
+                  // función de parche que `guardarDia` aplica contra el
+                  // último valor real conocido en el hook.
+                  onCambiar={(parchar) => {
                     if (!filaActual?.filaId) return;
-                    const departamentos = dia.departamentos.map((d, idx) => (idx === i ? nuevo : d));
-                    cambiarDia(filaActual.filaId, { ...dia, departamentos });
+                    cambiarDia(filaActual.filaId, (actualDia) => ({
+                      ...actualDia,
+                      departamentos: actualDia.departamentos.map((d, idx) => (idx === i ? parchar(d) : d)),
+                    }));
                   }}
                   onBorrar={() => {
                     if (!filaActual?.filaId) return;
                     if (!window.confirm(`¿Quitar a ${dep.departamento} de este día?`)) return;
-                    const departamentos = dia.departamentos.filter((_, idx) => idx !== i);
-                    cambiarDia(filaActual.filaId, { ...dia, departamentos });
+                    cambiarDia(filaActual.filaId, (actualDia) => ({
+                      ...actualDia,
+                      departamentos: actualDia.departamentos.filter((_, idx) => idx !== i),
+                    }));
                   }}
                 />
               ))}
@@ -330,7 +374,11 @@ function DepartamentoBarra({
   dep: DepartamentoDia;
   eje: { inicio: string; fin: string };
   editable: boolean;
-  onCambiar: (nuevo: DepartamentoDia) => void;
+  // Función de parche, no el objeto ya armado (ver Bug 1): quien aplica el
+  // parche es siempre el último `DepartamentoDia` real conocido, nunca el
+  // `dep` de este render (que puede estar obsoleto si hubo una escritura
+  // concurrente todavía no reflejada en props).
+  onCambiar: (parchar: (dep: DepartamentoDia) => DepartamentoDia) => void;
   onBorrar: () => void;
 }) {
   // Click/tap en la barra (o en su cabecera) abre el detalle de ESE
@@ -343,19 +391,19 @@ function DepartamentoBarra({
   const width = Math.max(2, right - left);
 
   function cambiarCampo<K extends keyof DepartamentoDia>(campo: K, valor: DepartamentoDia[K]) {
-    onCambiar({ ...dep, [campo]: valor });
+    onCambiar((actual) => ({ ...actual, [campo]: valor }));
   }
 
   function cambiarSetup(id: string, campo: keyof SetupHorario, valor: string) {
-    onCambiar({ ...dep, setups: dep.setups.map((s) => (s.id === id ? { ...s, [campo]: valor } : s)) });
+    onCambiar((actual) => ({ ...actual, setups: actual.setups.map((s) => (s.id === id ? { ...s, [campo]: valor } : s)) }));
   }
 
   function agregarSetup() {
-    onCambiar({ ...dep, setups: [...dep.setups, nuevoSetup()] });
+    onCambiar((actual) => ({ ...actual, setups: [...actual.setups, nuevoSetup()] }));
   }
 
   function borrarSetup(id: string) {
-    onCambiar({ ...dep, setups: dep.setups.filter((s) => s.id !== id) });
+    onCambiar((actual) => ({ ...actual, setups: actual.setups.filter((s) => s.id !== id) }));
   }
 
   return (
@@ -494,7 +542,7 @@ function SetupFila({
   }
 
   return (
-    <div className="ch1-setup">
+    <div className="ch1-setup" data-setup-id={setup.id}>
       {editable ? (
         <>
           <label className="ch1-field">

@@ -96,7 +96,21 @@ export function useControlHorarios1ad(fullName: string) {
     return (data as FilaDB)?.id ?? null;
   }
 
-  function guardarDia(id: string, dia: DiaControlHorarios) {
+  // Nunca construir el payload a partir de un `dia` capturado en un render
+  // (prop/estado que puede quedar obsoleto por una escritura concurrente,
+  // ver Bug 1 bloqueante QA 25/11/2026: condición de carrera que pierde
+  // SIEMPRE la edición más reciente). `guardarDia` recibe una función de
+  // actualización y la aplica contra `filasRef.current` — el ref se
+  // actualiza de forma SÍNCRONA en `aplicar`, así que cada llamada, aunque
+  // se dispare a milisegundos de la anterior (antes de que React re-renderee
+  // con el estado nuevo), siempre parte del último valor conocido real,
+  // nunca de una instantánea vieja. Mismo principio "most recent write wins"
+  // que ya se aplicó en el motor genérico de tabla (commit a47761a),
+  // trasladado acá al pipeline bespoke de este panel.
+  function guardarDia(id: string, actualizar: (dia: DiaControlHorarios) => DiaControlHorarios) {
+    const filaActual = filasRef.current.find((x) => x.id === id);
+    const diaBase = filaActual ? datosADia(filaActual.datos) : { dia_fecha: "", departamentos: [] };
+    const dia = actualizar(diaBase);
     aplicar(filasRef.current.map((x) => (x.id === id ? { ...x, datos: diaADatos(dia) } : x)));
     cola.current = cola.current.then(async () => {
       const supabase = createClient();
