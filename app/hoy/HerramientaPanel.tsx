@@ -779,13 +779,9 @@ function HerramientaData({
           <button onClick={() => setError(null)}>✕</button>
         </div>
       )}
-      {/* En Presupuesto, la vista Tabla es superficie de trabajo (carga real
-          de conceptos/montos): el hint ya se explica en el Tablero, y acá
-          solo resta altura para que la grilla empiece más arriba — pedido
-          explícito de Nicolás. */}
-      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && (
-        <p className="hp-hint">{herramienta.hint}</p>
-      )}
+      {/* Regla endurecida de Nico (25/11/2026): cero texto explicativo al
+          abrir una herramienta, sin excepciones. El hint nunca se renderiza
+          en pantalla — queda solo como documentación interna en herramientas.ts. */}
 
       {esTabla && herramienta.id === "ej-presupuesto-costos" && (
         // Barra propia de Presupuesto: el selector de "Presupuesto
