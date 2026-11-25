@@ -298,17 +298,33 @@ Hilux, con alerta real):
 **Detalle de matrícula — pestaña Kilometraje** (2 registros cronológicos
 reales, con kilometraje y nota):
 
-![Pestaña Kilometraje de 7830-LMN con 2 registros reales](capturas/ronda3_tab_kilometraje.png)
+![Pestaña Kilometraje de 7830-LMN con 2 registros reales, cada uno con su foto de odómetro](capturas/ronda3_tab_kilometraje.png)
 
 **Detalle de matrícula — pestaña Combustible y gastos** (3 tickets reales
 de distinto tipo: combustible, taller, parking):
 
-![Pestaña Combustible y gastos de 7830-LMN con 3 tickets reales](capturas/ronda3_tab_combustible.png)
+![Pestaña Combustible y gastos de 7830-LMN con 3 tickets reales, cada uno con su foto de ticket](capturas/ronda3_tab_combustible.png)
 
 **Detalle de matrícula — pestaña Carnet y responsable** (historial de
 responsable con fecha de inicio y vencimiento propio):
 
-![Pestaña Carnet y responsable de 7830-LMN](capturas/ronda3_tab_carnet.png)
+![Pestaña Carnet y responsable de 7830-LMN con la foto del carnet](capturas/ronda3_tab_carnet.png)
+
+**Fotos de ejemplo (ronda 3, corrección post-comité)**: el comité de
+calidad archivó la primera entrega de ronda 3 porque las 3 pestañas de
+arriba (Kilometraje, Combustible y gastos, Carnet y responsable) tenían
+el campo `foto`/`carnet_foto` vacío — viola la regla permanente de Nico
+del 25/11/2026 de nunca un dossier con una fotografía de ejemplo vacía.
+Se subieron 6 fotos reales a Supabase Storage (bucket `documentos`,
+mismo mecanismo `ArchivoCell`, cuenta `qa.prod-driver2@mailinator.com`,
+proyecto `[PROYECTO TEST] La sed de los almendros`) para los registros
+de `7830-LMN`: 2 fotos de odómetro (Kilometraje), 3 fotos de ticket
+(Combustible y gastos — combustible/taller/parking) y 1 foto de carnet
+de conducir genérico y ficticio (Carnet y responsable). Fuente de las
+imágenes: `image.pollinations.ai` (ya autorizado y probado en esta
+sesión) — no había credencial de Artlist cargada en esta sesión, así
+que no se usó esa fuente; si se carga en el futuro, debe preferirse
+para estas fotos de ejemplo.
 
 **Detalle de matrícula — pestaña Mantenimiento** (3 intervenciones reales,
 una marcada "Urgente" — neumático trasero izquierdo con desgaste, la que
