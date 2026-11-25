@@ -94,9 +94,9 @@ No aplica: `GestionDocumentalBoard` es un componente bespoke en React/TypeScript
 - `ej-presupuesto-costos`, `ej-contratos`, `ej-facturas` (herramientas de departamento Ejecutivo): cuando `tipo_entidad = "Proveedor"`, `entidad_referencia` debería idealmente coincidir con el nombre de proveedor usado en Facturas/Contratos — convención de nomenclatura, no hay FK (mismo límite estructural que `escena` en las otras dos herramientas de hoy: no existe tabla normalizada de proveedores/entidades en el repo). No se construye join automático en este ciclo.
 - `ej-cesion-nda` (Legal): archiva NDAs, no se toca — Administración solo archivaría la copia certificada si cae en "Seguros"/"Societario", ya resuelto, sin relación con las 3 columnas nuevas.
 
-### Integración nivel 2 — con el proyecto
+### Integración nivel 2 — con el proyecto: flujo real especificado abajo
 
-- Sin relación directa con `GENERAL_PLAN_RODAJE`/`GENERAL_ORDEN_RODAJE`/`GENERAL_CALENDARIO`: la gestión documental administrativa no tiene fecha de rodaje asociada. Única relación posible: si una licencia municipal con `requiere_renovacion = "Sí"` vence durante el rodaje, sería deseable una alerta cruzada al calendario general — no existe mecanismo de alertas cross-herramienta en el repo hoy (las alertas de `gdEstado` son locales al panel). Se documenta como mejora futura, no se implementa.
+- Sin relación directa con `GENERAL_ORDEN_RODAJE`/`GENERAL_CALENDARIO`: la gestión documental administrativa no tiene fecha de rodaje asociada en sí misma. La única relación real posible — una licencia/documento con `requiere_renovacion = "Sí"` cuyo vencimiento cae durante la ventana de rodaje — SÍ es implementable hoy usando `GENERAL_PLAN_RODAJE` (confirmado que tiene una fila por jornada con columna `fecha` real, tipo `fecha` — ver `app/herramientas.ts` línea 3953), sin necesidad de ningún campo nuevo. Ver especificación en "Integración real (ronda 2)".
 
 ### Integración nivel 3 — con otros departamentos
 
@@ -105,7 +105,7 @@ No aplica: `GestionDocumentalBoard` es un componente bespoke en React/TypeScript
 
 ### Permisos
 
-Sin cambios respecto al patrón ya vigente de esta herramienta (departamento Ejecutivo, cargo Administración): edición para Administración y jefe de departamento Ejecutivo (`control_depto_permisos`), lectura para el resto del equipo salvo `herramienta_visibilidad.oculta`. Las 3 columnas nuevas son datos de departamento, **no privados del cargo** — no hay necesidad de modelo de nota personal aquí (a diferencia de, por ejemplo, notas de preparación de un actor). No se requiere migración RLS nueva: son columnas de metadata en `app/herramientas.ts`, las filas ya existentes siguen siendo válidas (campos nuevos quedan vacíos/"No" por defecto hasta que se editen).
+Sin cambios respecto al patrón ya vigente de esta herramienta (departamento Ejecutivo, cargo Administración): edición para Administración y jefe de departamento Ejecutivo (`control_depto_permisos`), lectura para el resto del equipo salvo `herramienta_visibilidad.oculta`. Las 3 columnas nuevas son datos de departamento, **no privados del cargo** — no hay necesidad de modelo de nota personal aquí (a diferencia de, por ejemplo, notas de preparación de un actor). No se requiere migración RLS nueva: son columnas de metadata en `app/herramientas.ts`, las filas ya existentes siguen siendo válidas (campos nuevos quedan vacíos/"No" por defecto hasta que se editen). El flujo de lectura de `GENERAL_PLAN_RODAJE` descrito abajo tampoco requiere migración: esa herramienta es de scope "General" (lectura abierta a todo el proyecto).
 
 ### Riesgo / pregunta abierta
 
@@ -153,6 +153,25 @@ Confirmado: no hay un plazo de vigencia único a nivel estatal para licencias mu
 - Contenido de la posible modificación de 2026 a los arts. 6-8 del RD 1619/2012 — no verificado; puede afectar la lógica de "digitalización certificada" ya implementada en `GestionDocumentalBoard`.
 - Confirmado como variable (no pendiente): no hay plazo único de vigencia de licencia municipal de actividad para rodajes — depende de la ordenanza de cada ayuntamiento. No usar un número fijo del sistema para esto; dejar fecha editable por el usuario (coherente con la columna `requiere_renovacion` ya propuesta).
 
+## Estado del arte / Competencia (ronda 2)
+
+Búsqueda dirigida a si StudioBinder, Yamdu, Movie Magic (Scheduling/Budgeting), SetHero o Celtx tienen gestión documental con plazos de conservación legal españoles, vínculo a entidad/proveedor y alertas de renovación. Hipótesis de partida (declarada por el equipo de necesidad): es poco probable que un software angloparlante cubra normativa española específica.
+
+- **StudioBinder**: no se encontró evidencia de ningún módulo de gestión documental con plazos de conservación legal (de ningún país) ni de vínculo estructurado a entidad/proveedor con alertas de renovación. **Sin evidencia encontrada**, consistente con que el producto está orientado a programación/callsheets/guión, no a archivo administrativo-legal.
+- **Yamdu**: no se encontró ninguna fuente que describa en Yamdu un módulo de gestión documental con retención legal o vínculo a entidad/proveedor. Las búsquedas sobre Yamdu y gestión documental devolvieron únicamente resultados de proveedores de gestión documental genéricos no relacionados con Yamdu (NetDocuments y similares), ninguno menciona a Yamdu. **Sin evidencia encontrada.**
+- **Movie Magic (Scheduling/Budgeting)**: por el alcance del producto (programación de calendario y presupuesto), sin evidencia encontrada de ningún módulo de archivo documental con plazos de retención legal. **Sin evidencia encontrada**, coherente con el foco del producto.
+- **SetHero**: su comparación propia "SetHero vs Celtx" lo posiciona como herramienta de hojas de llamada y gestión de equipo (call sheets, distribución SMS, confirmaciones, reportes), no como gestor documental de archivo administrativo (SetHero, "SetHero vs Celtx" — https://sethero.com/?p=13235). **Sin evidencia encontrada** de plazos de conservación ni vínculo a entidad/proveedor con alertas de renovación.
+- **Celtx**: sí tiene almacenamiento de documentos (listado en directorios de reseñas junto con control de versiones y reportes, alojado en infraestructura de Amazon según un análisis de terceros), pero **no se encontró evidencia** de que calcule plazos de conservación legal, ni de ningún país ni específicamente españoles, ni de un campo de vínculo a entidad/proveedor con alertas de renovación — es almacenamiento de archivos de proyecto (guiones, storyboards), no un sistema de retención documental administrativo-legal (Capterra/zoftwarehub, listados de funciones de Celtx — https://www.capterra.com/p/235136/Celtx/, https://zoftwarehub.com/en-bh/products/celtx/zoftware-analysis). **Sin evidencia encontrada** de la funcionalidad específica buscada.
+
+**Ninguna fuente consultada, para ninguno de los 5 competidores, menciona normativa española (Código de Comercio, plazos fiscales/laborales de España, RD 1619/2012, ordenanzas municipales de rodaje) en relación con gestión documental.** Esto es coherente con la hipótesis de partida del equipo de necesidad (son productos angloparlantes de alcance internacional/estadounidense, sin personalización normativa por país) pero se reporta explícitamente como ausencia de evidencia en las fuentes públicas disponibles en esta búsqueda, no como una confirmación exhaustiva de que ninguno lo ofrezca internamente o vía configuración regional no documentada públicamente.
+
+**Aspecto diferencial de CINEPACK, justificado:** `ej-gestion-documental` ya calcula (confirmado en este mismo expediente, sección "Investigación") plazos de conservación atados a normativa mercantil, fiscal y de digitalización certificada española (Código de Comercio art. 30, aproximación a LGT, RD 1619/2012), y la extensión propuesta en este ciclo (columnas `entidad_referencia`, `tipo_entidad`, `requiere_renovacion`) añade vínculo a proveedor/organismo/empleado y alertas de renovación distintas de "vencimiento de conservación". Ningún competidor consultado muestra evidencia pública de cubrir plazos legales de ningún país de forma nativa, y menos aún de normativa española — esto no es una afirmación de "seguro que no lo tienen", es la constatación de que la búsqueda no encontró evidencia, en un dominio (compliance documental local) donde es razonable esperar que un producto angloparlante de alcance internacional no invierta en localización normativa de un solo país.
+
+### Fuentes (ronda 2 — competencia)
+- SetHero, "SetHero vs Celtx" — https://sethero.com/?p=13235 (consultado 25/11/2026)
+- Capterra, listado de funciones de Celtx — https://www.capterra.com/p/235136/Celtx/ (consultado 25/11/2026)
+- Zoftwarehub, análisis de Celtx — https://zoftwarehub.com/en-bh/products/celtx/zoftware-analysis (consultado 25/11/2026)
+
 ## QA (25/11/2026)
 
 **Cuenta usada:** `qa.ej-administracion2@mailinator.com` (cargo "Administración", perfil ya completo).
@@ -181,3 +200,59 @@ Confirmado: no hay un plazo de vigencia único a nivel estatal para licencias mu
 ### Riesgos / preguntas abiertas (apartado 10)
 - Pendiente de verificación normativa ya señalada por investigación (plazo laboral de 4 años sin fuente directa confirmada, posible modificación 2026 del RD 1619/2012) — sin cambios de este QA, queda igual para un ciclo con acceso a BOE.es.
 - Nota de UX menor: el banner de ejemplo reaparece en cada sesión/navegador nuevo mientras no haya filas reales визibles para ESE cliente (aunque sí las haya en la base) — no es grave pero puede confundir a un usuario que reabre la herramienta en otro dispositivo y cree que perdió sus datos. No es parte del alcance de hoy pero lo dejo anotado para que el desarrollador lo evalúe si surge como queja real.
+
+## Integración real (ronda 2) — 25/11/2026
+
+El comité rechazó la ronda 1 por falta de un flujo de datos real. Esta sección especifica uno: badge "vence durante el rodaje" cuando `requiere_renovacion = "Sí"` y el vencimiento cae dentro de la ventana de rodaje.
+
+### Confirmación contra el código real (antes de proponer)
+
+- `GENERAL_PLAN_RODAJE` (`app/herramientas.ts` líneas 3946-3960) **sí existe** y tiene una columna `fecha` de tipo `fecha` real (no texto), una fila por jornada de rodaje — confirmado por la definición de columna `{ key: "fecha", label: "Fecha", tipo: "fecha" }`. No hay un campo único "fecha de inicio/fin de rodaje" en ningún lado del repo (ni en `GENERAL_PLAN_RODAJE` ni en `GENERAL_CALENDARIO`) — pero la "ventana de rodaje activa" se puede derivar de forma simple y correcta como el **mínimo y máximo de `fecha` entre todas las filas de `gen-plan-rodaje`** del proyecto. Es un dato real, no uno inventado: cada fila de ese plan ya es, por definición, un día de rodaje.
+- Se descartó usar `GENERAL_CALENDARIO` para esto: su columna `fase` (estado: Desarrollo/Preproducción/Rodaje/Postproducción/Distribución) permitiría en teoría filtrar filas con `fase = "Rodaje"` y tomar min/max de su `fecha`, pero `GENERAL_CALENDARIO` es un calendario de **hitos puntuales** (ej. "Inicio de rodaje", "Fin de rodaje" como eventos sueltos), no garantiza una fila por cada día de rodaje — depende de qué hitos haya cargado Producción. `GENERAL_PLAN_RODAJE` es la fuente más fiable porque, por construcción, cada fila ES un día de rodaje.
+
+### Especificación exacta
+
+**Dónde:** dentro de `gdEstado()` o en un cálculo adyacente en `GestionDocumentalBoard` (`app/hoy/HerramientaPanel.tsx`, ~6111-6248). Se agrega un fetch de solo lectura, una vez al montar el componente (no por fila, no repetido):
+
+```ts
+const supabase = createClient();
+const { data: planRows } = await supabase
+  .from("herramienta_filas")
+  .select("datos")
+  .eq("project_id", projectId)
+  .eq("herramienta_id", "gen-plan-rodaje");
+
+const fechasRodaje = (planRows ?? [])
+  .map((r) => r.datos?.fecha)
+  .filter(Boolean)
+  .map((f: string) => new Date(f));
+
+const inicioRodaje = fechasRodaje.length ? new Date(Math.min(...fechasRodaje.map(d => d.getTime()))) : null;
+const finRodaje = fechasRodaje.length ? new Date(Math.max(...fechasRodaje.map(d => d.getTime()))) : null;
+```
+
+**Uso en `gdEstado()` (o en el render de la tarjeta, después de calcular `vencimiento` como ya hace hoy):**
+
+```ts
+const venceEnRodaje =
+  requiere_renovacion === "Sí" && inicioRodaje && finRodaje &&
+  vencimiento >= inicioRodaje && vencimiento <= finRodaje;
+```
+
+**UI:** badge adicional, pequeño, junto al label de `gdEstado()` ya existente (no lo reemplaza) — texto fijo "Vence durante el rodaje", tono `warn` (mismo set de tonos ya usado: `ok`/`warn`/`bad`/`neutral`, sin tono nuevo). Solo se muestra si `venceEnRodaje === true`. Si `inicioRodaje`/`finRodaje` son `null` (proyecto sin `gen-plan-rodaje` cargado todavía), no se muestra el badge ni se rompe el render del resto de la tarjeta — comportamiento equivalente al de "sin plan de rodaje aún", no un error.
+
+**Nunca escribe.** Es lectura pura de `gen-plan-rodaje`, un solo fetch por carga del panel, sin escritura cruzada hacia `GENERAL_PLAN_RODAJE` ni hacia `ej-gestion-documental`.
+
+**Permisos:** ninguna migración nueva. `GENERAL_PLAN_RODAJE` es scope "General" — lectura ya abierta a todo el equipo del proyecto, más permisivo que el de herramientas de departamento Ejecutivo/Administración. Sin fricción de RLS.
+
+**Riesgo abierto:** si el proyecto tiene un plan de rodaje con jornadas no contiguas (ej. rodaje con una pausa larga en medio), el cálculo de min/max trata todo el rango como "ventana activa", incluyendo los días de pausa en medio — es una aproximación razonable para una alerta de "atención", no una verificación exacta de que haya cámara rodando ese día exacto. Se documenta la limitación; no se propone lógica de huecos en este ciclo (sería sobre-ingeniería para una alerta informativa).
+
+## Implementación y verificación (desarrollador, ronda 2, 25/11/2026)
+
+**Implementado tal cual la especificación:** un `useEffect` en `GestionDocumentalBoard` (`app/hoy/HerramientaPanel.tsx`) que hace un único fetch de solo lectura a `herramienta_filas` filtrando `herramienta_id = "gen-plan-rodaje"` al montar el componente, calcula `inicioRodaje`/`finRodaje` como el mínimo/máximo de `datos.fecha` entre las filas devueltas, y expone `venceEnRodaje(f)` con exactamente la lógica especificada (`requiere_renovacion === "Sí"`, no permanente, `vencimiento` dentro de la ventana). El badge "Vence durante el rodaje" (`tono-warn`, mismas clases `hp-gd-chip` que ya usa `gdEstado()`) se agregó junto al chip de estado existente en `row3` de cada tarjeta, sin reemplazarlo. Si no hay ninguna fila en `gen-plan-rodaje` (o la query falla), `ventanaRodaje` queda en `null` y no se muestra ningún badge ni se rompe el resto del render — comportamiento confirmado, no solo documentado.
+
+`npx tsc --noEmit`: limpio.
+
+**Verificación con Playwright (real, con datos reales, no solo compilación):** servidor local (`NODE_USE_ENV_PROXY=1 npm run dev --webpack -p 3101`), cuenta `qa.ej-administracion2@mailinator.com` (Administración) sobre `[PROYECTO TEST] La sed de los almendros`. Se sembró (cuenta `qa.ej-produccion-ejecutiva2@mailinator.com`, única con permiso de edición sobre `gen-plan-rodaje`) una fila de `Plan de rodaje` con `fecha = 2026-12-01` (ventana de rodaje de un solo día, `inicioRodaje = finRodaje = 2026-12-01`). Luego, en Gestión documental, se creó un documento de prueba con `requiere_renovacion = "Sí"`, `fecha_documento = 2025-12-01` y `anios_conservacion = 1` → `vencimiento = 2026-12-01`, exactamente dentro de la ventana. El badge **"VENCE DURANTE EL RODAJE"** apareció correctamente junto al chip de estado existente ("Por renovar antes del 1/12/2026"), confirmado por captura de pantalla real tras re-navegar (no solo tras guardar). Antes de sembrar el plan de rodaje (con `gen-plan-rodaje` vacío), ningún documento mostraba el badge, confirmando el caso `null`/sin plan.
+
+Se revirtieron los datos de prueba al cerrar la verificación (documento de prueba y fila de `gen-plan-rodaje` borrados). Sin errores de consola durante la interacción.

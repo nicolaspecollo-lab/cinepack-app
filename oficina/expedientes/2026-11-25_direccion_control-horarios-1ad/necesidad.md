@@ -64,12 +64,39 @@ El contenido exacto del art. 18 reportado arriba proviene de fuentes secundarias
 
 Archivos leídos: `app/herramientas.ts` (líneas 2623, 2629, 16-29), `app/hoy/HerramientaPanel.tsx` (grep sin panel a medida para este id).
 
+## Estado del arte / Competencia (ronda 2)
+
+Búsqueda dirigida a si StudioBinder, Yamdu, Movie Magic (Scheduling/Budgeting), SetHero o Celtx tienen un registro de wrap time previsto vs. real por setup con indicador de overtime, o si solo cubren scheduling/callsheet sin este detalle operativo.
+
+- **StudioBinder**: no se encontró evidencia de un registro de wrap time previsto vs. real por setup con indicador de overtime. Su callsheet ("Callsheet Creator") se describe en la documentación consultada en términos de terminología de campos de citación/programación ("call sheet terminology"), no de bitácora de eventos de tiempo por setup (StudioBinder, "Call Sheet Terminology" — https://www.studiobinder.com/blog/call-sheet-terminology/). **Sin evidencia encontrada** de un módulo de wrap real vs. previsto con alerta de overtime.
+- **Yamdu**: tiene funcionalidad de "time tracking" para la industria del cine, descrita por el propio Yamdu como una solución para registrar tiempo de trabajo (Yamdu, "Time Tracking for the Film Industry" — https://www.yamdu.com/en/learn/time-tracking-for-the-film-industry/). La fuente consultada no detalla si existe específicamente un registro de wrap previsto vs. real por setup con indicador de overtime automático (**sin evidencia encontrada** sobre ese nivel de detalle operativo, aunque sí hay evidencia de que Yamdu cubre time tracking en general, a diferencia de StudioBinder).
+- **Movie Magic Scheduling**: su propia página de producto describe la herramienta como orientada a "crear, optimizar y seguir cronogramas de rodaje desde preparación hasta wrap", con colaboración multiusuario en tiempo real y transferencia de elementos hacia Movie Magic Budgeting (EP.com, "Movie Magic Scheduling" — https://www.ep.com/movie-magic-scheduling). No se encontró, en esa documentación ni en las fuentes de terceros consultadas, una descripción de registro evento-por-evento de hora de wrap real vs. prevista por setup con indicador de overtime — es coherente con que el producto está orientado a programación/calendario, no a bitácora operativa en vivo del día de rodaje. **Sin evidencia encontrada** de ese módulo específico.
+- **SetHero**: su propia documentación de marketing afirma que la función de IA de SetHero "ahorra tiempo con pronósticos de clima automáticos, cálculos de horas extra (overtime), detección de errores de tipeo en horarios, y más" (SetHero, página de producto — resultado de búsqueda citado como marketing propio de SetHero). Su reporte de producción ("Daily Production Reports") sí incluye una grilla de tripulación con hora de entrada, hora de salida ("Out"/wrap), violaciones de descanso para comer (MPV) y duración total trabajada por persona (SetHero, "Daily Production Reports Made Easy" — https://sethero.com/?p=39873). **Esto es el competidor con mayor evidencia de cobertura parcial**: registra wrap real por persona y calcula overtime, pero la fuente consultada no confirma si el cálculo de overtime está desglosado por setup/escena (como en el modelo de CINEPACK) o solo de forma agregada por jornada y por persona — **sin evidencia encontrada** de granularidad por setup.
+- **Celtx**: no se encontró ninguna fuente en esta búsqueda que describa funcionalidad de time tracking de wrap/overtime en Celtx. **Sin evidencia encontrada**.
+
+**Aspecto diferencial de CINEPACK, justificado:** la granularidad **por setup/escena** (no solo por persona o por jornada completa) del registro de wrap previsto vs. real, junto con el campo explícito `aviso_enviado` que conecta el evento de overtime con la acción operativa de avisar al equipo, no tiene equivalente confirmado en ninguno de los competidores consultados. El caso más cercano, SetHero, documenta overtime y wrap por persona dentro de un reporte de producción diario, pero sin evidencia de que lo desglose por setup dentro del día — que es precisamente la unidad atómica que este expediente defiende como necesaria (ver razonamiento en "Arquitectura" de este mismo documento: "la unidad atómica del dato es el evento, no el agregado"). Se reporta como ausencia de evidencia pública, no como confirmación de que ningún competidor lo tenga sin publicitarlo.
+
+### Fuentes (ronda 2 — competencia)
+- StudioBinder, "Call Sheet Terminology" — https://www.studiobinder.com/blog/call-sheet-terminology/ (consultado 25/11/2026)
+- Yamdu, "Time Tracking for the Film Industry" — https://www.yamdu.com/en/learn/time-tracking-for-the-film-industry/ (consultado 25/11/2026)
+- EP.com, página de producto Movie Magic Scheduling — https://www.ep.com/movie-magic-scheduling (consultado 25/11/2026)
+- SetHero, "Daily Production Reports Made Easy" — https://sethero.com/?p=39873 (consultado 25/11/2026)
+
 ## Arquitectura
 
 ### Decisión de id y tipo
 
 - **Id**: se mantiene `dir-control-horarios-1ad`. Confirmado contra `app/herramientas.ts` y `app/hoy/HerramientaPanel.tsx`: no hay panel a medida que dependa de este id ni evidencia de filas reales precargadas (es `checklist` sin `CHECKLIST_ITEMS`, confirmado también por el hallazgo general de inventario.md de que no existe ningún precargado de checklist en el repo). Es un slug interno sin filas de producción que dependan de él — mismo criterio aplicado en ciclos anteriores (ej. `dir-decisiones-visionado`, 20/11). No hace falta cambiarlo.
 - **Tipo**: migra `"checklist"` → `"tabla"`. El motor genérico de tabla (`esMulti` en `HerramientaPanel.tsx:351`, que agrupa `"tabla"` y `"galeria"` para el flujo multi-fila) ya soporta las columnas propuestas con los tipos existentes (`texto`, `fecha`, `num`, `estado`, `largo`) sin necesidad de componente a medida ni `ColTipo` nuevo.
+
+### Por qué `tipo: "tabla"` (log cronológico por setup) es correcto y no una vista agrupada
+
+El comité pidió justificar explícitamente esta decisión. Razones concretas:
+
+1. **La unidad atómica del dato es el evento, no el agregado.** Cada fila representa un hecho discreto que ocurre una vez por setup/escena del día (hora prevista de wrap, hora real, si cruzó overtime, si se avisó). Una "vista agrupada" (p. ej. un resumen por jornada con un solo número de "overtime total del día") perdería precisamente el dato que el 1AD necesita reconstruir después: EN QUÉ setup concreto ocurrió el cruce, para poder explicarlo en el parte de producción o en una negociación de horas extra. Agrupar de entrada es destructivo para este caso de uso; en cambio, agregar (sumar/contar) sobre un log de filas es trivial y reversible, lo inverso no.
+2. **Cardinalidad real y variable por jornada.** Un día de rodaje tiene un número variable de setups (puede ser 3, puede ser 15) — no hay un número fijo de "slots" que justifique una ficha con N campos fijos (`tipo: "ficha"`) ni una estructura jerárquica (`tipo: "repetible"` anidado dentro de otra cosa). `tabla` es exactamente el motor ya usado en el repo para "N eventos de la misma forma, cantidad variable por jornada" (mismo patrón que `GENERAL_ORDEN_RODAJE` usa para "una fila por jornada", aquí la granularidad es un nivel más fino: una fila por setup dentro de la jornada).
+3. **Precedente directo en el propio repo.** `GENERAL_ORDEN_RODAJE` (callsheet) es `tipo: "tabla"` con una fila por jornada — exactamente el mismo razonamiento aplicado un nivel de granularidad más abajo (una fila por setup en vez de por jornada). No hay ninguna herramienta en `app/herramientas.ts` que modele una bitácora cronológica como "vista agrupada"; cuando el repo necesita un resumen, lo computa client-side a partir de una tabla de eventos (ver `GestionDocumentalBoard`/`gdEstado()` para un patrón similar: filas atómicas + cálculo derivado en UI, no una tabla pre-agregada).
+4. **La vista agrupada sigue siendo posible como lectura derivada, sin perder el detalle.** Nada impide que, en un ciclo futuro, se agregue un resumen visual (p. ej. "3 overtimes hoy, 42 min de delta total") calculado client-side sobre las filas de `tabla` ya existentes — eso es una vista, no un modelo de datos alternativo. Modelar directamente como "vista agrupada" (sin el log atómico debajo) cerraría esa puerta de forma irreversible.
 
 ### Modelo de datos final
 
@@ -94,9 +121,9 @@ Confirmado el razonamiento del necesidad.md: son dos naturalezas de dato distint
 - `dir-control-horarios` (Asistencia de dirección): el campo `aviso_enviado` de esta tabla es el puente conceptual — cuando `overtime` cruza a "Alerta"/"Confirmado" y toca avisar al equipo, ese aviso se ejecuta y registra en el centro de avisos de Asistencia. **Sin integración automática de datos en este ciclo** (ratificado del necesidad.md): no hay escritura cruzada, solo coherencia de que el dato "hubo que avisar por overtime" nace aquí y el aviso en sí vive allá. Si en un ciclo futuro se quisiera automatizar, el enganche sería: al guardar `overtime = "Confirmado"` en esta tabla, crear una fila sugerida en `dir-control-horarios` con el setup/escena como referencia — pero eso es una decisión de producto para otro ciclo, no se implementa ahora.
 - `2ª Asistencia de dirección` (Listado de figuración/extras por escena): sin relación de datos directa; comparten `escena` como campo de texto libre, sin normalización (mismo límite estructural que el resto del repo).
 
-### Integración nivel 2 — con el proyecto (plan/calendario)
+### Integración nivel 2 — con el proyecto (plan/calendario): flujo real especificado abajo
 
-- `GENERAL_ORDEN_RODAJE` (callsheet): trae la hora de citación/llamada prevista por departamento, pero NO trae horas de wrap por setup — este es justamente el dato nuevo que esta herramienta aporta y que hoy no existe en ningún lado del proyecto. `escena_setup` debería usar la misma nomenclatura de escena que el plan de rodaje (convención, no FK — igual límite que en la herramienta de continuidad fotográfica de hoy).
+- `GENERAL_ORDEN_RODAJE` (callsheet): trae la hora de citación/llamada prevista por departamento, pero NO trae horas de wrap por setup — este es justamente el dato nuevo que esta herramienta aporta y que hoy no existe en ningún lado del proyecto.
 - `GENERAL_PLAN_RODAJE` / `GENERAL_CALENDARIO`: sin escritura automática. Si el equipo quisiera ver el real histórico de wraps para replanificar jornadas futuras, sería una lectura manual de esta tabla por parte de Producción, no un dato que fluya solo.
 - Sin impacto en presupuesto: `delta_minutos`/`overtime` no alimentan automáticamente ninguna partida de horas extra en `ej-presupuesto-costos` — si eso se quisiera, requeriría primero confirmar el umbral/coste de hora extra contra el convenio real (pendiente de verificación, según el propio necesidad.md), así que no se construye ahora.
 
@@ -180,3 +207,61 @@ Esto es un fix del **motor genérico de tabla** (`HerramientaPanel.tsx`), no de 
 - Dev server detenido al terminar la verificación.
 
 **Puede pasar a Corte** en lo que respecta a este bug — la salvedad de QA sobre el bug queda resuelta. Sigue pendiente, sin relación con esto, el bug ya documentado arriba de `/perfil` no escribiendo `profiles.cargo`.
+
+## Integración real (ronda 2) — 25/11/2026
+
+El comité rechazó la ronda 1 por falta de un flujo de datos real. Esta sección especifica uno: validación liviana de `escena_setup` contra `GENERAL_PLAN_RODAJE`.
+
+### Confirmación contra el código real (antes de proponer)
+
+Se verificó `app/herramientas.ts` (líneas 3946-3960, bloque `GENERAL_PLAN_RODAJE`) y su render en `app/hoy/HerramientaPanel.tsx` (~línea 8250). Hallazgos:
+
+- `GENERAL_PLAN_RODAJE` sí existe y sí tiene una columna `escenas` de **tipo texto libre, una fila por jornada** (no JSON, no normalizado) — confirmado por el input `<input className="ps-esc" defaultValue={f.datos?.escenas ?? ""} ... />` en `HerramientaPanel.tsx:8250`. Es una cadena libre (ej. "12, 12A, 15") sin estructura de array garantizada.
+- `GENERAL_ORDEN_RODAJE` (callsheet), que en un primer borrador parecía la fuente más natural, tiene un campo `escenas` pero está tipado `tipo: "largo"` con el label explícito **"Escenas del día (JSON)"** (línea 3978) — es un blob JSON de formato libre sin esquema fijado en código (no hay ningún parser de ese JSON en `HerramientaPanel.tsx`, confirmado por grep: no aparece ninguna cadena `escenas_resumen` ni similar). Usar este campo para autocompletar/validar sería construir sobre un formato no garantizado — **se descarta como fuente de este flujo**.
+
+**Alternativa elegida (implementable hoy):** usar `GENERAL_PLAN_RODAJE.escenas` (texto libre por jornada) con una validación por **coincidencia de subcadena**, no por parseo estructurado — es la única operación segura sobre un campo de texto libre sin esquema.
+
+### Especificación exacta
+
+**Dónde:** en el input de la columna `escena_setup` de `dir-control-horarios-1ad` (motor genérico de tabla, `app/hoy/HerramientaPanel.tsx`, componente de celda de texto dentro de `TablaTool`/`esMulti`). No es un componente nuevo de panel a medida — es un `onBlur` adicional sobre la celda existente de esta columna específica (identificable porque `herramienta.id === "dir-control-horarios-1ad" && col.key === "escena_setup"`, mismo patrón de excepción puntual por id que ya usa el archivo para otras columnas especiales, ej. `VerEscenaGuion` condicionado a `escena !== t("noScene")`).
+
+**Query (lectura, dispara en `onBlur` del campo `escena_setup`, no en cada tecla):**
+
+```ts
+const supabase = createClient();
+const { data } = await supabase
+  .from("herramienta_filas")
+  .select("datos")
+  .eq("project_id", projectId)
+  .eq("herramienta_id", "gen-plan-rodaje");
+// data: fila por jornada, cada una con datos.escenas como texto libre (ej. "12, 12A, 15")
+const encontrada = (data ?? []).some(
+  (fila) => (fila.datos?.escenas ?? "").toLowerCase().includes(valorEscenaSetup.toLowerCase().split("/")[0].trim())
+);
+```
+
+Nota sobre el `.split("/")[0]`: `escena_setup` en esta herramienta mezcla escena y setup (ej. "E22/Setup A") — solo la parte de escena (antes de la barra) es comparable contra `GENERAL_PLAN_RODAJE.escenas`; el setup es un dato propio del 1AD sin equivalente en el plan de rodaje. Si el 1AD no usa esa convención de barra, el desarrollador debe aceptar que la validación sea más laxa (substring simple sobre el valor completo) — se documenta la limitación, no se bloquea el guardado en ningún caso.
+
+**UI:** un indicador inline pequeño junto al campo (no un popover, no bloquea el guardado — es una ayuda, no una validación dura):
+- Encontrada en al menos una jornada del plan: icono `check` + tooltip "Aparece en el Plan de rodaje".
+- No encontrada: icono `alert-triangle` + tooltip "No se encontró esta escena en el Plan de rodaje — revisá el número o seguí igual, no bloquea el guardado".
+- Si `GENERAL_PLAN_RODAJE` no tiene ninguna fila todavía (proyecto sin plan cargado): no mostrar ningún icono (ni error ni alerta) — se asume que el plan todavía no existe, no que la escena esté mal.
+
+**Nunca escribe en `GENERAL_PLAN_RODAJE`.** Es lectura pura, disparada una vez por `onBlur`, sin polling ni suscripción en vivo.
+
+**Permisos:** ninguna migración nueva. `GENERAL_PLAN_RODAJE` es una herramienta de scope "General" (la edita cualquier integrante del proyecto, según el comentario de cabecera en `app/herramientas.ts` línea 3930) — su lectura ya está abierta a todo el equipo del proyecto por el mecanismo general, más permisivo que el de herramientas de departamento. No hay fricción de RLS.
+
+**Riesgo abierto:** por ser comparación de subcadena sobre texto libre (no hay normalización de números de escena en ningún lado del repo, confirmado también en el expediente de `dir-continuidad-foto` de hoy), puede haber falsos negativos si la nomenclatura difiere (ej. "Esc. 12" vs "12"). Es un indicador de ayuda, no una validación estricta — se documenta así explícitamente en el tooltip ("no bloquea el guardado") para que el 1AD no lo interprete como un error duro.
+
+## Implementación y verificación (desarrollador, ronda 2, 25/11/2026)
+
+**Implementado tal cual la especificación**, con una variación mínima: en vez de condicionar por `escena !== t("noScene")` (patrón de otra herramienta), la excepción puntual se identifica por `herramienta.id === "dir-control-horarios-1ad" && col.key === "escena_setup"` dentro de `TablaTool` (`app/hoy/HerramientaPanel.tsx`). El `onBlur` se colocó en el `div.hp-cell-body` que envuelve a `CeldaConAutocomp` (recibe el blur por bubbling desde el input real de la celda). La query trae todas las filas de `gen-plan-rodaje` una sola vez (cacheadas en estado local tras el primer blur, no se repite el fetch en blurs siguientes) y compara `escena_setup.split("/")[0].trim().toLowerCase()` contra cada `datos.escenas` en minúsculas con `.includes()`. Icono `check` (verde, `var(--lime)`) si se encuentra en al menos una jornada, `alert-triangle` (ámbar, `var(--amber)`) si no, y ningún icono si el plan todavía no tiene filas — los 3 casos de la especificación. Nunca escribe en `gen-plan-rodaje` ni bloquea el guardado de la celda.
+
+`npx tsc --noEmit`: limpio.
+
+**Verificación con Playwright (real, con datos reales, no solo compilación):** servidor local (`NODE_USE_ENV_PROXY=1 npm run dev --webpack -p 3101`), cuenta `qa.dir-1ad2@mailinator.com` (1er Asistente de Dirección) sobre `[PROYECTO TEST] La sed de los almendros`. El proyecto de prueba no tenía ninguna fila cargada en `Generales → Plan de rodaje`; se sembró una fila real (cuenta `qa.ej-produccion-ejecutiva2@mailinator.com`, que sí tiene permiso de edición sobre esa herramienta de scope General — confirmado que `qa.dir-1ad2`/`qa.dir-direccion2` no lo tienen, ya que `PROPIETARIOS`/`editores` de la sub-pestaña "plan" en `GeneralesPanel.tsx` es `["Producción", "Ejecutivo"]`) con `fecha = 2026-12-01` y `escenas = "E22, E23A"`. Con ese plan cargado:
+- Editando la celda `escena_setup` de una fila existente a `"E22/Setup A"` y disparando el blur: aparece el icono ✓ verde con el tooltip "Aparece en el Plan de rodaje".
+- Editando otra celda a `"ZZZ-NoExiste/Setup Z"`: aparece el icono ⚠ ámbar con el tooltip de no encontrada, sin bloquear el guardado del resto de la fila (el resto de columnas — delta, overtime, aviso, observación — siguieron editables y guardadas con normalidad).
+- Antes de sembrar el plan de rodaje (con `gen-plan-rodaje` vacío): no se mostró ningún icono, confirmando el tercer caso de la especificación.
+
+Se revirtieron los datos de prueba al cerrar la verificación (fila de `gen-plan-rodaje` borrada, `escena_setup` de las 2 filas reales de `dir-control-horarios-1ad` restaurado a `E22/Setup A` / `E23/Setup B`). Sin errores de consola durante toda la interacción.

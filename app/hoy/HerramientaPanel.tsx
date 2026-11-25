@@ -6181,6 +6181,51 @@ export function GestionDocumentalBoard({
   const t = useTranslations("hp");
   const [filtro, setFiltro] = useState<string | null>(null);
   const [filtroEntidad, setFiltroEntidad] = useState<string | null>(null);
+  // Integración real nivel 2 (ronda 2, 25/11/2026): ventana de rodaje
+  // (min/max de GENERAL_PLAN_RODAJE.fecha), un solo fetch de solo lectura al
+  // montar, para marcar qué documentos vencen durante el rodaje. null =
+  // todavía sin resolver o sin plan de rodaje cargado — en ambos casos no se
+  // muestra el badge, no se rompe el resto de la tarjeta.
+  const [ventanaRodaje, setVentanaRodaje] = useState<{ inicio: Date; fin: Date } | null>(null);
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      try {
+        const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+        if (!projectId) return;
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "gen-plan-rodaje");
+        const fechas = (data ?? [])
+          .map((r) => (r.datos as Record<string, string>)?.fecha)
+          .filter(Boolean)
+          .map((f) => new Date(f as string))
+          .filter((d) => !isNaN(d.getTime()));
+        if (!activo || fechas.length === 0) return;
+        setVentanaRodaje({
+          inicio: new Date(Math.min(...fechas.map((d) => d.getTime()))),
+          fin: new Date(Math.max(...fechas.map((d) => d.getTime()))),
+        });
+      } catch {
+        // sin plan de rodaje aún / error de red: se queda en null, sin badge
+      }
+    })();
+    return () => { activo = false; };
+  }, []);
+  function venceEnRodaje(f: Fila): boolean {
+    if (!ventanaRodaje) return false;
+    if ((f.datos?.requiere_renovacion ?? "No") !== "Sí") return false;
+    if ((f.datos?.permanencia ?? "") === "Permanente") return false;
+    const fecha = f.datos?.fecha_documento ? new Date(f.datos.fecha_documento) : null;
+    const anios = ejNum(f.datos?.anios_conservacion);
+    if (!fecha || !anios) return false;
+    const limite = new Date(fecha);
+    limite.setFullYear(limite.getFullYear() + anios);
+    return limite >= ventanaRodaje.inicio && limite <= ventanaRodaje.fin;
+  }
   const colByKey = new Map(columnas.map((c) => [c.key, c]));
   const colCategoria = colByKey.get("categoria");
   const colEntidad = colByKey.get("entidad_referencia");
@@ -6288,6 +6333,7 @@ export function GestionDocumentalBoard({
               </div>
               <div className="hp-gd-row3">
                 <span className={`hp-gd-chip tono-${estado.tono}`}>{estado.label}</span>
+                {venceEnRodaje(f) && <span className="hp-gd-chip tono-warn">Vence durante el rodaje</span>}
                 <EstadoSeg valor={f.datos?.estado_digitalizacion ?? ""} opciones={colByKey.get("estado_digitalizacion")?.opciones ?? []} onPick={(v) => set(f, "estado_digitalizacion", v)} editable={editable} chip color />
                 <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
               </div>
@@ -8481,6 +8527,46 @@ export function TablaTool({
   const [batchVal, setBatchVal] = useState("");
   const [showExtStats, setShowExtStats] = useState(false);
   const [importando, setImportando] = useState(false);
+  // Integración real nivel 2 (ronda 2, 25/11/2026), solo para
+  // dir-control-horarios-1ad, columna escena_setup: validación liviana de
+  // substring contra GENERAL_PLAN_RODAJE.escenas (texto libre). Nunca
+  // bloquea el guardado, solo pinta un icono de ayuda. null = sin verificar
+  // todavía, undefined (ausente) = plan de rodaje sin cargar.
+  const [planEscenasTexto, setPlanEscenasTexto] = useState<string[] | null>(null);
+  const [escenaSetupCheck, setEscenaSetupCheck] = useState<Record<string, "ok" | "alerta">>({});
+  async function verificarEscenaSetup(filaId: string, valor: string) {
+    if (herramientaId !== "dir-control-horarios-1ad") return;
+    const texto = valor.trim();
+    if (!texto) {
+      setEscenaSetupCheck((prev) => { const n = { ...prev }; delete n[filaId]; return n; });
+      return;
+    }
+    let plan = planEscenasTexto;
+    if (plan === null) {
+      try {
+        const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+        if (!projectId) return;
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "gen-plan-rodaje");
+        plan = (data ?? []).map((r) => (r.datos as Record<string, string>)?.escenas ?? "").filter(Boolean);
+        setPlanEscenasTexto(plan);
+      } catch {
+        return;
+      }
+    }
+    if (!plan.length) {
+      // Sin plan de rodaje todavía: no se muestra ni error ni alerta.
+      setEscenaSetupCheck((prev) => { const n = { ...prev }; delete n[filaId]; return n; });
+      return;
+    }
+    const buscado = texto.split("/")[0].trim().toLowerCase();
+    const encontrada = plan.some((escenasJornada) => escenasJornada.toLowerCase().includes(buscado));
+    setEscenaSetupCheck((prev) => ({ ...prev, [filaId]: encontrada ? "ok" : "alerta" }));
+  }
   const [showLastEdit, setShowLastEdit] = useState(false);
 
   const tableRef = useRef<HTMLTableElement>(null);
@@ -9384,7 +9470,15 @@ export function TablaTool({
                             {isNum && dataBarPct > 0 && !c.sinAcento && (
                               <div className="hp-databar" style={{width: `${dataBarPct}%`}} />
                             )}
-                            <div className="hp-cell-body" style={rowH ? {height: rowH - 2, maxHeight: rowH - 2} : undefined}>
+                            <div
+                              className="hp-cell-body"
+                              style={rowH ? {height: rowH - 2, maxHeight: rowH - 2} : undefined}
+                              onBlur={
+                                herramientaId === "dir-control-horarios-1ad" && c.key === "escena_setup"
+                                  ? () => verificarEscenaSetup(f.id, val(f, c.key))
+                                  : undefined
+                              }
+                            >
                               <CeldaConAutocomp
                                 col={c}
                                 valor={cellVal}
@@ -9400,6 +9494,18 @@ export function TablaTool({
                                 evaluarFormula={permitirFormulas && c.tipo === "money" ? () => resolverCelda(colIdx, absIdx) : undefined}
                                 onFocusCelda={permitirFormulas ? () => setCeldaFoco({ filaId: f.id, colKey: c.key }) : undefined}
                               />
+                              {herramientaId === "dir-control-horarios-1ad" && c.key === "escena_setup" && escenaSetupCheck[f.id] && (
+                                <span
+                                  className={`hp-escena-setup-check hp-esc-${escenaSetupCheck[f.id]}`}
+                                  title={
+                                    escenaSetupCheck[f.id] === "ok"
+                                      ? "Aparece en el Plan de rodaje"
+                                      : "No se encontró esta escena en el Plan de rodaje — revisá el número o seguí igual, no bloquea el guardado"
+                                  }
+                                >
+                                  <Icon name={escenaSetupCheck[f.id] === "ok" ? "check" : "alert-triangle"} size={13} />
+                                </span>
+                              )}
                             </div>
                           </td>
                         );
@@ -9643,7 +9749,12 @@ function GaleriaTool({
         />
         {columnas.map((c) => (
           <label className="hp-gfield" key={c.key}>
-            <span>{c.label}</span>
+            <span>
+              {c.label}
+              {herramientaId === "dir-continuidad-foto" && c.key === "escena" && (f.datos?.escena ?? "").trim() && (
+                <VerContinuidadArte escena={f.datos?.escena ?? ""} />
+              )}
+            </span>
             {c.tipo === "archivo" ? (
               <ArchivoCell
                 path={f.datos?.[c.key] ?? ""}
@@ -13598,6 +13709,95 @@ function VerEscenaGuion({ escena }: { escena: string }) {
               {datos.loc && <div><dt>Locación</dt><dd>{datos.loc}</dd></div>}
               {datos.personajes && <div><dt>Personajes</dt><dd>{datos.personajes}</dd></div>}
               {datos.resumen && <div><dt>Resumen</dt><dd>{datos.resumen}</dd></div>}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Integración real nivel 1 (ronda 2, 25/11/2026): mismo patrón que
+// VerEscenaGuion pero consultando, en paralelo, las dos herramientas de
+// continuidad de Arte (vestuario/maquillaje) para la misma escena. Solo
+// lectura — nunca escribe en esas tablas ni en dir-continuidad-foto.
+function VerContinuidadArte({ escena }: { escena: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, setEstado] = useState<"idle" | "cargando" | "ok" | "vacio" | "error">("idle");
+  const [vestuario, setVestuario] = useState<Record<string, string>[]>([]);
+  const [maquillaje, setMaquillaje] = useState<Record<string, string>[]>([]);
+
+  async function abrir() {
+    setAbierto((v) => !v);
+    if (estado !== "idle") return;
+    setEstado("cargando");
+    try {
+      const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+      if (!projectId) { setEstado("error"); return; }
+      const supabase = createClient();
+      const [vRes, mRes] = await Promise.all([
+        supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "arte-continuidad-vestuario")
+          .eq("datos->>escena", escena)
+          .limit(5),
+        supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "arte-continuidad-maquillaje")
+          .eq("datos->>escena", escena)
+          .limit(5),
+      ]);
+      const v = (vRes.data ?? []).map((r) => r.datos as Record<string, string>);
+      const m = (mRes.data ?? []).map((r) => r.datos as Record<string, string>);
+      setVestuario(v);
+      setMaquillaje(m);
+      setEstado(v.length === 0 && m.length === 0 ? "vacio" : "ok");
+    } catch {
+      setEstado("error");
+    }
+  }
+
+  return (
+    <div className="hp-mc-guion-wrap">
+      <button type="button" className="hp-mc-guion-btn" onClick={abrir} title="Ver continuidad de Arte para esta escena">
+        <Icon name="file-text" size={12} /> Ver continuidad de Arte
+      </button>
+      {abierto && (
+        <div className="hp-mc-guion-pop">
+          {estado === "cargando" && <p>Buscando continuidad de Arte para esta escena…</p>}
+          {estado === "error" && <p>No se pudo consultar la continuidad de Arte ahora.</p>}
+          {estado === "vacio" && <p>Arte todavía no registró continuidad de vestuario ni maquillaje para esta escena.</p>}
+          {estado === "ok" && (
+            <>
+              {vestuario.length > 0 && (
+                <div>
+                  <dt>Vestuario</dt>
+                  {vestuario.map((d, i) => (
+                    <dd key={i}>
+                      {d.personaje ?? "—"} — {d.look ?? ""}{" "}
+                      {d.cambio && (
+                        <span className={`seg seg-${MC_CONCEPTO_TONO.vestuario_prop}`}>{d.cambio}</span>
+                      )}
+                      {d.nota ? ` · ${d.nota}` : ""}
+                    </dd>
+                  ))}
+                </div>
+              )}
+              {maquillaje.length > 0 && (
+                <div>
+                  <dt>Maquillaje</dt>
+                  {maquillaje.map((d, i) => (
+                    <dd key={i}>
+                      {d.personaje ?? "—"} — {d.tipo ?? ""}
+                      {d.nota ? ` · ${d.nota}` : ""}
+                    </dd>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>

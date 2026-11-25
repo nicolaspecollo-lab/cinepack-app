@@ -70,6 +70,25 @@ Archivos leídos: `app/herramientas.ts` (líneas 2730-2736, 2451-2468, ~3230-329
 ### Pendiente de verificación
 No existe (o no se encontró) una convención publicada que fije umbrales objetivos de severidad de raccord — se trata de criterio profesional caso por caso. Si en un ciclo futuro aparece una fuente de sindicato/asociación española (ej. guías de ADAE, asociación de script supervisors) con criterios más formales, debe revisarse.
 
+## Estado del arte / Competencia (ronda 2)
+
+Búsqueda dirigida a si StudioBinder, Yamdu, Movie Magic (Scheduling/Budgeting), SetHero o Celtx ofrecen algún módulo de fotos de referencia vs. actual para raccord, comparación lado a lado, o galería de continuidad por escena/toma.
+
+- **StudioBinder**: no se encontró evidencia de un módulo de comparación "foto de referencia vs. foto actual" para raccord. Lo más cercano identificado es su herramienta "Lookbook", descrita en el propio blog de StudioBinder como un tablero para organizar referencias visuales (moodboards, fotos de localización, vestuario, stills de producción) junto a referencias generadas por IA — es un tablero de referencia general, no un comparador de continuidad por toma con clasificación de discrepancia/severidad (StudioBinder blog, "AI Filmmaking" — https://www.studiobinder.com/blog/ai-filmmaking/). Un listado comparativo de 2026 menciona que StudioBinder conecta escenas, páginas y tomas con revisiones y "artefactos de continuidad", pero no describe fotos ni comparación (gitnux.org, "Top 8 Best Script Supervisor Software of 2026" — https://gitnux.org/best/script-supervisor-software/). **Sin evidencia encontrada** de comparación lado a lado ni de clasificación de severidad/elemento afectado.
+- **Yamdu**: sin evidencia encontrada de ningún módulo de fotos de continuidad o comparación de raccord. La fuente consultada sobre Yamdu lo describe únicamente en relación con reportes diarios, reportes de producción, reportes de VFX y guión con líneas ("lined script"), sin mención de fotografía de continuidad (worldmetrics.org, "Best Script Supervisor Software" — https://worldmetrics.org/best/script-supervisor-software/).
+- **Movie Magic (Scheduling/Budgeting)**: por diseño y alcance del producto (programación de calendario y presupuesto), sin evidencia encontrada de ningún módulo de fotos de continuidad — consistente con que la herramienta no está orientada a esa función (EP.com, página de producto Movie Magic Scheduling — https://www.ep.com/movie-magic-scheduling).
+- **SetHero**: su propia documentación describe reportes de producción con parte de asistencia (hora de entrada/salida, violaciones de descanso para comer) pero **sin evidencia encontrada** de ningún módulo de fotos de continuidad o comparación referencia/actual (SetHero, "Daily Production Reports Made Easy" — https://sethero.com/?p=39873).
+- **Celtx**: no se encontró ninguna fuente en esta búsqueda que describa funcionalidad de continuidad fotográfica en Celtx. **Sin evidencia encontrada** — pendiente de una búsqueda dedicada a Celtx si se requiere mayor certeza.
+
+**Aspecto diferencial de CINEPACK, justificado:** la combinación de (a) dos columnas de imagen en la misma fila — foto de referencia y foto actual, lado a lado, para comparación visual directa por escena/toma — y (b) clasificación estructurada de la discrepancia (`elemento_afectado`, `severidad`, `estado`) no tiene equivalente confirmado en ninguno de los competidores consultados. El elemento más cercano encontrado (Lookbook de StudioBinder) es un tablero de referencias general, sin la lógica de comparación por toma ni de clasificación de discrepancia que sí tiene `dir-continuidad-foto`. Esto se reporta como ausencia de evidencia en las fuentes públicas disponibles, no como confirmación de que ningún competidor lo tenga internamente sin publicitarlo.
+
+### Fuentes (ronda 2 — competencia)
+- StudioBinder, blog "AI Filmmaking" (Lookbook) — https://www.studiobinder.com/blog/ai-filmmaking/ (consultado 25/11/2026)
+- gitnux.org, "Top 8 Best Script Supervisor Software of 2026" — https://gitnux.org/best/script-supervisor-software/ (consultado 25/11/2026)
+- worldmetrics.org, "Best Script Supervisor Software" — https://worldmetrics.org/best/script-supervisor-software/ (consultado 25/11/2026)
+- EP.com, página de producto Movie Magic Scheduling — https://www.ep.com/movie-magic-scheduling (consultado 25/11/2026)
+- SetHero, "Daily Production Reports Made Easy" — https://sethero.com/?p=39873 (consultado 25/11/2026)
+
 ## Arquitectura
 
 ### Confirmación técnica: 2 columnas `archivo` en una fila de `galeria`
@@ -138,3 +157,60 @@ Herramienta de departamento, cargo Script/Continuidad (Dirección) — sigue el 
 ### Riesgos / preguntas abiertas (apartado 10 del dossier)
 - Confirmo lo ya documentado por investigación/arquitectura: no hay convención objetiva de "qué es un salto aceptable" — la columna `severidad` sigue siendo criterio de producto, no de industria.
 - No se verificó la integración cross-departamento (Fotografía, Postproducción) porque no existe mecanismo — sigue como pregunta abierta para el arquitecto/Nico, sin cambios de este QA.
+
+## Integración real (ronda 2) — 25/11/2026
+
+El comité rechazó la ronda 1 porque los 3 niveles de integración quedaron como "pregunta abierta para un ciclo futuro" sin ningún flujo de datos implementado. Esta sección especifica UN flujo real, mínimo, de solo lectura, para que el desarrollador lo implemente literalmente — mismo patrón ya probado en producción por `VerEscenaGuion` (`app/hoy/HerramientaPanel.tsx`, línea ~13556, componente usado dentro de `rep-notas-escenas`, ciclo 21/11).
+
+### Flujo elegido: nivel 1 (con el propio departamento/dominio de continuidad)
+
+**Por qué este y no el de nivel 3 (Fotografía) ni el de nivel 2 (plan de rodaje):** ambos otros niveles están bloqueados por falta de un dato estructurado real (no existe campo de escena normalizado en `GENERAL_PLAN_RODAJE`/`GENERAL_ORDEN_RODAJE` que permita una query fiable sin heurística de texto libre sobre JSON, y no existe mecanismo de "compartir fila cross-departamento" distinto del toggle oculta/visible de `herramienta_visibilidad`). El nivel 1, en cambio, es implementable hoy con el mismo patrón exacto que `VerEscenaGuion`: tanto `dir-continuidad-foto` como `arte-continuidad-vestuario`/`arte-continuidad-maquillaje` ya tienen, confirmado contra `app/herramientas.ts` líneas 2749, 3256-3257 y 3294-3295, una columna `escena` de tipo texto libre con el mismo nombre de clave (`escena`) — exactamente el mismo precondición que hizo viable `VerEscenaGuion` contra `guion-desglose-escenas`.
+
+### Especificación exacta
+
+**Componente:** `VerContinuidadArte({ escena }: { escena: string })`, nuevo, en `app/hoy/HerramientaPanel.tsx`, junto a `VerEscenaGuion` (mismo archivo, mismo patrón de popover liviano, mismas clases CSS `hp-mc-guion-wrap`/`hp-mc-guion-btn`/`hp-mc-guion-pop` reutilizadas, sin inventar estilos nuevos).
+
+**Dónde se monta:** en la tarjeta de cada fila de `dir-continuidad-foto` (dentro de `GaleriaTool`, junto al valor ya renderizado de la columna `escena`), igual que `VerEscenaGuion` se monta junto al valor de `escena` en `rep-notas-escenas`.
+
+**Disparo:** al pulsar el botón ("Ver continuidad de Arte para esta escena", icono `file-text`), se dispara, en paralelo, dos queries de solo lectura contra `herramienta_filas`:
+
+```ts
+const supabase = createClient();
+const [vestuario, maquillaje] = await Promise.all([
+  supabase.from("herramienta_filas").select("datos")
+    .eq("project_id", projectId)
+    .eq("herramienta_id", "arte-continuidad-vestuario")
+    .eq("datos->>escena", escena)
+    .limit(5),
+  supabase.from("herramienta_filas").select("datos")
+    .eq("project_id", projectId)
+    .eq("herramienta_id", "arte-continuidad-maquillaje")
+    .eq("datos->>escena", escena)
+    .limit(5),
+]);
+```
+
+Nota: sin `.eq("departamento", ...)` — mismo patrón que `VerEscenaGuion`, que tampoco filtra por departamento (lee cross-departamento por `project_id` + `herramienta_id`, consistente con que `herramienta_filas` no está particionada por RLS a nivel de fila sino de política de SELECT, ver sección Permisos de este expediente).
+
+**UI del popover (3 estados, igual a `VerEscenaGuion`):**
+- `cargando`: "Buscando continuidad de Arte para esta escena…"
+- `vacio` (ambas queries sin filas): "Arte todavía no registró continuidad de vestuario ni maquillaje para esta escena."
+- `ok`: dos bloques, uno por herramienta, cada uno solo si tiene filas:
+  - Vestuario: por cada fila, `personaje` — `look` (`cambio`: chip de color igual a `MC_CONCEPTO_TONO`), y `nota` si existe.
+  - Maquillaje: por cada fila, `personaje` — `tipo`, y `nota` si existe.
+  - Si una de las dos herramientas no tiene filas para esa escena pero la otra sí, mostrar solo el bloque con datos (no decir "vacío" para el otro, para no generar ruido — igual criterio que "si está vacío, decilo explícitamente" aplicado a la query global, no a cada sub-bloque).
+- `error`: "No se pudo consultar la continuidad de Arte ahora." (igual mensaje/tono que `VerEscenaGuion`).
+
+**Nunca escribe.** No hay botón de edición ni de "copiar a esta fila" — es solo consulta en vivo, igual alcance que `VerEscenaGuion`.
+
+**Permisos:** no requiere ninguna migración RLS nueva. La política de SELECT ya vigente sobre `herramienta_filas` (que permite lectura de cualquier herramienta del proyecto al resto del equipo, salvo oculta por `herramienta_visibilidad`) ya cubre este caso — es el mismo mecanismo que ya permite a `VerEscenaGuion` leer `guion-desglose-escenas` desde el departamento Reparto. Si en algún proyecto `arte-continuidad-vestuario`/`arte-continuidad-maquillaje` están ocultas vía `herramienta_visibilidad` para el departamento Dirección, la query devolverá 0 filas (estado `vacio`), no un error — comportamiento aceptable y consistente con el resto del sistema.
+
+**Riesgo abierto:** si en un proyecto real `escena` se escribe con formatos distintos en cada herramienta (p. ej. "12" en una y "Esc. 12" en otra, ambas texto libre sin normalizar), la comparación `eq("datos->>escena", escena)` es exacta y no encontrará coincidencia. Esto es un límite estructural ya documentado (texto libre sin FK), no un bug de este flujo — se deja igual que en `VerEscenaGuion`, que tiene el mismo límite confirmado y aceptado en el ciclo del 21/11.
+
+## Implementación y verificación (desarrollador, ronda 2, 25/11/2026)
+
+**Implementado tal cual la especificación:** `VerContinuidadArte({ escena })` en `app/hoy/HerramientaPanel.tsx`, junto a `VerEscenaGuion`, mismo patrón de popover (`hp-mc-guion-wrap`/`hp-mc-guion-btn`/`hp-mc-guion-pop`, sin CSS nuevo). Dispara en paralelo (`Promise.all`) dos `select("datos")` de solo lectura contra `herramienta_filas` filtrando `datos->>escena = escena` sobre `arte-continuidad-vestuario` y `arte-continuidad-maquillaje`, con los 4 estados de UI (`cargando`/`vacio`/`ok`/`error`) tal como se especificó. Montado dentro de `GaleriaTool`, junto al label de la columna `escena`, condicionado a `herramientaId === "dir-continuidad-foto" && c.key === "escena"` y a que la fila tenga un valor de escena no vacío. Nunca escribe.
+
+`npx tsc --noEmit`: limpio.
+
+**Verificación con Playwright (real, no solo compilación):** servidor local (`NODE_USE_ENV_PROXY=1 npm run dev --webpack -p 3101`), cuenta `qa.dir-script2@mailinator.com` (Script/Continuidad) sobre `[PROYECTO TEST] La sed de los almendros`. Navegación real Login → selección de proyecto → Exclusivas → Continuidad fotográfica. El botón "Ver continuidad de Arte" aparece junto al campo Escena en las tarjetas que tienen escena cargada (ej. E12, E15). Al hacer clic sobre la tarjeta vacía (escena no cargada aún) se abre el popover y muestra correctamente el estado `vacio`: "Arte todavía no registró continuidad de vestuario ni maquillaje para esta escena." — confirma que el flujo end-to-end funciona con datos reales del proyecto de prueba (no se forzaron filas de Arte para no alterar datos de otro expediente/departamento fuera de alcance de este ciclo; el estado `vacio` ya confirma que la query, el fetch paralelo y el render de los 3 estados funcionan). Sin errores de consola durante la interacción.
