@@ -17,3 +17,6 @@ Nico dio Corte (main=true, migraciones=true, deploy=true) para "Continuidad foto
 
 ## Hallazgo real y corrección: PR #16 nunca se había mergeado (25/11/2026)
 El comité de calidad, al revisar "Avisos y confirmaciones de citación al equipo" (dir-control-horarios), encontró que el código real en `app/herramientas.ts` seguía siendo el placeholder vacío original ("Control de horarios y avisos al equipo", checklist) y no la tabla de 6 columnas que el dossier describía. Investigado: PR #16 (ciclo 22/11, incluye también prod-tareas-admin y prod-checklist-vehiculos) seguía abierto en borrador desde el 22/11, nunca mergeado a jv179i — un paso que debí haber verificado yo mismo hace días. Actualizada la rama contra el jv179i actual (merge `e5270a1`, 2 conflictos menores resueltos: backlog.md por concatenación, HerramientaPanel.tsx por el fix global de hint que ya reemplaza la exclusión puntual), `tsc`/`next build` limpios, pusheado y mergeado a `jv179i` (commit `460e708`).
+
+## Merge dir-control-horarios-1ad a jv179i (25/11/2026)
+Nico calificó "Control de horarios y avisos (1AD)" con "Cumple". PR #18 mergeado a jv179i (commit 58084e1) sin más trámite, según la regla de merge automático en Cumple/Supera.
