@@ -351,7 +351,21 @@ function HerramientaData({
   const esMulti = herramienta.tipo === "tabla" || herramienta.tipo === "galeria";
   const esSingle = herramienta.tipo === "nota" || herramienta.tipo === "checklist" || herramienta.tipo === "ficha";
 
+  // HerramientaPanel se reutiliza (mismo fiber, sin remount) cuando el panel
+  // padre cambia qué `herramienta` muestra — ej. el auto-select de la primera
+  // herramienta al montar seguido, casi en el mismo tick, del restore de la
+  // última abierta por localStorage/efecto de cargo. Si el fetch de la
+  // PRIMERA herramienta todavía está en vuelo cuando el usuario (o esos
+  // efectos) ya cambiaron a OTRA, su resolución tardía pisaba `filas` con los
+  // datos (u otro vacío) de la herramienta vieja — bug real encontrado por QA
+  // en `dir-control-horarios-1ad` (ver necesidad.md, 25/11). `loadReqRef`
+  // guarda qué pedido es el más reciente; cualquier respuesta que llegue
+  // después de que el componente ya pidió OTRA cosa se descarta sin tocar
+  // el estado.
+  const loadReqRef = useRef(0);
+
   const load = useCallback(async () => {
+    const reqId = ++loadReqRef.current;
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
       setError("No hay proyecto activo (localStorage cinepack-proyecto-id). Volvé a iniciar sesión.");
@@ -366,6 +380,7 @@ function HerramientaData({
       .eq("departamento", departamento)
       .eq("herramienta_id", herramienta.id)
       .order("orden", { ascending: true });
+    if (loadReqRef.current !== reqId) return; // respuesta de un pedido ya obsoleto: se descarta
     if (err) {
       setError(err.message);
       setLoading(false);
