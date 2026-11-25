@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente en ronda de revisión",
+  "title": "Checklist de vehículos, combustible y mantenimiento",
+  "subtitle": "Driver (Producción): rediseño en tarjeta por matrícula con historial de kilometraje, combustible/gastos y carnet/responsable (ronda 3, rebote de Nico sobre la tabla de celdas de ronda 2).",
+  "badge": "<span class=\"badge badge-warn\">Ronda 3 · Pendiente de comité</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Producción · Driver"], ["Oficina", "Desarrollo"], ["Ronda", "3 — rediseño en tarjetas"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#5F70ED"
+}

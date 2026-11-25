@@ -13,7 +13,9 @@ export type IconName =
   | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
   | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase"
   | "camera" | "palette" | "sound" | "leaf" | "megaphone"
-  | "link" | "quote" | "minus" | "undo" | "redo" | "shield";
+  | "link" | "quote" | "minus" | "undo" | "redo" | "shield"
+  | "heart" | "target" | "book"
+  | "car" | "fuel" | "gauge" | "wrench";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   bold: <><path d="M6 4h8a4 4 0 0 1 0 8H6z" /><path d="M6 12h9a4 4 0 0 1 0 8H6z" /></>,
@@ -86,6 +88,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
   undo: <><path d="M4 7v6h6" /><path d="M20 18a8 8 0 0 0-8-8 8 8 0 0 0-6.3 3" /></>,
   redo: <><path d="M20 7v6h-6" /><path d="M4 18a8 8 0 0 1 8-8 8 8 0 0 1 6.3 3" /></>,
   shield: <><path d="M12 2 4 5v6c0 5.2 3.4 8.4 8 11 4.6-2.6 8-5.8 8-11V5Z" /><path d="m9 12 2 2 4-4" /></>,
+  heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />,
+  target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
+  book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></>,
+  car: <><path d="M5 17h14l1.2-5.4a2 2 0 0 0-1-2.2L17 8l-1.6-3.2A2 2 0 0 0 13.6 4h-3.2a2 2 0 0 0-1.8 1.1L7 8l-2.2 1.4a2 2 0 0 0-1 2.2Z" /><circle cx="7.5" cy="17" r="1.5" /><circle cx="16.5" cy="17" r="1.5" /></>,
+  fuel: <><line x1="3" y1="22" x2="15" y2="22" /><line x1="6" y1="22" x2="6" y2="4" /><path d="M6 4h9v18" /><path d="M15 9h2a2 2 0 0 1 2 2v2.5l1.5 1.5v4a1.5 1.5 0 0 1-3 0V14" /></>,
+  gauge: <><circle cx="12" cy="13" r="9" /><path d="M12 13 15.5 9" /><path d="M8 5.5 6.5 3.5" /><path d="M16 5.5 17.5 3.5" /></>,
+  wrench: <><path d="M14.7 6.3a4 4 0 1 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4Z" /></>,
 };
 
 export default function Icon({

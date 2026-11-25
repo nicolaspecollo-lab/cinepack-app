@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente aprobado",
+  "title": "Tareas administrativas diarias",
+  "subtitle": "Asistencia de producción: tabla genérica de gestiones puntuales con caja chica, prioridad y fecha límite, con 2 bugs del motor genérico de tabla corregidos y reverificados en vivo.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado · Ronda 2</span>",
+  "metaItems": [["Fecha", "22 nov 2026"], ["Departamento", "Producción · Asistencia de producción"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado sin objeciones"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#E8A330"
+}
