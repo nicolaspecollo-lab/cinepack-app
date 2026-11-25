@@ -2723,6 +2723,16 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
           id: "dir-control-horarios",
           nombre: "Avisos y confirmaciones de citación al equipo",
           tipo: "tabla",
+          // Dato: tabla (una fila = un aviso enviado a un destinatario/depto).
+          // Vista: panel a medida (AvisoCitacionBoard en HerramientaPanel.tsx),
+          // tablero kanban de 3 columnas por estado de confirmación
+          // (Pendiente/No leído/Confirmado) — rediseño 25/11 tras objeción del
+          // comité (ronda 1): esto es un log de notificaciones operativas, no
+          // una planilla de conceptos/montos, y la pregunta real de la 1AD es
+          // "¿a quién le mandé qué, y quién me confirmó?", que el kanban
+          // responde de un vistazo sin abrir cada fila. Las columnas de acá
+          // siguen existiendo para que el dato quede tipado/exportable, aunque
+          // el motor genérico nunca renderiza esto como tabla plana.
           hint: "Centro de avisos operativos al equipo (citación, cambios de horario de último momento) con confirmación de recepción por destinatario. No es un registro de tiempos/overtime (ver Control de horarios y avisos al equipo (1AD)).",
           columnas: [
             { key: "mensaje", label: "Aviso / mensaje", tipo: "largo" },
