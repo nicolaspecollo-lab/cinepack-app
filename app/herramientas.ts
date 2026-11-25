@@ -3476,7 +3476,35 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Reparto principal": {
       departamento: [fichaPersonaje, guionMarcado, calendarioCitaciones, vestMaqAsignado, contratoIndividual],
       cargo: [
-        { id: "rep-notas-preparacion", nombre: "Notas de preparación del personaje", tipo: "nota" },
+        {
+          id: "rep-notas-preparacion",
+          nombre: "Notas de preparación del personaje",
+          // Dato: tabla (una fila = un personaje completo que el actor/actriz
+          // prepara). Vista: panel a medida (RepNotasPreparacionPanel.tsx),
+          // ficha con pestañas por personaje (Biografía/Objetivos/
+          // Relaciones/Arco emocional/Notas recibidas) — ver justificación
+          // en ese archivo. Las columnas siguen existiendo para que el dato
+          // quede tipado y legible en exportaciones, aunque HerramientasPanel
+          // nunca monte la grilla genérica para este id.
+          tipo: "tabla",
+          hint: "Cuaderno de preparación del actor sobre su propio personaje: biografía, objetivos por escena, relaciones y arco emocional — nunca la vista del director sobre el actor.",
+          columnas: [
+            { key: "personaje", label: "Personaje" },
+            { key: "actor", label: "Actor/Actriz" },
+            { key: "edad", label: "Edad del personaje" },
+            { key: "ocupacion", label: "Ocupación" },
+            { key: "biografia", label: "Biografía / backstory", tipo: "largo" },
+            { key: "rasgos_fisicos", label: "Rasgos físicos y gestuales", tipo: "largo" },
+            { key: "voz_habla", label: "Voz y forma de hablar", tipo: "largo" },
+            { key: "objeto_personal", label: "Objeto personal significativo" },
+            { key: "motivacion_central", label: "Motivación central", tipo: "largo" },
+            { key: "foto_url", label: "Foto retrato", tipo: "archivo" },
+            { key: "objetivos_json", label: "Objetivos por escena (JSON)", tipo: "largo" },
+            { key: "relaciones_json", label: "Relaciones (JSON)", tipo: "largo" },
+            { key: "arco_json", label: "Arco emocional (JSON)", tipo: "largo" },
+            { key: "notas_json", label: "Notas de ensayo recibidas (JSON)", tipo: "largo" },
+          ],
+        },
         {
           id: "rep-agenda-personal-principal", nombre: "Mi agenda de rodaje personal", tipo: "tabla",
           hint: "Tus días de rodaje, horario de citación y escenas de cada jornada.",

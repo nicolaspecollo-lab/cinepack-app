@@ -13,7 +13,8 @@ export type IconName =
   | "sun" | "moon" | "cloud" | "users" | "calendar" | "phone" | "alert-triangle" | "film"
   | "checklist" | "id-card" | "image" | "key" | "message" | "cube" | "bell" | "layout" | "briefcase"
   | "camera" | "palette" | "sound" | "leaf" | "megaphone"
-  | "link" | "quote" | "minus" | "undo" | "redo" | "shield";
+  | "link" | "quote" | "minus" | "undo" | "redo" | "shield"
+  | "heart" | "target" | "book";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   bold: <><path d="M6 4h8a4 4 0 0 1 0 8H6z" /><path d="M6 12h9a4 4 0 0 1 0 8H6z" /></>,
@@ -86,6 +87,9 @@ const PATHS: Record<IconName, React.ReactNode> = {
   undo: <><path d="M4 7v6h6" /><path d="M20 18a8 8 0 0 0-8-8 8 8 0 0 0-6.3 3" /></>,
   redo: <><path d="M20 7v6h-6" /><path d="M4 18a8 8 0 0 1 8-8 8 8 0 0 1 6.3 3" /></>,
   shield: <><path d="M12 2 4 5v6c0 5.2 3.4 8.4 8 11 4.6-2.6 8-5.8 8-11V5Z" /><path d="m9 12 2 2 4-4" /></>,
+  heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />,
+  target: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
+  book: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" /></>,
 };
 
 export default function Icon({

@@ -6630,6 +6630,152 @@
   .cp-dash .ens-field-select select{ max-width:none; }
 }
 
+/* ---- Notas de preparación del personaje (rep-notas-preparacion) ---- */
+.cp-dash .rnp-hex{ background:var(--violet) !important; }
+.cp-dash .rnp-btn-acc{ color:var(--violet); border-color:var(--violet); }
+.cp-dash .rnp-btn-acc:hover{ background:var(--violet); color:#0D0D12; }
+.cp-dash .rnp-guardado{ margin:0 var(--gutter); }
+.cp-dash .rnp-wrap{ padding:var(--sp-4) var(--gutter) var(--sp-6); display:flex; flex-direction:column; gap:var(--sp-4); }
+
+/* Nivel 1 — grid de personajes. */
+.cp-dash .rnp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:var(--sp-3); }
+.cp-dash .rnp-card{
+  position:relative; text-align:left; display:flex; flex-direction:column; gap:0;
+  background:var(--bg-2); border:1px solid var(--line); padding:0 0 var(--sp-3);
+  cursor:pointer; font-family:inherit; color:var(--text); overflow:hidden;
+  transition:border-color var(--dur) ease, transform var(--dur) ease;
+}
+.cp-dash .rnp-card:hover{ border-color:var(--violet); transform:translateY(-2px); }
+.cp-dash .rnp-card-retrato{ position:relative; width:100%; aspect-ratio:4/3; background:var(--bg); overflow:hidden; }
+.cp-dash .rnp-card-retrato img,
+.cp-dash .rnp-card-retrato .rnp-retrato-svg{ width:100%; height:100%; object-fit:cover; display:block; }
+.cp-dash .rnp-card-notas{
+  position:absolute; right:8px; top:8px; display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-xs);
+  color:var(--violet); border:1px solid rgba(201,138,242,0.4); background:rgba(201,138,242,0.12); padding:2px 6px;
+}
+.cp-dash .rnp-card-id{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; padding:var(--sp-3) var(--sp-4) 2px; }
+.cp-dash .rnp-card-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-md); }
+.cp-dash .rnp-card-actor{ color:var(--muted); font-size:var(--fs-sm); }
+.cp-dash .rnp-card-ocup{ margin:2px var(--sp-4) 0; color:var(--muted); font-size:var(--fs-sm); }
+.cp-dash .rnp-card-stats{ display:flex; flex-direction:column; gap:6px; padding:var(--sp-2) var(--sp-4) 0; }
+.cp-dash .rnp-card-progreso{ display:flex; flex-direction:column; gap:3px; }
+.cp-dash .rnp-card-progreso-bar{ height:5px; background:var(--hl2); overflow:hidden; }
+.cp-dash .rnp-card-progreso-bar span{ display:block; height:100%; background:var(--violet); }
+.cp-dash .rnp-card-progreso-txt{ font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .rnp-card-meta{ display:flex; gap:10px; color:var(--muted); font-size:var(--fs-xs); }
+.cp-dash .rnp-card-meta span{ display:inline-flex; align-items:center; gap:4px; }
+.cp-dash .rnp-card-arco-actual{
+  margin:6px var(--sp-4) 0; padding-top:8px; border-top:1px dashed var(--line); font-size:var(--fs-sm); color:var(--text);
+  display:flex; align-items:flex-start; gap:6px; line-height:1.4;
+}
+.cp-dash .rnp-card-arco-actual svg{ flex-shrink:0; margin-top:2px; color:var(--violet); }
+
+/* Cabecera de ficha — nivel 2. */
+.cp-dash .rnp-ficha-head{ display:flex; gap:var(--sp-3); align-items:flex-start; }
+.cp-dash .rnp-ficha-retrato{ width:88px; height:110px; flex-shrink:0; border:1px solid var(--line); overflow:hidden; }
+.cp-dash .rnp-ficha-retrato img, .cp-dash .rnp-ficha-retrato .rnp-retrato-svg{ width:100%; height:100%; object-fit:cover; display:block; }
+.cp-dash .rnp-ficha-id{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; padding-top:4px; }
+.cp-dash .rnp-ficha-actor, .cp-dash .rnp-ficha-ocup, .cp-dash .rnp-ficha-edad{ font-size:var(--fs-base); }
+.cp-dash .rnp-ficha-actor{ font-family:'Poppins',sans-serif; font-weight:700; }
+.cp-dash .rnp-ficha-ocup, .cp-dash .rnp-ficha-edad{ color:var(--muted); }
+.cp-dash .rnp-ficha-actor-in, .cp-dash .rnp-ficha-ocup-in, .cp-dash .rnp-ficha-edad-in{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; width:100%;
+}
+.cp-dash .rnp-ficha-actor-in:focus, .cp-dash .rnp-ficha-ocup-in:focus, .cp-dash .rnp-ficha-edad-in:focus{ outline:none; border-color:var(--violet); }
+
+/* Pestañas internas. */
+.cp-dash .rnp-tabs{ display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid var(--line); padding-bottom:0; }
+.cp-dash .rnp-tab{
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap; background:none; border:none;
+  border-bottom:2px solid transparent; color:var(--muted); font-family:inherit; font-size:var(--fs-sm);
+  padding:var(--sp-2) var(--sp-3); cursor:pointer; flex-shrink:0;
+}
+.cp-dash .rnp-tab:hover{ color:var(--text); }
+.cp-dash .rnp-tab.active{ color:var(--violet); border-bottom-color:var(--violet); font-weight:700; }
+.cp-dash .rnp-tab-count{ background:var(--hl2); color:var(--text); font-size:var(--fs-xs); padding:1px 6px; border-radius:10px; }
+.cp-dash .rnp-tab-body{ display:flex; flex-direction:column; gap:var(--sp-3); }
+
+/* Biografía. */
+.cp-dash .rnp-bio-form, .cp-dash .rnp-bio-ro{ display:flex; flex-direction:column; gap:var(--sp-3); }
+.cp-dash .rnp-field{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .rnp-field > span{ font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); font-family:'Poppins',sans-serif; }
+.cp-dash .rnp-field input, .cp-dash .rnp-field textarea{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-base);
+  padding:7px 9px; width:100%; resize:vertical;
+}
+.cp-dash .rnp-field input:focus, .cp-dash .rnp-field textarea:focus{ outline:none; border-color:var(--violet); }
+.cp-dash .rnp-field-ro > p{ margin:0; font-size:var(--fs-base); line-height:1.6; }
+.cp-dash .rnp-vacio{ color:var(--muted); font-style:italic; font-size:var(--fs-base); }
+
+/* Objetivos por escena. */
+.cp-dash .rnp-lista{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .rnp-obj-row{ display:flex; align-items:flex-start; gap:var(--sp-2); background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); }
+.cp-dash .rnp-obj-tono{ width:8px; height:8px; border-radius:50%; margin-top:8px; flex-shrink:0; }
+.cp-dash .rnp-obj-escena{ width:110px; flex-shrink:0; background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; }
+.cp-dash .rnp-obj-texto{ flex:1; min-width:0; background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; resize:vertical; }
+.cp-dash .rnp-obj-ro{ display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
+.cp-dash .rnp-obj-ro-head{ display:flex; align-items:center; gap:8px; justify-content:space-between; }
+.cp-dash .rnp-obj-escena-txt{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); }
+.cp-dash .rnp-obj-ro p{ margin:0; font-size:var(--fs-base); line-height:1.5; }
+.cp-dash .rnp-estado-badge{ border:1px solid; padding:2px 8px; font-size:var(--fs-xs); font-family:'Poppins',sans-serif; font-weight:700; flex-shrink:0; }
+.cp-dash .rnp-btn-icon{ background:none; border:1px solid var(--line); color:var(--muted); padding:6px; cursor:pointer; flex-shrink:0; }
+.cp-dash .rnp-btn-icon:hover{ color:var(--rose); border-color:var(--rose); }
+.cp-dash .rnp-add{ align-self:flex-start; }
+@media (max-width:640px){
+  .cp-dash .rnp-obj-row{ flex-wrap:wrap; }
+  .cp-dash .rnp-obj-escena{ width:100%; }
+}
+
+/* Relaciones. */
+.cp-dash .rnp-rel-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--sp-3); align-items:start; }
+.cp-dash .rnp-rel-card{
+  position:relative; background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--line);
+  padding:var(--sp-3); display:flex; flex-direction:column; gap:6px;
+}
+.cp-dash .rnp-rel-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.cp-dash .rnp-rel-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-base); }
+.cp-dash .rnp-rel-actor{ color:var(--muted); font-size:var(--fs-sm); }
+.cp-dash .rnp-rel-card p{ margin:0; font-size:var(--fs-sm); line-height:1.5; }
+.cp-dash .rnp-rel-nombre-in, .cp-dash .rnp-rel-actor-in{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; width:100%;
+}
+.cp-dash .rnp-rel-card textarea{ background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; width:100%; resize:vertical; }
+.cp-dash .rnp-rel-del{ align-self:flex-end; }
+.cp-dash .rnp-rel-add{ align-self:flex-start; }
+
+/* Arco emocional — línea de tiempo horizontal en desktop, vertical en móvil. */
+.cp-dash .rnp-arco-timeline{ display:flex; flex-direction:column; gap:0; position:relative; padding-left:16px; border-left:2px solid var(--line); }
+.cp-dash .rnp-arco-punto{ position:relative; padding-bottom:var(--sp-4); }
+.cp-dash .rnp-arco-punto:last-child{ padding-bottom:0; }
+.cp-dash .rnp-arco-dot{ position:absolute; left:-21px; top:14px; width:9px; height:9px; border-radius:50%; background:var(--violet); }
+.cp-dash .rnp-arco-card{ background:var(--bg-2); border:1px solid var(--line); margin-left:var(--sp-3); padding:var(--sp-3); display:flex; flex-direction:column; gap:6px; position:relative; }
+.cp-dash .rnp-arco-momento{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); color:var(--violet); }
+.cp-dash .rnp-arco-estado{ font-size:var(--fs-base); }
+.cp-dash .rnp-arco-card p{ margin:0; font-size:var(--fs-sm); color:var(--muted); line-height:1.5; }
+.cp-dash .rnp-arco-momento-in, .cp-dash .rnp-arco-estado-in{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; width:100%;
+}
+.cp-dash .rnp-arco-card textarea{ background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; width:100%; resize:vertical; }
+.cp-dash .rnp-arco-del{ position:absolute; right:var(--sp-3); top:var(--sp-3); }
+
+/* Notas de ensayo recibidas. */
+.cp-dash .rnp-notas-lista{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .rnp-nota-card{ display:flex; gap:var(--sp-2); background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--violet); padding:var(--sp-3); }
+.cp-dash .rnp-nota-icon{ color:var(--violet); flex-shrink:0; margin-top:2px; }
+.cp-dash .rnp-nota-body{ display:flex; flex-direction:column; gap:6px; flex:1; min-width:0; }
+.cp-dash .rnp-nota-meta-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.cp-dash .rnp-nota-fecha-in{ background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; }
+.cp-dash .rnp-nota-de-in{ flex:1; min-width:140px; background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; }
+.cp-dash .rnp-nota-card textarea{ background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-sm); padding:6px 8px; width:100%; resize:vertical; }
+.cp-dash .rnp-nota-meta-row-ro{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+.cp-dash .rnp-nota-fecha{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .rnp-nota-de{ font-size:var(--fs-sm); color:var(--violet); font-weight:600; }
+.cp-dash .rnp-nota-card p{ margin:0; font-size:var(--fs-base); line-height:1.5; }
+@media (max-width:640px){
+  .cp-dash .rnp-arco-timeline{ padding-left:12px; }
+  .cp-dash .rnp-arco-card{ margin-left:var(--sp-2); }
+}
+
 /* ---- Memoria de making of (mo-memoria): documento + tablero de escenas ---- */
 .cp-dash .hp-momem{ display:flex; flex-direction:column; gap:var(--sp-5); }
 .cp-dash .hp-momem-doc{
