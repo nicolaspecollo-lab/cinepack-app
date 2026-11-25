@@ -2074,6 +2074,14 @@ function Celda({
     if (!editable) {
       return <span className={`hp-cell-select-ro tono-${tono}`}>{valor || "—"}</span>;
     }
+    // Mismo problema que tenía la celda `fecha` (ver comentario más abajo):
+    // `onChange(v)` hace `setDraft` async y `onCommit` leía `draft` del
+    // closure del render actual, que todavía no lo había absorbido. Con una
+    // sola columna `estado` por fila rara vez se notaba, pero con DOS+
+    // columnas `estado` editadas rápido en la misma fila, el primer cambio
+    // se perdía tras reload. Usamos `onSave` (mismo camino que
+    // ArchivoCell/LinkCell/fecha) para grabar con el valor nuevo pasado
+    // directo, sin depender de `draft`.
     return (
       <div className={`hp-cell-cpselect tono-${tono}`}>
         <CpSelect
@@ -2081,7 +2089,7 @@ function Celda({
           options={col.opciones ?? []}
           placeholder="—"
           permitirLibre={col.libre}
-          onChange={(v) => { onChange(v); onCommit(); }}
+          onChange={(v) => { if (onSave) onSave(v); else { onChange(v); onCommit(); } }}
         />
       </div>
     );
@@ -2121,10 +2129,35 @@ function Celda({
       </div>
     );
   }
+  if (col.tipo === "fecha") {
+    // Input nativo `<input type="date">`: a diferencia de los demás tipos,
+    // NO lo dejamos controlado por `value`/`onChange`+`onCommit` (ese combo
+    // depende de que `draft` ya haya absorbido el `onChange` antes de que
+    // corra `onCommit`, algo que no está garantizado cuando el navegador
+    // dispara "change" y "blur" del picker nativo muy pegados entre sí — la
+    // fila quedaba sin guardar aunque el input mostrara la fecha elegida).
+    // En vez de eso: no-controlado (`defaultValue`, remonta con `key` si el
+    // valor cambia por fuera, ej. deshacer/duplicar fila) y graba leyendo
+    // `e.target.value` directo del DOM en el blur, vía `onSave` — el mismo
+    // camino ya usado por ArchivoCell/LinkCell, que no depende de `draft`.
+    return (
+      <input
+        key={valor}
+        className="hp-cell-input"
+        type="date"
+        defaultValue={valor}
+        readOnly={!editable}
+        onBlur={(e) => {
+          if (onSave) onSave(e.target.value);
+          else { onChange(e.target.value); onCommit(); }
+        }}
+      />
+    );
+  }
   return (
     <input
       className="hp-cell-input"
-      type={col.tipo === "num" ? "number" : col.tipo === "fecha" ? "date" : "text"}
+      type={col.tipo === "num" ? "number" : "text"}
       value={valor}
       readOnly={!editable}
       onChange={(e) => onChange(e.target.value)}

@@ -2,6 +2,9 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Idea de Nico para un ciclo futuro (25/11/2026)
+Propuesta en rebote de "Avisos y confirmaciones de citación al equipo" (Asistencia de dirección): construir una herramienta en paralelo, estilo agenda personal por cargo, donde cada citación confirmada (y potencialmente otras confirmaciones de otras herramientas) dispare automáticamente un registro del evento confirmado (hora, fecha, explicación) en la agenda de la persona. Requiere: definir qué herramientas disparan el registro, el modelo de datos de la agenda por cargo, y el mecanismo de disparo (¿trigger en backend al cambiar estado_confirmacion a "Confirmado"? ¿solo lectura agregada?). Investigar y arquitecturar en un ciclo propio, no como extensión menor — es un expediente nuevo.
+
 ## Bug transversal pendiente de decisión de Nico (25/11/2026)
 `/perfil` no escribe `profiles.cargo` al cambiar de cargo — escribe a `user_roles` en su lugar. El gating real de qué herramientas ve un cargo en Exclusivas/Departamentos lee `profiles.cargo` (`app/hoy/page.tsx`), así que cualquier usuario que cambie de cargo vía la UI de autoservicio no ve efecto real, sin error visible. Encontrado por QA al intentar destrabar la cuenta de 1er asistente de dirección el 25/11. No se toca hasta que Nico decida prioridad (afecta onboarding/autoservicio de cualquier cargo, no solo el de hoy).
 
@@ -17,6 +20,14 @@ No es de un departamento: la usa cualquier cargo para crear su propia hoja/docum
 - **Documento**: edición de texto enriquecido estilo Word, con exportación.
 
 **No existe hoy ni como herramienta ni como librería instalada** (confirmado: `package.json`/`package-lock.json` no tienen Univer, FortuneSheet, Handsontable ni TipTap). El arquitecto-integracion debe comparar estas opciones (y cualquier otra candidata que surja) en: licencia, coste, rendimiento en móvil (el sistema de diseño es mobile-first con gutter de 16px/12px en pantallas chicas — una librería pesada o no táctil sería un mal encaje), y encaje con el stack (React 19, Next 16, exportación ya cubierta en parte por `exceljs`/`jspdf`/`pdf-lib`, que ya están instalados y podrían evitar reinventar la exportación). **Pregunta abierta, no resuelta aquí**: no se evaluó aún ninguna librería — queda explícitamente para el ciclo de trabajo del arquitecto, no se debe asumir una opción de antemano.
+
+## Ciclo 22/11/2026 — ✅ 3 ENTREGADAS (PR #16, pendientes de calificación de Nico)
+Elegidas deliberadamente dentro de departamentos ya habilitados en beta (Dirección, Producción), tras el hallazgo de QA nocturna de que departamentos fuera de esa lista (`MODULOS_BETA_ACTIVOS`) no pueden abrir ninguna herramienta real. Ver `oficina-qa/bugs/2026-11-22.md`.
+- `prod-tareas-admin` (Tareas administrativas diarias, Asistencia de producción) — corrige además un error de etiquetado de departamento en `inventario.md`.
+- `dir-control-horarios` → renombrada "Avisos y confirmaciones de citación al equipo" (Asistencia de dirección).
+- `prod-checklist-vehiculos` (Checklist de vehículos, combustible y mantenimiento, Driver) — agrupada por vehículo.
+
+De paso, QA encontró y el desarrollador corrigió 2 bugs reales del motor genérico de tabla (`HerramientaPanel.tsx`), no exclusivos de estas 3 herramientas: columna `fecha` no persistía (`4d0d5b0`), y columnas `estado` perdían ediciones por race condition cuando se tocaban 2+ en la misma fila rápido (`56fa4f8`). Ambos reverificados.
 
 ## 1-4. Herramientas vacías/placeholder de cargos clave (sección 2.3, prioridad por impacto de lanzamiento)
 **Actualizado 17/11**: los 3 primeros de esta lista (`dir-notas-escena`, `rrhh-plan-bienestar`, `foto-dit-backup`) se entregaron hoy — ver `oficina/expedientes/2026-11-17_*` y `entregas` en el panel, pendientes de calificación de Nico. `post-checklist-mezcla` también entregado y rehecho (ver 17/11).
