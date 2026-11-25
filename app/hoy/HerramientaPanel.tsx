@@ -783,7 +783,7 @@ function HerramientaData({
           de conceptos/montos): el hint ya se explica en el Tablero, y acá
           solo resta altura para que la grilla empiece más arriba — pedido
           explícito de Nicolás. */}
-      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && (
+      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && herramienta.id !== "prod-checklist-vehiculos" && (
         <p className="hp-hint">{herramienta.hint}</p>
       )}
 
@@ -6881,7 +6881,7 @@ function parseArr<T>(s: string | undefined): T[] {
   }
 }
 
-const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "dir-decisiones-visionado", "rrhh-plan-bienestar"]);
+const ENTIDAD_TABS_IDS = new Set(["ej-coproducciones", "ej-ayudas-subvenciones", "ej-agenda-ejecutivo", "ej-deliverables", "ej-notas-ejecutivo", "ej-derechos-pi", "ej-polizas-permisos", "dir-decisiones-visionado", "rrhh-plan-bienestar", "prod-checklist-vehiculos"]);
 
 // Debajo de las tarjetas de riesgo de "rrhh-plan-bienestar": todos los
 // empleados cargados a mano (sub-filas `empleados`, repetible) en una sola
@@ -6987,7 +6987,7 @@ type EntidadConfig = {
   listCols: string[];
   tabs: EntidadTab[];
   addLabel: string;
-  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador" | "derechos-vencimiento" | "polizas-vencimiento";
+  special?: "waterfall" | "subvencion-risk" | "categorias-filtro" | "buscador" | "derechos-vencimiento" | "polizas-vencimiento" | "vehiculo-alerta";
 };
 
 const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
@@ -7099,7 +7099,42 @@ const ENTIDAD_TABS_CONFIG: Record<string, EntidadConfig> = {
       { label: "Documentos", keys: ["documentos"] },
     ],
   },
+  "prod-checklist-vehiculos": {
+    titleKey: "matricula",
+    subtitleKey: "modelo",
+    listCols: ["responsable_actual", "revision_tecnica", "carnet_vencimiento"],
+    addLabel: "+ Agregar vehículo",
+    special: "vehiculo-alerta",
+    tabs: [
+      { label: "Resumen", keys: ["matricula", "modelo", "anio", "responsable_actual", "km_actual", "revision_tecnica", "carnet_vencimiento"] },
+      { label: "Kilometraje", keys: ["historial_km"] },
+      { label: "Combustible y gastos", keys: ["historial_gastos"] },
+      { label: "Carnet y responsable", keys: ["historial_responsables"] },
+      { label: "Mantenimiento", keys: ["mantenimiento"] },
+    ],
+  },
 };
+
+// Alertas críticas de una tarjeta de vehículo ("prod-checklist-vehiculos"):
+// carnet de conducir del responsable vencido, revisión técnica vencida, o
+// algún punto de mantenimiento marcado "Urgente" — exactamente lo que Nico
+// pidió poder ver "de un vistazo" sin entrar a la matrícula.
+function vehiculoAlertas(f: Fila): string[] {
+  const alertas: string[] = [];
+  const hoy = Date.now();
+  const carnet = f.datos?.carnet_vencimiento;
+  if (carnet && !isNaN(Date.parse(carnet)) && new Date(carnet).getTime() < hoy) {
+    alertas.push("Carnet del responsable vencido");
+  }
+  const revision = f.datos?.revision_tecnica;
+  if (revision && !isNaN(Date.parse(revision)) && new Date(revision).getTime() < hoy) {
+    alertas.push("Revisión técnica vencida");
+  }
+  for (const m of parseArr<Record<string, string>>(f.datos?.mantenimiento)) {
+    if (m.estado === "Urgente") alertas.push(`Mantenimiento urgente: ${m.item || "ítem"}`);
+  }
+  return alertas;
+}
 
 // Campo simple (no repetible) dentro de una pestaña.
 function EntidadCampo({
@@ -7385,16 +7420,18 @@ export function EntidadTabsBoard({
           {editable && <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>{t("addFirstRow")}</button>}
         </div>
       ) : (
-        <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-list hp-etb-list-rail" : "hp-etb-list"}>
+        <div className={herramientaId === "rrhh-plan-bienestar" ? "hp-etb-list hp-etb-list-rail" : herramientaId === "prod-checklist-vehiculos" ? "hp-etb-list hp-etb-list-grid" : "hp-etb-list"}>
           {visibles.map((f) => {
             const isRrhh = herramientaId === "rrhh-plan-bienestar";
             const rrhhOrigen = isRrhh ? (f.datos?.origen || "") : "";
             const rrhhAccentColor = isRrhh ? rrhhAccent(rrhhOrigen) : "";
             const rrhhEmpleadosN = isRrhh ? parseArr<Record<string, string>>(f.datos?.empleados).length : 0;
             const rrhhFormacion = isRrhh ? (f.datos?.formacion_obligatoria || "") : "";
+            const isVehiculo = cfg.special === "vehiculo-alerta";
+            const vehAlertas = isVehiculo ? vehiculoAlertas(f) : [];
             return (
             <div
-              className={isRrhh ? "hp-etb-row hp-etb-row-card hp-rrhh-card" : "hp-etb-row"}
+              className={isRrhh ? "hp-etb-row hp-etb-row-card hp-rrhh-card" : isVehiculo ? "hp-etb-row hp-etb-row-card hp-veh-card" : "hp-etb-row"}
               style={isRrhh ? { "--rrhh-accent": `var(--${rrhhAccentColor})` } as React.CSSProperties : undefined}
               key={f.id}
               onClick={() => { setAbiertoId(f.id); setTab(0); }}
@@ -7404,6 +7441,16 @@ export function EntidadTabsBoard({
                   {rrhhOrigen && <span className="hp-rrhh-origen-badge">{rrhhOrigen}</span>}
                   {rrhhFormacion === "Sí — hipótesis, validar con PRL externo" && (
                     <Icon name="alert-triangle" className="hp-rrhh-warn-ico" />
+                  )}
+                </div>
+              )}
+              {isVehiculo && (
+                <div className="hp-veh-card-top">
+                  <span className="hp-veh-ico"><Icon name="car" /></span>
+                  {vehAlertas.length > 0 && (
+                    <span className="hp-veh-alert-badge" title={vehAlertas.join(" · ")}>
+                      <Icon name="alert-triangle" /> {vehAlertas.length}
+                    </span>
                   )}
                 </div>
               )}
@@ -7428,7 +7475,33 @@ export function EntidadTabsBoard({
                   )}
                 </div>
               )}
-              {!isRrhh && cfg.listCols.map((k) => {
+              {isVehiculo && (
+                <div className="hp-veh-card-body">
+                  <div className="hp-veh-resp"><Icon name="id-card" /> {f.datos?.responsable_actual || "Sin responsable asignado"}</div>
+                  <div className="hp-veh-fechas">
+                    {(() => {
+                      const rev = f.datos?.revision_tecnica;
+                      const vencidaRev = rev && !isNaN(Date.parse(rev)) && new Date(rev).getTime() < Date.now();
+                      return (
+                        <span className={`hp-veh-fecha-chip ${vencidaRev ? "bad" : "ok"}`}>
+                          <Icon name="wrench" /> Revisión {rev ? new Date(rev).toLocaleDateString("es-ES") : "sin dato"}
+                        </span>
+                      );
+                    })()}
+                    {(() => {
+                      const carnet = f.datos?.carnet_vencimiento;
+                      const vencidoCarnet = carnet && !isNaN(Date.parse(carnet)) && new Date(carnet).getTime() < Date.now();
+                      return (
+                        <span className={`hp-veh-fecha-chip ${vencidoCarnet ? "bad" : "ok"}`}>
+                          <Icon name="id-card" /> Carnet {carnet ? new Date(carnet).toLocaleDateString("es-ES") : "sin dato"}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <div className="hp-veh-km"><Icon name="gauge" /> {f.datos?.km_actual ? `${Number(f.datos.km_actual).toLocaleString("es-ES")} km` : "Km sin registrar"}</div>
+                </div>
+              )}
+              {!isRrhh && !isVehiculo && cfg.listCols.map((k) => {
                 const c = colByKey.get(k);
                 if (!c) return null;
                 const v = f.datos?.[k] ?? "";
@@ -10990,6 +11063,95 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
   "prod-reporte-incidencias-loc": [
     { locacion: "Faro de Punta Alta", dia: "3", descripcion: "Viento levantó un panel de luz, sin daños en la estructura del faro.", responsable: "Grip jefe", estado: "Gestionada", foto: "" },
     { locacion: "Casa de Elsa", dia: "5", descripcion: "Vecino reclamó por ruido del generador después de las 20:00.", responsable: "Jefe de producción", estado: "Abierta", foto: "" },
+  ],
+  "prod-checklist-vehiculos": [
+    {
+      matricula: "4521-KBP", modelo: "Mercedes Sprinter (furgón de producción)", anio: "2022",
+      responsable_actual: "Joan Ferrer", km_actual: "58420",
+      revision_tecnica: "2027-03-14", carnet_vencimiento: "2029-05-02",
+      historial_km: JSON.stringify([
+        { fecha: "2026-06-30", km: "52100", foto: "", nota: "Lectura antes de salir de base hacia Punta Alta." },
+        { fecha: "2026-07-10", km: "55680", foto: "", nota: "Mitad de rodaje, traslados diarios equipo/material." },
+        { fecha: "2026-07-20", km: "58420", foto: "", nota: "Cierre de rodaje, devolución a base." },
+      ]),
+      historial_gastos: JSON.stringify([
+        { fecha: "2026-07-01", tipo_gasto: "Combustible", monto: "92.40", foto: "" },
+        { fecha: "2026-07-08", tipo_gasto: "Peaje", monto: "18.75", foto: "" },
+        { fecha: "2026-07-14", tipo_gasto: "Combustible", monto: "101.10", foto: "" },
+        { fecha: "2026-07-19", tipo_gasto: "Lavado", monto: "15.00", foto: "" },
+      ]),
+      historial_responsables: JSON.stringify([
+        { fecha_desde: "2026-01-10", nombre: "Marta Solís", carnet_foto: "", vencimiento_carnet: "2026-06-01" },
+        { fecha_desde: "2026-06-15", nombre: "Joan Ferrer", carnet_foto: "", vencimiento_carnet: "2029-05-02" },
+      ]),
+      mantenimiento: JSON.stringify([
+        { fecha: "2026-05-20", item: "Aceite y filtros", estado: "OK", nota: "Cambio en taller Rodimotor, 50.000 km." },
+        { fecha: "2026-06-25", item: "Neumáticos", estado: "OK", nota: "Rotación delante-atrás, desgaste parejo." },
+        { fecha: "2026-07-15", item: "Frenos", estado: "Revisar", nota: "Ruido leve en freno trasero derecho, agendar taller al volver." },
+      ]),
+    },
+    {
+      matricula: "7830-LMN", modelo: "Toyota Hilux (producción/locaciones)", anio: "2020",
+      responsable_actual: "Rubén Castaños", km_actual: "102340",
+      revision_tecnica: "2026-11-30", carnet_vencimiento: "2026-10-05",
+      historial_km: JSON.stringify([
+        { fecha: "2026-07-02", km: "98900", foto: "", nota: "Recorrido base–Faro de Punta Alta (camino de tierra)." },
+        { fecha: "2026-07-17", km: "102340", foto: "", nota: "Incluye traslados a localización del embalse." },
+      ]),
+      historial_gastos: JSON.stringify([
+        { fecha: "2026-07-03", tipo_gasto: "Combustible", monto: "88.00", foto: "" },
+        { fecha: "2026-07-09", tipo_gasto: "Taller", monto: "65.00", foto: "" },
+        { fecha: "2026-07-16", tipo_gasto: "Parking", monto: "12.50", foto: "" },
+      ]),
+      historial_responsables: JSON.stringify([
+        { fecha_desde: "2026-02-01", nombre: "Rubén Castaños", carnet_foto: "", vencimiento_carnet: "2026-10-05" },
+      ]),
+      mantenimiento: JSON.stringify([
+        { fecha: "2026-06-10", item: "Neumáticos", estado: "Urgente", nota: "Neumático trasero izquierdo con desgaste irregular por el camino de tierra del faro — cambiar antes de volver a ir." },
+        { fecha: "2026-06-10", item: "Luces", estado: "OK", nota: "" },
+        { fecha: "2026-04-02", item: "Correa de distribución", estado: "OK", nota: "Cambiada a los 95.000 km según manual." },
+      ]),
+    },
+    {
+      matricula: "2290-FRT", modelo: "Renault Master (transporte de equipo técnico)", anio: "2023",
+      responsable_actual: "Edurne Lantz", km_actual: "31050",
+      revision_tecnica: "2027-01-18", carnet_vencimiento: "2028-02-11",
+      historial_km: JSON.stringify([
+        { fecha: "2026-07-05", km: "28700", foto: "", nota: "Salida de almacén central con grúa y rigging." },
+        { fecha: "2026-07-18", km: "31050", foto: "", nota: "Vuelta a almacén tras el bloque de exteriores." },
+      ]),
+      historial_gastos: JSON.stringify([
+        { fecha: "2026-07-05", tipo_gasto: "Combustible", monto: "110.30", foto: "" },
+        { fecha: "2026-07-12", tipo_gasto: "Peaje", monto: "22.40", foto: "" },
+      ]),
+      historial_responsables: JSON.stringify([
+        { fecha_desde: "2026-03-01", nombre: "Edurne Lantz", carnet_foto: "", vencimiento_carnet: "2028-02-11" },
+      ]),
+      mantenimiento: JSON.stringify([
+        { fecha: "2026-07-01", item: "Aceite y filtros", estado: "OK", nota: "" },
+        { fecha: "2026-07-01", item: "Batería", estado: "OK", nota: "" },
+      ]),
+    },
+    {
+      matricula: "9014-TZX", modelo: "Citroën Jumpy (van de maquillaje y peluquería)", anio: "2019",
+      responsable_actual: "— sin asignar —", km_actual: "145200",
+      revision_tecnica: "2026-08-02", carnet_vencimiento: "2026-01-20",
+      historial_km: JSON.stringify([
+        { fecha: "2026-06-20", km: "142800", foto: "", nota: "" },
+        { fecha: "2026-07-15", km: "145200", foto: "", nota: "Pendiente de confirmar nuevo responsable tras baja de Iker Mendoza." },
+      ]),
+      historial_gastos: JSON.stringify([
+        { fecha: "2026-06-22", tipo_gasto: "Combustible", monto: "79.90", foto: "" },
+        { fecha: "2026-07-10", tipo_gasto: "Taller", monto: "210.00", foto: "" },
+      ]),
+      historial_responsables: JSON.stringify([
+        { fecha_desde: "2025-09-01", nombre: "Iker Mendoza", carnet_foto: "", vencimiento_carnet: "2026-01-20" },
+      ]),
+      mantenimiento: JSON.stringify([
+        { fecha: "2026-07-10", item: "Líquido refrigerante", estado: "Urgente", nota: "Pérdida detectada en taller — fuga en manguito, requiere reparación antes de volver a circular." },
+        { fecha: "2026-05-01", item: "Frenos", estado: "OK", nota: "" },
+      ]),
+    },
   ],
 };
 
