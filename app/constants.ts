@@ -98,6 +98,7 @@ export const PERMISOS_VISIONADO: Record<string, string[]> = {
 export const JERARQUIA_POR_DEPARTAMENTO: Record<string, string[]> = {
   "Dirección": [
     "Dirección",
+    "1er asistente de dirección",
     "Asistencia de dirección",
     "2ª Asistencia de dirección",
     "Script",
