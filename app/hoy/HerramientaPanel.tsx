@@ -4191,7 +4191,13 @@ function TareasAdminBoard({
   const [abierta, setAbierta] = useState<string | null>(null);
 
   function set(f: Fila, key: string, v: string) {
-    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+    // No mergear acá contra f.datos (instantánea cerrada en el render donde
+    // se montó el handler): guardarFila ya hace `{ ...fresh, ...cambios }`
+    // contra el dato más reciente conocido de la fila. Si mandamos acá todo
+    // el objeto f.datos como "cambios", pisamos ediciones concurrentes de
+    // otros campos hechas entre el render y este guardado (bug real QA 25/11:
+    // responsable + subtarea casi simultáneos se pisaban entre sí).
+    onGuardar(f.id, { [key]: v }, f);
   }
 
   const totalTareas = filas.length;
@@ -4297,6 +4303,33 @@ function TareasAdminBoard({
 
                   {abiertaAqui && (
                     <div className="hp-tad-detalle" key={f.id}>
+                      {colTarea && (
+                        <input
+                          className="hp-tad-input hp-tad-input-titulo"
+                          defaultValue={f.datos?.[colTarea.key] ?? ""}
+                          placeholder={colTarea.label}
+                          readOnly={!editable}
+                          onBlur={(e) => set(f, colTarea.key, e.target.value)}
+                        />
+                      )}
+                      {colCategoria && (
+                        <EstadoSeg
+                          valor={categoria}
+                          opciones={colCategoria.opciones ?? []}
+                          onPick={(v) => set(f, colCategoria.key, v)}
+                          editable={editable}
+                          chip
+                        />
+                      )}
+                      {colPrioridad && (
+                        <EstadoSeg
+                          valor={prioridad}
+                          opciones={colPrioridad.opciones ?? []}
+                          onPick={(v) => set(f, colPrioridad.key, v)}
+                          editable={editable}
+                          chip
+                        />
+                      )}
                       {colResponsable && (
                         <input
                           className="hp-tad-input"
