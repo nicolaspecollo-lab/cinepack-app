@@ -6053,6 +6053,7 @@
 
 .cp-dash .hp-etb-list{ display:flex; flex-direction:column; }
 .cp-dash .hp-etb-list-rail{ flex-direction:row; overflow-x:auto; -webkit-overflow-scrolling:touch; gap:12px; padding:2px 2px 10px; }
+.cp-dash .hp-etb-list-grid{ flex-direction:row; flex-wrap:wrap; gap:14px; padding:2px 2px 10px; }
 .cp-dash .hp-etb-row-card{ flex:0 0 260px; min-width:260px; flex-direction:column; align-items:flex-start; border:1px solid var(--line); background:var(--bg-2); border-radius:0; }
 .cp-dash .hp-etb-row-card .hp-etb-row-title{ width:100%; }
 .cp-dash .hp-etb-row-card .hp-etb-row-cats{ margin-top:6px; }
@@ -6814,4 +6815,36 @@
   .cp-dash .ch1-field{ min-width:0; }
   .cp-dash .ch1-field-select{ max-width:none; }
   .cp-dash .ch1-eje-lbl{ display:none; }
+}
+
+/* Tarjetas por matrícula de "prod-checklist-vehiculos" — cada vehículo es
+   una ficha, no una fila: acento índigo de marca, alerta visible sin abrir
+   (carnet vencido / revisión vencida / mantenimiento urgente), y un resumen
+   de responsable + fechas + kilometraje para decidir de un vistazo si hace
+   falta entrar al historial. */
+.cp-dash .hp-veh-card{
+  flex:0 0 272px; min-width:272px; max-width:100%; padding:16px 16px 14px; gap:0; align-items:flex-start;
+  border-left:3px solid var(--indigo); box-shadow:0 10px 24px var(--shadow);
+  transition:transform var(--dur,180ms) ease, box-shadow var(--dur,180ms) ease, border-color var(--dur,180ms) ease;
+}
+.cp-dash .hp-veh-card:hover{ transform:translateY(-3px); box-shadow:0 18px 36px var(--shadow); }
+.cp-dash .hp-veh-card .hp-etb-row-name{ font-family:'Poppins',sans-serif; font-weight:800; font-size:16px; letter-spacing:.01em; }
+.cp-dash .hp-veh-card .hp-etb-row-sub{ font-size:11px; color:var(--muted); text-transform:none; letter-spacing:0; margin-top:3px; }
+.cp-dash .hp-veh-card-top{ display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:8px; }
+.cp-dash .hp-veh-ico{ display:inline-flex; color:var(--indigo); font-size:20px; }
+.cp-dash .hp-veh-alert-badge{
+  display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700;
+  padding:3px 8px; color:var(--rose); background:color-mix(in srgb, var(--rose) 18%, transparent);
+  border:1px solid color-mix(in srgb, var(--rose) 45%, transparent);
+}
+.cp-dash .hp-veh-card-body{ width:100%; margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+.cp-dash .hp-veh-resp{ display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--text); }
+.cp-dash .hp-veh-resp svg{ color:var(--muted); font-size:14px; flex-shrink:0; }
+.cp-dash .hp-veh-fechas{ display:flex; flex-wrap:wrap; gap:6px; }
+.cp-dash .hp-veh-fecha-chip{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600; padding:4px 8px; border:1px solid var(--line); }
+.cp-dash .hp-veh-fecha-chip.ok{ color:var(--lime); border-color:color-mix(in srgb, var(--lime) 40%, transparent); background:color-mix(in srgb, var(--lime) 10%, transparent); }
+.cp-dash .hp-veh-fecha-chip.bad{ color:var(--rose); border-color:color-mix(in srgb, var(--rose) 45%, transparent); background:color-mix(in srgb, var(--rose) 14%, transparent); }
+.cp-dash .hp-veh-km{ display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--muted); font-weight:600; }
+@media (max-width:640px){
+  .cp-dash .hp-veh-card{ flex:1 1 100%; min-width:0; }
 }
