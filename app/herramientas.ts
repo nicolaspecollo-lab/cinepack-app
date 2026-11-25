@@ -2698,7 +2698,26 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         dirBreakdownTecnico,
         dirContinuidadDiaria,
-        { id: "dir-control-horarios-1ad", nombre: "Control de horarios y avisos al equipo (1AD)", tipo: "checklist", hint: "Checklist de control de tiempos del día: wrap de cada setup, alertas de overtime, notificaciones al equipo." },
+        {
+          id: "dir-control-horarios-1ad", nombre: "Control de horarios y avisos al equipo (1AD)", tipo: "tabla",
+          // RONDA 2 (25/11/2026) — rebote de fondo de Nico: "esto no es una
+          // herramienta, es simplemente un cuadro". Pasa de tabla plana
+          // (1 fila = 1 setup) a panel a medida de 3 niveles — día de
+          // rodaje → Gantt de presencia por departamento (barras CSS,
+          // left/width %, sin librería) → detalle por setup, agrupado por
+          // cargo/citación (ajuste de Nico sobre la spec original, directo
+          // en el panel, aplicado al pinchar la barra de un departamento).
+          // Ver rediseno-panel-medida.md. Render 100% bespoke en
+          // ControlHorarios1ADPanel.tsx (HerramientasPanel nunca monta la
+          // grilla genérica para este id) — las columnas de acá quedan
+          // como contrato de datos para el desarrollador/backoffice, no
+          // como definición de render.
+          hint: "Una fila por día de rodaje: Gantt de presencia real por departamento (llegada→salida), con el detalle de wrap previsto/real por setup agrupado por cargo dentro de cada barra.",
+          columnas: [
+            { key: "dia_fecha", label: "Fecha de la jornada", tipo: "fecha" as const },
+            { key: "departamentos", label: "Departamentos del día (JSON: llegada/salida real + setups agrupados por cargo)", tipo: "largo" as const },
+          ],
+        },
       ],
     },
     "Asistencia de dirección": {
