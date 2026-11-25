@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente aprobado",
+  "title": "Continuidad fotográfica",
+  "subtitle": "Script/Continuidad (Dirección): comparador de foto de referencia vs. foto actual por escena/toma, con clasificación de discrepancia y lectura en vivo de continuidad de Arte, verificado con cuenta de prueba real.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado · Ronda 2</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Dirección · Script/Continuidad"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#E8A330"
+}
