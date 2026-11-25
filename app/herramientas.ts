@@ -3497,7 +3497,35 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     },
     "Figuración": {
       departamento: [calendarioCitaciones, vestMaqAsignado],
-      cargo: [{ id: "rep-instrucciones-figuracion", nombre: "Instrucciones de figuración por jornada", tipo: "checklist" }],
+      cargo: [
+        {
+          id: "rep-instrucciones-figuracion",
+          nombre: "Instrucciones de figuración por jornada",
+          tipo: "tabla",
+          hint: "Panel a medida (no tabla genérica): tarjetas de grupo de figuración agrupadas por jornada, con vestuario/posición/bloqueo/movimiento, punto de reunión y hora de citación propios de Figuración, foto de referencia y confirmación de recepción por grupo. Detalle completo al abrir la tarjeta, nunca una celda suelta. Documentación interna, nunca se renderiza (regla 25/11).",
+          columnas: [
+            { key: "jornada", label: "Jornada", tipo: "fecha" },
+            { key: "grupo", label: "Grupo de figuración", tipo: "texto" },
+            { key: "escena", label: "Escena/secuencia", tipo: "texto" },
+            { key: "hora_citacion", label: "Hora de citación", tipo: "texto" },
+            { key: "punto_reunion", label: "Punto de reunión", tipo: "texto" },
+            { key: "num_figurantes", label: "Nº de figurantes", tipo: "num" },
+            { key: "confirmados", label: "Confirmados", tipo: "num" },
+            {
+              key: "estado",
+              label: "Estado",
+              tipo: "estado",
+              opciones: ["Pendiente de preparar", "Instrucciones enviadas", "Confirmado en plató", "En ensayo/ajuste", "Listo para rodar"],
+            },
+            { key: "vestuario", label: "Vestuario y attrezzo", tipo: "largo" },
+            { key: "posicion", label: "Posición y bloqueo en escena", tipo: "largo" },
+            { key: "movimiento", label: "Movimiento y acción", tipo: "largo" },
+            { key: "foto_referencia", label: "Foto de referencia", tipo: "archivo" },
+            { key: "notas", label: "Notas adicionales", tipo: "largo" },
+          ],
+          agruparPor: "jornada",
+        },
+      ],
     },
   },
 
