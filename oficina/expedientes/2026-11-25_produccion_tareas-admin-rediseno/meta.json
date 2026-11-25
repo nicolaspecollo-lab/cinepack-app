@@ -1,10 +1,10 @@
 {
-  "kicker": "Oficina de Desarrollo de App · Expediente en corrección",
+  "kicker": "Oficina de Desarrollo de App · Aprobado por comité",
   "title": "Tareas administrativas diarias — rediseño",
-  "subtitle": "Tablero por urgencia real (TareasAdminBoard) para la Asistencia de producción. Corrección de capturas tras objeción de comité por datos de ejemplo vacíos/sucios.",
-  "badge": "<span class=\"badge badge-warn\">Pendiente · corrección de capturas y 2 bugs de QA</span>",
-  "metaItems": [["Fecha", "25 nov 2026"], ["Commit", "8e5e530"], ["Rama", "oficina/2026-11-25-tareas-admin-rediseno"], ["Oficina", "Desarrollo"]],
+  "subtitle": "Tablero por urgencia real (TareasAdminBoard) para la Asistencia de producción.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado por comité</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Commit", "fe2f063"], ["Rama", "oficina/2026-11-25-tareas-admin-rediseno"], ["Oficina", "Desarrollo"]],
   "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
-  "footerNote": "listo para volver a comité de calidad",
+  "footerNote": "aprobado por comité de calidad, pendiente de calificación de Nico",
   "accent": "#E8A330"
 }
