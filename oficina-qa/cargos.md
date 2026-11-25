@@ -61,3 +61,68 @@ Fuente: `/oficina/inventario.md` (17 departamentos reales de CINEPACK). Convenci
 | 51 | General (todos) | Cualquier integrante | Callsheet, Checklist de wrap | qa.general-callsheet4@mailinator.com | Exige que la callsheet del día de la secuencia de riesgo incluya al coordinador de especialistas y al equipo de rescate acuático como citación obligatoria. |
 
 **Nota de alcance**: 51 cargos, cubriendo los 17 departamentos reales. Making of (Cámara/Edición/Community) y Marketing/Difusión interno quedan fuera de esta primera tanda a propósito — son herramientas ya "Consolidadas" sin complejidad nueva que aporte el proyecto test; se agregan en una ronda siguiente si el director-qa lo considera necesario.
+
+## Verificación de acceso real — 25/11/2026 (pedido directo de Nico, por encima de buscar bugs en cargos nuevos esta noche)
+
+Verificación sistemática de las 51 cuentas: login real (API Supabase Auth, password grant) + lectura de `profiles` (propio registro) + lectura de `project_members` (propia fila, con join a `proyectos.nombre`). Password fija de todas: `CinepackQA-2026!tester`.
+
+**Resultado: las 51/51 cuentas confirman LOGIN_OK y son miembro real (`project_members`) de `[PROYECTO TEST] La sed de los almendros`.** El acceso de autenticación y de membresía al proyecto está sano para toda la tabla — no es un problema (como sí lo fue el 18/11 con las cuentas sin sufijo).
+
+**Perfil (`profiles`): de las 51, 37 tenían `full_name`/`departamento`/`cargo` en `null`** (perfil vacío, igual que advertía la nota del 21/11 — la suposición de "cuenta con sufijo = perfil completo" volvió a fallar). Se completaron las 37 esta noche vía self-update RLS (login propio + `PATCH /rest/v1/profiles?id=eq.<propio id>`), con `full_name`, `departamento` y `cargo` exacto según `JERARQUIA_POR_DEPARTAMENTO` (`app/constants.ts`), `pais_residencia`/`provincia_residencia`/`pais_produccion`/`provincia_produccion` = "España"/"Madrid" (dato de prueba razonable, no real), y `acepta_tratamiento_datos = true`.
+
+**Además, 1 cuenta (#48, RRHH) tenía `cargo` desalineado**: guardaba `"Coordinación de bienestar"` en vez de `"Dirección de RRHH"` (el cargo correcto según esta tabla y según `JERARQUIA_POR_DEPARTAMENTO`). Corregido esta noche con el mismo mecanismo de self-update.
+
+**Confirmado 25/11: perfil OK, acceso OK, miembro OK — las 51 cuentas**, con el detalle de qué se tocó:
+1. Producción ejecutiva — perfil completado esta noche.
+2. Dirección financiera — perfil completado esta noche.
+3. Tesorería — perfil completado esta noche.
+4. Administración — perfil completado esta noche.
+5. Legal — ya estaba completo (confirmado 21/11), re-confirmado hoy.
+6. Financiación y Seguros — perfil completado esta noche.
+7. Dirección — ya estaba completo, re-confirmado hoy.
+8. 1er ayudante de dirección — perfil completado esta noche.
+9. Asistencia de dirección — ya estaba completo, re-confirmado hoy.
+10. 2ª Asistencia de dirección — perfil completado esta noche.
+11. Script/Continuidad — perfil completado esta noche (cargo real en BD: `"Script"`, no `"Script/Continuidad"` — así está en `JERARQUIA_POR_DEPARTAMENTO`, es solo nombre más largo en esta tabla).
+12. Dirección de actores — ya estaba completo, re-confirmado hoy.
+13. Secretaría de rodaje — ya estaba completo, re-confirmado hoy.
+14. Dirección de producción — perfil completado esta noche.
+15. Jefatura de producción — perfil completado esta noche.
+16. Asistencia de producción — ya estaba completo, re-confirmado hoy.
+17. Coordinación de producción — perfil completado esta noche.
+18. Jefatura de locaciones — perfil completado esta noche.
+19. Scouting — perfil completado esta noche.
+20. Logística — perfil completado esta noche.
+21. Driver — ya estaba completo, re-confirmado hoy.
+22. Dirección de fotografía — perfil completado esta noche.
+23. Operación de cámara — perfil completado esta noche.
+24. Foquista — perfil completado esta noche.
+25. Auxiliar de cámara — perfil completado esta noche.
+26. Maquinista — perfil completado esta noche.
+27. Eléctricos/Gaffer — perfil completado esta noche (cargo real en BD: `"Eléctricos / Gaffer"` con espacios, ojo si se compara el string literal).
+28. DIT (Imagen Digital) — ya estaba completo (confirmado 22/11), re-confirmado hoy.
+29. Dirección de arte — perfil completado esta noche.
+30. Ayudantía de dirección de arte — perfil completado esta noche.
+31. Construcción de decorados — perfil completado esta noche.
+32. Atrezzo — perfil completado esta noche.
+33. Vestuario — perfil completado esta noche.
+34. Maquillaje — perfil completado esta noche.
+35. Peluquería — perfil completado esta noche.
+36. Guion — perfil completado esta noche.
+37. Script doctor — perfil completado esta noche.
+38. Dirección de casting — perfil completado esta noche.
+39. Casting de figuración — perfil completado esta noche.
+40. Protagonista — perfil completado esta noche.
+41. Reparto secundario — ya estaba completo, re-confirmado hoy.
+42. Dirección de making of — ya estaba completo, re-confirmado hoy.
+43. Dirección de sonido — perfil completado esta noche.
+44. Microfonía — perfil completado esta noche.
+45. Dirección de postproducción — perfil completado esta noche.
+46. VFX — perfil completado esta noche.
+47. Sonorización final — ya estaba completo (`es_tester:true`, nota aparte — no se tocó ese flag), re-confirmado hoy.
+48. Dirección de RRHH — **cargo corregido hoy** (tenía `"Coordinación de bienestar"` guardado, no `"Dirección de RRHH"`).
+49. Dirección de sostenibilidad — ya estaba completo (confirmado 21/11), re-confirmado hoy.
+50. Jefatura de distribución — ya estaba completo (confirmado 22/11), re-confirmado hoy.
+51. Cualquier integrante (callsheet) — perfil completado esta noche (asignado departamento "Producción"/cargo "Dirección de producción" como dato de prueba razonable, ya que el cargo real es "cualquier integrante").
+
+**No verificado todavía (pendiente próxima noche, por tiempo)**: interacción real en vivo (click a click, vía navegador) dentro de "Exclusivas"/"Departamentos" para confirmar que cada cargo *ve* sus herramientas listadas tras el fix de perfil — esto se confirmó por API (perfil + membresía), no por UI, para poder cubrir las 51 cuentas en la ventana de 2 horas. Ya se sabe (ver `bugs/2026-11-25.md`) que **editar/abrir sub-pestañas seguirá bloqueado para los 6 departamentos fuera de `MODULOS_BETA_ACTIVOS`** aunque el perfil esté perfecto — ese es un bug de código aparte, no de datos de cuenta.
