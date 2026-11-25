@@ -6557,6 +6557,113 @@
   .cp-dash .hp-mezcla-grid{ grid-template-columns:1fr; }
 }
 
+/* Tareas administrativas diarias (Asistencia de producción): tablero
+   agrupado por urgencia (vencida/hoy/semana/más adelante/sin fecha), con
+   tarjetas por tarea acentuadas por categoría y detalle expandible con
+   subtareas/notas/adjunto. Mobile-first: grid colapsa a 1 columna <640px,
+   todo el ancho vive dentro de var(--gutter). */
+.cp-dash .hp-tad-wrap{ padding:var(--sp-3) var(--gutter) var(--sp-4); }
+.cp-dash .hp-tad-resumen{
+  display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-4); padding:var(--sp-2) var(--sp-3);
+  background:var(--bg-2); border:1px solid var(--line);
+}
+.cp-dash .hp-tad-resumen-stat{ display:flex; flex-direction:column; gap:1px; flex-shrink:0; }
+.cp-dash .hp-tad-resumen-n{ font-family:'Poppins',sans-serif; font-weight:800; font-size:var(--fs-lg); color:var(--lime); line-height:1; }
+.cp-dash .hp-tad-resumen-l{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-tad-resumen-bar{ flex:1; height:8px; background:var(--hl2); }
+.cp-dash .hp-tad-resumen-bar-fill{ height:100%; background:linear-gradient(90deg, var(--lime), var(--cyan)); transition:width 0.3s ease; }
+
+.cp-dash .hp-tad-grupo{ margin-bottom:var(--sp-4); }
+.cp-dash .hp-tad-grupo-head{ display:flex; align-items:center; gap:8px; margin-bottom:var(--sp-2); }
+.cp-dash .hp-tad-grupo-dot{ width:9px; height:9px; border-radius:50%; background:var(--urg-tono, var(--muted)); flex-shrink:0; }
+.cp-dash .hp-tad-grupo-label{
+  font-family:'Poppins',sans-serif; font-weight:800; font-size:var(--fs-md); color:var(--urg-tono, var(--text)); letter-spacing:-0.01em;
+}
+.cp-dash .hp-tad-grupo-n{
+  font-size:10px; color:var(--muted); background:var(--hl1); border:1px solid var(--line); padding:1px 7px; margin-left:2px;
+}
+.cp-dash .hp-tad-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:var(--sp-3); }
+
+.cp-dash .hp-tad-card{
+  background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--cat-accent, var(--line));
+  padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2);
+  transition:border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cp-dash .hp-tad-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.18); }
+.cp-dash .hp-tad-card.on{ opacity:0.72; }
+.cp-dash .hp-tad-card.on .hp-tad-card-titulo{ text-decoration:line-through; color:var(--muted); }
+.cp-dash .hp-tad-card-head{
+  display:flex; align-items:center; gap:8px; background:none; border:none; padding:0; cursor:pointer; text-align:left; width:100%;
+}
+.cp-dash .hp-tad-card-icono{ flex-shrink:0; display:flex; width:17px; height:17px; }
+.cp-dash .hp-tad-card-icono svg{ width:100%; height:100%; }
+.cp-dash .hp-tad-card-titulo{ flex:1; min-width:0; font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-base); color:var(--text); }
+.cp-dash .hp-tad-card-chev{ flex-shrink:0; width:14px; height:14px; color:var(--muted); display:flex; }
+.cp-dash .hp-tad-card-chev svg{ width:100%; height:100%; }
+
+.cp-dash .hp-tad-card-meta{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; }
+.cp-dash .hp-tad-chip{
+  font-size:10px; font-family:'Poppins',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.02em;
+  color:var(--chip-accent, var(--muted)); border:1px solid var(--chip-accent, var(--line)); padding:2px 8px;
+}
+.cp-dash .hp-tad-prioridad{ font-size:var(--fs-xs); font-weight:600; white-space:nowrap; }
+.cp-dash .hp-tad-fecha{
+  display:inline-flex; align-items:center; gap:3px; font-size:var(--fs-xs); color:var(--muted); white-space:nowrap;
+}
+.cp-dash .hp-tad-fecha svg{ width:11px; height:11px; }
+
+.cp-dash .hp-tad-progreso{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-tad-bar{ flex:1; height:6px; background:var(--hl2); }
+.cp-dash .hp-tad-bar-fill{ height:100%; transition:width 0.3s ease; }
+.cp-dash .hp-tad-progreso-txt{ font-size:var(--fs-xs); color:var(--muted); white-space:nowrap; font-weight:600; }
+
+.cp-dash .hp-tad-detalle{
+  display:flex; flex-direction:column; gap:var(--sp-2); margin-top:var(--sp-1); padding-top:var(--sp-2); border-top:1px dashed var(--line);
+}
+.cp-dash .hp-tad-input, .cp-dash .hp-tad-notas{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical; width:100%;
+}
+.cp-dash .hp-tad-input:focus, .cp-dash .hp-tad-notas:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-tad-sub{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .hp-tad-sub-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px; }
+.cp-dash .hp-tad-sub-item{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-tad-sub-check{
+  flex-shrink:0; width:18px; height:18px; border:1px solid var(--line); background:var(--hl1); color:var(--bg);
+  font-size:12px; line-height:1; cursor:pointer; padding:0; transition:transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.cp-dash .hp-tad-sub-item.on .hp-tad-sub-check{ background:var(--lime); border-color:var(--lime); color:var(--bg); animation:hp-mezcla-check-pop 0.2s ease; }
+.cp-dash .hp-tad-sub-text{
+  flex:1; min-width:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  background:none; border:none; padding:2px 0; color:var(--text);
+}
+.cp-dash .hp-tad-sub-item.on .hp-tad-sub-text{ color:var(--muted); text-decoration:line-through; }
+.cp-dash .hp-tad-sub-text:focus{ outline:none; }
+.cp-dash .hp-tad-sub-del{ flex-shrink:0; background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; }
+.cp-dash .hp-tad-sub-del:hover{ color:var(--rose); }
+.cp-dash .hp-tad-sub-add{
+  align-self:flex-start; margin-top:2px; font-size:11px; font-family:'Poppins',sans-serif; color:var(--muted);
+  background:none; border:1px solid var(--line); padding:3px 7px; cursor:pointer;
+}
+.cp-dash .hp-tad-sub-add:hover{ border-color:var(--acc); color:var(--text); }
+.cp-dash .hp-tad-adjunto{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .hp-tad-adjunto-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-tad-borrar{
+  align-self:flex-start; font-size:11px; font-family:'Poppins',sans-serif; color:var(--rose);
+  background:none; border:1px solid var(--rose); padding:4px 9px; cursor:pointer; margin-top:var(--sp-1);
+}
+.cp-dash .hp-tad-borrar:hover{ background:var(--rose); color:var(--bg); }
+.cp-dash .hp-tad-nueva{
+  display:inline-flex; align-items:center; gap:6px; font-family:'Poppins',sans-serif; font-size:var(--fs-sm); font-weight:600;
+  color:var(--text); background:var(--bg-2); border:1px dashed var(--line); padding:9px 14px; cursor:pointer; margin-top:var(--sp-2);
+  transition:border-color 0.15s ease, transform 0.1s ease;
+}
+.cp-dash .hp-tad-nueva svg{ width:14px; height:14px; color:var(--acc); }
+.cp-dash .hp-tad-nueva:hover{ border-color:var(--acc); transform:translateY(-1px); }
+@media (max-width:640px){
+  .cp-dash .hp-tad-grid{ grid-template-columns:1fr; }
+}
+
 /* ===========================================================================
    NOTAS DE ENSAYO POR ACTOR/PERSONAJE — Dirección de actores
    Acento propio: --coral (ningún otro panel lo usa como acento fijo hoy,

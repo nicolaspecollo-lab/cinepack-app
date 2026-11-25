@@ -2886,18 +2886,28 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       departamento: [parteDiario],
       cargo: [
         {
-          id: "prod-tareas-admin",
-          nombre: "Tareas administrativas diarias",
-          tipo: "tabla",
-          hint: "Gestiones puntuales delegadas: trámites, compras de caja chica, documentación, proveedores menores. No es para préstamos de material (ver Control de material prestado o alquilado) ni para logística pre-rodaje (ver Checklist de preparación de jornada).",
+          // Era tipo "checklist" genérico (sin columnas propias). Nico lo
+          // rebotó dos veces como "Lejos de lo esperado" pidiendo un tablero
+          // a medida en vez de una tabla más (ver desarrollador.md, "Panel a
+          // medida por defecto"). Pasa a tabla con columnas reales de
+          // gestión administrativa (trámites/pagos/seguros/permisos), con
+          // vista a medida TareasAdminBoard (board agrupado por urgencia,
+          // tarjetas con subtareas, notas y adjunto) — ver HerramientaPanel.
+          id: "prod-tareas-admin", nombre: "Tareas administrativas diarias", tipo: "tabla",
+          hint: "Trámites, pagos, seguros y gestiones del día a día de producción, agrupados por urgencia real (vencida/hoy/semana/sin fecha), con subtareas y adjuntos por gestión.",
           columnas: [
-            { key: "tarea", label: "Tarea / gestión" },
-            { key: "categoria", label: "Categoría", tipo: "estado", opciones: ["Trámite", "Compra/caja chica", "Documentación", "Proveedor", "Logística", "Otro"] },
-            { key: "responsable", label: "Responsable" },
-            { key: "fecha_limite", label: "Fecha límite", tipo: "fecha" },
+            { key: "tarea", label: "Tarea / Gestión" },
+            {
+              key: "categoria", label: "Categoría", tipo: "estado",
+              opciones: ["Trámites", "Pagos", "Seguros", "Permisos", "Documentación legal", "Logística administrativa"],
+            },
             { key: "prioridad", label: "Prioridad", tipo: "estado", opciones: ["Alta", "Media", "Baja"] },
-            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Bloqueada", "Completada"] },
-            { key: "notas", label: "Notas / contexto", tipo: "largo" },
+            { key: "vencimiento", label: "Vencimiento", tipo: "fecha" },
+            { key: "responsable", label: "Responsable" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Bloqueada", "Hecha"] },
+            { key: "subtareas", label: "Subtareas", tipo: "largo" },
+            { key: "notas", label: "Notas", tipo: "largo" },
+            { key: "adjunto", label: "Adjunto", tipo: "archivo" as const },
           ],
         },
       ],

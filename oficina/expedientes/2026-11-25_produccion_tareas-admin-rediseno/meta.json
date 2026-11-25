@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Aprobado por comité",
+  "title": "Tareas administrativas diarias — rediseño",
+  "subtitle": "Tablero por urgencia real (TareasAdminBoard) para la Asistencia de producción.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado por comité</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Commit", "fe2f063"], ["Rama", "oficina/2026-11-25-tareas-admin-rediseno"], ["Oficina", "Desarrollo"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "aprobado por comité de calidad, pendiente de calificación de Nico",
+  "accent": "#E8A330"
+}
