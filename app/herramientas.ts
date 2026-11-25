@@ -2593,6 +2593,9 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
             { key: "permanencia", label: "Permanencia", tipo: "estado", opciones: ["Conservación temporal", "Permanente"] },
             { key: "estado_digitalizacion", label: "Digitalización", tipo: "estado", opciones: ["Sin digitalizar", "Solo copia", "Certificada"] },
             { key: "archivo", label: "Archivo", tipo: "archivo" as const },
+            { key: "entidad_referencia", label: "Entidad de referencia" },
+            { key: "tipo_entidad", label: "Tipo de entidad", tipo: "estado", opciones: ["Proveedor", "Organismo público", "Empleado", "Societario interno", "Otro"] },
+            { key: "requiere_renovacion", label: "Requiere renovación", tipo: "estado", opciones: ["No", "Sí"] },
           ],
         },
       ],
@@ -2698,7 +2701,19 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       cargo: [
         dirBreakdownTecnico,
         dirContinuidadDiaria,
-        { id: "dir-control-horarios-1ad", nombre: "Control de horarios y avisos al equipo (1AD)", tipo: "checklist", hint: "Checklist de control de tiempos del día: wrap de cada setup, alertas de overtime, notificaciones al equipo." },
+        {
+          id: "dir-control-horarios-1ad", nombre: "Control de horarios y avisos al equipo (1AD)", tipo: "tabla",
+          hint: "Bitácora de tiempos por setup/escena: wrap previsto vs. real, si cruza a overtime (indicador cualitativo, el convenio computa horas extra en cómputo mensual, no por evento) y si se avisó al equipo.",
+          columnas: [
+            { key: "escena_setup", label: "Escena / Setup" },
+            { key: "hora_prevista_wrap", label: "Hora prevista de wrap", tipo: "fecha" as const },
+            { key: "hora_real_wrap", label: "Hora real de wrap", tipo: "fecha" as const },
+            { key: "delta_minutos", label: "Delta (minutos)", tipo: "num" as const },
+            { key: "overtime", label: "Overtime", tipo: "estado", opciones: ["No", "Alerta", "Confirmado"] },
+            { key: "aviso_enviado", label: "Aviso enviado al equipo", tipo: "estado", opciones: ["Pendiente", "Enviado", "No aplica"] },
+            { key: "observacion", label: "Observación", tipo: "largo" },
+          ],
+        },
       ],
     },
     "Asistencia de dirección": {
@@ -2728,10 +2743,17 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
       departamento: [partesScript],
       cargo: [
         {
-          id: "dir-continuidad-foto", nombre: "Continuidad fotográfica", tipo: "galeria", hint: "Galería + notas de raccord.",
+          id: "dir-continuidad-foto", nombre: "Continuidad fotográfica", tipo: "galeria",
+          hint: "Foto de referencia vs. foto actual por escena/toma, para detectar discrepancias de raccord (continuity photos) y clasificar qué tan grave es.",
           columnas: [
-            { key: "escena", label: "Escena / Toma" },
-            { key: "raccord", label: "Notas de raccord", tipo: "largo" },
+            { key: "escena", label: "Escena" },
+            { key: "toma", label: "Toma" },
+            { key: "foto_referencia", label: "Foto de referencia", tipo: "archivo" as const },
+            { key: "foto_actual", label: "Foto actual / toma en revisión", tipo: "archivo" as const },
+            { key: "elemento_afectado", label: "Elemento afectado", tipo: "estado", opciones: ["Vestuario", "Prop", "Maquillaje/Peinado", "Posición/Marca", "Iluminación", "Otro"] },
+            { key: "discrepancia", label: "Notas de discrepancia", tipo: "largo" },
+            { key: "severidad", label: "Severidad", tipo: "estado", opciones: ["Leve", "Moderada", "Grave / requiere repetir toma"] },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente de revisar", "Resuelto en set", "Aceptado como salto", "Pendiente de VFX/montaje"] },
           ],
         },
         dirScriptLog,
