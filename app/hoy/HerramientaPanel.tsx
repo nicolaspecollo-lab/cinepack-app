@@ -768,7 +768,7 @@ function HerramientaData({
           de conceptos/montos): el hint ya se explica en el Tablero, y acá
           solo resta altura para que la grilla empiece más arriba — pedido
           explícito de Nicolás. */}
-      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && (
+      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && herramienta.id !== "dir-control-horarios" && (
         <p className="hp-hint">{herramienta.hint}</p>
       )}
 
