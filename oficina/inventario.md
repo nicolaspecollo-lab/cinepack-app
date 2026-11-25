@@ -16,7 +16,7 @@ Herramientas de departamento (compartidas): Presupuesto (`ej-presupuesto-costos`
 - **Producción ejecutiva**: Gestión de coproductores, Justificación de subvenciones, Agenda ejecutiva, Deliverables, Historial de decisiones ejecutivas, KPIs clave — todas con columnas propias, **Consolidadas** (muestra de `ejAgendaEjecutivo`, `ejDeliverables`, `ejKpis` con nombres propios en el registro).
 - **Dirección financiera**: Modelo financiero y proyección (**Consolidada** — 3 escenarios, waterfall de recoupment).
 - **Tesorería**: Pagos/nóminas/caja chica/rendiciones (**Consolidada** — maneja alta/baja en Seguridad Social, muy detallada).
-- **Administración**: Gestión documental administrativa (**Circunstancial** — una sola tabla genérica, a confirmar alcance).
+- **Administración**: Gestión documental administrativa (~~**Circunstancial**~~ → **Consolidada** 25/11 — componente a medida `GestionDocumentalBoard` con cálculo real de plazos de conservación legal por categoría, alertas de vencimiento, digitalización certificada; la clasificación anterior estaba desactualizada. Gap real identificado: falta vincular el documento a la entidad/proveedor/organismo de referencia — ver `expedientes/2026-11-25_ejecutivo_gestion-documental/`).
 - **Legal**: Cadena de titularidad y derechos, Acuerdos de confidencialidad/NDA (**Circunstancial/Consolidada** a confirmar con el agente de departamento).
 - **Financiación y Seguros**: Pólizas de seguro (**Circunstancial**, a confirmar).
 

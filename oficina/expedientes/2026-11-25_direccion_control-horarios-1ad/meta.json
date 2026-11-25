@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente aprobado",
+  "title": "Control de horarios y avisos al equipo (1AD)",
+  "subtitle": "1er asistente de dirección: bitácora de reloj de rodaje por setup (wrap previsto vs. real, delta, overtime, aviso al equipo), migrada a tabla con el motor genérico y validación contra el plan de rodaje, verificado con cuenta de prueba real.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado · Ronda 2</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Dirección · 1er asistente de dirección"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#E8A330"
+}

@@ -2,6 +2,12 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Bug transversal pendiente de decisión de Nico (25/11/2026)
+`/perfil` no escribe `profiles.cargo` al cambiar de cargo — escribe a `user_roles` en su lugar. El gating real de qué herramientas ve un cargo en Exclusivas/Departamentos lee `profiles.cargo` (`app/hoy/page.tsx`), así que cualquier usuario que cambie de cargo vía la UI de autoservicio no ve efecto real, sin error visible. Encontrado por QA al intentar destrabar la cuenta de 1er asistente de dirección el 25/11. No se toca hasta que Nico decida prioridad (afecta onboarding/autoservicio de cualquier cargo, no solo el de hoy).
+
+## Bug menor sin investigar a fondo (25/11/2026)
+En "Plan de rodaje" (`GENERAL_PLAN_RODAJE`), el guardado `onBlur` de una celda a veces no persiste si el foco se mueve inmediatamente hacia una celda de tipo fecha (date picker) — posible condición de carrera de guardado/debounce. Detectado de pasada durante la verificación de los flujos de integración de hoy, no investigado a fondo (fuera de alcance de esos 3 expedientes). Candidato para un ciclo futuro.
+
 ## 0. Herramienta transversal — Hoja y documento en blanco — ✅ ENTREGADA (16/11, PR #5)
 Aprobada por el comité tras 2 rondas. Univer (hoja, Apache-2.0) + TipTap (documento, MIT). Ver `expedientes/2026-11-16_transversal_hoja-documento-blanco/`. Pendiente real (no bloqueante): persistencia Supabase, export .xlsx/.docx, permisos fila-por-persona (Nivel 3).
 
