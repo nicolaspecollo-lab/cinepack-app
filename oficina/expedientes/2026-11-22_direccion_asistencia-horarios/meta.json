@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente aprobado por comité",
+  "title": "Avisos y confirmaciones de citación al equipo",
+  "subtitle": "Asistencia de dirección: centro de avisos de citación con canal y estado de confirmación por destinatario, reverificado por QA tras corrección de bug de persistencia.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado por comité</span>",
+  "metaItems": [["Fecha", "22 nov 2026"], ["Departamento", "Dirección · Asistencia de dirección"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado, sin objeciones"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de adjuntar al PR",
+  "accent": "#FF7F6B"
+}

@@ -22,6 +22,12 @@ Cada agente-cargo es un **especialista exigente y proactivo** en ese cargo real 
 
 El `director-qa` pasa este mandato completo (no solo un link a este archivo) en el prompt literal con el que invoca a cada cargo — ver `director-qa.md`.
 
+## Informe diario por cargo (regla de Nico, 25/11/2026)
+Todos los días, Nico recibe un documento (`/oficina-qa/informes/AAAA-MM-DD.md`) con una sección por cada cargo que trabajó esa noche, en este orden: (1) reverificación de los bugs reportados en noches anteriores de esa herramienta, con OK explícito de "corregido" o "sigue abierto"; (2) qué trabajo hizo hoy contra el proyecto de prueba; (3) bugs encontrados hoy; (4) solución propuesta para cada uno; (5) feedback real del flujo de trabajo de hoy (no solo si funciona, sino cómo se sintió usarlo y qué mejoraría). Ver el detalle completo y el orden exacto en `.claude/agents/director-qa.md`. Esto se suma a (no reemplaza) `/oficina-qa/bugs/` e `/oficina-qa/ideas/`, que siguen siendo el insumo interno hacia desarrollo.
+
+## Presupuesto de tiempo (regla de Nico, 25/11/2026)
+Cada cargo calcula que tiene 2 horas reales (la ventana 1:00–3:00 Madrid) y se frena ANTES de quedarse sin créditos de la sesión, priorizando: reverificación de bugs viejos ya empezada → escribir el informe de 5 partes con lo que tiene → recién después, si queda margen, seguir probando cosas nuevas. Un informe parcial entregado a tiempo vale más que uno completo que nunca llega.
+
 ## Panel en vivo
 Mismo criterio que las otras dos oficinas: cada agente se marca `estado:"busy"` en el panel (ArtifactData, colección `agentes`, url `https://claude.ai/artifact/S99rUHDdJbz5u1amLjtdLK`) **al empezar** un paso real, con `tarea_actual` describiendo lo que está haciendo, y vuelve a `idle` al terminar.
 
@@ -43,4 +49,8 @@ Ciclo nocturno automático, todas las noches, **1:00–3:00 hora de Madrid** (2 
     crear-cuentas-qa.mjs    <- alta de las cuentas de prueba (signup público + proxy)
   bugs/
     AAAA-MM-DD.md           <- bugs encontrados esa noche, antes de entregarlos al director-oficina
+  ideas/
+    AAAA-MM-DD.md           <- ideas de mejora/nuevas herramientas de todos los cargos
+  informes/
+    AAAA-MM-DD.md           <- informe diario por cargo para Nico (regla 25/11/2026, ver director-qa.md)
 ```

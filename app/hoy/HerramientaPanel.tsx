@@ -229,6 +229,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     CATERING_IDS.has(id) ||
     DESGLOSE_DIR_IDS.has(id) ||
     PLAN_FIGURACION_IDS.has(id) ||
+    id === "rep-instrucciones-figuracion" ||
     id === "dir-partes-script" ||
     id === "dir-script-log" ||
     id === "dir-cambios-guion" ||
@@ -779,13 +780,9 @@ function HerramientaData({
           <button onClick={() => setError(null)}>✕</button>
         </div>
       )}
-      {/* En Presupuesto, la vista Tabla es superficie de trabajo (carga real
-          de conceptos/montos): el hint ya se explica en el Tablero, y acá
-          solo resta altura para que la grilla empiece más arriba — pedido
-          explícito de Nicolás. */}
-      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && herramienta.id !== "prod-checklist-vehiculos" && (
-        <p className="hp-hint">{herramienta.hint}</p>
-      )}
+      {/* Regla endurecida de Nico (25/11/2026): cero texto explicativo al
+          abrir una herramienta, sin excepciones. El hint nunca se renderiza
+          en pantalla — queda solo como documentación interna en herramientas.ts. */}
 
       {esTabla && herramienta.id === "ej-presupuesto-costos" && (
         // Barra propia de Presupuesto: el selector de "Presupuesto
@@ -1520,6 +1517,19 @@ function HerramientaData({
         />
       )}
 
+      {herramienta.tipo === "tabla" && herramienta.id === "rep-instrucciones-figuracion" && (
+        <InstruccionesFiguracionBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
       {herramienta.tipo === "tabla" && herramienta.id === "son-plan-directo" && (
         <PlanDirecto
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
@@ -2078,6 +2088,14 @@ function Celda({
     if (!editable) {
       return <span className={`hp-cell-select-ro tono-${tono}`}>{valor || "—"}</span>;
     }
+    // Mismo problema que tenía la celda `fecha` (ver comentario más abajo):
+    // `onChange(v)` hace `setDraft` async y `onCommit` leía `draft` del
+    // closure del render actual, que todavía no lo había absorbido. Con una
+    // sola columna `estado` por fila rara vez se notaba, pero con DOS+
+    // columnas `estado` editadas rápido en la misma fila, el primer cambio
+    // se perdía tras reload. Usamos `onSave` (mismo camino que
+    // ArchivoCell/LinkCell/fecha) para grabar con el valor nuevo pasado
+    // directo, sin depender de `draft`.
     return (
       <div className={`hp-cell-cpselect tono-${tono}`}>
         <CpSelect
@@ -2085,7 +2103,7 @@ function Celda({
           options={col.opciones ?? []}
           placeholder="—"
           permitirLibre={col.libre}
-          onChange={(v) => { onChange(v); onCommit(); }}
+          onChange={(v) => { if (onSave) onSave(v); else { onChange(v); onCommit(); } }}
         />
       </div>
     );
@@ -2125,10 +2143,35 @@ function Celda({
       </div>
     );
   }
+  if (col.tipo === "fecha") {
+    // Input nativo `<input type="date">`: a diferencia de los demás tipos,
+    // NO lo dejamos controlado por `value`/`onChange`+`onCommit` (ese combo
+    // depende de que `draft` ya haya absorbido el `onChange` antes de que
+    // corra `onCommit`, algo que no está garantizado cuando el navegador
+    // dispara "change" y "blur" del picker nativo muy pegados entre sí — la
+    // fila quedaba sin guardar aunque el input mostrara la fecha elegida).
+    // En vez de eso: no-controlado (`defaultValue`, remonta con `key` si el
+    // valor cambia por fuera, ej. deshacer/duplicar fila) y graba leyendo
+    // `e.target.value` directo del DOM en el blur, vía `onSave` — el mismo
+    // camino ya usado por ArchivoCell/LinkCell, que no depende de `draft`.
+    return (
+      <input
+        key={valor}
+        className="hp-cell-input"
+        type="date"
+        defaultValue={valor}
+        readOnly={!editable}
+        onBlur={(e) => {
+          if (onSave) onSave(e.target.value);
+          else { onChange(e.target.value); onCommit(); }
+        }}
+      />
+    );
+  }
   return (
     <input
       className="hp-cell-input"
-      type={col.tipo === "num" ? "number" : col.tipo === "fecha" ? "date" : "text"}
+      type={col.tipo === "num" ? "number" : "text"}
       value={valor}
       readOnly={!editable}
       onChange={(e) => onChange(e.target.value)}
@@ -4071,6 +4114,720 @@ function ChecklistMezclaBoard({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>Sin tarjetas de formato todavía.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===========================================================================
+// CHECKLIST DE WRAP — transversal, General (cualquier integrante)
+// Una tarjeta por departamento+jornada. Mismo mecanismo de precarga que
+// QC_SUGERIDOS (post-checklist-mezcla), pero disparado por DEPARTAMENTO en
+// vez de por formato, y agrupado visualmente por categoría (Equipo/Espacio/
+// Documentación) en vez de una lista plana — el wrap de Fotografía (tarjetas,
+// baterías, ópticas) no se lee igual que el de Arte (attrezzo, decorado,
+// compromiso de restauración con el propietario de la locación).
+// Patrón elegido (de 3 evaluados): (a) tabla plana con columnas fijas —
+// descartado, cada depto tiene ítems distintos y no son columnas, son filas
+// de una sub-lista; (b) línea de tiempo del día — descartado, el wrap no
+// tiene orden temporal entre departamentos, cada uno cierra en paralelo;
+// (c) tarjetas por departamento con checklist categorizado interno + badge
+// de progreso y "Set liberado" — elegido, porque es exactamente cómo lo vive
+// Producción: un vistazo a qué departamentos ya liberaron el set, y el
+// detalle categorizado solo importa cuando entrás a corregir algo puntual.
+type WrapItem = { categoria: string; item: string; hecho: string };
+
+function wrapProgreso(items: WrapItem[]): { hechos: number; total: number } {
+  const total = items.length;
+  const hechos = items.filter((it) => it.hecho === "Sí").length;
+  return { hechos, total };
+}
+
+const WRAP_CATEGORIAS = ["Equipo", "Espacio", "Documentación"] as const;
+
+const WRAP_ACCENT: Record<string, string> = {
+  "Dirección": "var(--blue)",
+  "Producción": "var(--amber)",
+  "Fotografía": "var(--sky)",
+  "Arte": "var(--violet)",
+  "Sonido": "var(--teal)",
+  "Vestuario/Maquillaje": "var(--pink)",
+  "Reparto": "var(--rose)",
+  "Making of": "var(--orange)",
+};
+
+const WRAP_ICON: Record<string, IconName> = {
+  "Dirección": "film",
+  "Producción": "briefcase",
+  "Fotografía": "camera",
+  "Arte": "palette",
+  "Sonido": "sound",
+  "Vestuario/Maquillaje": "users",
+  "Reparto": "users",
+  "Making of": "megaphone",
+};
+
+// Ítems comunes a cualquier departamento (siempre se agregan a la precarga).
+const WRAP_COMUN: WrapItem[] = [
+  { categoria: "Espacio", item: "Set/localización verificado por el responsable antes de irse", hecho: "No" },
+  { categoria: "Documentación", item: "Material entregado a Producción (tarjetas/archivos/partes) confirmado", hecho: "No" },
+  { categoria: "Documentación", item: "Incidencias del día reportadas, si hubo", hecho: "No" },
+];
+
+// Ítems específicos por departamento — reales y distintos entre sí, no una
+// plantilla genérica repetida con el nombre del depto cambiado.
+const WRAP_SUGERIDOS: Record<string, WrapItem[]> = {
+  "Fotografía": [
+    { categoria: "Equipo", item: "Cámaras devueltas a casa de alquiler / almacén", hecho: "No" },
+    { categoria: "Equipo", item: "Ópticas revisadas y guardadas en sus maletas", hecho: "No" },
+    { categoria: "Equipo", item: "Baterías puestas a cargar o devueltas", hecho: "No" },
+    { categoria: "Equipo", item: "Tarjetas de medios descargadas y verificadas por checksum", hecho: "No" },
+    { categoria: "Equipo", item: "Monitores y video-assist desconectados y guardados", hecho: "No" },
+    { categoria: "Espacio", item: "Set de cámara desmontado (trípodes, dolly, raíles)", hecho: "No" },
+    { categoria: "Documentación", item: "Reporte de cámara del día entregado a Producción", hecho: "No" },
+    { categoria: "Documentación", item: "Lista de material dañado o perdido, si hubo", hecho: "No" },
+  ],
+  "Arte": [
+    { categoria: "Equipo", item: "Herramientas de attrezzo devueltas al taller", hecho: "No" },
+    { categoria: "Equipo", item: "Inventario de piezas de alquiler revisado contra la lista de salida", hecho: "No" },
+    { categoria: "Espacio", item: "Decorado restaurado a condición original (compromiso con el propietario de la locación)", hecho: "No" },
+    { categoria: "Espacio", item: "Fotos de 'antes' comparadas con el estado de salida", hecho: "No" },
+    { categoria: "Espacio", item: "Objetos sensibles/frágiles embalados y guardados bajo llave", hecho: "No" },
+    { categoria: "Documentación", item: "Parte de daños o desgaste de attrezzo entregado a Producción", hecho: "No" },
+    { categoria: "Documentación", item: "Inventario de arte actualizado para la próxima jornada", hecho: "No" },
+  ],
+  "Sonido": [
+    { categoria: "Equipo", item: "Micrófonos y petacas devueltos y cargando", hecho: "No" },
+    { categoria: "Equipo", item: "Grabadora descargada y backup 3-2-1 verificado", hecho: "No" },
+    { categoria: "Equipo", item: "Cableado y pértigas revisados y guardados", hecho: "No" },
+    { categoria: "Documentación", item: "Reporte de sonido del día (notas de toma) entregado a Producción", hecho: "No" },
+  ],
+  "Producción": [
+    { categoria: "Documentación", item: "Parte de producción del día cerrado y firmado", hecho: "No" },
+    { categoria: "Documentación", item: "Horas extra y descansos del equipo registrados", hecho: "No" },
+    { categoria: "Espacio", item: "Cierre de locación confirmado con el propietario/ayuntamiento", hecho: "No" },
+  ],
+  "Vestuario/Maquillaje": [
+    { categoria: "Equipo", item: "Vestuario revisado, lavado si corresponde y colgado por personaje", hecho: "No" },
+    { categoria: "Equipo", item: "Productos de maquillaje/caracterización guardados y repuestos anotados", hecho: "No" },
+    { categoria: "Documentación", item: "Fotos de continuidad de vestuario/maquillaje del día archivadas", hecho: "No" },
+  ],
+  "Reparto": [
+    { categoria: "Documentación", item: "Marcas de continuidad física del día registradas", hecho: "No" },
+  ],
+  "Making of": [
+    { categoria: "Equipo", item: "Tarjetas de BTS descargadas y respaldadas", hecho: "No" },
+    { categoria: "Documentación", item: "Restricciones de uso del material del día confirmadas", hecho: "No" },
+  ],
+  "Dirección": [
+    { categoria: "Documentación", item: "Decisiones de visionado/dailies del día cerradas", hecho: "No" },
+  ],
+};
+
+function WrapBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const colDepto = columnas.find((c) => c.key === "departamento");
+  const colFecha = columnas.find((c) => c.key === "fecha");
+  const colItems = columnas.find((c) => c.key === "items");
+  const colIncidencias = columnas.find((c) => c.key === "incidencias");
+  const colMaterial = columnas.find((c) => c.key === "material_entregado");
+  const colResponsable = columnas.find((c) => c.key === "responsable");
+  const colEstado = columnas.find((c) => c.key === "estado");
+
+  const deptosUsados = new Set(filas.map((f) => f.datos?.[colDepto?.key ?? "departamento"] ?? ""));
+  const deptosDisponibles = (colDepto?.opciones ?? []).filter((op) => !deptosUsados.has(op));
+
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  function agregarDepto(depto: string) {
+    const items = [...WRAP_COMUN, ...(WRAP_SUGERIDOS[depto] ?? [])];
+    onCrear({ departamento: depto, items: JSON.stringify(items), estado: "Pendiente" });
+  }
+
+  const totalDeptos = filas.length;
+  const deptosLiberados = filas.filter((f) => f.datos?.[colEstado?.key ?? "estado"] === "Set liberado").length;
+  const wrapGlobal = filas.reduce(
+    (acc, f) => {
+      const { hechos, total } = wrapProgreso(parseArr<WrapItem>(f.datos?.[colItems?.key ?? "items"]));
+      return { hechos: acc.hechos + hechos, total: acc.total + total };
+    },
+    { hechos: 0, total: 0 }
+  );
+  const pctGlobal = wrapGlobal.total > 0 ? Math.round((wrapGlobal.hechos / wrapGlobal.total) * 100) : 0;
+
+  return (
+    <div className="hp-wrap-wrap">
+      {totalDeptos > 0 && (
+        <div className="hp-wrap-resumen">
+          <div className="hp-wrap-resumen-stat">
+            <span className="hp-wrap-resumen-n">{deptosLiberados}/{totalDeptos}</span>
+            <span className="hp-wrap-resumen-l">deptos. con set liberado</span>
+          </div>
+          <div className="hp-wrap-resumen-bar"><div className="hp-wrap-resumen-bar-fill" style={{ width: `${pctGlobal}%` }} /></div>
+          <span className="hp-wrap-resumen-pct">{pctGlobal}% de ítems de wrap confirmados en total</span>
+        </div>
+      )}
+
+      <div className="hp-wrap-grid">
+        {filas.map((f) => {
+          const depto = f.datos?.[colDepto?.key ?? "departamento"] ?? "";
+          const accent = WRAP_ACCENT[depto] ?? "var(--acc)";
+          const icono: IconName = WRAP_ICON[depto] ?? "checklist";
+          const items = parseArr<WrapItem>(f.datos?.[colItems?.key ?? "items"]);
+          const { hechos, total } = wrapProgreso(items);
+          const pct = total > 0 ? Math.round((hechos / total) * 100) : 0;
+          const liberado = f.datos?.[colEstado?.key ?? "estado"] === "Set liberado";
+
+          function setItems(next: WrapItem[]) {
+            set(f, colItems?.key ?? "items", JSON.stringify(next));
+          }
+          function toggleItem(idx: number) {
+            if (!editable) return;
+            const next = items.map((it, i) => (i === idx ? { ...it, hecho: it.hecho === "Sí" ? "No" : "Sí" } : it));
+            setItems(next);
+          }
+          function agregarItem(categoria: string) {
+            setItems([...items, { categoria, item: "", hecho: "No" }]);
+          }
+          function borrarItem(idx: number) {
+            setItems(items.filter((_, i) => i !== idx));
+          }
+
+          return (
+            <div className={`hp-wrap-card${liberado ? " on" : ""}`} key={f.id} style={{ "--wrap-accent": accent } as React.CSSProperties}>
+              <div className="hp-wrap-head">
+                <span className="hp-wrap-icono" style={{ color: accent }}><Icon name={icono} /></span>
+                <span className="hp-wrap-depto">{depto || "—"}</span>
+                {liberado && <span className="hp-wrap-badge">Set liberado</span>}
+                {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title="Eliminar">✕</button>}
+              </div>
+
+              {colFecha && (
+                <input
+                  className="hp-wrap-fecha"
+                  type="date"
+                  defaultValue={f.datos?.[colFecha.key] ?? ""}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, colFecha.key, e.target.value)}
+                  onChange={(e) => editable && set(f, colFecha.key, e.target.value)}
+                />
+              )}
+
+              <div className="hp-wrap-progreso">
+                <div className="hp-wrap-bar"><div className="hp-wrap-bar-fill" style={{ width: `${pct}%` }} /></div>
+                <span className="hp-wrap-progreso-txt">{hechos}/{total} confirmado{total === 1 ? "" : "s"}</span>
+              </div>
+
+              {WRAP_CATEGORIAS.map((cat) => {
+                const itemsCat = items
+                  .map((it, idx) => ({ ...it, idx }))
+                  .filter((it) => it.categoria === cat);
+                if (itemsCat.length === 0 && !editable) return null;
+                return (
+                  <div className="hp-wrap-cat" key={cat}>
+                    <span className="hp-wrap-cat-label">{cat}</span>
+                    {itemsCat.map(({ item, hecho, idx }) => (
+                      <div className={`hp-wrap-item${hecho === "Sí" ? " on" : ""}`} key={idx}>
+                        <button
+                          type="button"
+                          className="hp-wrap-check"
+                          onClick={() => toggleItem(idx)}
+                          disabled={!editable}
+                          aria-pressed={hecho === "Sí"}
+                          title={hecho === "Sí" ? "Confirmado" : "Marcar como confirmado"}
+                        >
+                          {hecho === "Sí" ? "✓" : ""}
+                        </button>
+                        <input
+                          className="hp-wrap-item-text"
+                          defaultValue={item}
+                          placeholder="Ítem de wrap"
+                          readOnly={!editable}
+                          onBlur={(e) => {
+                            const next = items.map((q, i) => (i === idx ? { ...q, item: e.target.value } : q));
+                            setItems(next);
+                          }}
+                        />
+                        {editable && (
+                          <button className="hp-wrap-item-del" onClick={() => borrarItem(idx)} title="Eliminar ítem">✕</button>
+                        )}
+                      </div>
+                    ))}
+                    {editable && (
+                      <button className="hp-wrap-item-add" onClick={() => agregarItem(cat)}>+ Agregar a {cat}</button>
+                    )}
+                  </div>
+                );
+              })}
+
+              {colIncidencias && (
+                <textarea
+                  className="hp-wrap-field"
+                  defaultValue={f.datos?.[colIncidencias.key] ?? ""}
+                  placeholder={colIncidencias.label}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, colIncidencias.key, e.target.value)}
+                  rows={2}
+                />
+              )}
+              {colMaterial && (
+                <textarea
+                  className="hp-wrap-field"
+                  defaultValue={f.datos?.[colMaterial.key] ?? ""}
+                  placeholder={colMaterial.label}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, colMaterial.key, e.target.value)}
+                  rows={2}
+                />
+              )}
+              {colResponsable && (
+                <input
+                  className="hp-wrap-responsable"
+                  defaultValue={f.datos?.[colResponsable.key] ?? ""}
+                  placeholder={colResponsable.label}
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, colResponsable.key, e.target.value)}
+                />
+              )}
+
+              {colEstado && (
+                <div className="hp-wrap-estado-row">
+                  <EstadoSeg
+                    valor={f.datos?.[colEstado.key] ?? ""}
+                    opciones={colEstado.opciones ?? []}
+                    onPick={(v) => set(f, colEstado.key, v)}
+                    editable={editable}
+                    color
+                  />
+                  {editable && !liberado && total > 0 && pct === 100 && (
+                    <button className="hp-wrap-liberar" onClick={() => set(f, colEstado.key, "Set liberado")}>
+                      Liberar set
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {editable && deptosDisponibles.length > 0 && (
+        <div className="hp-wrap-agregar">
+          <span className="hp-wrap-agregar-label">Agregar checklist de departamento</span>
+          <div className="hp-wrap-agregar-row">
+            {deptosDisponibles.map((depto) => {
+              const accent = WRAP_ACCENT[depto] ?? "var(--acc)";
+              const icono: IconName = WRAP_ICON[depto] ?? "checklist";
+              return (
+                <button
+                  key={depto}
+                  className="hp-wrap-agregar-btn"
+                  style={{ "--wrap-accent": accent } as React.CSSProperties}
+                  onClick={() => agregarDepto(depto)}
+                >
+                  <Icon name={icono} /> {depto}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {filas.length === 0 && !editable && (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>Sin checklists de wrap todavía.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===========================================================================
+// FIGURACIÓN — Instrucciones de figuración por jornada (rep-instrucciones-figuracion)
+// El coordinador de figuración no administra figurantes uno por uno (eso ya
+// lo hace "Listado de figuración/extras por escena" de 2ª Asistencia de
+// Dirección, por cantidad/perfil para cubrir la escena) — administra GRUPOS
+// ya convocados que necesitan instrucciones concretas de plató el día de
+// rodaje: dónde se juntan, a qué hora, cómo van vestidos, dónde se paran y
+// qué se mueven, y si ya recibieron y entendieron esas instrucciones.
+// Patrón elegido (de 3 evaluados, ver necesidad.md): bandeja de tarjetas por
+// grupo, agrupadas por jornada, colapsadas por defecto (lo que se necesita
+// de un vistazo corriendo por el set) con detalle completo al tocarlas (lo
+// que se necesita una vez, antes de dar la instrucción) — ni una tabla de
+// celdas, ni un Gantt (no hay solapamiento temporal real entre grupos que
+// amerite una línea de tiempo), ni una grilla de fotos (la info no es
+// mayormente visual, es instructiva).
+// ===========================================================================
+const EJ_FIGURACION_INSTR: Ejemplo[] = [
+  {
+    jornada: "2026-12-02",
+    grupo: "Asamblea del pueblo — fila central",
+    escena: "Esc. 42 — Asamblea",
+    hora_citacion: "06:30",
+    punto_reunion: "Carpa de figuración, acceso norte",
+    num_figurantes: "25",
+    confirmados: "25",
+    estado: "Listo para rodar",
+    vestuario: "Ropa de calle de época, tonos tierra/gris oscuro. Sin estampados, sin logos visibles, sin relojes ni gafas modernas. Abrigo si hace frío (vestuario lo provee).",
+    posicion: "Ocupan las 6 filas centrales de la plaza, de cara al estrado. Las primeras 2 filas son los figurantes destacados (ver grupo \"Primera fila — reacciones\"). Marca de pie con cinta gris en el suelo, no moverse de la marca hasta la claqueta de corte.",
+    movimiento: "Al grito del orador (línea del guion \"¡Esto no puede seguir así!\") giran la cabeza hacia la izquierda y murmuran entre sí 3-4 segundos. No aplaudir, no levantar las manos salvo indicación directa de 2ª asistencia en el momento.",
+    foto_referencia: "",
+    notas: "Grupo numeroso: dividir la citación en 2 tandas de 15 min en el punto de reunión para no saturar maquillaje.",
+  },
+  {
+    jornada: "2026-12-02",
+    grupo: "Primera fila — reacciones",
+    escena: "Esc. 42 — Asamblea",
+    hora_citacion: "06:00",
+    punto_reunion: "Carpa de figuración, acceso norte",
+    num_figurantes: "6",
+    confirmados: "4",
+    estado: "Instrucciones enviadas",
+    vestuario: "Igual que el grupo general, pero sin sombrero (necesitamos ver la cara en primer plano). Vestuario ya fue a prueba el 28/11 — llevar la misma prenda asignada en el perchero con su nombre.",
+    posicion: "Primeras 2 filas, posiciones marcadas A1 a A6 en el plano de planta (ver desglose de ADD). Cuerpo ligeramente girado hacia el estrado, nunca de espaldas a cámara 1.",
+    movimiento: "Reacción individual dirigida por el director en el momento (no ensayar gesto propio). Mantenerse en silencio hasta la señal.",
+    foto_referencia: "",
+    notas: "Son los 6 figurantes destacados con línea de continuidad — avisar a Reparto secundario si alguno falta, necesitan doble para raccord.",
+  },
+  {
+    jornada: "2026-12-02",
+    grupo: "Guardias — fondo de plaza",
+    escena: "Esc. 42 — Asamblea",
+    hora_citacion: "07:00",
+    punto_reunion: "Vestuario — tienda de atrezzo militar",
+    num_figurantes: "8",
+    confirmados: "8",
+    estado: "Confirmado en plató",
+    vestuario: "Uniforme de guardia de atrezzo (ya numerado por talla en la tienda). Casco puesto siempre en cámara, correa cerrada. Lanza de atrezzo según el peso real — avisar si alguien no puede sostenerla 2h.",
+    posicion: "Flancos este y oeste de la plaza, en fila de a dos, de espaldas al muro. No bloquear la salida de emergencia marcada en el suelo.",
+    movimiento: "Postura estática de firmes durante todo el discurso. Solo se mueven si 1AD da la orden de \"dispersar a la multitud\" en la segunda mitad de la escena.",
+    foto_referencia: "",
+    notas: "Attrezzo entrega y retira el arma de atrezzo cada vez — nunca queda en manos del figurante fuera de toma.",
+  },
+  {
+    jornada: "2026-12-03",
+    grupo: "Mercado — tenderos y compradores",
+    escena: "Esc. 51 — Mercado de la mañana",
+    hora_citacion: "05:45",
+    punto_reunion: "Plaza mayor, puesto de producción",
+    num_figurantes: "18",
+    confirmados: "9",
+    estado: "Pendiente de preparar",
+    vestuario: "Mitad tenderos (mandil de trabajo + manchas de atrezzo) / mitad compradores (ropa de calle de época, cesta o bolsa de tela que entrega Attrezzo).",
+    posicion: "Tenderos fijos en los 6 puestos ya montados (ver plano de Arte). Compradores circulan en bucle por el pasillo central, sin cruzar el eje de cámara marcado con cinta roja.",
+    movimiento: "Circulación continua en bucle de fondo, ritmo natural de mercado — nunca mirar a cámara, nunca detenerse frente al objetivo.",
+    foto_referencia: "",
+    notas: "Grupo nuevo, primera jornada — hacer ensayo de bloqueo 30 min antes de la hora de rodaje real.",
+  },
+];
+
+function tonoEstadoFiguracion(estado: string): "ok" | "warn" | "bad" | "info" | "neutral" {
+  const v = estado.toLowerCase();
+  if (v.includes("listo")) return "ok";
+  if (v.includes("confirmado")) return "ok";
+  if (v.includes("ensayo") || v.includes("ajuste")) return "info";
+  if (v.includes("enviadas")) return "warn";
+  return "neutral";
+}
+
+function InstruccionesFiguracionBoard({
+  columnas,
+  filas,
+  editable: editableProp,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const hayFilas = filas.length > 0;
+  const filasEff = hayFilas ? filas : ghostFilas(EJ_FIGURACION_INSTR);
+  const editable = editableProp && hayFilas;
+  const [abiertoId, setAbiertoId] = useState<string | null>(null);
+
+  const colJornada = columnas.find((c) => c.key === "jornada");
+  const colGrupo = columnas.find((c) => c.key === "grupo");
+  const colEscena = columnas.find((c) => c.key === "escena");
+  const colHora = columnas.find((c) => c.key === "hora_citacion");
+  const colPunto = columnas.find((c) => c.key === "punto_reunion");
+  const colNum = columnas.find((c) => c.key === "num_figurantes");
+  const colConf = columnas.find((c) => c.key === "confirmados");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colVestuario = columnas.find((c) => c.key === "vestuario");
+  const colPosicion = columnas.find((c) => c.key === "posicion");
+  const colMovimiento = columnas.find((c) => c.key === "movimiento");
+  const colFoto = columnas.find((c) => c.key === "foto_referencia");
+  const colNotas = columnas.find((c) => c.key === "notas");
+
+  const val = (f: Fila, c?: Columna) => (c ? f.datos?.[c.key] ?? "" : "");
+  function set(f: Fila, key: string, v: string) {
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+  }
+
+  const grupos = Object.entries(
+    filasEff.reduce<Record<string, Fila[]>>((acc, f) => {
+      const jornada = val(f, colJornada) || "Sin jornada asignada";
+      (acc[jornada] ??= []).push(f);
+      return acc;
+    }, {})
+  ).sort(([a], [b]) => a.localeCompare(b));
+
+  return (
+    <div className="hp-figu-wrap">
+      {!hayFilas && editableProp && <AdoptarEjemplos ejemplos={EJ_FIGURACION_INSTR} onCrear={onCrear} />}
+
+      {grupos.map(([jornada, fs]) => {
+        const totalFigurantes = fs.reduce((acc, f) => acc + (parseInt(val(f, colNum), 10) || 0), 0);
+        const totalConfirmados = fs.reduce((acc, f) => acc + (parseInt(val(f, colConf), 10) || 0), 0);
+        return (
+          <div className="hp-figu-jornada" key={jornada}>
+            <div className="hp-figu-jhdr">
+              <Icon name="calendar" />
+              <span className="hp-figu-jfecha">{jornada}</span>
+              <span className="hp-figu-jgrupos">{fs.length} grupo{fs.length === 1 ? "" : "s"}</span>
+              <span className="hp-figu-jfigurantes">
+                <Icon name="users" /> {totalConfirmados}/{totalFigurantes} confirmados
+              </span>
+            </div>
+
+            <div className="hp-figu-lista">
+              {fs.map((f) => {
+                const abierto = abiertoId === f.id;
+                const estado = val(f, colEstado);
+                const tono = tonoEstadoFiguracion(estado);
+                const num = parseInt(val(f, colNum), 10) || 0;
+                const conf = parseInt(val(f, colConf), 10) || 0;
+                const pct = num > 0 ? Math.min(100, Math.round((conf / num) * 100)) : 0;
+
+                return (
+                  <div
+                    className={`hp-figu-card tono-${tono}${abierto ? " on" : ""}`}
+                    key={f.id}
+                  >
+                    <button
+                      type="button"
+                      className="hp-figu-cardhead"
+                      onClick={() => setAbiertoId(abierto ? null : f.id)}
+                      aria-expanded={abierto}
+                    >
+                      <div className="hp-figu-cardhead-top">
+                        <span className="hp-figu-nombre">{val(f, colGrupo) || t("noTitle")}</span>
+                        {editable && !esGhost(f) && (
+                          <span
+                            className="hp-del"
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onBorrar(f.id);
+                            }}
+                            title={t("delete")}
+                          >
+                            ✕
+                          </span>
+                        )}
+                        <Icon name={abierto ? "chevron-up" : "chevron-down"} />
+                      </div>
+                      <div className="hp-figu-meta">
+                        <span className="hp-figu-escena">{val(f, colEscena) || "—"}</span>
+                        <span className="hp-figu-hora"><Icon name="clock" /> {val(f, colHora) || "—"}</span>
+                        <span className="hp-figu-badge-estado">{estado || "—"}</span>
+                      </div>
+                      <div className="hp-figu-progreso">
+                        <div className="hp-figu-bar"><div className="hp-figu-bar-fill" style={{ width: `${pct}%` }} /></div>
+                        <span className="hp-figu-progreso-txt"><Icon name="users" /> {conf}/{num} confirmaron recepción</span>
+                      </div>
+                      {!abierto && colVestuario && val(f, colVestuario) && (
+                        <p className="hp-figu-preview">{val(f, colVestuario)}</p>
+                      )}
+                    </button>
+
+                    {abierto && (
+                      <div className="hp-figu-detalle">
+                        <div className="hp-figu-row2">
+                          <input
+                            className="hp-figu-input"
+                            defaultValue={val(f, colGrupo)}
+                            placeholder={colGrupo?.label ?? "Grupo"}
+                            readOnly={!editable}
+                            onBlur={(e) => colGrupo && set(f, colGrupo.key, e.target.value)}
+                          />
+                          <input
+                            className="hp-figu-input"
+                            defaultValue={val(f, colEscena)}
+                            placeholder={colEscena?.label ?? "Escena"}
+                            readOnly={!editable}
+                            onBlur={(e) => colEscena && set(f, colEscena.key, e.target.value)}
+                          />
+                        </div>
+                        <div className="hp-figu-row2">
+                          <label className="hp-figu-field">
+                            <span><Icon name="clock" /> {colHora?.label ?? "Hora de citación"}</span>
+                            <input
+                              className="hp-figu-input"
+                              defaultValue={val(f, colHora)}
+                              placeholder="06:30"
+                              readOnly={!editable}
+                              onBlur={(e) => colHora && set(f, colHora.key, e.target.value)}
+                            />
+                          </label>
+                          <label className="hp-figu-field">
+                            <span><Icon name="map-pin" /> {colPunto?.label ?? "Punto de reunión"}</span>
+                            <input
+                              className="hp-figu-input"
+                              defaultValue={val(f, colPunto)}
+                              placeholder="Carpa de figuración"
+                              readOnly={!editable}
+                              onBlur={(e) => colPunto && set(f, colPunto.key, e.target.value)}
+                            />
+                          </label>
+                        </div>
+
+                        {colEstado && (
+                          <EstadoSeg
+                            valor={estado}
+                            opciones={colEstado.opciones ?? []}
+                            onPick={(v) => set(f, colEstado.key, v)}
+                            editable={editable}
+                            color
+                          />
+                        )}
+
+                        <div className="hp-figu-row2">
+                          <label className="hp-figu-field">
+                            <span><Icon name="users" /> {colNum?.label ?? "Nº de figurantes"}</span>
+                            <input
+                              className="hp-figu-input"
+                              type="number"
+                              min={0}
+                              defaultValue={val(f, colNum)}
+                              readOnly={!editable}
+                              onBlur={(e) => colNum && set(f, colNum.key, e.target.value)}
+                            />
+                          </label>
+                          <label className="hp-figu-field">
+                            <span><Icon name="check" /> {colConf?.label ?? "Confirmados"}</span>
+                            <input
+                              className="hp-figu-input"
+                              type="number"
+                              min={0}
+                              defaultValue={val(f, colConf)}
+                              readOnly={!editable}
+                              onBlur={(e) => colConf && set(f, colConf.key, e.target.value)}
+                            />
+                          </label>
+                        </div>
+
+                        {colVestuario && (
+                          <label className="hp-figu-field hp-figu-field-block">
+                            <span><Icon name="palette" /> {colVestuario.label}</span>
+                            <textarea
+                              className="hp-figu-textarea"
+                              defaultValue={val(f, colVestuario)}
+                              placeholder="Vestuario, colores, attrezzo que llevan…"
+                              readOnly={!editable}
+                              rows={3}
+                              onBlur={(e) => set(f, colVestuario.key, e.target.value)}
+                            />
+                          </label>
+                        )}
+
+                        {colPosicion && (
+                          <label className="hp-figu-field hp-figu-field-block">
+                            <span><Icon name="map-pin" /> {colPosicion.label}</span>
+                            <textarea
+                              className="hp-figu-textarea"
+                              defaultValue={val(f, colPosicion)}
+                              placeholder="Dónde se colocan, marcas de plató, bloqueo…"
+                              readOnly={!editable}
+                              rows={3}
+                              onBlur={(e) => set(f, colPosicion.key, e.target.value)}
+                            />
+                          </label>
+                        )}
+
+                        {colMovimiento && (
+                          <label className="hp-figu-field hp-figu-field-block">
+                            <span><Icon name="arrow-right" /> {colMovimiento.label}</span>
+                            <textarea
+                              className="hp-figu-textarea"
+                              defaultValue={val(f, colMovimiento)}
+                              placeholder="Qué hacen, cuándo se mueven, pie de acción…"
+                              readOnly={!editable}
+                              rows={3}
+                              onBlur={(e) => set(f, colMovimiento.key, e.target.value)}
+                            />
+                          </label>
+                        )}
+
+                        {colFoto && (
+                          <div className="hp-figu-field hp-figu-field-block">
+                            <span><Icon name="camera" /> {colFoto.label}</span>
+                            <ArchivoCell
+                              path={val(f, colFoto)}
+                              editable={editable}
+                              departamento={departamento}
+                              herramientaId={herramientaId}
+                              filaId={f.id}
+                              colKey={colFoto.key}
+                              onSave={(v) => set(f, colFoto.key, v)}
+                            />
+                          </div>
+                        )}
+
+                        {colNotas && (
+                          <label className="hp-figu-field hp-figu-field-block">
+                            <span><Icon name="message" /> {colNotas.label}</span>
+                            <textarea
+                              className="hp-figu-textarea"
+                              defaultValue={val(f, colNotas)}
+                              placeholder="Notas adicionales…"
+                              readOnly={!editable}
+                              rows={2}
+                              onBlur={(e) => set(f, colNotas.key, e.target.value)}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+
+      {hayFilas && editable && (
+        <div className="hp-actions">
+          <button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Agregar grupo de figuración</button>
         </div>
       )}
     </div>

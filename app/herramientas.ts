@@ -2703,15 +2703,22 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
         dirContinuidadDiaria,
         {
           id: "dir-control-horarios-1ad", nombre: "Control de horarios y avisos al equipo (1AD)", tipo: "tabla",
-          hint: "Bitácora de tiempos por setup/escena: wrap previsto vs. real, si cruza a overtime (indicador cualitativo, el convenio computa horas extra en cómputo mensual, no por evento) y si se avisó al equipo.",
+          // RONDA 2 (25/11/2026) — rebote de fondo de Nico: "esto no es una
+          // herramienta, es simplemente un cuadro". Pasa de tabla plana
+          // (1 fila = 1 setup) a panel a medida de 3 niveles — día de
+          // rodaje → Gantt de presencia por departamento (barras CSS,
+          // left/width %, sin librería) → detalle por setup, agrupado por
+          // cargo/citación (ajuste de Nico sobre la spec original, directo
+          // en el panel, aplicado al pinchar la barra de un departamento).
+          // Ver rediseno-panel-medida.md. Render 100% bespoke en
+          // ControlHorarios1ADPanel.tsx (HerramientasPanel nunca monta la
+          // grilla genérica para este id) — las columnas de acá quedan
+          // como contrato de datos para el desarrollador/backoffice, no
+          // como definición de render.
+          hint: "Una fila por día de rodaje: Gantt de presencia real por departamento (llegada→salida), con el detalle de wrap previsto/real por setup agrupado por cargo dentro de cada barra.",
           columnas: [
-            { key: "escena_setup", label: "Escena / Setup" },
-            { key: "hora_prevista_wrap", label: "Hora prevista de wrap", tipo: "fecha" as const },
-            { key: "hora_real_wrap", label: "Hora real de wrap", tipo: "fecha" as const },
-            { key: "delta_minutos", label: "Delta (minutos)", tipo: "num" as const },
-            { key: "overtime", label: "Overtime", tipo: "estado", opciones: ["No", "Alerta", "Confirmado"] },
-            { key: "aviso_enviado", label: "Aviso enviado al equipo", tipo: "estado", opciones: ["Pendiente", "Enviado", "No aplica"] },
-            { key: "observacion", label: "Observación", tipo: "largo" },
+            { key: "dia_fecha", label: "Fecha de la jornada", tipo: "fecha" as const },
+            { key: "departamentos", label: "Departamentos del día (JSON: llegada/salida real + setups agrupados por cargo)", tipo: "largo" as const },
           ],
         },
       ],
@@ -2719,7 +2726,20 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Asistencia de dirección": {
       departamento: [calendarioEnsayos],
       cargo: [
-        { id: "dir-control-horarios", nombre: "Control de horarios y avisos al equipo", tipo: "checklist" },
+        {
+          id: "dir-control-horarios",
+          nombre: "Avisos y confirmaciones de citación al equipo",
+          tipo: "tabla",
+          hint: "Centro de avisos operativos al equipo (citación, cambios de horario de último momento) con confirmación de recepción por destinatario. No es un registro de tiempos/overtime (ver Control de horarios y avisos al equipo (1AD)).",
+          columnas: [
+            { key: "mensaje", label: "Aviso / mensaje", tipo: "largo" },
+            { key: "destinatario", label: "Destinatario o departamento" },
+            { key: "fecha_envio", label: "Fecha y hora de envío", tipo: "fecha" },
+            { key: "canal", label: "Canal", tipo: "estado", opciones: ["WhatsApp", "Llamada", "Presencial", "Callsheet"] },
+            { key: "estado_confirmacion", label: "Estado de confirmación", tipo: "estado", opciones: ["Pendiente", "Confirmado", "No leído"] },
+            { key: "confirmado_por", label: "Quién confirmó" },
+          ],
+        },
       ],
     },
     "2ª Asistencia de dirección": {
@@ -2865,7 +2885,21 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Asistencia de producción": {
       departamento: [parteDiario],
       cargo: [
-        { id: "prod-tareas-admin", nombre: "Tareas administrativas diarias", tipo: "checklist" },
+        {
+          id: "prod-tareas-admin",
+          nombre: "Tareas administrativas diarias",
+          tipo: "tabla",
+          hint: "Gestiones puntuales delegadas: trámites, compras de caja chica, documentación, proveedores menores. No es para préstamos de material (ver Control de material prestado o alquilado) ni para logística pre-rodaje (ver Checklist de preparación de jornada).",
+          columnas: [
+            { key: "tarea", label: "Tarea / gestión" },
+            { key: "categoria", label: "Categoría", tipo: "estado", opciones: ["Trámite", "Compra/caja chica", "Documentación", "Proveedor", "Logística", "Otro"] },
+            { key: "responsable", label: "Responsable" },
+            { key: "fecha_limite", label: "Fecha límite", tipo: "fecha" },
+            { key: "prioridad", label: "Prioridad", tipo: "estado", opciones: ["Alta", "Media", "Baja"] },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Bloqueada", "Completada"] },
+            { key: "notas", label: "Notas / contexto", tipo: "largo" },
+          ],
+        },
       ],
     },
     "Coordinación de producción": {
@@ -4044,11 +4078,26 @@ export const GENERAL_CONTACTOS_EMERGENCIA: Herramienta = {
   ],
 };
 
+// Checklist de wrap: una fila por departamento+jornada. Los ítems reales
+// (categorizados Equipo/Espacio/Documentación) viven en la columna "items"
+// como JSON — igual mecanismo que QC_SUGERIDOS de post-checklist-mezcla,
+// pero precargado por DEPARTAMENTO en vez de por formato (WRAP_SUGERIDOS en
+// HerramientaPanel.tsx). El motor genérico de tabla nunca renderiza esto:
+// WrapBoard (panel a medida) es quien lee estas columnas.
 export const GENERAL_CHECKLIST_WRAP: Herramienta = {
   id: "gen-checklist-wrap",
-  nombre: "Checklist de cierre de rodaje (wrap)",
-  tipo: "checklist",
-  hint: "Puntos que todo el equipo debe confirmar antes de dar por finalizado el rodaje.",
+  nombre: "Checklist de wrap",
+  tipo: "tabla",
+  hint: "Cierre de jornada/rodaje por departamento: equipo devuelto, set en condiciones, incidencias, material entregado a Producción y responsable que firma.",
+  columnas: [
+    { key: "departamento", label: "Departamento", tipo: "estado", opciones: ["Dirección", "Producción", "Fotografía", "Arte", "Sonido", "Vestuario/Maquillaje", "Reparto", "Making of"], libre: true },
+    { key: "fecha", label: "Fecha de jornada", tipo: "fecha" },
+    { key: "items", label: "Ítems de wrap", tipo: "largo", sinAcento: true },
+    { key: "incidencias", label: "Incidencias del día", tipo: "largo" },
+    { key: "material_entregado", label: "Material entregado a Producción", tipo: "largo" },
+    { key: "responsable", label: "Responsable que confirma", tipo: "texto" },
+    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Set liberado"] },
+  ],
 };
 
 // Unión deduplicada de TODAS las herramientas de departamento del depto.

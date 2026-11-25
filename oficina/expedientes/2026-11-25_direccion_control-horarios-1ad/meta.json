@@ -1,9 +1,9 @@
 {
-  "kicker": "Oficina de Desarrollo de App · Expediente aprobado",
+  "kicker": "Oficina de Desarrollo de App · Expediente en revisión de comité",
   "title": "Control de horarios y avisos al equipo (1AD)",
-  "subtitle": "1er asistente de dirección: bitácora de reloj de rodaje por setup (wrap previsto vs. real, delta, overtime, aviso al equipo), migrada a tabla con el motor genérico y validación contra el plan de rodaje, verificado con cuenta de prueba real.",
-  "badge": "<span class=\"badge badge-ok\">Aprobado · Ronda 2</span>",
-  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Dirección · 1er asistente de dirección"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado"]],
+  "subtitle": "1er asistente de dirección: panel a medida de 3 niveles (tarjetas por día, Gantt CSS de presencia por departamento, detalle por cargo) con el registro original de wrap previsto vs. real por setup intacto, 2 bugs de QA corregidos y verificados con Playwright real.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de comité · Ronda 3</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Dirección · 1er asistente de dirección"], ["Oficina", "Desarrollo"], ["Ronda", "3 — rediseño a panel a medida"]],
   "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
   "footerNote": "pendiente de tu aprobación final",
   "accent": "#E8A330"

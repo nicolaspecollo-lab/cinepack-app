@@ -6740,3 +6740,116 @@
   .cp-dash .hp-momem-grid{ grid-template-columns:1fr; }
   .cp-dash .hp-momem-buscar{ margin-left:0; width:100%; }
 }
+
+/* ---- Control de horarios y avisos al equipo (1AD) — panel a medida,
+   ronda 2 (25/11/2026): día → Gantt de presencia por departamento → detalle
+   por setup agrupado por cargo. Acento: var(--lime), tono de Dirección
+   (ver ACCENTS en app/constants.ts). Nivel 1 = tarjetas por día; nivel 2 =
+   barras de presencia con mobile-first "apila vertical, nunca horizontal". */
+.cp-dash .ch1-hex{ background:var(--lime) !important; }
+.cp-dash .ch1-btn-acc:hover{ background:currentColor; color:#0D0D12; }
+.cp-dash .ch1-guardado{ margin:0 var(--gutter); }
+.cp-dash .ch1-wrap{ padding:var(--sp-4) var(--gutter) var(--sp-6); display:flex; flex-direction:column; gap:var(--sp-4); overflow-x:hidden; }
+
+/* Nivel 1 — tarjetas por día. */
+.cp-dash .ch1-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:var(--sp-3); }
+.cp-dash .ch1-card{
+  display:flex; flex-direction:column; gap:6px; text-align:left; background:var(--bg-2); border:1px solid var(--line);
+  padding:var(--sp-3) var(--sp-4); cursor:pointer; font-family:inherit; color:var(--text);
+  transition:border-color var(--dur) ease, transform var(--dur) ease;
+}
+.cp-dash .ch1-card:hover{ border-color:var(--lime); transform:translateY(-2px); }
+.cp-dash .ch1-card-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.cp-dash .ch1-card-dia{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-md); }
+.cp-dash .ch1-card-fecha{ display:inline-flex; align-items:center; gap:5px; color:var(--muted); font-size:var(--fs-sm); }
+.cp-dash .ch1-card-meta{ display:flex; gap:12px; flex-wrap:wrap; color:var(--muted); font-size:var(--fs-xs); }
+.cp-dash .ch1-card-meta span{ display:inline-flex; align-items:center; gap:4px; }
+.cp-dash .ch1-card-wrap{ display:inline-flex; align-items:center; gap:5px; font-size:var(--fs-sm); color:var(--text); padding-top:4px; border-top:1px dashed var(--line); }
+.cp-dash .ch1-chip-ot{
+  display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-xs); padding:2px 7px; flex-shrink:0;
+  font-family:'Poppins',sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:0.02em;
+}
+.cp-dash .ch1-chip-ot.fuerte{ color:var(--rose); border:1px solid rgba(240,122,122,0.5); background:rgba(240,122,122,0.14); }
+.cp-dash .ch1-chip-ot.tenue{ color:var(--amber); border:1px solid rgba(232,163,48,0.4); background:rgba(232,163,48,0.1); }
+
+/* Tarjeta "Agregar día" (Bug 2a, 25/11/2026) — vía de creación manual que
+   nunca depende de gen-plan-rodaje ni de filas ya existentes. */
+.cp-dash .ch1-card-add{
+  align-items:center; justify-content:center; gap:var(--sp-2); color:var(--lime); border-style:dashed;
+  min-height:120px;
+}
+.cp-dash .ch1-card-add:hover{ background:rgba(174,255,109,0.08); }
+
+/* Estado vacío — accesos directos a departamentos reales, nunca un
+   formulario en blanco genérico. */
+.cp-dash .ch1-empty{ align-items:flex-start; text-align:left; }
+.cp-dash .ch1-empty-chips{ display:flex; gap:var(--sp-2); flex-wrap:wrap; margin-top:var(--sp-2); }
+.cp-dash .ch1-add-depto{ display:flex; flex-direction:column; gap:var(--sp-2); padding-top:var(--sp-3); border-top:1px dashed var(--line); }
+.cp-dash .ch1-add-depto > span{ font-size:var(--fs-sm); color:var(--muted); }
+
+/* Nivel 2 — eje + Gantt. */
+.cp-dash .ch1-eje{ display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); font-size:var(--fs-xs); color:var(--muted); font-family:'Poppins',sans-serif; }
+.cp-dash .ch1-eje-lbl{ text-align:center; flex:1; }
+.cp-dash .ch1-gantt{ display:flex; flex-direction:column; gap:var(--sp-3); }
+.cp-dash .ch1-fila-depto{ background:var(--bg-2); border:1px solid var(--line); display:flex; flex-direction:column; }
+.cp-dash .ch1-depto-head{
+  width:100%; display:flex; align-items:center; gap:10px; background:none; border:none; cursor:pointer;
+  padding:var(--sp-2) var(--sp-3); color:var(--text); font-family:inherit; text-align:left;
+}
+.cp-dash .ch1-depto-head:hover{ background:var(--hl1); }
+.cp-dash .ch1-depto-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); flex-shrink:0; }
+.cp-dash .ch1-depto-horas{ color:var(--muted); font-size:var(--fs-xs); }
+.cp-dash .ch1-depto-chev{ margin-left:auto; color:var(--muted); flex-shrink:0; }
+.cp-dash .ch1-track{
+  position:relative; height:22px; margin:0 var(--sp-3) var(--sp-3); background:var(--bg); border:1px solid var(--line);
+  width:calc(100% - 2 * var(--sp-3)); display:block; padding:0; cursor:pointer;
+}
+.cp-dash .ch1-barra{ position:absolute; top:0; bottom:0; opacity:0.85; }
+.cp-dash .ch1-marca{ position:absolute; top:-2px; bottom:-2px; width:2px; background:rgba(0,0,0,0.5); }
+.cp-dash .ch1-marca.ch1-marca-alerta{ background:var(--amber); width:3px; }
+.cp-dash .ch1-marca.ch1-marca-ot{ background:var(--rose); width:3px; }
+.cp-dash .ch1-depto-body{ display:flex; flex-direction:column; gap:var(--sp-3); padding:0 var(--sp-3) var(--sp-4); border-top:1px solid var(--line); }
+.cp-dash .ch1-ro{ margin:0; font-size:var(--fs-sm); color:var(--muted); }
+.cp-dash .ch1-horas-row{ display:flex; gap:var(--sp-3); flex-wrap:wrap; }
+.cp-dash .ch1-field{ display:flex; flex-direction:column; gap:4px; flex:1; min-width:120px; }
+.cp-dash .ch1-field > span{ font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.03em; color:var(--muted); font-family:'Poppins',sans-serif; }
+.cp-dash .ch1-field input, .cp-dash .ch1-field textarea{
+  background:var(--bg); border:1px solid var(--line); color:var(--text); font-family:inherit; font-size:var(--fs-base);
+  padding:7px 9px; width:100%; resize:vertical;
+}
+.cp-dash .ch1-field input:focus, .cp-dash .ch1-field textarea:focus{ outline:none; border-color:var(--lime); }
+.cp-dash .ch1-field-select{ max-width:220px; }
+.cp-dash .ch1-depto-acciones{ display:flex; gap:var(--sp-2); flex-wrap:wrap; padding-top:4px; }
+
+/* Detalle agrupado por cargo/citación dentro de cada departamento. */
+.cp-dash .ch1-cargos{ display:flex; flex-direction:column; gap:var(--sp-3); }
+.cp-dash .ch1-cargo-grupo{ background:var(--hl1); border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .ch1-cargo-head{ display:flex; align-items:center; gap:6px; }
+.cp-dash .ch1-cargo-head svg{ color:var(--muted); flex-shrink:0; }
+.cp-dash .ch1-cargo-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); }
+.cp-dash .ch1-cargo-count{ margin-left:auto; color:var(--muted); font-size:var(--fs-xs); }
+.cp-dash .ch1-cargo-track{ position:relative; height:10px; background:var(--bg); border:1px solid var(--line); }
+.cp-dash .ch1-cargo-barra{ position:absolute; top:0; bottom:0; }
+.cp-dash .ch1-cargo-marca{ position:absolute; top:-2px; width:4px; height:14px; border-radius:1px; }
+.cp-dash .ch1-setups{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .ch1-setup{ background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .ch1-setup-input{ display:flex; align-items:center; gap:6px; }
+.cp-dash .ch1-setup-input input{ flex:1; }
+.cp-dash .ch1-check-ok{ color:var(--lime); flex-shrink:0; }
+.cp-dash .ch1-check-alerta{ color:var(--amber); flex-shrink:0; }
+.cp-dash .ch1-btn-del-setup{ align-self:flex-start; }
+.cp-dash .ch1-setup-nombre{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); }
+.cp-dash .ch1-setup-cargo{ color:var(--muted); font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .ch1-setup-horas{ font-size:var(--fs-sm); color:var(--muted); }
+.cp-dash .ch1-setup-aviso{ display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .ch1-setup-obs{ margin:0; font-size:var(--fs-sm); line-height:1.5; }
+
+@media (max-width:640px){
+  /* Mobile-first obligatorio: a 390px las barras se apilan verticalmente
+     con scroll vertical, nunca horizontal — ya cubierto por flex-column de
+     .ch1-gantt/.ch1-cargos; acá solo se angostan los campos de hora. */
+  .cp-dash .ch1-horas-row{ flex-direction:column; }
+  .cp-dash .ch1-field{ min-width:0; }
+  .cp-dash .ch1-field-select{ max-width:none; }
+  .cp-dash .ch1-eje-lbl{ display:none; }
+}
