@@ -20,3 +20,12 @@ El comité de calidad, al revisar "Avisos y confirmaciones de citación al equip
 
 ## Merge dir-control-horarios-1ad a jv179i (25/11/2026)
 Nico calificó "Control de horarios y avisos (1AD)" con "Cumple". PR #18 mergeado a jv179i (commit 58084e1) sin más trámite, según la regla de merge automático en Cumple/Supera.
+
+## Corte masivo: 4 herramientas a main real (25/11/2026)
+Nico dio Corte explícito (main=true, migraciones=true, deploy=true) para las 4 herramientas rediseñadas hoy, y pidió el paquete completo para pasarlo al desarrollador del Corte final. Ejecutado:
+- dir-control-horarios-1ad → main commit `4e15f6c`
+- ej-gestion-documental → main commit `7793068`
+- prod-checklist-vehiculos → main commit `0e8b29b`
+- prod-tareas-admin → main commit `7ff58ae`
+
+Las 4 verificadas con `tsc --noEmit`/`next build --webpack` limpios antes de pushear, patch aislado a los archivos de producto (nunca la rama de oficina completa). Ninguna necesita migración SQL. Diffs completos entregados a Nico por SendUserFile. `corte_ejecutado:false`, `corte_estado_final:"pendiente_de_corte_final"` en las 4 — falta solo la confirmación explícita de Nico de que el deploy quedó hecho.
