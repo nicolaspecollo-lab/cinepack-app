@@ -6135,9 +6135,14 @@ function gdEstado(f: Fila): { label: string; tono: "ok" | "warn" | "bad" | "neut
   limite.setFullYear(limite.getFullYear() + anios);
   const dias = Math.round((limite.getTime() - Date.now()) / 86400000);
   const fechaTxt = limite.toLocaleDateString("es-ES");
-  if (dias < 0) return { label: `Vencido (${fechaTxt})`, tono: "bad" };
-  if (dias <= 90) return { label: `Vence ${fechaTxt}`, tono: "warn" };
-  return { label: `Vigente hasta ${fechaTxt}`, tono: "ok" };
+  // requiere_renovacion no cambia el cálculo de plazo ni los tonos, solo el
+  // lenguaje: "vencido su plazo de conservación" (archivo pasivo) vs.
+  // "pendiente de renovar" (vigencia activa, ej. licencia municipal) — ver
+  // necesidad.md 2026-11-25_ejecutivo_gestion-documental.
+  const renovacion = (f.datos?.requiere_renovacion ?? "No") === "Sí";
+  if (dias < 0) return { label: renovacion ? `Vencida, pendiente de renovar (${fechaTxt})` : `Vencido (${fechaTxt})`, tono: "bad" };
+  if (dias <= 90) return { label: renovacion ? `Por renovar antes del ${fechaTxt}` : `Vence ${fechaTxt}`, tono: "warn" };
+  return { label: renovacion ? `Renovación vigente hasta ${fechaTxt}` : `Vigente hasta ${fechaTxt}`, tono: "ok" };
 }
 
 export function GestionDocumentalBoard({
@@ -6161,8 +6166,56 @@ export function GestionDocumentalBoard({
 }) {
   const t = useTranslations("hp");
   const [filtro, setFiltro] = useState<string | null>(null);
+  const [filtroEntidad, setFiltroEntidad] = useState<string | null>(null);
+  // Integración real nivel 2 (ronda 2, 25/11/2026): ventana de rodaje
+  // (min/max de GENERAL_PLAN_RODAJE.fecha), un solo fetch de solo lectura al
+  // montar, para marcar qué documentos vencen durante el rodaje. null =
+  // todavía sin resolver o sin plan de rodaje cargado — en ambos casos no se
+  // muestra el badge, no se rompe el resto de la tarjeta.
+  const [ventanaRodaje, setVentanaRodaje] = useState<{ inicio: Date; fin: Date } | null>(null);
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      try {
+        const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+        if (!projectId) return;
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "gen-plan-rodaje");
+        const fechas = (data ?? [])
+          .map((r) => (r.datos as Record<string, string>)?.fecha)
+          .filter(Boolean)
+          .map((f) => new Date(f as string))
+          .filter((d) => !isNaN(d.getTime()));
+        if (!activo || fechas.length === 0) return;
+        setVentanaRodaje({
+          inicio: new Date(Math.min(...fechas.map((d) => d.getTime()))),
+          fin: new Date(Math.max(...fechas.map((d) => d.getTime()))),
+        });
+      } catch {
+        // sin plan de rodaje aún / error de red: se queda en null, sin badge
+      }
+    })();
+    return () => { activo = false; };
+  }, []);
+  function venceEnRodaje(f: Fila): boolean {
+    if (!ventanaRodaje) return false;
+    if ((f.datos?.requiere_renovacion ?? "No") !== "Sí") return false;
+    if ((f.datos?.permanencia ?? "") === "Permanente") return false;
+    const fecha = f.datos?.fecha_documento ? new Date(f.datos.fecha_documento) : null;
+    const anios = ejNum(f.datos?.anios_conservacion);
+    if (!fecha || !anios) return false;
+    const limite = new Date(fecha);
+    limite.setFullYear(limite.getFullYear() + anios);
+    return limite >= ventanaRodaje.inicio && limite <= ventanaRodaje.fin;
+  }
   const colByKey = new Map(columnas.map((c) => [c.key, c]));
   const colCategoria = colByKey.get("categoria");
+  const colEntidad = colByKey.get("entidad_referencia");
+  const colTipoEntidad = colByKey.get("tipo_entidad");
 
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
@@ -6176,7 +6229,14 @@ export function GestionDocumentalBoard({
   }
 
   const categoriasVistas = Array.from(new Set([...(colCategoria?.opciones ?? []), ...filas.map((f) => f.datos?.categoria).filter(Boolean) as string[]]));
-  const visibles = filtro ? filas.filter((f) => (f.datos?.categoria ?? "") === filtro) : filas;
+  const entidadesVistas = Array.from(new Set([...(colEntidad?.opciones ?? []), ...filas.map((f) => f.datos?.entidad_referencia).filter(Boolean) as string[]]));
+  const visibles = filas
+    .filter((f) => !filtro || (f.datos?.categoria ?? "") === filtro)
+    .filter((f) => !filtroEntidad || (f.datos?.entidad_referencia ?? "") === filtroEntidad);
+  // Mensaje agregado con lenguaje neutro ("requieren atención") en vez de
+  // distinguir "vencido"/"pendiente de renovar" acá: con documentos mixtos
+  // (algunos con requiere_renovacion="Sí" y otros no) un único texto agregado
+  // sonaría incoherente — la distinción real vive en el chip de cada tarjeta.
   const vencidosOVenciendo = filas.filter((f) => { const e = gdEstado(f); return e.tono === "bad" || e.tono === "warn"; });
 
   if (filas.length === 0) {
@@ -6189,7 +6249,7 @@ export function GestionDocumentalBoard({
     <div className="hp-gd">
       {vencidosOVenciendo.length > 0 && (
         <div className="hp-gd-alert">
-          <b>{vencidosOVenciendo.length}</b> documento{vencidosOVenciendo.length === 1 ? "" : "s"} vencido{vencidosOVenciendo.length === 1 ? "" : "s"} o por vencer su plazo de conservación.
+          <b>{vencidosOVenciendo.length}</b> documento{vencidosOVenciendo.length === 1 ? "" : "s"} requiere{vencidosOVenciendo.length === 1 ? "" : "n"} atención (vencido, por vencer o pendiente de renovar).
         </div>
       )}
 
@@ -6198,6 +6258,15 @@ export function GestionDocumentalBoard({
           <button className={`hp-gd-fchip${!filtro ? " on" : ""}`} onClick={() => setFiltro(null)}>Todas</button>
           {categoriasVistas.map((c) => (
             <button key={c} className={`hp-gd-fchip${filtro === c ? " on" : ""}`} onClick={() => setFiltro(c)}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      {entidadesVistas.length > 0 && (
+        <div className="hp-gd-filtros">
+          <button className={`hp-gd-fchip${!filtroEntidad ? " on" : ""}`} onClick={() => setFiltroEntidad(null)}>Todas las entidades</button>
+          {entidadesVistas.map((e) => (
+            <button key={e} className={`hp-gd-fchip${filtroEntidad === e ? " on" : ""}`} onClick={() => setFiltroEntidad(e)}>{e}</button>
           ))}
         </div>
       )}
@@ -6218,6 +6287,14 @@ export function GestionDocumentalBoard({
                   readOnly={!editable}
                   onBlur={(e) => setCategoria(f, e.target.value)}
                 />
+                <input
+                  className="hp-gd-categoria"
+                  defaultValue={f.datos?.entidad_referencia ?? ""}
+                  placeholder="Entidad (proveedor, organismo...)"
+                  list="hp-gd-entidades-list"
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, "entidad_referencia", e.target.value)}
+                />
                 {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
               </div>
               <div className="hp-gd-row2">
@@ -6230,8 +6307,19 @@ export function GestionDocumentalBoard({
                   <label>Años de conservación<input type="number" defaultValue={f.datos?.anios_conservacion ?? ""} readOnly={!editable} onBlur={(e) => set(f, "anios_conservacion", e.target.value)} /></label>
                 )}
               </div>
+              <div className="hp-gd-row2">
+                <label className="hp-gd-permanencia">
+                  Tipo de entidad
+                  <EstadoSeg valor={f.datos?.tipo_entidad ?? ""} opciones={colTipoEntidad?.opciones ?? []} onPick={(v) => set(f, "tipo_entidad", v)} editable={editable} chip />
+                </label>
+                <label className="hp-gd-permanencia">
+                  Requiere renovación
+                  <EstadoSeg valor={f.datos?.requiere_renovacion || "No"} opciones={colByKey.get("requiere_renovacion")?.opciones ?? []} onPick={(v) => set(f, "requiere_renovacion", v)} editable={editable} chip color />
+                </label>
+              </div>
               <div className="hp-gd-row3">
                 <span className={`hp-gd-chip tono-${estado.tono}`}>{estado.label}</span>
+                {venceEnRodaje(f) && <span className="hp-gd-chip tono-warn">Vence durante el rodaje</span>}
                 <EstadoSeg valor={f.datos?.estado_digitalizacion ?? ""} opciones={colByKey.get("estado_digitalizacion")?.opciones ?? []} onPick={(v) => set(f, "estado_digitalizacion", v)} editable={editable} chip color />
                 <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
               </div>
@@ -6241,6 +6329,9 @@ export function GestionDocumentalBoard({
       </div>
       <datalist id="hp-gd-categorias-list">
         {categoriasVistas.map((c) => <option key={c} value={c} />)}
+      </datalist>
+      <datalist id="hp-gd-entidades-list">
+        {entidadesVistas.map((e) => <option key={e} value={e} />)}
       </datalist>
 
       {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Agregar documento</button></div>}
