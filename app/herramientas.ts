@@ -2703,15 +2703,22 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
         dirContinuidadDiaria,
         {
           id: "dir-control-horarios-1ad", nombre: "Control de horarios y avisos al equipo (1AD)", tipo: "tabla",
-          hint: "Bitácora de tiempos por setup/escena: wrap previsto vs. real, si cruza a overtime (indicador cualitativo, el convenio computa horas extra en cómputo mensual, no por evento) y si se avisó al equipo.",
+          // RONDA 2 (25/11/2026) — rebote de fondo de Nico: "esto no es una
+          // herramienta, es simplemente un cuadro". Pasa de tabla plana
+          // (1 fila = 1 setup) a panel a medida de 3 niveles — día de
+          // rodaje → Gantt de presencia por departamento (barras CSS,
+          // left/width %, sin librería) → detalle por setup, agrupado por
+          // cargo/citación (ajuste de Nico sobre la spec original, directo
+          // en el panel, aplicado al pinchar la barra de un departamento).
+          // Ver rediseno-panel-medida.md. Render 100% bespoke en
+          // ControlHorarios1ADPanel.tsx (HerramientasPanel nunca monta la
+          // grilla genérica para este id) — las columnas de acá quedan
+          // como contrato de datos para el desarrollador/backoffice, no
+          // como definición de render.
+          hint: "Una fila por día de rodaje: Gantt de presencia real por departamento (llegada→salida), con el detalle de wrap previsto/real por setup agrupado por cargo dentro de cada barra.",
           columnas: [
-            { key: "escena_setup", label: "Escena / Setup" },
-            { key: "hora_prevista_wrap", label: "Hora prevista de wrap", tipo: "fecha" as const },
-            { key: "hora_real_wrap", label: "Hora real de wrap", tipo: "fecha" as const },
-            { key: "delta_minutos", label: "Delta (minutos)", tipo: "num" as const },
-            { key: "overtime", label: "Overtime", tipo: "estado", opciones: ["No", "Alerta", "Confirmado"] },
-            { key: "aviso_enviado", label: "Aviso enviado al equipo", tipo: "estado", opciones: ["Pendiente", "Enviado", "No aplica"] },
-            { key: "observacion", label: "Observación", tipo: "largo" },
+            { key: "dia_fecha", label: "Fecha de la jornada", tipo: "fecha" as const },
+            { key: "departamentos", label: "Departamentos del día (JSON: llegada/salida real + setups agrupados por cargo)", tipo: "largo" as const },
           ],
         },
       ],
@@ -2962,7 +2969,55 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Driver": {
       departamento: [],
       cargo: [
-        { id: "prod-checklist-vehiculos", nombre: "Checklist de vehículos, combustible y mantenimiento", tipo: "checklist" },
+        {
+          id: "prod-checklist-vehiculos", nombre: "Checklist de vehículos, combustible y mantenimiento", tipo: "tabla",
+          hint: "Rediseño 25/11/2026 (rebote de Nico sobre la versión en tabla de celdas): una tarjeta por matrícula con alerta de un vistazo (carnet vencido / revisión vencida / mantenimiento urgente); al abrir, historial cronológico por vehículo — kilometraje con foto de odómetro, tickets de combustible/gastos con monto + foto, carnet y responsable de conducción (con historial de responsables, no solo el actual), y el checklist técnico de mantenimiento. Usa el motor EntidadTabsBoard ya aprobado (tarjeta → modal con pestañas), no la tabla genérica — mismo patrón que rrhh-plan-bienestar, con rama propia de tarjeta/alerta para este cargo.",
+          columnas: [
+            { key: "matricula", label: "Matrícula", tipo: "texto" },
+            { key: "modelo", label: "Modelo", tipo: "texto" },
+            { key: "anio", label: "Año", tipo: "num" },
+            { key: "responsable_actual", label: "Responsable actual", tipo: "texto" },
+            { key: "km_actual", label: "Kilometraje actual", tipo: "num" },
+            { key: "revision_tecnica", label: "Próxima revisión técnica", tipo: "fecha" },
+            { key: "carnet_vencimiento", label: "Vencimiento carnet del responsable", tipo: "fecha" },
+            {
+              key: "historial_km", label: "Registros de kilometraje", tipo: "repetible",
+              sub: [
+                { key: "fecha", label: "Fecha", tipo: "fecha" },
+                { key: "km", label: "Kilometraje", tipo: "num" },
+                { key: "foto", label: "Foto del odómetro", tipo: "archivo" },
+                { key: "nota", label: "Nota", tipo: "texto" },
+              ],
+            },
+            {
+              key: "historial_gastos", label: "Combustible y otros gastos", tipo: "repetible",
+              sub: [
+                { key: "fecha", label: "Fecha", tipo: "fecha" },
+                { key: "tipo_gasto", label: "Tipo", tipo: "estado", opciones: ["Combustible", "Peaje", "Parking", "Lavado", "Taller", "Otro"], libre: true },
+                { key: "monto", label: "Monto", tipo: "money" },
+                { key: "foto", label: "Foto del ticket", tipo: "archivo" },
+              ],
+            },
+            {
+              key: "historial_responsables", label: "Responsables de conducción", tipo: "repetible",
+              sub: [
+                { key: "fecha_desde", label: "Responsable desde", tipo: "fecha" },
+                { key: "nombre", label: "Nombre", tipo: "texto" },
+                { key: "carnet_foto", label: "Foto del carnet de conducir", tipo: "archivo" },
+                { key: "vencimiento_carnet", label: "Vencimiento del carnet", tipo: "fecha" },
+              ],
+            },
+            {
+              key: "mantenimiento", label: "Mantenimiento / checklist técnico", tipo: "repetible",
+              sub: [
+                { key: "fecha", label: "Fecha", tipo: "fecha" },
+                { key: "item", label: "Punto revisado", tipo: "estado", opciones: ["Aceite y filtros", "Frenos", "Neumáticos", "Luces", "Batería", "Líquido refrigerante", "Correa de distribución", "Aire acondicionado", "Otro"], libre: true },
+                { key: "estado", label: "Estado", tipo: "estado", opciones: ["OK", "Revisar", "Urgente"] },
+                { key: "nota", label: "Nota / taller", tipo: "largo" },
+              ],
+            },
+          ],
+        },
       ],
     },
   },
@@ -3476,7 +3531,35 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Reparto principal": {
       departamento: [fichaPersonaje, guionMarcado, calendarioCitaciones, vestMaqAsignado, contratoIndividual],
       cargo: [
-        { id: "rep-notas-preparacion", nombre: "Notas de preparación del personaje", tipo: "nota" },
+        {
+          id: "rep-notas-preparacion",
+          nombre: "Notas de preparación del personaje",
+          // Dato: tabla (una fila = un personaje completo que el actor/actriz
+          // prepara). Vista: panel a medida (RepNotasPreparacionPanel.tsx),
+          // ficha con pestañas por personaje (Biografía/Objetivos/
+          // Relaciones/Arco emocional/Notas recibidas) — ver justificación
+          // en ese archivo. Las columnas siguen existiendo para que el dato
+          // quede tipado y legible en exportaciones, aunque HerramientasPanel
+          // nunca monte la grilla genérica para este id.
+          tipo: "tabla",
+          hint: "Cuaderno de preparación del actor sobre su propio personaje: biografía, objetivos por escena, relaciones y arco emocional — nunca la vista del director sobre el actor.",
+          columnas: [
+            { key: "personaje", label: "Personaje" },
+            { key: "actor", label: "Actor/Actriz" },
+            { key: "edad", label: "Edad del personaje" },
+            { key: "ocupacion", label: "Ocupación" },
+            { key: "biografia", label: "Biografía / backstory", tipo: "largo" },
+            { key: "rasgos_fisicos", label: "Rasgos físicos y gestuales", tipo: "largo" },
+            { key: "voz_habla", label: "Voz y forma de hablar", tipo: "largo" },
+            { key: "objeto_personal", label: "Objeto personal significativo" },
+            { key: "motivacion_central", label: "Motivación central", tipo: "largo" },
+            { key: "foto_url", label: "Foto retrato", tipo: "archivo" },
+            { key: "objetivos_json", label: "Objetivos por escena (JSON)", tipo: "largo" },
+            { key: "relaciones_json", label: "Relaciones (JSON)", tipo: "largo" },
+            { key: "arco_json", label: "Arco emocional (JSON)", tipo: "largo" },
+            { key: "notas_json", label: "Notas de ensayo recibidas (JSON)", tipo: "largo" },
+          ],
+        },
         {
           id: "rep-agenda-personal-principal", nombre: "Mi agenda de rodaje personal", tipo: "tabla",
           hint: "Tus días de rodaje, horario de citación y escenas de cada jornada.",
@@ -3497,7 +3580,35 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     },
     "Figuración": {
       departamento: [calendarioCitaciones, vestMaqAsignado],
-      cargo: [{ id: "rep-instrucciones-figuracion", nombre: "Instrucciones de figuración por jornada", tipo: "checklist" }],
+      cargo: [
+        {
+          id: "rep-instrucciones-figuracion",
+          nombre: "Instrucciones de figuración por jornada",
+          tipo: "tabla",
+          hint: "Panel a medida (no tabla genérica): tarjetas de grupo de figuración agrupadas por jornada, con vestuario/posición/bloqueo/movimiento, punto de reunión y hora de citación propios de Figuración, foto de referencia y confirmación de recepción por grupo. Detalle completo al abrir la tarjeta, nunca una celda suelta. Documentación interna, nunca se renderiza (regla 25/11).",
+          columnas: [
+            { key: "jornada", label: "Jornada", tipo: "fecha" },
+            { key: "grupo", label: "Grupo de figuración", tipo: "texto" },
+            { key: "escena", label: "Escena/secuencia", tipo: "texto" },
+            { key: "hora_citacion", label: "Hora de citación", tipo: "texto" },
+            { key: "punto_reunion", label: "Punto de reunión", tipo: "texto" },
+            { key: "num_figurantes", label: "Nº de figurantes", tipo: "num" },
+            { key: "confirmados", label: "Confirmados", tipo: "num" },
+            {
+              key: "estado",
+              label: "Estado",
+              tipo: "estado",
+              opciones: ["Pendiente de preparar", "Instrucciones enviadas", "Confirmado en plató", "En ensayo/ajuste", "Listo para rodar"],
+            },
+            { key: "vestuario", label: "Vestuario y attrezzo", tipo: "largo" },
+            { key: "posicion", label: "Posición y bloqueo en escena", tipo: "largo" },
+            { key: "movimiento", label: "Movimiento y acción", tipo: "largo" },
+            { key: "foto_referencia", label: "Foto de referencia", tipo: "archivo" },
+            { key: "notas", label: "Notas adicionales", tipo: "largo" },
+          ],
+          agruparPor: "jornada",
+        },
+      ],
     },
   },
 
@@ -3996,11 +4107,26 @@ export const GENERAL_CONTACTOS_EMERGENCIA: Herramienta = {
   ],
 };
 
+// Checklist de wrap: una fila por departamento+jornada. Los ítems reales
+// (categorizados Equipo/Espacio/Documentación) viven en la columna "items"
+// como JSON — igual mecanismo que QC_SUGERIDOS de post-checklist-mezcla,
+// pero precargado por DEPARTAMENTO en vez de por formato (WRAP_SUGERIDOS en
+// HerramientaPanel.tsx). El motor genérico de tabla nunca renderiza esto:
+// WrapBoard (panel a medida) es quien lee estas columnas.
 export const GENERAL_CHECKLIST_WRAP: Herramienta = {
   id: "gen-checklist-wrap",
-  nombre: "Checklist de cierre de rodaje (wrap)",
-  tipo: "checklist",
-  hint: "Puntos que todo el equipo debe confirmar antes de dar por finalizado el rodaje.",
+  nombre: "Checklist de wrap",
+  tipo: "tabla",
+  hint: "Cierre de jornada/rodaje por departamento: equipo devuelto, set en condiciones, incidencias, material entregado a Producción y responsable que firma.",
+  columnas: [
+    { key: "departamento", label: "Departamento", tipo: "estado", opciones: ["Dirección", "Producción", "Fotografía", "Arte", "Sonido", "Vestuario/Maquillaje", "Reparto", "Making of"], libre: true },
+    { key: "fecha", label: "Fecha de jornada", tipo: "fecha" },
+    { key: "items", label: "Ítems de wrap", tipo: "largo", sinAcento: true },
+    { key: "incidencias", label: "Incidencias del día", tipo: "largo" },
+    { key: "material_entregado", label: "Material entregado a Producción", tipo: "largo" },
+    { key: "responsable", label: "Responsable que confirma", tipo: "texto" },
+    { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "En curso", "Set liberado"] },
+  ],
 };
 
 // Unión deduplicada de TODAS las herramientas de departamento del depto.
