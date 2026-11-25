@@ -262,7 +262,8 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "dif-medios" ||
     id === "dist-festivales" ||
     id === "mo-cal-publicaciones" ||
-    id === "mo-memoria"
+    id === "mo-memoria" ||
+    id === "prod-tareas-admin"
   );
 }
 
@@ -1083,6 +1084,21 @@ function HerramientaData({
       {herramienta.tipo === "tabla" && herramienta.id === "dir-actas" && (
         <VistaConEjemplos ejemplos={EJEMPLOS_POR_ID[herramienta.id] ?? []} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
         <ActasReunionBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "prod-tareas-admin" && (
+        <VistaConEjemplos ejemplos={EJ_TAREAS_ADMIN} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <TareasAdminBoard
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
@@ -4057,6 +4073,425 @@ function ChecklistMezclaBoard({
         <div className="hp-tabla-empty">
           <span className="hex"></span>
           <p>Sin tarjetas de formato todavía.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// TAREAS ADMINISTRATIVAS DIARIAS — Asistencia de producción
+// Patrón elegido (ver dossier §6/§9): tablero agrupado por URGENCIA real
+// (Vencidas / Hoy / Esta semana / Más adelante / Sin fecha) en vez de por
+// categoría fija o de lista plana — la Asistencia de producción no revisa
+// "todos los pagos juntos", revisa "qué se vence ya" sin importar si es un
+// trámite, un pago o un seguro; la categoría queda como acento visual de la
+// tarjeta (badge+icono por color de sistema-diseno), no como agrupador.
+// Cada tarjeta trae de un vistazo: categoría, prioridad, vencimiento,
+// responsable y progreso de subtareas — se abre para ver/editar subtareas,
+// notas y adjunto (mismo mecanismo de JSON embebido que QcItem en
+// ChecklistMezclaBoard, reusado para subtareas con checkbox).
+// ===========================================================================
+type SubtareaItem = { item: string; hecha: string };
+
+function subtareasProgreso(items: SubtareaItem[]): { hechas: number; total: number } {
+  const total = items.length;
+  const hechas = items.filter((it) => it.hecha === "Sí").length;
+  return { hechas, total };
+}
+
+const TAREA_CATEGORIA_ACCENT: Record<string, string> = {
+  "Trámites": "var(--blue)",
+  "Pagos": "var(--gold)",
+  "Seguros": "var(--teal)",
+  "Permisos": "var(--violet)",
+  "Documentación legal": "var(--rose)",
+  "Logística administrativa": "var(--lime)",
+};
+
+const TAREA_CATEGORIA_ICON: Record<string, IconName> = {
+  "Trámites": "id-card",
+  "Pagos": "briefcase",
+  "Seguros": "shield",
+  "Permisos": "key",
+  "Documentación legal": "file-text",
+  "Logística administrativa": "folder",
+};
+
+const TAREA_PRIORIDAD_TONO: Record<string, string> = {
+  Alta: "var(--rose)",
+  Media: "var(--amber)",
+  Baja: "var(--muted)",
+};
+
+function diasHasta(fechaIso: string): number | null {
+  if (!fechaIso) return null;
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const d = new Date(fechaIso + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.round((d.getTime() - hoy.getTime()) / 86400000);
+}
+
+type UrgenciaGrupo = { key: string; label: string; tono: string };
+const URGENCIA_GRUPOS: UrgenciaGrupo[] = [
+  { key: "vencida", label: "Vencidas", tono: "var(--rose)" },
+  { key: "hoy", label: "Hoy", tono: "var(--amber)" },
+  { key: "semana", label: "Esta semana", tono: "var(--sky)" },
+  { key: "despues", label: "Más adelante", tono: "var(--muted)" },
+  { key: "sinfecha", label: "Sin fecha", tono: "var(--muted)" },
+];
+
+function urgenciaDeFila(vencimiento: string, estado: string): string {
+  if (estado === "Hecha") return "despues"; // hechas no urgen, se agrupan abajo igual
+  const dias = diasHasta(vencimiento);
+  if (dias === null) return "sinfecha";
+  if (dias < 0) return "vencida";
+  if (dias === 0) return "hoy";
+  if (dias <= 7) return "semana";
+  return "despues";
+}
+
+const EJ_TAREAS_ADMIN: Ejemplo[] = [
+  {
+    tarea: "Renovar seguro de responsabilidad civil de rodaje", categoria: "Seguros", prioridad: "Alta",
+    vencimiento: "2026-11-24", responsable: "Marta Oyarzun", estado: "En curso",
+    subtareas: JSON.stringify([
+      { item: "Pedir cotización renovación a Mapfre Producciones", hecha: "Sí" },
+      { item: "Confirmar cobertura de drones para escena 22", hecha: "No" },
+      { item: "Enviar póliza firmada a locación del faro", hecha: "No" },
+    ]),
+    notas: "La póliza actual vence antes de la jornada del faro — no se puede rodar ahí sin la renovación firmada.",
+  },
+  {
+    tarea: "Pago de nóminas de la semana 3 al equipo técnico", categoria: "Pagos", prioridad: "Alta",
+    vencimiento: "2026-11-25", responsable: "Asistencia de producción", estado: "Pendiente",
+    subtareas: JSON.stringify([
+      { item: "Verificar horas extra reportadas en partes diarios", hecha: "Sí" },
+      { item: "Enviar planilla a gestoría", hecha: "Sí" },
+      { item: "Confirmar transferencia con el banco", hecha: "No" },
+    ]),
+    notas: "Gestoría pide la planilla cerrada antes de las 10:00 para procesar el pago el mismo día.",
+  },
+  {
+    tarea: "Permiso de rodaje en vía pública — escena del puerto", categoria: "Permisos", prioridad: "Alta",
+    vencimiento: "2026-11-20", responsable: "Ana Puig", estado: "Bloqueada",
+    subtareas: JSON.stringify([
+      { item: "Presentar plano de ocupación de calle al ayuntamiento", hecha: "Sí" },
+      { item: "Pagar tasa municipal de ocupación", hecha: "No" },
+      { item: "Coordinar corte de tráfico con policía local", hecha: "No" },
+    ]),
+    notas: "El ayuntamiento no agenda la reunión de corte de tráfico hasta que la tasa esté pagada. Escalar a producción ejecutiva si no se resuelve hoy.",
+  },
+  {
+    tarea: "Alta en Seguridad Social del nuevo auxiliar de cámara", categoria: "Trámites", prioridad: "Media",
+    vencimiento: "2026-11-26", responsable: "Asistencia de producción", estado: "En curso",
+    subtareas: JSON.stringify([
+      { item: "Recoger DNI y datos bancarios", hecha: "Sí" },
+      { item: "Dar de alta en TGSS antes del primer día de trabajo", hecha: "No" },
+    ]),
+    notas: "Empieza el lunes — el alta tiene que estar hecha antes de esa fecha, no el mismo día.",
+  },
+  {
+    tarea: "Tramitar devolución de IVA de alquiler de equipo de cámara", categoria: "Trámites", prioridad: "Baja",
+    vencimiento: "2026-12-10", responsable: "Gestoría externa", estado: "Pendiente",
+    subtareas: JSON.stringify([
+      { item: "Recopilar facturas de alquiler del mes", hecha: "No" },
+      { item: "Enviar a gestoría con el modelo correspondiente", hecha: "No" },
+    ]),
+    notas: "",
+  },
+  {
+    tarea: "Contrato de cesión de derechos de imagen — figuración del puerto", categoria: "Documentación legal", prioridad: "Media",
+    vencimiento: "2026-11-19", responsable: "Marta Oyarzun", estado: "Hecha",
+    subtareas: JSON.stringify([
+      { item: "Imprimir formularios de cesión en castellano y euskera", hecha: "Sí" },
+      { item: "Recoger firmas de los 8 figurantes", hecha: "Sí" },
+      { item: "Escanear y archivar en carpeta del proyecto", hecha: "Sí" },
+    ]),
+    notas: "Archivado. Copia enviada a producción ejecutiva el 19/11.",
+  },
+  {
+    tarea: "Renovar alquiler de furgón de producción", categoria: "Logística administrativa", prioridad: "Media",
+    vencimiento: "2026-11-30", responsable: "Sergi Roma", estado: "Pendiente",
+    subtareas: JSON.stringify([
+      { item: "Confirmar kilometraje y estado con la empresa de alquiler", hecha: "No" },
+      { item: "Negociar extensión por 2 semanas más de rodaje", hecha: "No" },
+    ]),
+    notas: "",
+  },
+  {
+    tarea: "Pago de tasa de permiso de dron (AESA)", categoria: "Pagos", prioridad: "Alta",
+    vencimiento: "2026-11-18", responsable: "Asistencia de producción", estado: "Hecha",
+    subtareas: JSON.stringify([
+      { item: "Confirmar NOTAM de la zona del faro", hecha: "Sí" },
+      { item: "Pagar tasa y descargar justificante", hecha: "Sí" },
+    ]),
+    notas: "Justificante archivado junto al seguro de responsabilidad civil de drones.",
+  },
+];
+
+function TareasAdminBoard({
+  columnas,
+  filas,
+  editable,
+  departamento,
+  herramientaId,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  departamento: string;
+  herramientaId: string;
+  onCrear: (datos?: Record<string, string>) => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const colTarea = columnas.find((c) => c.key === "tarea");
+  const colCategoria = columnas.find((c) => c.key === "categoria");
+  const colPrioridad = columnas.find((c) => c.key === "prioridad");
+  const colVencimiento = columnas.find((c) => c.key === "vencimiento");
+  const colResponsable = columnas.find((c) => c.key === "responsable");
+  const colEstado = columnas.find((c) => c.key === "estado");
+  const colSub = columnas.find((c) => c.key === "subtareas");
+  const colNotas = columnas.find((c) => c.key === "notas");
+  const [abierta, setAbierta] = useState<string | null>(null);
+
+  function set(f: Fila, key: string, v: string) {
+    // No mergear acá contra f.datos (instantánea cerrada en el render donde
+    // se montó el handler): guardarFila ya hace `{ ...fresh, ...cambios }`
+    // contra el dato más reciente conocido de la fila. Si mandamos acá todo
+    // el objeto f.datos como "cambios", pisamos ediciones concurrentes de
+    // otros campos hechas entre el render y este guardado (bug real QA 25/11:
+    // responsable + subtarea casi simultáneos se pisaban entre sí).
+    onGuardar(f.id, { [key]: v }, f);
+  }
+
+  const totalTareas = filas.length;
+  const totalHechas = filas.filter((f) => f.datos?.[colEstado?.key ?? "estado"] === "Hecha").length;
+
+  const grupos = URGENCIA_GRUPOS.map((g) => ({
+    ...g,
+    filas: filas.filter(
+      (f) =>
+        urgenciaDeFila(f.datos?.[colVencimiento?.key ?? "vencimiento"] ?? "", f.datos?.[colEstado?.key ?? "estado"] ?? "") === g.key
+    ),
+  })).filter((g) => g.filas.length > 0);
+
+  return (
+    <div className="hp-tad-wrap">
+      {totalTareas > 0 && (
+        <div className="hp-tad-resumen">
+          <div className="hp-tad-resumen-stat">
+            <span className="hp-tad-resumen-n">{totalHechas}/{totalTareas}</span>
+            <span className="hp-tad-resumen-l">gestiones resueltas</span>
+          </div>
+          <div className="hp-tad-resumen-bar">
+            <div className="hp-tad-resumen-bar-fill" style={{ width: `${totalTareas ? Math.round((totalHechas / totalTareas) * 100) : 0}%` }} />
+          </div>
+        </div>
+      )}
+
+      {grupos.map((g) => (
+        <div className="hp-tad-grupo" key={g.key}>
+          <div className="hp-tad-grupo-head" style={{ "--urg-tono": g.tono } as React.CSSProperties}>
+            <span className="hp-tad-grupo-dot" />
+            <span className="hp-tad-grupo-label">{g.label}</span>
+            <span className="hp-tad-grupo-n">{g.filas.length}</span>
+          </div>
+          <div className="hp-tad-grid">
+            {g.filas.map((f) => {
+              const categoria = f.datos?.[colCategoria?.key ?? "categoria"] ?? "";
+              const prioridad = f.datos?.[colPrioridad?.key ?? "prioridad"] ?? "";
+              const estado = f.datos?.[colEstado?.key ?? "estado"] ?? "";
+              const vencimiento = f.datos?.[colVencimiento?.key ?? "vencimiento"] ?? "";
+              const accent = TAREA_CATEGORIA_ACCENT[categoria] ?? "var(--acc)";
+              const icono: IconName = TAREA_CATEGORIA_ICON[categoria] ?? "folder";
+              const sub = parseArr<SubtareaItem>(f.datos?.[colSub?.key ?? "subtareas"]);
+              const { hechas, total } = subtareasProgreso(sub);
+              const abiertaAqui = abierta === f.id;
+
+              function setSub(next: SubtareaItem[]) {
+                set(f, colSub?.key ?? "subtareas", JSON.stringify(next));
+              }
+              function toggleSub(idx: number) {
+                if (!editable) return;
+                setSub(sub.map((it, i) => (i === idx ? { ...it, hecha: it.hecha === "Sí" ? "No" : "Sí" } : it)));
+              }
+              function agregarSub() {
+                setSub([...sub, { item: "", hecha: "No" }]);
+              }
+              function borrarSub(idx: number) {
+                setSub(sub.filter((_, i) => i !== idx));
+              }
+
+              return (
+                <div
+                  className={`hp-tad-card${estado === "Hecha" ? " on" : ""}`}
+                  key={f.id}
+                  style={{ "--cat-accent": accent } as React.CSSProperties}
+                >
+                  <button
+                    type="button"
+                    className="hp-tad-card-head"
+                    onClick={() => setAbierta(abiertaAqui ? null : f.id)}
+                  >
+                    <span className="hp-tad-card-icono" style={{ color: accent }}><Icon name={icono} /></span>
+                    <span className="hp-tad-card-titulo">{f.datos?.[colTarea?.key ?? "tarea"] || "Sin título"}</span>
+                    <span className="hp-tad-card-chev"><Icon name={abiertaAqui ? "chevron-up" : "chevron-down"} /></span>
+                  </button>
+
+                  <div className="hp-tad-card-meta">
+                    <span className="hp-tad-chip" style={{ "--chip-accent": accent } as React.CSSProperties}>{categoria || "—"}</span>
+                    {prioridad && (
+                      <span className="hp-tad-prioridad" style={{ color: TAREA_PRIORIDAD_TONO[prioridad] ?? "var(--muted)" }}>
+                        ● {prioridad}
+                      </span>
+                    )}
+                    {vencimiento && <span className="hp-tad-fecha"><Icon name="clock" /> {vencimiento}</span>}
+                  </div>
+
+                  {total > 0 && (
+                    <div className="hp-tad-progreso">
+                      <div className="hp-tad-bar"><div className="hp-tad-bar-fill" style={{ width: `${Math.round((hechas / total) * 100)}%`, background: accent }} /></div>
+                      <span className="hp-tad-progreso-txt">{hechas}/{total} subtareas</span>
+                    </div>
+                  )}
+
+                  {colEstado && (
+                    <EstadoSeg
+                      valor={estado}
+                      opciones={colEstado.opciones ?? []}
+                      onPick={(v) => set(f, colEstado.key, v)}
+                      editable={editable}
+                      color
+                    />
+                  )}
+
+                  {abiertaAqui && (
+                    <div className="hp-tad-detalle" key={f.id}>
+                      {colTarea && (
+                        <input
+                          className="hp-tad-input hp-tad-input-titulo"
+                          defaultValue={f.datos?.[colTarea.key] ?? ""}
+                          placeholder={colTarea.label}
+                          readOnly={!editable}
+                          onBlur={(e) => set(f, colTarea.key, e.target.value)}
+                        />
+                      )}
+                      {colCategoria && (
+                        <EstadoSeg
+                          valor={categoria}
+                          opciones={colCategoria.opciones ?? []}
+                          onPick={(v) => set(f, colCategoria.key, v)}
+                          editable={editable}
+                          chip
+                        />
+                      )}
+                      {colPrioridad && (
+                        <EstadoSeg
+                          valor={prioridad}
+                          opciones={colPrioridad.opciones ?? []}
+                          onPick={(v) => set(f, colPrioridad.key, v)}
+                          editable={editable}
+                          chip
+                        />
+                      )}
+                      {colResponsable && (
+                        <input
+                          className="hp-tad-input"
+                          defaultValue={f.datos?.[colResponsable.key] ?? ""}
+                          placeholder={colResponsable.label}
+                          readOnly={!editable}
+                          onBlur={(e) => set(f, colResponsable.key, e.target.value)}
+                        />
+                      )}
+                      {colVencimiento && (
+                        <input
+                          type="date"
+                          className="hp-tad-input"
+                          defaultValue={f.datos?.[colVencimiento.key] ?? ""}
+                          readOnly={!editable}
+                          onChange={(e) => editable && set(f, colVencimiento.key, e.target.value)}
+                        />
+                      )}
+
+                      <div className="hp-tad-sub">
+                        <span className="hp-tad-sub-label">Subtareas</span>
+                        {sub.map((it, idx) => (
+                          <div className={`hp-tad-sub-item${it.hecha === "Sí" ? " on" : ""}`} key={idx}>
+                            <button
+                              type="button"
+                              className="hp-tad-sub-check"
+                              onClick={() => toggleSub(idx)}
+                              disabled={!editable}
+                              aria-pressed={it.hecha === "Sí"}
+                            >
+                              {it.hecha === "Sí" ? "✓" : ""}
+                            </button>
+                            <input
+                              className="hp-tad-sub-text"
+                              defaultValue={it.item}
+                              placeholder="Subtarea"
+                              readOnly={!editable}
+                              onBlur={(e) => {
+                                const next = sub.map((s, i) => (i === idx ? { ...s, item: e.target.value } : s));
+                                setSub(next);
+                              }}
+                            />
+                            {editable && <button className="hp-tad-sub-del" onClick={() => borrarSub(idx)} title="Eliminar">✕</button>}
+                          </div>
+                        ))}
+                        {editable && <button className="hp-tad-sub-add" onClick={agregarSub}>+ Agregar subtarea</button>}
+                      </div>
+
+                      {colNotas && (
+                        <textarea
+                          className="hp-tad-notas"
+                          defaultValue={f.datos?.[colNotas.key] ?? ""}
+                          placeholder={colNotas.label}
+                          readOnly={!editable}
+                          onBlur={(e) => set(f, colNotas.key, e.target.value)}
+                          rows={2}
+                        />
+                      )}
+
+                      <div className="hp-tad-adjunto">
+                        <span className="hp-tad-adjunto-label">Adjunto</span>
+                        <ArchivoCell
+                          path={f.datos?.["adjunto"] ?? ""}
+                          editable={editable}
+                          departamento={departamento}
+                          herramientaId={herramientaId}
+                          filaId={f.id}
+                          colKey="adjunto"
+                          onSave={(v) => set(f, "adjunto", v)}
+                        />
+                      </div>
+
+                      {editable && (
+                        <button className="hp-tad-borrar" onClick={() => onBorrar(f.id)}>Eliminar tarea</button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {editable && (
+        <button className="hp-tad-nueva" onClick={() => onCrear({ estado: "Pendiente", prioridad: "Media" })}>
+          <Icon name="plus" /> Nueva tarea administrativa
+        </button>
+      )}
+
+      {filas.length === 0 && !editable && (
+        <div className="hp-tabla-empty">
+          <span className="hex"></span>
+          <p>Sin tareas administrativas todavía.</p>
         </div>
       )}
     </div>
