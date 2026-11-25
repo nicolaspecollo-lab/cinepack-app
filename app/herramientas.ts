@@ -2969,55 +2969,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Driver": {
       departamento: [],
       cargo: [
-        {
-          id: "prod-checklist-vehiculos", nombre: "Checklist de vehículos, combustible y mantenimiento", tipo: "tabla",
-          hint: "Rediseño 25/11/2026 (rebote de Nico sobre la versión en tabla de celdas): una tarjeta por matrícula con alerta de un vistazo (carnet vencido / revisión vencida / mantenimiento urgente); al abrir, historial cronológico por vehículo — kilometraje con foto de odómetro, tickets de combustible/gastos con monto + foto, carnet y responsable de conducción (con historial de responsables, no solo el actual), y el checklist técnico de mantenimiento. Usa el motor EntidadTabsBoard ya aprobado (tarjeta → modal con pestañas), no la tabla genérica — mismo patrón que rrhh-plan-bienestar, con rama propia de tarjeta/alerta para este cargo.",
-          columnas: [
-            { key: "matricula", label: "Matrícula", tipo: "texto" },
-            { key: "modelo", label: "Modelo", tipo: "texto" },
-            { key: "anio", label: "Año", tipo: "num" },
-            { key: "responsable_actual", label: "Responsable actual", tipo: "texto" },
-            { key: "km_actual", label: "Kilometraje actual", tipo: "num" },
-            { key: "revision_tecnica", label: "Próxima revisión técnica", tipo: "fecha" },
-            { key: "carnet_vencimiento", label: "Vencimiento carnet del responsable", tipo: "fecha" },
-            {
-              key: "historial_km", label: "Registros de kilometraje", tipo: "repetible",
-              sub: [
-                { key: "fecha", label: "Fecha", tipo: "fecha" },
-                { key: "km", label: "Kilometraje", tipo: "num" },
-                { key: "foto", label: "Foto del odómetro", tipo: "archivo" },
-                { key: "nota", label: "Nota", tipo: "texto" },
-              ],
-            },
-            {
-              key: "historial_gastos", label: "Combustible y otros gastos", tipo: "repetible",
-              sub: [
-                { key: "fecha", label: "Fecha", tipo: "fecha" },
-                { key: "tipo_gasto", label: "Tipo", tipo: "estado", opciones: ["Combustible", "Peaje", "Parking", "Lavado", "Taller", "Otro"], libre: true },
-                { key: "monto", label: "Monto", tipo: "money" },
-                { key: "foto", label: "Foto del ticket", tipo: "archivo" },
-              ],
-            },
-            {
-              key: "historial_responsables", label: "Responsables de conducción", tipo: "repetible",
-              sub: [
-                { key: "fecha_desde", label: "Responsable desde", tipo: "fecha" },
-                { key: "nombre", label: "Nombre", tipo: "texto" },
-                { key: "carnet_foto", label: "Foto del carnet de conducir", tipo: "archivo" },
-                { key: "vencimiento_carnet", label: "Vencimiento del carnet", tipo: "fecha" },
-              ],
-            },
-            {
-              key: "mantenimiento", label: "Mantenimiento / checklist técnico", tipo: "repetible",
-              sub: [
-                { key: "fecha", label: "Fecha", tipo: "fecha" },
-                { key: "item", label: "Punto revisado", tipo: "estado", opciones: ["Aceite y filtros", "Frenos", "Neumáticos", "Luces", "Batería", "Líquido refrigerante", "Correa de distribución", "Aire acondicionado", "Otro"], libre: true },
-                { key: "estado", label: "Estado", tipo: "estado", opciones: ["OK", "Revisar", "Urgente"] },
-                { key: "nota", label: "Nota / taller", tipo: "largo" },
-              ],
-            },
-          ],
-        },
+        { id: "prod-checklist-vehiculos", nombre: "Checklist de vehículos, combustible y mantenimiento", tipo: "checklist" },
       ],
     },
   },
@@ -3531,35 +3483,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Reparto principal": {
       departamento: [fichaPersonaje, guionMarcado, calendarioCitaciones, vestMaqAsignado, contratoIndividual],
       cargo: [
-        {
-          id: "rep-notas-preparacion",
-          nombre: "Notas de preparación del personaje",
-          // Dato: tabla (una fila = un personaje completo que el actor/actriz
-          // prepara). Vista: panel a medida (RepNotasPreparacionPanel.tsx),
-          // ficha con pestañas por personaje (Biografía/Objetivos/
-          // Relaciones/Arco emocional/Notas recibidas) — ver justificación
-          // en ese archivo. Las columnas siguen existiendo para que el dato
-          // quede tipado y legible en exportaciones, aunque HerramientasPanel
-          // nunca monte la grilla genérica para este id.
-          tipo: "tabla",
-          hint: "Cuaderno de preparación del actor sobre su propio personaje: biografía, objetivos por escena, relaciones y arco emocional — nunca la vista del director sobre el actor.",
-          columnas: [
-            { key: "personaje", label: "Personaje" },
-            { key: "actor", label: "Actor/Actriz" },
-            { key: "edad", label: "Edad del personaje" },
-            { key: "ocupacion", label: "Ocupación" },
-            { key: "biografia", label: "Biografía / backstory", tipo: "largo" },
-            { key: "rasgos_fisicos", label: "Rasgos físicos y gestuales", tipo: "largo" },
-            { key: "voz_habla", label: "Voz y forma de hablar", tipo: "largo" },
-            { key: "objeto_personal", label: "Objeto personal significativo" },
-            { key: "motivacion_central", label: "Motivación central", tipo: "largo" },
-            { key: "foto_url", label: "Foto retrato", tipo: "archivo" },
-            { key: "objetivos_json", label: "Objetivos por escena (JSON)", tipo: "largo" },
-            { key: "relaciones_json", label: "Relaciones (JSON)", tipo: "largo" },
-            { key: "arco_json", label: "Arco emocional (JSON)", tipo: "largo" },
-            { key: "notas_json", label: "Notas de ensayo recibidas (JSON)", tipo: "largo" },
-          ],
-        },
+        { id: "rep-notas-preparacion", nombre: "Notas de preparación del personaje", tipo: "nota" },
         {
           id: "rep-agenda-personal-principal", nombre: "Mi agenda de rodaje personal", tipo: "tabla",
           hint: "Tus días de rodaje, horario de citación y escenas de cada jornada.",
@@ -3580,35 +3504,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     },
     "Figuración": {
       departamento: [calendarioCitaciones, vestMaqAsignado],
-      cargo: [
-        {
-          id: "rep-instrucciones-figuracion",
-          nombre: "Instrucciones de figuración por jornada",
-          tipo: "tabla",
-          hint: "Panel a medida (no tabla genérica): tarjetas de grupo de figuración agrupadas por jornada, con vestuario/posición/bloqueo/movimiento, punto de reunión y hora de citación propios de Figuración, foto de referencia y confirmación de recepción por grupo. Detalle completo al abrir la tarjeta, nunca una celda suelta. Documentación interna, nunca se renderiza (regla 25/11).",
-          columnas: [
-            { key: "jornada", label: "Jornada", tipo: "fecha" },
-            { key: "grupo", label: "Grupo de figuración", tipo: "texto" },
-            { key: "escena", label: "Escena/secuencia", tipo: "texto" },
-            { key: "hora_citacion", label: "Hora de citación", tipo: "texto" },
-            { key: "punto_reunion", label: "Punto de reunión", tipo: "texto" },
-            { key: "num_figurantes", label: "Nº de figurantes", tipo: "num" },
-            { key: "confirmados", label: "Confirmados", tipo: "num" },
-            {
-              key: "estado",
-              label: "Estado",
-              tipo: "estado",
-              opciones: ["Pendiente de preparar", "Instrucciones enviadas", "Confirmado en plató", "En ensayo/ajuste", "Listo para rodar"],
-            },
-            { key: "vestuario", label: "Vestuario y attrezzo", tipo: "largo" },
-            { key: "posicion", label: "Posición y bloqueo en escena", tipo: "largo" },
-            { key: "movimiento", label: "Movimiento y acción", tipo: "largo" },
-            { key: "foto_referencia", label: "Foto de referencia", tipo: "archivo" },
-            { key: "notas", label: "Notas adicionales", tipo: "largo" },
-          ],
-          agruparPor: "jornada",
-        },
-      ],
+      cargo: [{ id: "rep-instrucciones-figuracion", nombre: "Instrucciones de figuración por jornada", tipo: "checklist" }],
     },
   },
 

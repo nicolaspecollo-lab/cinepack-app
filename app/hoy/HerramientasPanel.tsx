@@ -17,8 +17,6 @@ import NotasEnsayoPanel from "./NotasEnsayoPanel";
 import { NOTAS_ENSAYO_HERRAMIENTA_ID } from "./notasEnsayoFilas";
 import ControlHorarios1ADPanel from "./ControlHorarios1ADPanel";
 import { CONTROL_HORARIOS_1AD_HERRAMIENTA_ID } from "./controlHorarios1adFilas";
-import RepNotasPreparacionPanel from "./RepNotasPreparacionPanel";
-import { REP_PREP_HERRAMIENTA_ID } from "./repNotasPreparacionFilas";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import { PLANTILLAS_DOCUMENTO, PLANTILLAS_TABLA } from "./plantillasEspacio";
 import DocsBlancoPanel from "./DocsBlancoPanel";
@@ -376,7 +374,6 @@ export default function HerramientasPanel({
     const esMoodboardFoto = abierta.id === MOODBOARD_FOTO_HERRAMIENTA_ID;
     const esNotasEnsayo = abierta.id === NOTAS_ENSAYO_HERRAMIENTA_ID;
     const esControlHorarios1AD = abierta.id === CONTROL_HORARIOS_1AD_HERRAMIENTA_ID;
-    const esRepNotasPreparacion = abierta.id === REP_PREP_HERRAMIENTA_ID;
     return (
       <div className="hp-open">
         {seccion === "departamento" ? (
@@ -446,14 +443,6 @@ export default function HerramientasPanel({
             editable={
               seccion === "cargo" &&
               (!!isAdmin || cargo === "1er asistente de dirección" || (!!cargo && cargo === cargoJefe))
-            }
-          />
-        ) : esRepNotasPreparacion ? (
-          <RepNotasPreparacionPanel
-            fullName={fullName}
-            editable={
-              seccion === "cargo" &&
-              (!!isAdmin || cargo === "Reparto principal" || (!!cargo && cargo === cargoJefe))
             }
           />
         ) : (
