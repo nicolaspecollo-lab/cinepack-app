@@ -351,7 +351,21 @@ function HerramientaData({
   const esMulti = herramienta.tipo === "tabla" || herramienta.tipo === "galeria";
   const esSingle = herramienta.tipo === "nota" || herramienta.tipo === "checklist" || herramienta.tipo === "ficha";
 
+  // HerramientaPanel se reutiliza (mismo fiber, sin remount) cuando el panel
+  // padre cambia qué `herramienta` muestra — ej. el auto-select de la primera
+  // herramienta al montar seguido, casi en el mismo tick, del restore de la
+  // última abierta por localStorage/efecto de cargo. Si el fetch de la
+  // PRIMERA herramienta todavía está en vuelo cuando el usuario (o esos
+  // efectos) ya cambiaron a OTRA, su resolución tardía pisaba `filas` con los
+  // datos (u otro vacío) de la herramienta vieja — bug real encontrado por QA
+  // en `dir-control-horarios-1ad` (ver necesidad.md, 25/11). `loadReqRef`
+  // guarda qué pedido es el más reciente; cualquier respuesta que llegue
+  // después de que el componente ya pidió OTRA cosa se descarta sin tocar
+  // el estado.
+  const loadReqRef = useRef(0);
+
   const load = useCallback(async () => {
+    const reqId = ++loadReqRef.current;
     const projectId = localStorage.getItem("cinepack-proyecto-id");
     if (!projectId) {
       setError("No hay proyecto activo (localStorage cinepack-proyecto-id). Volvé a iniciar sesión.");
@@ -366,6 +380,7 @@ function HerramientaData({
       .eq("departamento", departamento)
       .eq("herramienta_id", herramienta.id)
       .order("orden", { ascending: true });
+    if (loadReqRef.current !== reqId) return; // respuesta de un pedido ya obsoleto: se descarta
     if (err) {
       setError(err.message);
       setLoading(false);
@@ -764,13 +779,9 @@ function HerramientaData({
           <button onClick={() => setError(null)}>✕</button>
         </div>
       )}
-      {/* En Presupuesto, la vista Tabla es superficie de trabajo (carga real
-          de conceptos/montos): el hint ya se explica en el Tablero, y acá
-          solo resta altura para que la grilla empiece más arriba — pedido
-          explícito de Nicolás. */}
-      {herramienta.hint && !(herramienta.id === "ej-presupuesto-costos" && vista === "tabla") && herramienta.id !== "rep-notas-escenas" && herramienta.id !== "dir-control-horarios" && (
-        <p className="hp-hint">{herramienta.hint}</p>
-      )}
+      {/* Regla endurecida de Nico (25/11/2026): cero texto explicativo al
+          abrir una herramienta, sin excepciones. El hint nunca se renderiza
+          en pantalla — queda solo como documentación interna en herramientas.ts. */}
 
       {esTabla && herramienta.id === "ej-presupuesto-costos" && (
         // Barra propia de Presupuesto: el selector de "Presupuesto
@@ -6167,9 +6178,14 @@ function gdEstado(f: Fila): { label: string; tono: "ok" | "warn" | "bad" | "neut
   limite.setFullYear(limite.getFullYear() + anios);
   const dias = Math.round((limite.getTime() - Date.now()) / 86400000);
   const fechaTxt = limite.toLocaleDateString("es-ES");
-  if (dias < 0) return { label: `Vencido (${fechaTxt})`, tono: "bad" };
-  if (dias <= 90) return { label: `Vence ${fechaTxt}`, tono: "warn" };
-  return { label: `Vigente hasta ${fechaTxt}`, tono: "ok" };
+  // requiere_renovacion no cambia el cálculo de plazo ni los tonos, solo el
+  // lenguaje: "vencido su plazo de conservación" (archivo pasivo) vs.
+  // "pendiente de renovar" (vigencia activa, ej. licencia municipal) — ver
+  // necesidad.md 2026-11-25_ejecutivo_gestion-documental.
+  const renovacion = (f.datos?.requiere_renovacion ?? "No") === "Sí";
+  if (dias < 0) return { label: renovacion ? `Vencida, pendiente de renovar (${fechaTxt})` : `Vencido (${fechaTxt})`, tono: "bad" };
+  if (dias <= 90) return { label: renovacion ? `Por renovar antes del ${fechaTxt}` : `Vence ${fechaTxt}`, tono: "warn" };
+  return { label: renovacion ? `Renovación vigente hasta ${fechaTxt}` : `Vigente hasta ${fechaTxt}`, tono: "ok" };
 }
 
 export function GestionDocumentalBoard({
@@ -6193,8 +6209,56 @@ export function GestionDocumentalBoard({
 }) {
   const t = useTranslations("hp");
   const [filtro, setFiltro] = useState<string | null>(null);
+  const [filtroEntidad, setFiltroEntidad] = useState<string | null>(null);
+  // Integración real nivel 2 (ronda 2, 25/11/2026): ventana de rodaje
+  // (min/max de GENERAL_PLAN_RODAJE.fecha), un solo fetch de solo lectura al
+  // montar, para marcar qué documentos vencen durante el rodaje. null =
+  // todavía sin resolver o sin plan de rodaje cargado — en ambos casos no se
+  // muestra el badge, no se rompe el resto de la tarjeta.
+  const [ventanaRodaje, setVentanaRodaje] = useState<{ inicio: Date; fin: Date } | null>(null);
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      try {
+        const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+        if (!projectId) return;
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "gen-plan-rodaje");
+        const fechas = (data ?? [])
+          .map((r) => (r.datos as Record<string, string>)?.fecha)
+          .filter(Boolean)
+          .map((f) => new Date(f as string))
+          .filter((d) => !isNaN(d.getTime()));
+        if (!activo || fechas.length === 0) return;
+        setVentanaRodaje({
+          inicio: new Date(Math.min(...fechas.map((d) => d.getTime()))),
+          fin: new Date(Math.max(...fechas.map((d) => d.getTime()))),
+        });
+      } catch {
+        // sin plan de rodaje aún / error de red: se queda en null, sin badge
+      }
+    })();
+    return () => { activo = false; };
+  }, []);
+  function venceEnRodaje(f: Fila): boolean {
+    if (!ventanaRodaje) return false;
+    if ((f.datos?.requiere_renovacion ?? "No") !== "Sí") return false;
+    if ((f.datos?.permanencia ?? "") === "Permanente") return false;
+    const fecha = f.datos?.fecha_documento ? new Date(f.datos.fecha_documento) : null;
+    const anios = ejNum(f.datos?.anios_conservacion);
+    if (!fecha || !anios) return false;
+    const limite = new Date(fecha);
+    limite.setFullYear(limite.getFullYear() + anios);
+    return limite >= ventanaRodaje.inicio && limite <= ventanaRodaje.fin;
+  }
   const colByKey = new Map(columnas.map((c) => [c.key, c]));
   const colCategoria = colByKey.get("categoria");
+  const colEntidad = colByKey.get("entidad_referencia");
+  const colTipoEntidad = colByKey.get("tipo_entidad");
 
   function set(f: Fila, key: string, v: string) {
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
@@ -6208,7 +6272,14 @@ export function GestionDocumentalBoard({
   }
 
   const categoriasVistas = Array.from(new Set([...(colCategoria?.opciones ?? []), ...filas.map((f) => f.datos?.categoria).filter(Boolean) as string[]]));
-  const visibles = filtro ? filas.filter((f) => (f.datos?.categoria ?? "") === filtro) : filas;
+  const entidadesVistas = Array.from(new Set([...(colEntidad?.opciones ?? []), ...filas.map((f) => f.datos?.entidad_referencia).filter(Boolean) as string[]]));
+  const visibles = filas
+    .filter((f) => !filtro || (f.datos?.categoria ?? "") === filtro)
+    .filter((f) => !filtroEntidad || (f.datos?.entidad_referencia ?? "") === filtroEntidad);
+  // Mensaje agregado con lenguaje neutro ("requieren atención") en vez de
+  // distinguir "vencido"/"pendiente de renovar" acá: con documentos mixtos
+  // (algunos con requiere_renovacion="Sí" y otros no) un único texto agregado
+  // sonaría incoherente — la distinción real vive en el chip de cada tarjeta.
   const vencidosOVenciendo = filas.filter((f) => { const e = gdEstado(f); return e.tono === "bad" || e.tono === "warn"; });
 
   if (filas.length === 0) {
@@ -6221,7 +6292,7 @@ export function GestionDocumentalBoard({
     <div className="hp-gd">
       {vencidosOVenciendo.length > 0 && (
         <div className="hp-gd-alert">
-          <b>{vencidosOVenciendo.length}</b> documento{vencidosOVenciendo.length === 1 ? "" : "s"} vencido{vencidosOVenciendo.length === 1 ? "" : "s"} o por vencer su plazo de conservación.
+          <b>{vencidosOVenciendo.length}</b> documento{vencidosOVenciendo.length === 1 ? "" : "s"} requiere{vencidosOVenciendo.length === 1 ? "" : "n"} atención (vencido, por vencer o pendiente de renovar).
         </div>
       )}
 
@@ -6230,6 +6301,15 @@ export function GestionDocumentalBoard({
           <button className={`hp-gd-fchip${!filtro ? " on" : ""}`} onClick={() => setFiltro(null)}>Todas</button>
           {categoriasVistas.map((c) => (
             <button key={c} className={`hp-gd-fchip${filtro === c ? " on" : ""}`} onClick={() => setFiltro(c)}>{c}</button>
+          ))}
+        </div>
+      )}
+
+      {entidadesVistas.length > 0 && (
+        <div className="hp-gd-filtros">
+          <button className={`hp-gd-fchip${!filtroEntidad ? " on" : ""}`} onClick={() => setFiltroEntidad(null)}>Todas las entidades</button>
+          {entidadesVistas.map((e) => (
+            <button key={e} className={`hp-gd-fchip${filtroEntidad === e ? " on" : ""}`} onClick={() => setFiltroEntidad(e)}>{e}</button>
           ))}
         </div>
       )}
@@ -6250,6 +6330,14 @@ export function GestionDocumentalBoard({
                   readOnly={!editable}
                   onBlur={(e) => setCategoria(f, e.target.value)}
                 />
+                <input
+                  className="hp-gd-categoria"
+                  defaultValue={f.datos?.entidad_referencia ?? ""}
+                  placeholder="Entidad (proveedor, organismo...)"
+                  list="hp-gd-entidades-list"
+                  readOnly={!editable}
+                  onBlur={(e) => set(f, "entidad_referencia", e.target.value)}
+                />
                 {editable && <button className="hp-del" onClick={() => onBorrar(f.id)} title={t("delete")}>✕</button>}
               </div>
               <div className="hp-gd-row2">
@@ -6262,8 +6350,19 @@ export function GestionDocumentalBoard({
                   <label>Años de conservación<input type="number" defaultValue={f.datos?.anios_conservacion ?? ""} readOnly={!editable} onBlur={(e) => set(f, "anios_conservacion", e.target.value)} /></label>
                 )}
               </div>
+              <div className="hp-gd-row2">
+                <label className="hp-gd-permanencia">
+                  Tipo de entidad
+                  <EstadoSeg valor={f.datos?.tipo_entidad ?? ""} opciones={colTipoEntidad?.opciones ?? []} onPick={(v) => set(f, "tipo_entidad", v)} editable={editable} chip />
+                </label>
+                <label className="hp-gd-permanencia">
+                  Requiere renovación
+                  <EstadoSeg valor={f.datos?.requiere_renovacion || "No"} opciones={colByKey.get("requiere_renovacion")?.opciones ?? []} onPick={(v) => set(f, "requiere_renovacion", v)} editable={editable} chip color />
+                </label>
+              </div>
               <div className="hp-gd-row3">
                 <span className={`hp-gd-chip tono-${estado.tono}`}>{estado.label}</span>
+                {venceEnRodaje(f) && <span className="hp-gd-chip tono-warn">Vence durante el rodaje</span>}
                 <EstadoSeg valor={f.datos?.estado_digitalizacion ?? ""} opciones={colByKey.get("estado_digitalizacion")?.opciones ?? []} onPick={(v) => set(f, "estado_digitalizacion", v)} editable={editable} chip color />
                 <ArchivoCell path={f.datos?.archivo ?? ""} editable={editable} departamento={departamento} herramientaId={herramientaId} filaId={f.id} colKey="archivo" onSave={(v) => set(f, "archivo", v)} />
               </div>
@@ -6273,6 +6372,9 @@ export function GestionDocumentalBoard({
       </div>
       <datalist id="hp-gd-categorias-list">
         {categoriasVistas.map((c) => <option key={c} value={c} />)}
+      </datalist>
+      <datalist id="hp-gd-entidades-list">
+        {entidadesVistas.map((e) => <option key={e} value={e} />)}
       </datalist>
 
       {editable && <div className="hp-actions"><button className="cp-btn cp-btn-acc" onClick={() => onCrear()}>+ Agregar documento</button></div>}
@@ -8454,6 +8556,46 @@ export function TablaTool({
   const [batchVal, setBatchVal] = useState("");
   const [showExtStats, setShowExtStats] = useState(false);
   const [importando, setImportando] = useState(false);
+  // Integración real nivel 2 (ronda 2, 25/11/2026), solo para
+  // dir-control-horarios-1ad, columna escena_setup: validación liviana de
+  // substring contra GENERAL_PLAN_RODAJE.escenas (texto libre). Nunca
+  // bloquea el guardado, solo pinta un icono de ayuda. null = sin verificar
+  // todavía, undefined (ausente) = plan de rodaje sin cargar.
+  const [planEscenasTexto, setPlanEscenasTexto] = useState<string[] | null>(null);
+  const [escenaSetupCheck, setEscenaSetupCheck] = useState<Record<string, "ok" | "alerta">>({});
+  async function verificarEscenaSetup(filaId: string, valor: string) {
+    if (herramientaId !== "dir-control-horarios-1ad") return;
+    const texto = valor.trim();
+    if (!texto) {
+      setEscenaSetupCheck((prev) => { const n = { ...prev }; delete n[filaId]; return n; });
+      return;
+    }
+    let plan = planEscenasTexto;
+    if (plan === null) {
+      try {
+        const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+        if (!projectId) return;
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "gen-plan-rodaje");
+        plan = (data ?? []).map((r) => (r.datos as Record<string, string>)?.escenas ?? "").filter(Boolean);
+        setPlanEscenasTexto(plan);
+      } catch {
+        return;
+      }
+    }
+    if (!plan.length) {
+      // Sin plan de rodaje todavía: no se muestra ni error ni alerta.
+      setEscenaSetupCheck((prev) => { const n = { ...prev }; delete n[filaId]; return n; });
+      return;
+    }
+    const buscado = texto.split("/")[0].trim().toLowerCase();
+    const encontrada = plan.some((escenasJornada) => escenasJornada.toLowerCase().includes(buscado));
+    setEscenaSetupCheck((prev) => ({ ...prev, [filaId]: encontrada ? "ok" : "alerta" }));
+  }
   const [showLastEdit, setShowLastEdit] = useState(false);
 
   const tableRef = useRef<HTMLTableElement>(null);
@@ -9357,7 +9499,15 @@ export function TablaTool({
                             {isNum && dataBarPct > 0 && !c.sinAcento && (
                               <div className="hp-databar" style={{width: `${dataBarPct}%`}} />
                             )}
-                            <div className="hp-cell-body" style={rowH ? {height: rowH - 2, maxHeight: rowH - 2} : undefined}>
+                            <div
+                              className="hp-cell-body"
+                              style={rowH ? {height: rowH - 2, maxHeight: rowH - 2} : undefined}
+                              onBlur={
+                                herramientaId === "dir-control-horarios-1ad" && c.key === "escena_setup"
+                                  ? () => verificarEscenaSetup(f.id, val(f, c.key))
+                                  : undefined
+                              }
+                            >
                               <CeldaConAutocomp
                                 col={c}
                                 valor={cellVal}
@@ -9373,6 +9523,18 @@ export function TablaTool({
                                 evaluarFormula={permitirFormulas && c.tipo === "money" ? () => resolverCelda(colIdx, absIdx) : undefined}
                                 onFocusCelda={permitirFormulas ? () => setCeldaFoco({ filaId: f.id, colKey: c.key }) : undefined}
                               />
+                              {herramientaId === "dir-control-horarios-1ad" && c.key === "escena_setup" && escenaSetupCheck[f.id] && (
+                                <span
+                                  className={`hp-escena-setup-check hp-esc-${escenaSetupCheck[f.id]}`}
+                                  title={
+                                    escenaSetupCheck[f.id] === "ok"
+                                      ? "Aparece en el Plan de rodaje"
+                                      : "No se encontró esta escena en el Plan de rodaje — revisá el número o seguí igual, no bloquea el guardado"
+                                  }
+                                >
+                                  <Icon name={escenaSetupCheck[f.id] === "ok" ? "check" : "alert-triangle"} size={13} />
+                                </span>
+                              )}
                             </div>
                           </td>
                         );
@@ -9616,7 +9778,12 @@ function GaleriaTool({
         />
         {columnas.map((c) => (
           <label className="hp-gfield" key={c.key}>
-            <span>{c.label}</span>
+            <span>
+              {c.label}
+              {herramientaId === "dir-continuidad-foto" && c.key === "escena" && (f.datos?.escena ?? "").trim() && (
+                <VerContinuidadArte escena={f.datos?.escena ?? ""} />
+              )}
+            </span>
             {c.tipo === "archivo" ? (
               <ArchivoCell
                 path={f.datos?.[c.key] ?? ""}
@@ -13571,6 +13738,95 @@ function VerEscenaGuion({ escena }: { escena: string }) {
               {datos.loc && <div><dt>Locación</dt><dd>{datos.loc}</dd></div>}
               {datos.personajes && <div><dt>Personajes</dt><dd>{datos.personajes}</dd></div>}
               {datos.resumen && <div><dt>Resumen</dt><dd>{datos.resumen}</dd></div>}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Integración real nivel 1 (ronda 2, 25/11/2026): mismo patrón que
+// VerEscenaGuion pero consultando, en paralelo, las dos herramientas de
+// continuidad de Arte (vestuario/maquillaje) para la misma escena. Solo
+// lectura — nunca escribe en esas tablas ni en dir-continuidad-foto.
+function VerContinuidadArte({ escena }: { escena: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, setEstado] = useState<"idle" | "cargando" | "ok" | "vacio" | "error">("idle");
+  const [vestuario, setVestuario] = useState<Record<string, string>[]>([]);
+  const [maquillaje, setMaquillaje] = useState<Record<string, string>[]>([]);
+
+  async function abrir() {
+    setAbierto((v) => !v);
+    if (estado !== "idle") return;
+    setEstado("cargando");
+    try {
+      const projectId = typeof window !== "undefined" ? localStorage.getItem("cinepack-proyecto-id") : null;
+      if (!projectId) { setEstado("error"); return; }
+      const supabase = createClient();
+      const [vRes, mRes] = await Promise.all([
+        supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "arte-continuidad-vestuario")
+          .eq("datos->>escena", escena)
+          .limit(5),
+        supabase
+          .from("herramienta_filas")
+          .select("datos")
+          .eq("project_id", projectId)
+          .eq("herramienta_id", "arte-continuidad-maquillaje")
+          .eq("datos->>escena", escena)
+          .limit(5),
+      ]);
+      const v = (vRes.data ?? []).map((r) => r.datos as Record<string, string>);
+      const m = (mRes.data ?? []).map((r) => r.datos as Record<string, string>);
+      setVestuario(v);
+      setMaquillaje(m);
+      setEstado(v.length === 0 && m.length === 0 ? "vacio" : "ok");
+    } catch {
+      setEstado("error");
+    }
+  }
+
+  return (
+    <div className="hp-mc-guion-wrap">
+      <button type="button" className="hp-mc-guion-btn" onClick={abrir} title="Ver continuidad de Arte para esta escena">
+        <Icon name="file-text" size={12} /> Ver continuidad de Arte
+      </button>
+      {abierto && (
+        <div className="hp-mc-guion-pop">
+          {estado === "cargando" && <p>Buscando continuidad de Arte para esta escena…</p>}
+          {estado === "error" && <p>No se pudo consultar la continuidad de Arte ahora.</p>}
+          {estado === "vacio" && <p>Arte todavía no registró continuidad de vestuario ni maquillaje para esta escena.</p>}
+          {estado === "ok" && (
+            <>
+              {vestuario.length > 0 && (
+                <div>
+                  <dt>Vestuario</dt>
+                  {vestuario.map((d, i) => (
+                    <dd key={i}>
+                      {d.personaje ?? "—"} — {d.look ?? ""}{" "}
+                      {d.cambio && (
+                        <span className={`seg seg-${MC_CONCEPTO_TONO.vestuario_prop}`}>{d.cambio}</span>
+                      )}
+                      {d.nota ? ` · ${d.nota}` : ""}
+                    </dd>
+                  ))}
+                </div>
+              )}
+              {maquillaje.length > 0 && (
+                <div>
+                  <dt>Maquillaje</dt>
+                  {maquillaje.map((d, i) => (
+                    <dd key={i}>
+                      {d.personaje ?? "—"} — {d.tipo ?? ""}
+                      {d.nota ? ` · ${d.nota}` : ""}
+                    </dd>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>

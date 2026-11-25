@@ -1341,7 +1341,12 @@
 /* Wrapper del contenido de cada celda: cuando el usuario fija el alto de la
    fila (arrastrando), este div recibe height+maxHeight inline y recorta el
    contenido con scroll — los <td> ignoran max-height, por eso el wrapper. */
-.cp-dash .hp-cell-body{ overflow:auto; min-width:0; }
+.cp-dash .hp-cell-body{ overflow:auto; min-width:0; position:relative; }
+/* Integración real nivel 2 (ronda 2, 25/11/2026): indicador liviano de
+   escena_setup contra GENERAL_PLAN_RODAJE — no bloquea, solo ayuda visual. */
+.cp-dash .hp-escena-setup-check{ position:absolute; top:2px; right:2px; display:inline-flex; pointer-events:none; }
+.cp-dash .hp-escena-setup-check.hp-esc-ok{ color:var(--lime); }
+.cp-dash .hp-escena-setup-check.hp-esc-alerta{ color:var(--amber); }
 .cp-dash .hp-cell-area{ resize:none; line-height:1.5; min-height:36px; overflow:hidden; }
 .cp-dash .hp-cell-input:focus, .cp-dash .hp-cell-area:focus, .cp-dash .hp-cell-select:focus{ outline:1px solid var(--acc); outline-offset:-1px; background:var(--hl1); }
 .cp-dash .hp-cell-select{ cursor:pointer; }

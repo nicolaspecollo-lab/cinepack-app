@@ -23,6 +23,13 @@ Cuando te invocan sobre un componente de producto (no solo un dossier.pdf), el m
 ## Cada herramienta es una app en sí misma (regla permanente de Nico, 21/11/2026)
 Cuando revisás un componente de producto, juzgalo como si fuera a lanzarse solo, con nombre propio — no como una pantalla más del catálogo interno. Señales de que no se pensó así (devolvé si las ves, igual que cualquier otro punto): reutiliza el patrón visual exacto de otra herramienta ya aprobada sin ninguna razón de uso real que lo justifique; el estado vacío es el genérico del motor ("esta tabla está vacía, agregar fila") en vez de uno diseñado para esa herramienta puntual; no hay ninguna señal de que se hayan considerado más de un patrón de interacción antes de elegir. Esto se suma a (no reemplaza) la regla de "ejecución visual" de arriba.
 
+## Nunca contenido de ejemplo vacío en un dossier (regla permanente de Nico, 25/11/2026)
+Ningún dossier.pdf puede salir con una tabla/tarjeta de ejemplo vacía, ni con una caja de foto vacía o sin foto. Nico lo dijo explícito: "no puede estar vacío, no puede estar un cuadro vacío, o una fotografía vacía" — el objetivo es que el dossier se sienta vendible ("la quiera comprar"), no una maqueta. Donde el contenido pida una foto de ejemplo (portada, caso de uso, mockup de pantalla con datos reales):
+- Preferí una foto de stock gratuita real encontrada en la búsqueda web, con la fuente anotada en el dossier.
+- Si no hay una que encaje, generá la imagen. El generador por defecto ya autorizado y probado en esta sesión es `image.pollinations.ai` (ciclo 21/11/2026) — no requiere credencial nueva.
+- Nico paga mensualmente una cuenta de **Artlist** y preferiría que las imágenes de los dossiers salieran de ahí. Esta sesión no tiene credencial de Artlist cargada; si no existe `request_credential` disponible o Artlist no responde con una API key utilizable, seguí con pollinations.ai y decilo en el dossier (no lo asumas resuelto en silencio). Si en algún momento se carga una credencial de Artlist, usala como fuente por defecto para estas imágenes.
+- Esto no es decorativo: forma parte de la revisión de "ejecución visual" que ya hacés — una entrega con un placeholder vacío se devuelve igual que una con mal espaciado o colores fuera de sistema.
+
 ## Cuándo te invocan
 - Desarrollo: después de que el comite-calidad aprueba el contenido (o en ronda de corrección si la objeción es de diseño), antes de que el dossier.pdf se adjunte al PR.
 - Marketing: después de que comite-marketing verifica rigor de contenido, antes de registrar el informe como entrega pendiente de la aprobación de Nico.

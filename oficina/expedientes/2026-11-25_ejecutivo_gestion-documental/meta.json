@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente aprobado",
+  "title": "Gestión documental administrativa",
+  "subtitle": "Administración (Ejecutivo): correlación documento-entidad con 3 columnas nuevas y badge \"Vence durante el rodaje\" cruzado en tiempo real con el plan de rodaje, aprobado por comité en ronda 2 sin objeciones.",
+  "badge": "<span class=\"badge badge-ok\">Aprobado · Ronda 2</span>",
+  "metaItems": [["Fecha", "25 nov 2026"], ["Departamento", "Ejecutivo · Administración"], ["Oficina", "Desarrollo"], ["Ronda", "2 — aprobado sin objeciones"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#5F70ED"
+}
