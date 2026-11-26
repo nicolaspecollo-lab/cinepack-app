@@ -15,7 +15,7 @@ import HerramientaPanel from "./HerramientaPanel";
 import OrdenRodajePanel from "./OrdenRodajePanel";
 import DocumentosProyectoPanel from "./DocumentosProyectoPanel";
 import CalendarioProyecto from "./CalendarioProyecto";
-import { GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP } from "../herramientas";
+import { GENERAL_PLAN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP, GENERAL_AGENDA_CONFIRMACIONES } from "../herramientas";
 import { createClient } from "@/lib/supabase/client";
 import { useTranslations } from "next-intl";
 
@@ -25,7 +25,7 @@ export type Sub =
   | "comunicados" | "consultas" | "guion" | "guiontec"
   | "calendario" | "plan" | "orden" | "escena3d"
   | "espacio" | "visionado" | "equipo" | "accesos" | "pipeline"
-  | "contactos" | "wrap" | "documentos";
+  | "contactos" | "wrap" | "agenda" | "documentos";
 
 // Departamentos que pueden EDITAR cada herramienta general.
 // Ejecutivo siempre puede editar (se suma en canEdit abajo).
@@ -43,6 +43,7 @@ const PROPIETARIOS: Partial<Record<Sub, string[] | null>> = {
   contactos:  ["Producción"],
   wrap:       ["Producción"],
   escena3d:   [],           // vista agregada, sin edición directa
+  agenda:     [],           // la escriben otras herramientas al confirmar, nunca a mano
 };
 
 function canEditSub(sub: Sub, departamento: string): boolean {
@@ -77,6 +78,7 @@ const SUBS: SubDef[] = [
   { id: "pipeline",       label: "Pipeline",             desc: "Financiación, acuerdos y entregables ejecutivos.",       editores: ["Ejecutivo"],                                                  visores: ["Ejecutivo", "Producción"], cond: (d) => d === "Ejecutivo" || d === "Producción" },
   { id: "contactos",      label: "Contactos emergencia", desc: "Teléfonos y contactos clave para urgencias.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
   { id: "wrap",           label: "Checklist wrap",       desc: "Lista de control para el cierre del rodaje.",            editores: ["Producción", "Ejecutivo"],                                    visores: "todos" },
+  { id: "agenda",         label: "Agenda de confirmaciones", desc: "Registro automático de citaciones confirmadas, con fecha, hora y explicación.", editores: [],                                       visores: "todos" },
   { id: "documentos",     label: "Documentos",           desc: "Hojas y documentos en blanco compartidos con todo el proyecto.", editores: null,                                                      visores: "todos" },
 ];
 
@@ -161,6 +163,9 @@ export default function GeneralesPanel({
         )}
         {sub === "wrap" && (
           <HerramientaPanel departamento="General" herramienta={GENERAL_CHECKLIST_WRAP} fullName={fullName} editable={ce("wrap")} />
+        )}
+        {sub === "agenda" && (
+          <HerramientaPanel departamento="General" herramienta={GENERAL_AGENDA_CONFIRMACIONES} fullName={fullName} editable={false} />
         )}
         {sub === "documentos" && <DocumentosProyectoPanel />}
       </div>

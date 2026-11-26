@@ -2730,6 +2730,16 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
           id: "dir-control-horarios",
           nombre: "Avisos y confirmaciones de citación al equipo",
           tipo: "tabla",
+          // Dato: tabla (una fila = un aviso enviado a un destinatario/depto).
+          // Vista: panel a medida (AvisoCitacionBoard en HerramientaPanel.tsx),
+          // tablero kanban de 3 columnas por estado de confirmación
+          // (Pendiente/No leído/Confirmado) — rediseño 25/11 tras objeción del
+          // comité (ronda 1): esto es un log de notificaciones operativas, no
+          // una planilla de conceptos/montos, y la pregunta real de la 1AD es
+          // "¿a quién le mandé qué, y quién me confirmó?", que el kanban
+          // responde de un vistazo sin abrir cada fila. Las columnas de acá
+          // siguen existiendo para que el dato quede tipado/exportable, aunque
+          // el motor genérico nunca renderiza esto como tabla plana.
           hint: "Centro de avisos operativos al equipo (citación, cambios de horario de último momento) con confirmación de recepción por destinatario. No es un registro de tiempos/overtime (ver Control de horarios y avisos al equipo (1AD)).",
           columnas: [
             { key: "mensaje", label: "Aviso / mensaje", tipo: "largo" },
@@ -4110,6 +4120,23 @@ export const GENERAL_CHECKLIST_WRAP: Herramienta = {
   ],
 };
 
+// Registro automático de eventos confirmados desde otras herramientas
+// (hoy: avisos de citación de Asistencia de dirección). Nunca se edita a
+// mano desde acá — cada fila la crea la herramienta de origen cuando el
+// destinatario confirma, con fecha/hora y la explicación del evento.
+export const GENERAL_AGENDA_CONFIRMACIONES: Herramienta = {
+  id: "gen-agenda-confirmaciones",
+  nombre: "Agenda de confirmaciones",
+  tipo: "tabla",
+  columnas: [
+    { key: "fecha", label: "Fecha", tipo: "fecha" },
+    { key: "hora", label: "Hora" },
+    { key: "origen_herramienta", label: "Origen" },
+    { key: "destinatario", label: "Para" },
+    { key: "explicacion", label: "Explicación", tipo: "largo" },
+  ],
+};
+
 // Unión deduplicada de TODAS las herramientas de departamento del depto.
 export function deptTools(departamento: string): Herramienta[] {
   const dep = HERRAMIENTAS[departamento];
@@ -4156,7 +4183,7 @@ export const HERRAMIENTA_POR_ID: Record<string, Herramienta> = (() => {
       for (const h of [...ct.departamento, ...ct.cargo]) map[h.id] = h;
     }
   }
-  for (const h of [GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_ORDEN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP]) map[h.id] = h;
+  for (const h of [GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_ORDEN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP, GENERAL_AGENDA_CONFIRMACIONES]) map[h.id] = h;
   return map;
 })();
 

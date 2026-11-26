@@ -209,6 +209,7 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "maq-efectos-especiales-maq" ||
     PLANO_BOARD_IDS.has(id) ||
     PENDIENTES_BOARD_IDS.has(id) ||
+    AVISOS_CITACION_BOARD_IDS.has(id) ||
     FICHA_EQUIPO_IDS.has(id) ||
     AGENDA_DIA_IDS.has(id) ||
     CONTINUIDAD_PERSONAJE_IDS.has(id) ||
@@ -911,6 +912,19 @@ function HerramientaData({
           editable={ed}
           departamento={departamento}
           herramientaId={herramienta.id}
+          onCrear={() => crearFila({})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+        )}</VistaConEjemplos>
+      )}
+
+      {herramienta.tipo === "tabla" && AVISOS_CITACION_BOARD_IDS.has(herramienta.id) && (
+        <VistaConEjemplos ejemplos={EJ_AVISOS_CITACION} filas={filas} editable={editable} onCrear={crearFila}>{(fs, ed) => (
+        <AvisoCitacionBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={fs}
+          editable={ed}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
@@ -2818,6 +2832,254 @@ function PendientesBoard({
         </div>
       )}
       {editable && filas.length > 0 && (
+        <div className="hp-actions">
+          <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ---- Tablero de avisos y confirmaciones de citación (Asistencia de dirección) ----
+// Objeción del comité (ronda 1, 25/11): esto es un log de notificaciones
+// operativas por destinatario con estado de lectura/confirmación, no una
+// planilla de conceptos/montos — no corresponde la tabla genérica. La
+// pregunta real que la 1AD necesita responder de un vistazo es "¿a quién le
+// mandé qué, y quién me confirmó?". De los 3 patrones evaluados (tarjetas
+// sueltas con badge, feed cronológico agrupado por destinatario, tablero de
+// 3 columnas por estado) se elige el tablero: el estado de confirmación YA
+// es la columna "estado" del dato real (Pendiente/No leído/Confirmado), así
+// que un kanban de 3 columnas responde la pregunta sin un clic extra — ver
+// cuántos avisos siguen sin confirmar es tan importante como ver cuáles ya
+// están. Agrupar por destinatario (la otra opción) obliga a abrir cada
+// grupo para saber si algo quedó pendiente; acá se ve en la columna misma.
+const AVISOS_CITACION_BOARD_IDS = new Set(["dir-control-horarios"]);
+
+// Orden fijo del flujo real de un aviso (no el orden en que se declaran las
+// opciones en herramientas.ts): se manda → puede quedar sin leer → se
+// confirma. "No leído" antes de "Confirmado" porque es un estado peor, no
+// mejor, aunque alfabéticamente caiga después.
+const AVISO_ESTADO_ORDEN = ["Pendiente", "No leído", "Confirmado"];
+
+const AVISO_CANAL_ICONO: Record<string, IconName> = {
+  WhatsApp: "message",
+  Llamada: "phone",
+  Presencial: "users",
+  Callsheet: "file-text",
+};
+const AVISO_CANAL_TONO: Record<string, string> = {
+  WhatsApp: "var(--lime)",
+  Llamada: "var(--cyan)",
+  Presencial: "var(--amber)",
+  Callsheet: "var(--violet)",
+};
+
+// Hash determinístico simple (destinatario → color de avatar), mismo
+// mecanismo que NotasEnsayoPanel: el mismo destinatario siempre cae en el
+// mismo color, nunca uno al azar en cada render.
+function hashAvatar(nombre: string): number {
+  let h = 0;
+  for (let i = 0; i < nombre.length; i++) h = (h * 31 + nombre.charCodeAt(i)) >>> 0;
+  return h;
+}
+function inicialesDe(nombre: string): string {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
+function AvisoCitacionBoard({
+  columnas,
+  filas,
+  editable,
+  onCrear,
+  onGuardar,
+  onBorrar,
+}: {
+  columnas: Columna[];
+  filas: Fila[];
+  editable: boolean;
+  onCrear: () => void;
+  onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
+  onBorrar: (id: string) => void;
+}) {
+  const t = useTranslations("hp");
+  const [abiertaId, setAbiertaId] = useState<string | null>(null);
+
+  const colEstado = columnas.find((c) => c.key === "estado_confirmacion")!;
+  const colCanal = columnas.find((c) => c.key === "canal")!;
+
+  function set(f: Fila, key: string, v: string) {
+    const yaConfirmado = (f.datos?.estado_confirmacion ?? "Pendiente") === "Confirmado";
+    onGuardar(f.id, { ...f.datos, [key]: v }, f);
+    if (key === "estado_confirmacion" && v === "Confirmado" && !yaConfirmado) {
+      registrarEnAgenda(f);
+    }
+  }
+
+  // Pedido de Nico (26/11): al confirmarse un aviso de citación, el evento
+  // queda registrado solo, con fecha/hora y explicación, en la agenda
+  // general del destinatario — sin que nadie tenga que anotarlo a mano.
+  // No bloquea ni revierte el guardado del aviso si falla (es un registro
+  // derivado, nunca la fuente de verdad del aviso en sí).
+  async function registrarEnAgenda(f: Fila) {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) return;
+    const d = f.datos ?? {};
+    const ahora = new Date();
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("herramienta_filas").insert({
+        project_id: projectId,
+        departamento: "General",
+        herramienta_id: "gen-agenda-confirmaciones",
+        datos: {
+          fecha: ahora.toISOString().slice(0, 10),
+          hora: ahora.toTimeString().slice(0, 5),
+          origen_herramienta: "Aviso de citación (Asistencia de dirección)",
+          destinatario: d.destinatario || "Sin destinatario",
+          explicacion: d.mensaje ? `Confirmó: "${d.mensaje}"` : "Confirmó el aviso de citación.",
+        },
+        orden: Math.floor(Date.now() / 1000),
+        registro: [],
+        visionado_por: [],
+        created_by: user?.id ?? null,
+        autor_nombre: "Sistema",
+        editor_nombre: "Sistema",
+      });
+    } catch (e) {
+      console.error("[agenda debug catch]", e);
+    }
+  }
+
+  function fechaHora(iso: string): string {
+    if (!iso) return "sin fecha";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+
+  function Tarjeta(f: Fila) {
+    const d = f.datos ?? {};
+    const destinatario = d.destinatario || "Sin destinatario";
+    const estado = d.estado_confirmacion || "Pendiente";
+    const canal = d.canal || "";
+    const abierta = abiertaId === f.id;
+    const h = hashAvatar(destinatario);
+    return (
+      <div className={`avc-card tono-${estadoTono(estado)}`} key={f.id}>
+        <button className="avc-card-head" onClick={() => setAbiertaId(abierta ? null : f.id)}>
+          <span className="avc-avatar" style={{ background: `hsl(${h % 360},46%,32%)`, color: `hsl(${h % 360},70%,86%)` }}>
+            {inicialesDe(destinatario)}
+          </span>
+          <span className="avc-card-id">
+            <span className="avc-card-dest">{destinatario}</span>
+            <span className="avc-card-fecha"><Icon name="clock" size={11} /> {fechaHora(d.fecha_envio)}</span>
+          </span>
+          {canal && (
+            <span className="avc-canal-badge" style={{ color: AVISO_CANAL_TONO[canal] ?? "var(--muted)", borderColor: AVISO_CANAL_TONO[canal] ?? "var(--line)" }}>
+              <Icon name={AVISO_CANAL_ICONO[canal] ?? "message"} size={12} /> {canal}
+            </span>
+          )}
+          <Icon name={abierta ? "chevron-up" : "chevron-down"} size={13} className="avc-chev" />
+        </button>
+
+        <p className="avc-mensaje" title={d.mensaje ? undefined : "Sin mensaje"}>
+          {d.mensaje ? d.mensaje.replace(/<[^>]*>/g, "") : "Sin mensaje"}
+        </p>
+
+        {estado === "Confirmado" && d.confirmado_por && (
+          <span key={`${f.id}-${estado}`} className="avc-confirmado-pill avc-pop">
+            <Icon name="check" size={12} /> Confirmó {d.confirmado_por}
+          </span>
+        )}
+
+        {abierta && (
+          <div className="avc-body">
+            {editable ? (
+              <>
+                <label className="avc-field">
+                  <span>Aviso / mensaje</span>
+                  <textarea rows={3} defaultValue={d.mensaje ?? ""} onBlur={(e) => set(f, "mensaje", e.target.value)} />
+                </label>
+                <label className="avc-field">
+                  <span>Destinatario o departamento</span>
+                  <input defaultValue={d.destinatario ?? ""} onBlur={(e) => set(f, "destinatario", e.target.value)} />
+                </label>
+                <label className="avc-field">
+                  <span>Fecha y hora de envío</span>
+                  <input type="datetime-local" defaultValue={(d.fecha_envio ?? "").slice(0, 16)} onBlur={(e) => set(f, "fecha_envio", e.target.value)} />
+                </label>
+                <label className="avc-field avc-field-seg">
+                  <span>Canal</span>
+                  <EstadoSeg valor={d.canal ?? ""} opciones={colCanal.opciones ?? []} onPick={(v) => set(f, "canal", v)} editable={editable} chip />
+                </label>
+                <label className="avc-field">
+                  <span>Quién confirmó</span>
+                  <input defaultValue={d.confirmado_por ?? ""} placeholder="Nombre de quién confirmó recepción" onBlur={(e) => set(f, "confirmado_por", e.target.value)} />
+                </label>
+                <button className="cp-btn hp-btn-danger avc-btn-del" onClick={() => onBorrar(f.id)}>
+                  <Icon name="trash" size={13} /> Borrar aviso
+                </button>
+              </>
+            ) : (
+              <>
+                {d.destinatario && <p className="avc-ro"><b>Destinatario:</b> {d.destinatario}</p>}
+                {d.confirmado_por && <p className="avc-ro"><b>Confirmó:</b> {d.confirmado_por}</p>}
+              </>
+            )}
+          </div>
+        )}
+
+        {editable && (
+          <label className="avc-mover-wrap">
+            <span className="avc-mover-label">Mover a</span>
+            <EstadoSeg valor={estado} opciones={AVISO_ESTADO_ORDEN} onPick={(v) => set(f, "estado_confirmacion", v)} editable={editable} chip color />
+          </label>
+        )}
+      </div>
+    );
+  }
+
+  const porEstado = AVISO_ESTADO_ORDEN.map((op) => ({
+    nombre: op,
+    filas: filas
+      .filter((f) => (f.datos?.estado_confirmacion ?? "Pendiente") === op)
+      .sort((a, b) => (b.datos?.fecha_envio ?? "").localeCompare(a.datos?.fecha_envio ?? "")),
+  }));
+
+  if (filas.length === 0) {
+    return (
+      <div className="hp-tabla-empty">
+        <span className="hex"></span>
+        <p>Todavía no enviaste ningún aviso al equipo hoy</p>
+        {editable && <button className="cp-btn cp-btn-acc" onClick={onCrear}>+ Enviar un aviso</button>}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="avc-board">
+        {porEstado.map((col) => (
+          <div className={`avc-col tono-${estadoTono(col.nombre)}`} key={col.nombre}>
+            <div className="avc-col-head">
+              <span>{col.nombre}</span>
+              <span className="avc-col-count">{col.filas.length}</span>
+            </div>
+            <div className="avc-col-body">
+              {col.filas.length === 0 ? (
+                <p className="avc-col-vacia">Sin avisos en este estado.</p>
+              ) : (
+                col.filas.map(Tarjeta)
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {editable && (
         <div className="hp-actions">
           <button className="cp-btn cp-btn-acc" onClick={onCrear}>{t("addRow")}</button>
         </div>
@@ -11478,6 +11740,68 @@ const EJ_PENDIENTES: Ejemplo[] = [
   { objeto: "Farol de aceite (atrezzo)", descripcion: "Se necesita para la escena 1 del faro.", estado: "Pendiente", prioridad: "Alta" },
   { objeto: "Cuaderno de bitácora", descripcion: "Con nombres tachados, encargado a utilería.", estado: "En proceso", prioridad: "Media" },
 ];
+// Avisos y confirmaciones de citación — contenido rico y variado: varios
+// destinatarios/departamentos reales de un rodaje, mezcla de canales y de
+// estados (confirmado/no leído/pendiente), no un caso pelado de 2-3 filas.
+const EJ_AVISOS_CITACION: Ejemplo[] = [
+  {
+    mensaje: "Cambio de citación: mañana 15/7 el equipo técnico entra 06:00 en vez de 07:00 por el traslado al Faro de Punta Alta (30 min más de viaje). Cámara y eléctricos, por favor confirmar.",
+    destinatario: "Cámara y Eléctricos",
+    fecha_envio: "2026-07-14T19:05",
+    canal: "WhatsApp",
+    estado_confirmacion: "Confirmado",
+    confirmado_por: "Kepa Aguirre (Jefe de cámara)",
+  },
+  {
+    mensaje: "Recordatorio: mañana rodamos en el muelle, exterior. Traer ropa de abrigo, el parte meteorológico anuncia viento fuerte desde las 09:00.",
+    destinatario: "Reparto principal",
+    fecha_envio: "2026-07-14T19:10",
+    canal: "Callsheet",
+    estado_confirmacion: "Confirmado",
+    confirmado_por: "Irene Calvo",
+  },
+  {
+    mensaje: "Se adelanta la hora de maquillaje de Pablo Yagüe a las 05:15 (antes 05:45) por la escena 14 de efectos (herida en la ceja).",
+    destinatario: "Maquillaje/FX",
+    fecha_envio: "2026-07-14T20:02",
+    canal: "Llamada",
+    estado_confirmacion: "Confirmado",
+    confirmado_por: "Marina Sotelo",
+  },
+  {
+    mensaje: "Convocatoria de figuración (8 extras) confirmada para el jueves en la plaza del ayuntamiento, 08:00. Traer vestuario de época según indicación de Arte.",
+    destinatario: "Figuración",
+    fecha_envio: "2026-07-14T20:30",
+    canal: "WhatsApp",
+    estado_confirmacion: "No leído",
+    confirmado_por: "",
+  },
+  {
+    mensaje: "Aviso a Transporte: la furgoneta de 9 plazas sale 20 min antes (05:30) por el cambio de citación de Cámara. Avisar al conductor Sergi Roma.",
+    destinatario: "Transporte",
+    fecha_envio: "2026-07-14T20:45",
+    canal: "Llamada",
+    estado_confirmacion: "No leído",
+    confirmado_por: "",
+  },
+  {
+    mensaje: "Se confirma catering para 32 personas en locación mañana, desayuno 06:30 y almuerzo 13:00. Hay 2 dietas sin gluten (ver lista de Producción).",
+    destinatario: "Catering",
+    fecha_envio: "2026-07-14T21:00",
+    canal: "Presencial",
+    estado_confirmacion: "Pendiente",
+    confirmado_por: "",
+  },
+  {
+    mensaje: "Aviso urgente: la escena 21 (Marta decide quedarse) se mueve del jueves al viernes por disponibilidad de grúa. Dirección de actores, reorganizar el ensayo previsto para el jueves.",
+    destinatario: "Dirección de actores",
+    fecha_envio: "2026-07-14T21:20",
+    canal: "WhatsApp",
+    estado_confirmacion: "Pendiente",
+    confirmado_por: "",
+  },
+];
+
 const EJ_TIMELINE_DEC: Ejemplo[] = [
   { decorado: "Interior del faro", inicio_construccion: "2026-06-20", fin_construccion: "2026-07-01", montaje: "2026-07-10", rodaje: "2026-07-14", desmontaje: "2026-07-16", responsable: "Dir. de arte", estado: "En construcción" },
   { decorado: "Casa de Elsa", inicio_construccion: "2026-07-02", fin_construccion: "2026-07-12", montaje: "2026-07-15", rodaje: "2026-07-16", desmontaje: "2026-07-18", responsable: "Ayudantía de arte", estado: "Pendiente" },
