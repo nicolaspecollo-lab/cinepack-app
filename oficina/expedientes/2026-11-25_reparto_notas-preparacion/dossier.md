@@ -128,13 +128,25 @@ mecanismo que `NotasEnsayoPanel`/`MoMemoriaPanel`.
 
 ## 8. Diseño visual
 
-Capturas pendientes de QA de interacción real (ver Riesgos, sección 10) —
-el worktree pasa `tsc --noEmit` y `next build --webpack` limpios, y la
-inspección directa del código confirma el wiring correcto:
-`app/hoy/HerramientasPanel.tsx` despacha `RepNotasPreparacionPanel` cuando
-`abierta.id === REP_PREP_HERRAMIENTA_ID`, con `editable` condicionado a
-`cargo === "Reparto principal"` (coincide exactamente con el string usado
-en `app/herramientas.ts`). Paleta y tipografía via `cp-theme.css`
+**Bug real encontrado y corregido (26/11/2026)**: el dispatch a
+`RepNotasPreparacionPanel` era correcto en código, pero nunca se ejecutaba
+en runtime — `"Reparto"` no estaba en `MODULOS_BETA_ACTIVOS`
+(`app/constants.ts`), así que el gate `bloqueado = !esModuloBeta &&
+!isAdmin` interceptaba el click en `abrir()` antes de llegar al dispatch,
+y la UI caía al tablero Kanban genérico de "Tareas". Corregido agregando
+`"Reparto"` a `MODULOS_BETA_ACTIVOS` — consistente con que otras
+herramientas de Reparto (`rep-notas-escenas`) ya están en producción real.
+
+Verificado en vivo (login real, cuenta de prueba con cargo cambiado
+temporalmente a "Reparto principal" y revertido al terminar): la ficha
+de personaje con pestañas (biografía, objetivos, relaciones, arco
+emocional, notas de ensayo recibidas) se ve de verdad, con 3 personajes
+de ejemplo reales (Mara Ferreiro/Lucía Abad, etc.) — no el Kanban
+genérico. Captura real a 1440px:
+
+![captura 1440px](capturas/1440.png)
+
+Paleta y tipografía via `cp-theme.css`
 (variables `--lime`/`--amber`/`--muted`/`--sky`/`--pink`/`--rose`/
 `--orange`/`--violet`), mismas que el resto de la app — sin colores
 inventados.
