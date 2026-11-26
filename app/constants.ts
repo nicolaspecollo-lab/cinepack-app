@@ -40,7 +40,7 @@ export const CLIENTE_DEPT = "Cliente / Productora";
 // para usuarios comunes. El resto se ve (para transmitir la propuesta completa del producto)
 // pero cada herramienta se muestra bloqueada con un cartel "Próximamente". Super_admin
 // siempre accede sin restricción, para poder ir habilitando y probando de a uno.
-export const MODULOS_BETA_ACTIVOS = ["Ejecutivo", "Dirección", "Guion", "Producción"];
+export const MODULOS_BETA_ACTIVOS = ["Ejecutivo", "Dirección", "Guion", "Producción", "Reparto"];
 
 // Estados de tareas, consistentes en toda la app (Pulso, Kanban, Inbox).
 export const ESTADOS_TAREA = ["pendiente", "en_curso", "hecho"] as const;
