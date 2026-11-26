@@ -2,6 +2,9 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Actualizado 26/11/2026 — `rep-instrucciones-figuracion` entregado
+De `checklist` vacío a tabla real de 10 columnas (jornada, escena, grupo, punto de encuentro, hora, vestuario/atrezzo, instrucciones de escena, contacto, estado), con 3 filas de ejemplo del proyecto de prueba — ver `oficina/expedientes/2026-11-26_reparto_instrucciones-figuracion/`. `tsc`/`build` limpios. **Bloqueo real documentado, no fabricado**: no hay cuenta de prueba con cargo "Figuración" en `oficina-qa/cargos.md` y el registro público está cerrado — mismo bloqueo que `rep-notas-preparacion` (entregado hoy mismo), recomendado resolver ambos juntos en la próxima noche de QA. Pendiente de tu calificación con esta limitación explícita.
+
 ## Idea de Nico para un ciclo futuro (25/11/2026)
 Propuesta en rebote de "Avisos y confirmaciones de citación al equipo" (Asistencia de dirección): construir una herramienta en paralelo, estilo agenda personal por cargo, donde cada citación confirmada (y potencialmente otras confirmaciones de otras herramientas) dispare automáticamente un registro del evento confirmado (hora, fecha, explicación) en la agenda de la persona. Requiere: definir qué herramientas disparan el registro, el modelo de datos de la agenda por cargo, y el mecanismo de disparo (¿trigger en backend al cambiar estado_confirmacion a "Confirmado"? ¿solo lectura agregada?). Investigar y arquitecturar en un ciclo propio, no como extensión menor — es un expediente nuevo.
 
