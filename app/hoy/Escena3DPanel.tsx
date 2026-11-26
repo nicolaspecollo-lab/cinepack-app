@@ -19,6 +19,7 @@ const DEPTO_HEX: Record<string, string> = {
 };
 
 const ICONO_CARA: Record<string, IconName> = {
+  resumen: "layout",
   guion: "book",
   fotografia: "camera",
   storyboard: "image",
@@ -126,11 +127,12 @@ type CaraDef = {
   id: string;
   label: string;
   depto: string;
-  kind: "guion" | "fotografia" | "reparto" | "horarios1ad" | "generica";
+  kind: "resumen" | "guion" | "fotografia" | "reparto" | "horarios1ad" | "generica";
   herramientaIds?: string[];
 };
 
 const CARAS: CaraDef[] = [
+  { id: "resumen", label: "Resumen", depto: "General", kind: "resumen" },
   { id: "guion", label: "Guion", depto: "Guion", kind: "guion" },
   { id: "fotografia", label: "Fotografía", depto: "Fotografía", kind: "fotografia" },
   { id: "storyboard", label: "Storyboard", depto: "Fotografía", kind: "generica", herramientaIds: ["foto-guion-tecnico"] },
@@ -155,6 +157,8 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
   const [numeroEscena, setNumeroEscena] = useState<number | null>(null);
   const [activo, setActivo] = useState(0);
   const [radio, setRadio] = useState(220);
+  const [filtroEscena, setFiltroEscena] = useState("");
+  const [pulso, setPulso] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -197,6 +201,43 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
 
   const escena = escenas.find((e) => e.numero === numeroEscena) ?? null;
 
+  // Filtro real por número, encabezado o localización — para no obligar a
+  // scrollear una lista plana cuando el guion tiene muchas escenas.
+  const escenasFiltradas = useMemo(() => {
+    const q = filtroEscena.trim().toLowerCase();
+    if (!q) return escenas;
+    return escenas.filter(
+      (e) =>
+        String(e.numero).includes(q) ||
+        e.encabezado?.toLowerCase().includes(q) ||
+        e.lugar?.toLowerCase().includes(q)
+    );
+  }, [escenas, filtroEscena]);
+
+  // Pulso de entrada: un breve destello del cubo cada vez que se cambia de
+  // escena, para que el cambio se sienta como un evento real y no un simple
+  // refresco de datos — el eje "dinamismo" que exigió Nico.
+  useEffect(() => {
+    if (numeroEscena === null) return;
+    setPulso(true);
+    const t = setTimeout(() => setPulso(false), 420);
+    return () => clearTimeout(t);
+  }, [numeroEscena]);
+
+  // Navegación por teclado (← →) para no depender solo de tocar una pestaña
+  // o un botón — nunca cuando el foco está en un campo de texto (el buscador
+  // de escena, u otro input de la página).
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      const tag = (ev.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (ev.key === "ArrowRight") setActivo((a) => (a + 1) % N);
+      else if (ev.key === "ArrowLeft") setActivo((a) => (a - 1 + N) % N);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const propuestasEscena = useMemo(() => {
     if (!escena) return [];
     return propuestas.filter((p) => propuestaDeEscena(p.datos, escena.numero));
@@ -219,7 +260,8 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
   const tieneDatos = useMemo(() => {
     const map: Record<string, boolean> = {};
     for (const c of CARAS) {
-      if (c.kind === "guion") map[c.id] = !!escena && escena.dialogo?.length > 0;
+      if (c.kind === "resumen") map[c.id] = false; // la cara de resumen no necesita el punto, siempre está
+      else if (c.kind === "guion") map[c.id] = !!escena && escena.dialogo?.length > 0;
       else if (c.kind === "fotografia") map[c.id] = planosEscena.length > 0;
       else if (c.kind === "horarios1ad") map[c.id] = setupsHorarios1ad.length > 0;
       else if (c.kind === "reparto") map[c.id] = !!escena && (escena.personajes?.length ?? 0) > 0;
@@ -264,23 +306,37 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
   return (
     <div className="e3d-wrap">
       <div className="e3d-selector">
-        <label htmlFor="e3d-escena-select">Escena</label>
-        <select
-          id="e3d-escena-select"
-          value={numeroEscena ?? ""}
-          onChange={(ev) => setNumeroEscena(Number(ev.target.value))}
-        >
-          {escenas.map((e) => (
-            <option key={e.id} value={e.numero}>
-              {e.numero}. {e.encabezado}
-            </option>
-          ))}
-        </select>
-        {escena && (
-          <span className="e3d-escena-meta">
-            {escena.int_ext ?? ""} · {escena.dia_noche ?? ""} · {escena.lugar ?? ""}
-          </span>
-        )}
+        <div className="e3d-buscador">
+          <Icon name="search" size={14} />
+          <input
+            type="text"
+            placeholder="Buscar escena por número, encabezado o lugar…"
+            value={filtroEscena}
+            onChange={(ev) => setFiltroEscena(ev.target.value)}
+            aria-label="Buscar escena"
+          />
+        </div>
+        <div className="e3d-escena-rail" role="listbox" aria-label="Escenas">
+          {escenasFiltradas.length === 0 ? (
+            <span className="e3d-escena-sin-resultados">Sin escenas que coincidan con &quot;{filtroEscena}&quot;.</span>
+          ) : (
+            escenasFiltradas.map((e) => (
+              <button
+                key={e.id}
+                role="option"
+                aria-selected={e.numero === numeroEscena}
+                className={`e3d-escena-chip ${e.numero === numeroEscena ? "on" : ""}`}
+                onClick={() => setNumeroEscena(e.numero)}
+              >
+                <span className="e3d-escena-chip-n">{e.numero}</span>
+                <span className="e3d-escena-chip-txt">
+                  <b>{e.encabezado}</b>
+                  <small>{e.int_ext ?? ""} · {e.dia_noche ?? ""} · {e.lugar ?? ""}</small>
+                </span>
+              </button>
+            ))
+          )}
+        </div>
       </div>
 
       <div className="e3d-shortcuts" role="tablist" aria-label="Acceso directo por departamento">
@@ -301,8 +357,9 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
       </div>
 
       <div className="e3d-stage" ref={stageRef}>
+        <div className="e3d-glow" style={{ "--cara-acc": DEPTO_HEX[CARAS[activo].depto] ?? "var(--acc)" } as React.CSSProperties} />
         <div
-          className="e3d-cube"
+          className={`e3d-cube ${pulso ? "pulso" : ""}`}
           style={{
             transform: `translateZ(-${radio}px) rotateY(${rotY}deg)`,
             transition: `transform ${duracionMs}ms cubic-bezier(.22,.9,.25,1)`,
@@ -374,6 +431,43 @@ function CaraContenido({
   setupsHorarios1ad: SetupHorario1AD[];
 }) {
   if (!escena) return <p className="e3d-vacio">Elegí una escena arriba.</p>;
+
+  if (cara.kind === "resumen") {
+    const otras = CARAS.filter((c) => c.kind !== "resumen");
+    const conDatos = (c: CaraDef) => {
+      if (c.kind === "guion") return escena.dialogo?.length > 0;
+      if (c.kind === "fotografia") return planosEscena.length > 0;
+      if (c.kind === "horarios1ad") return setupsHorarios1ad.length > 0;
+      if (c.kind === "reparto") return (escena.personajes?.length ?? 0) > 0;
+      return propuestasEscena.some((p) => (c.herramientaIds ?? []).includes(p.herramienta_id));
+    };
+    const disponibles = otras.filter(conDatos);
+    return (
+      <div className="e3d-resumen">
+        <h5>{escena.encabezado}</h5>
+        <p className="e3d-meta">{escena.int_ext} · {escena.dia_noche} · {escena.lugar}</p>
+        <p className="e3d-resumen-conteo">
+          <b>{disponibles.length}</b> de {otras.length} departamentos tienen contenido cargado para esta escena.
+        </p>
+        <div className="e3d-resumen-grid">
+          {otras.map((c) => {
+            const hay = conDatos(c);
+            return (
+              <div
+                key={c.id}
+                className={`e3d-resumen-item ${hay ? "con-datos" : "sin-datos"}`}
+                style={{ "--cara-acc": DEPTO_HEX[c.depto] ?? "var(--acc)" } as React.CSSProperties}
+              >
+                <Icon name={ICONO_CARA[c.id]} size={14} />
+                <span>{c.label}</span>
+                {hay ? <Icon name="check" size={12} /> : <span className="e3d-resumen-dash">—</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   if (cara.kind === "guion") {
     return (

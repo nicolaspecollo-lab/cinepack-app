@@ -6964,22 +6964,41 @@
 /* Escena 3D: carrusel 3D por escena (CSS puro, sin librería). Mobile-first:
    el radio del cubo se recalcula en JS según el ancho real del contenedor. */
 .cp-dash .e3d-wrap{ display:flex; flex-direction:column; gap:var(--sp-3); }
-.cp-dash .e3d-selector{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; }
-.cp-dash .e3d-selector label{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
-.cp-dash .e3d-selector select{ flex:1; min-width:160px; }
+.cp-dash .e3d-selector{ display:flex; flex-direction:column; gap:var(--sp-2); }
+.cp-dash .e3d-buscador{ display:flex; align-items:center; gap:8px; background:var(--bg-2); border:1px solid var(--line); padding:7px 11px; }
+.cp-dash .e3d-buscador svg{ color:var(--muted); flex-shrink:0; }
+.cp-dash .e3d-buscador input{ flex:1; background:none; border:none; outline:none; color:var(--text); font-size:var(--fs-sm); font-family:inherit; min-width:0; }
+.cp-dash .e3d-buscador input::placeholder{ color:var(--muted); }
+.cp-dash .e3d-escena-rail{ display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scroll-snap-type:x proximity; }
+.cp-dash .e3d-escena-chip{ scroll-snap-align:start; flex-shrink:0; display:flex; align-items:center; gap:8px; background:var(--bg-2); border:1px solid var(--line); padding:7px 12px; cursor:pointer; min-width:170px; max-width:230px; text-align:left; transition:border-color .15s ease, transform .1s ease; }
+.cp-dash .e3d-escena-chip:hover{ border-color:var(--amber); transform:translateY(-1px); }
+.cp-dash .e3d-escena-chip:active{ transform:translateY(0); }
+.cp-dash .e3d-escena-chip.on{ background:var(--amber); border-color:var(--amber); }
+.cp-dash .e3d-escena-chip.on .e3d-escena-chip-n{ background:var(--bg); color:var(--amber); }
+.cp-dash .e3d-escena-chip.on .e3d-escena-chip-txt b, .cp-dash .e3d-escena-chip.on .e3d-escena-chip-txt small{ color:var(--bg); }
+.cp-dash .e3d-escena-chip-n{ flex-shrink:0; width:24px; height:24px; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--amber); font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-xs); }
+.cp-dash .e3d-escena-chip-txt{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.cp-dash .e3d-escena-chip-txt b{ font-family:'Poppins',sans-serif; font-weight:600; font-size:var(--fs-xs); color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cp-dash .e3d-escena-chip-txt small{ font-size:10px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cp-dash .e3d-escena-sin-resultados{ color:var(--muted); font-size:var(--fs-sm); font-style:italic; padding:8px 2px; }
 .cp-dash .e3d-escena-meta{ font-size:var(--fs-xs); color:var(--muted); }
 .cp-dash .e3d-shortcuts{ display:flex; flex-wrap:wrap; gap:6px; }
 .cp-dash .e3d-shortcut{ display:inline-flex; align-items:center; gap:6px; position:relative; background:var(--bg-2); border:1px solid var(--line); padding:4px 10px; font-size:var(--fs-xs); color:var(--muted); cursor:pointer; }
 .cp-dash .e3d-shortcut svg{ color:var(--cara-acc); }
-.cp-dash .e3d-shortcut.on{ background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:700; }
+.cp-dash .e3d-shortcut.on{ background:var(--amber); color:var(--bg); border-color:var(--amber); font-weight:700; }
 .cp-dash .e3d-shortcut.on svg{ color:var(--bg); }
 .cp-dash .e3d-shortcut-dot{ width:6px; height:6px; border-radius:50%; background:var(--cara-acc); flex-shrink:0; }
 /* Stage más bajo que antes (280/360 -> 220/300): el contenido real de una
    escena rara vez llena 280px, y el espacio muerto resultante se leía como
-   "herramienta incompleta" en QA. */
-.cp-dash .e3d-stage{ position:relative; height:220px; perspective:1200px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-.cp-dash .e3d-cube{ position:relative; width:100%; height:100%; transform-style:preserve-3d; }
-.cp-dash .e3d-face{ position:absolute; inset:0; backface-visibility:hidden; background:var(--bg-2); border:1px solid var(--line); border-top:3px solid var(--cara-acc); padding:var(--sp-3); overflow-y:auto; display:flex; flex-direction:column; gap:var(--sp-2); }
+   "herramienta incompleta" en QA. Perspectiva más agresiva (1200->1500) y un
+   glow radial del color de la cara activa detrás del cubo: la diferencia real
+   entre "un div que rota" y que se sienta como una pieza con profundidad. */
+.cp-dash .e3d-stage{ position:relative; height:220px; perspective:1500px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cp-dash .e3d-glow{ position:absolute; inset:-20%; background:radial-gradient(ellipse 60% 55% at 50% 50%, color-mix(in srgb, var(--cara-acc) 22%, transparent), transparent 70%); transition:background .4s ease; pointer-events:none; z-index:0; }
+.cp-dash .e3d-cube{ position:relative; width:100%; height:100%; transform-style:preserve-3d; z-index:1; }
+.cp-dash .e3d-cube.pulso{ animation:e3d-pulso .42s ease; }
+@keyframes e3d-pulso{ 0%{ filter:brightness(1); } 35%{ filter:brightness(1.18); } 100%{ filter:brightness(1); } }
+.cp-dash .e3d-face{ position:absolute; inset:0; backface-visibility:hidden; background:linear-gradient(165deg, var(--bg-2), color-mix(in srgb, var(--cara-acc) 5%, var(--bg-2))); border:1px solid var(--line); border-top:3px solid var(--cara-acc); box-shadow:0 10px 28px -6px rgba(0,0,0,.45); padding:var(--sp-3); overflow-y:auto; display:flex; flex-direction:column; gap:var(--sp-2); }
 .cp-dash .e3d-cara-head{ display:flex; align-items:center; gap:6px; color:var(--cara-acc); font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-xs); text-transform:uppercase; letter-spacing:0.03em; padding-bottom:6px; border-bottom:1px solid var(--line); }
 .cp-dash .e3d-cara-depto{ margin-left:auto; color:var(--muted); font-weight:400; text-transform:none; letter-spacing:0; }
 .cp-dash .e3d-cara-body h5{ font-family:'Poppins',sans-serif; font-weight:700; margin:0 0 4px; }
@@ -6996,6 +7015,16 @@
 .cp-dash .e3d-chip{ background:var(--bg-2); border:1px solid var(--line); padding:1px 7px; font-size:var(--fs-xs); color:var(--muted); }
 .cp-dash .e3d-chip-alerta{ border-color:#F07A7A; color:#F07A7A; }
 .cp-dash .e3d-vacio{ color:var(--muted); font-size:var(--fs-sm); font-style:italic; }
+.cp-dash .e3d-resumen h5{ font-family:'Poppins',sans-serif; font-weight:700; margin:0 0 4px; }
+.cp-dash .e3d-resumen-conteo{ font-size:var(--fs-sm); color:var(--text); margin:0 0 var(--sp-2); }
+.cp-dash .e3d-resumen-conteo b{ color:var(--amber); font-family:'Poppins',sans-serif; }
+.cp-dash .e3d-resumen-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; }
+.cp-dash .e3d-resumen-item{ display:flex; align-items:center; gap:6px; background:var(--bg); border:1px solid var(--line); border-left:3px solid var(--cara-acc); padding:7px 9px; font-size:var(--fs-xs); }
+.cp-dash .e3d-resumen-item svg:first-child{ color:var(--cara-acc); flex-shrink:0; }
+.cp-dash .e3d-resumen-item span:first-of-type{ flex:1; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cp-dash .e3d-resumen-item.con-datos svg:last-child{ color:var(--ok,#52EC64); }
+.cp-dash .e3d-resumen-item.sin-datos{ opacity:.55; }
+.cp-dash .e3d-resumen-dash{ color:var(--muted); }
 .cp-dash .e3d-nav{ display:flex; align-items:center; justify-content:center; gap:var(--sp-3); }
 .cp-dash .e3d-nav button{ background:var(--bg-2); border:1px solid var(--line); width:32px; height:32px; font-size:var(--fs-md); cursor:pointer; }
 .cp-dash .e3d-nav-label{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); min-width:140px; text-align:center; }
