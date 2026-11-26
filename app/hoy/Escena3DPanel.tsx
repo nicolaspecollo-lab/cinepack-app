@@ -4,6 +4,32 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { HERRAMIENTA_POR_ID } from "../herramientas";
+import Icon, { type IconName } from "../components/Icon";
+
+// Mismo mapa real de acento por departamento que EquipoPanel.tsx (DEPTO_HEX)
+// — nunca un color inventado fuera del sistema de diseño.
+const DEPTO_HEX: Record<string, string> = {
+  "Dirección": "#9EEE6A",
+  "Producción": "#19CBE6",
+  "Reparto": "#F4F4F6",
+  "Fotografía": "#1F7DE2",
+  "Guion": "#F5E26A",
+  "Arte": "#F37FB5",
+  "Sonido": "#E6B019",
+};
+
+const ICONO_CARA: Record<string, IconName> = {
+  guion: "book",
+  fotografia: "camera",
+  storyboard: "image",
+  "plan-rodaje": "calendar",
+  "horarios-1ad": "clock",
+  reparto: "users",
+  vestuario: "palette",
+  continuidad: "eye",
+  sonido: "sound",
+  luces: "sun",
+};
 
 type DialogoLinea = { personaje: string; parentetico?: string; texto: string };
 
@@ -187,6 +213,21 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
     return filas.flatMap((f) => setupsDeEscena(f.datos, escena.numero));
   }, [propuestas, escena]);
 
+  // Qué caras tienen contenido real para esta escena — para el punto de
+  // las pestañas de acceso directo (objetivo: ver de un vistazo qué vale
+  // la pena abrir, antes de entrar a esa cara).
+  const tieneDatos = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const c of CARAS) {
+      if (c.kind === "guion") map[c.id] = !!escena && escena.dialogo?.length > 0;
+      else if (c.kind === "fotografia") map[c.id] = planosEscena.length > 0;
+      else if (c.kind === "horarios1ad") map[c.id] = setupsHorarios1ad.length > 0;
+      else if (c.kind === "reparto") map[c.id] = !!escena && (escena.personajes?.length ?? 0) > 0;
+      else map[c.id] = propuestasEscena.some((p) => (c.herramientaIds ?? []).includes(p.herramienta_id));
+    }
+    return map;
+  }, [escena, planosEscena, setupsHorarios1ad, propuestasEscena]);
+
   const irA = (idx: number) => {
     if (idx === activo) return;
     setActivo(idx);
@@ -250,8 +291,11 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
             aria-selected={i === activo}
             className={`e3d-shortcut ${i === activo ? "on" : ""}`}
             onClick={() => irA(i)}
+            style={{ "--cara-acc": DEPTO_HEX[c.depto] ?? "var(--acc)" } as React.CSSProperties}
           >
+            <Icon name={ICONO_CARA[c.id]} size={14} />
             {c.label}
+            {tieneDatos[c.id] && <span className="e3d-shortcut-dot" aria-label="Con contenido" />}
           </button>
         ))}
       </div>
@@ -266,12 +310,16 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
         >
           {CARAS.map((c, i) => {
             // Con 10 caras (36° entre sí), más de una queda "de frente" a la
-            // vez dentro de los ±90° que backface-visibility no oculta —
-            // un cubo de 4 caras no tiene este problema, el de 10 sí. Sin
-            // atenuar las no-activas, el texto de la cara vecina se superpone
-            // y se vuelve ilegible (bug real encontrado en QA, 820px). Las
-            // caras no activas quedan como insinuación tenue, nunca legibles
-            // ni clicables.
+            // vez dentro de los ±90° que backface-visibility no oculta — un
+            // cubo de 4 caras no tiene este problema, el de 10 sí. Primer
+            // intento (opacity:0.08 fijo en reposo) seguía siendo legible —
+            // confirmado en QA real a 1440px, la cara vecina (36° de
+            // distancia) se leía perfectamente encima de la activa. Fix de
+            // raíz: en reposo la opacidad real es 0 (invisible, no solo
+            // "tenue") — la transición de opacity (misma duración que el
+            // giro) es lo único que deja ver un destello de las caras
+            // intermedias mientras el cubo gira de verdad (el efecto que
+            // pidió Nico), nunca un valor legible una vez que frena.
             const esActiva = i === activo;
             return (
             <div
@@ -279,11 +327,17 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
               className="e3d-face"
               style={{
                 transform: `rotateY(${i * ANGULO}deg) translateZ(${radio}px)`,
-                opacity: esActiva ? 1 : 0.08,
+                opacity: esActiva ? 1 : 0,
                 pointerEvents: esActiva ? "auto" : "none",
                 transition: `opacity ${duracionMs}ms ease`,
-              }}
+                "--cara-acc": DEPTO_HEX[c.depto] ?? "var(--acc)",
+              } as React.CSSProperties}
             >
+              <div className="e3d-cara-head">
+                <Icon name={ICONO_CARA[c.id]} size={18} />
+                <span>{c.label}</span>
+                <span className="e3d-cara-depto">{c.depto}</span>
+              </div>
               <CaraContenido
                 cara={c}
                 escena={escena}
@@ -345,15 +399,19 @@ function CaraContenido({
       return <p className="e3d-vacio">Sin planos del guion técnico cargados todavía para esta escena.</p>;
     }
     return (
-      <ul className="e3d-planos">
+      <div className="e3d-cards">
         {planosEscena.map((p) => (
-          <li key={p.id}>
-            <b>{p.plano}</b> — {p.tipo ?? "sin encuadre"} · {p.mov_camara ?? "sin movimiento"}
-            {p.lente ? ` · ${p.lente}` : ""}
+          <div className="e3d-card" key={p.id}>
+            <b>{p.plano}</b>
+            <span className="e3d-card-chips">
+              <span className="e3d-chip">{p.tipo ?? "sin encuadre"}</span>
+              <span className="e3d-chip">{p.mov_camara ?? "sin movimiento"}</span>
+              {p.lente && <span className="e3d-chip">{p.lente}</span>}
+            </span>
             {p.descripcion ? <div className="e3d-desc-chica">{p.descripcion}</div> : null}
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   }
 
@@ -362,14 +420,18 @@ function CaraContenido({
       return <p className="e3d-vacio">Sin horarios del día cargados todavía para esta escena.</p>;
     }
     return (
-      <ul className="e3d-horarios1ad">
+      <div className="e3d-cards">
         {setupsHorarios1ad.map((s) => (
-          <li key={s.id}>
-            <b>{s.cargo ?? "Sin cargo"}</b> — previsto {s.hora_prevista_wrap || "?"} · real {s.hora_real_wrap || "?"}
-            {s.overtime ? ` · overtime: ${s.overtime}` : ""}
-          </li>
+          <div className="e3d-card" key={s.id}>
+            <b>{s.cargo ?? "Sin cargo"}</b>
+            <span className="e3d-card-chips">
+              <span className="e3d-chip">previsto {s.hora_prevista_wrap || "?"}</span>
+              <span className="e3d-chip">real {s.hora_real_wrap || "?"}</span>
+              {s.overtime && <span className="e3d-chip e3d-chip-alerta">overtime: {s.overtime}</span>}
+            </span>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   }
 
@@ -378,9 +440,13 @@ function CaraContenido({
       return <p className="e3d-vacio">Sin personajes asignados a esta escena todavía.</p>;
     }
     return (
-      <ul className="e3d-reparto">
-        {escena.personajes.map((p, i) => <li key={i}>{p}</li>)}
-      </ul>
+      <div className="e3d-cards e3d-cards-grid">
+        {escena.personajes.map((p, i) => (
+          <div className="e3d-card e3d-card-persona" key={i}>
+            <Icon name="users" size={14} /> {p}
+          </div>
+        ))}
+      </div>
     );
   }
 
@@ -395,8 +461,10 @@ function CaraContenido({
   }
 
   return (
-    <ul className="e3d-generica">
-      {filas.map((p, i) => <li key={i}>{resumenPropuesta(p)}</li>)}
-    </ul>
+    <div className="e3d-cards">
+      {filas.map((p, i) => (
+        <div className="e3d-card" key={i}>{resumenPropuesta(p)}</div>
+      ))}
+    </div>
   );
 }

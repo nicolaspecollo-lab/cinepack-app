@@ -31,6 +31,8 @@ A diferencia de cualquier expediente anterior, Escena 3D no pertenece a un cargo
 - **Otros departamentos**: es, por diseño, 100% integración cruzada — cada cara es la ventana de un departamento distinto sobre el mismo identificador de escena (`escenas.numero`, ya usado por ~40 herramientas del repo real).
 
 ## 8. Diseño visual (capturas móvil 390px, tablet 820px, escritorio 1440px)
+**Ronda 2 (corrección tras comité independiente):** la ronda 1 afirmaba que las caras inactivas quedaban "tenues, nunca legibles", pero el comité verificó con capturas reales que a 1440/820px la cara vecina (a 36° de distancia angular) se leía perfectamente superpuesta a la activa — `opacity:0.08` en reposo no alcanzaba. Fix de raíz: en reposo la opacidad de toda cara no activa es ahora `0` (invisible de verdad, no solo "tenue"); la transición de opacity durante el giro (misma duración que la rotación) es lo único que deja ver el destello de las caras intermedias mientras el cubo gira — nunca un valor legible una vez que frena. Verificado de nuevo con capturas reales en los 3 anchos, en reposo y justo después de un salto de pestaña lejano: sin superposición en ningún caso. De paso se resolvieron las otras 3 objeciones del comité: las 10 caras ahora son tarjetas con acento de color real por departamento (mismo `DEPTO_HEX` de `EquipoPanel.tsx`) e ícono de `Icon.tsx`, en vez de texto plano; las pestañas de acceso directo muestran un punto de color cuando esa cara tiene contenido real para la escena elegida; y se redujo la altura del escenario 3D (280px→220px en escritorio) para que el espacio vacío debajo del contenido no se lea como herramienta incompleta.
+
 ![captura 390px](capturas/390px.png)
 ![captura 820px](capturas/820px.png)
 ![captura 1440px](capturas/1440px.png)
