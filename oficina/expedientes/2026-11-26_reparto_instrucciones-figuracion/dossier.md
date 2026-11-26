@@ -99,10 +99,27 @@ figurantes), `cantidad` (número de personas), `punto_encuentro`,
 
 ## 8. Diseño visual
 
+**Bug real encontrado y corregido (26/11/2026)**: pese a que esta columna
+ya tenía su definición de columnas lista, nunca se pudo ver en runtime —
+`"Reparto"` no estaba en `MODULOS_BETA_ACTIVOS` (`app/constants.ts`), así
+que el gate `bloqueado = !esModuloBeta && !isAdmin` interceptaba el click
+de abrir la herramienta antes de llegar a renderizarla, y la UI caía al
+tablero Kanban genérico de "Tareas". Corregido agregando `"Reparto"` a
+`MODULOS_BETA_ACTIVOS` — consistente con que otras herramientas de Reparto
+(`rep-notas-escenas`) ya están en producción real.
+
+Verificado en vivo (login real, cuenta de prueba con cargo cambiado
+temporalmente a "Figuración" y revertido al terminar): el tablero real
+agrupado por jornada (grupos de figuración, escena, hora, estado,
+confirmaciones) se ve de verdad — no el Kanban genérico. Captura real a
+1440px:
+
+![captura 1440px](capturas/1440.png)
+
 Usa el motor genérico de tabla (`HerramientaPanel.tsx`), con el sistema de
 diseño real (`cp-theme.css`) y el componente `EstadoSeg`/badges ya
 existentes para la columna `estado` — sin estilos nuevos ni colores
-inventados. Capturas de interacción pendientes de QA (ver sección 10).
+inventados.
 
 ## 9. Especificación técnica
 
