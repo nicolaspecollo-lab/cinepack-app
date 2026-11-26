@@ -1,0 +1,10 @@
+{
+  "kicker": "Oficina de Desarrollo de App · Expediente transversal en revisión",
+  "title": "Escena 3D",
+  "subtitle": "Vista transversal por escena: carrusel 3D de 10 caras que cruza Guion, Fotografía, Dirección, Producción, Reparto, Arte y Sonido sin duplicar ningún dato. Pedida directamente por Nico.",
+  "badge": "<span class=\"badge badge-warn\">Pendiente de tu calificación</span>",
+  "metaItems": [["Fecha", "26 nov 2026"], ["Alcance", "Transversal · 7 departamentos"], ["Oficina", "Desarrollo"], ["Ronda", "1 — primera entrega completa"]],
+  "logoPath": "/home/user/cinepack-app/app/apple-icon.png",
+  "footerNote": "pendiente de tu aprobación final",
+  "accent": "#E8A330"
+}
