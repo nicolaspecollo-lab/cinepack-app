@@ -6960,3 +6960,32 @@
   .cp-dash .ch1-field-select{ max-width:none; }
   .cp-dash .ch1-eje-lbl{ display:none; }
 }
+
+/* Escena 3D: carrusel 3D por escena (CSS puro, sin librería). Mobile-first:
+   el radio del cubo se recalcula en JS según el ancho real del contenedor. */
+.cp-dash .e3d-wrap{ display:flex; flex-direction:column; gap:var(--sp-3); }
+.cp-dash .e3d-selector{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; }
+.cp-dash .e3d-selector label{ font-size:var(--fs-xs); color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .e3d-selector select{ flex:1; min-width:160px; }
+.cp-dash .e3d-escena-meta{ font-size:var(--fs-xs); color:var(--muted); }
+.cp-dash .e3d-shortcuts{ display:flex; flex-wrap:wrap; gap:6px; }
+.cp-dash .e3d-shortcut{ background:var(--bg-2); border:1px solid var(--line); padding:4px 10px; font-size:var(--fs-xs); color:var(--muted); cursor:pointer; }
+.cp-dash .e3d-shortcut.on{ background:var(--accent); color:var(--bg); border-color:var(--accent); font-weight:700; }
+.cp-dash .e3d-stage{ position:relative; height:280px; perspective:1200px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.cp-dash .e3d-cube{ position:relative; width:100%; height:100%; transform-style:preserve-3d; }
+.cp-dash .e3d-face{ position:absolute; inset:0; backface-visibility:hidden; background:var(--bg-2); border:1px solid var(--line); padding:var(--sp-3); overflow-y:auto; }
+.cp-dash .e3d-cara-body h5{ font-family:'Poppins',sans-serif; font-weight:700; margin:0 0 4px; }
+.cp-dash .e3d-meta{ font-size:var(--fs-xs); color:var(--muted); margin:0 0 var(--sp-2); }
+.cp-dash .e3d-desc{ font-size:var(--fs-sm); line-height:1.5; }
+.cp-dash .e3d-desc-chica{ font-size:var(--fs-xs); color:var(--muted); margin-top:2px; }
+.cp-dash .e3d-dialogo, .cp-dash .e3d-planos, .cp-dash .e3d-reparto, .cp-dash .e3d-generica{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:var(--sp-2); font-size:var(--fs-sm); }
+.cp-dash .e3d-vacio{ color:var(--muted); font-size:var(--fs-sm); font-style:italic; }
+.cp-dash .e3d-nav{ display:flex; align-items:center; justify-content:center; gap:var(--sp-3); }
+.cp-dash .e3d-nav button{ background:var(--bg-2); border:1px solid var(--line); width:32px; height:32px; font-size:var(--fs-md); cursor:pointer; }
+.cp-dash .e3d-nav-label{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-sm); min-width:140px; text-align:center; }
+
+@media (max-width:640px){
+  .cp-dash .e3d-stage{ height:360px; }
+  .cp-dash .e3d-shortcuts{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; }
+  .cp-dash .e3d-shortcut{ flex-shrink:0; }
+}
