@@ -94,6 +94,9 @@ Todo worktree nuevo (`git worktree add ...`) usado para un expediente debe, ante
 
 **Bug conocido de Turbopack con `node_modules` symlinkeado** (encontrado 17/11/2026): cuando `node_modules` es un symlink fuera del filesystem del worktree, Turbopack falla con "Symlink points out of the filesystem root" — rompe tanto `next dev` como `next build` con sus flags por defecto. El script `dev` del repo ya corre con `--webpack`; para `build` en un worktree con `node_modules` symlinkeado, corré `next build --webpack` explícitamente en vez de `npm run build`. No cambies el `package.json` real por esto — es un workaround solo para builds en worktrees temporales de la oficina.
 
+## Confirmación previa antes de poner a trabajar la oficina (regla de Nico, 26/11/2026)
+Antes de lanzar el ciclo sobre cualquier herramienta puntual (del cupo diario, de un pedido fuera de ciclo, o de completar expedientes pendientes), esta sesión le pregunta a Nico y espera su confirmación explícita antes de poner a trabajar a los agentes en esa herramienta. Esto no aplica al chequeo horario de estado del panel ni a la ejecución de Corte ya autorizado — aplica específicamente a arrancar trabajo nuevo de desarrollo sobre una herramienta.
+
 ## Panel en vivo — estado en tiempo real (regla de Nico, 17/11/2026)
 Cada agente, **al empezar** un paso real de trabajo (no al terminar), se marca `estado:"busy"` en el panel (colección `agentes`, campo `tarea_actual` describiendo qué está haciendo en ese momento) — nunca esperar a tener el resultado final para escribirlo. Recién cuando termina ese paso y entrega el resultado se vuelve a poner `estado:"idle"` con la tarea ya hecha. Quien orquesta (esta sesión, vía tool Agent) es responsable de escribir ese `busy` antes de lanzar cada subagente real, no solo al recibir su reporte final — si no, el panel muestra a todos quietos aunque haya trabajo real en curso.
 
