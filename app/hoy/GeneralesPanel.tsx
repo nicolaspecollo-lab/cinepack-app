@@ -5,7 +5,7 @@ import ConsultasPanel from "./ConsultasPanel";
 import ComunicadosPanel from "./ComunicadosPanel";
 import GuionPanel from "./GuionPanel";
 import GuionTecnicoPanel from "./GuionTecnicoPanel";
-import EscenasPanel from "./EscenasPanel";
+import Escena3DPanel from "./Escena3DPanel";
 import EspacioTrabajoPanel from "./EspacioTrabajoPanel";
 import VisionadoPanel from "./VisionadoPanel";
 import EquipoPanel from "./EquipoPanel";
@@ -142,7 +142,7 @@ export default function GeneralesPanel({
         {sub === "consultas" && <ConsultasPanel deDepartamento={departamento} cargo={cargo} fullName={fullName} />}
         {sub === "guion" && <GuionPanel fullName={fullName} canEdit={ce("guion")} />}
         {sub === "guiontec" && <GuionTecnicoPanel fullName={fullName} canEdit={ce("guiontec")} />}
-        {sub === "escena3d" && <EscenasPanel departamento={departamento} />}
+        {sub === "escena3d" && <Escena3DPanel departamento={departamento} />}
         {sub === "espacio" && <EspacioTrabajoPanel departamento={departamento} fullName={fullName} />}
         {sub === "visionado" && <VisionadoPanel departamento={departamento} fullName={fullName} />}
         {sub === "equipo" && <EquipoPanel departamento={departamento} />}
