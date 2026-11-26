@@ -2,6 +2,19 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Bug de alta prioridad — triage QA nocturno 26/11/2026 (entra al ciclo del 27/11)
+**[1AD] Overtime y delta de horario no se calculan automáticamente** (`dir-control-horarios-1ad`, ya Consolidada/mergeada a `main` el 25/11). Confirmado por QA nocturno 26/11 (lectura de código + Playwright en vivo, no hipótesis): `delta_minutos` y `overtime` son campos de entrada manual en `useControlHorarios1ad.ts` / el detalle por cargo, en vez de derivarse de `hora_prevista_wrap`/`hora_real_wrap`. Severidad alta porque contradice la objeción central del cargo cronometrador ("que calcule overtime automáticamente, no a mano"). Repro: wrap previsto 20:00, wrap real 21:30 → delta/overtime quedan vacíos hasta completarlos a mano.
+- **Solución propuesta por QA** (informe `oficina-qa/informes/2026-11-26.md`): calcular `delta_minutos`/`overtime` desde los dos campos de wrap (cliente o servidor), con umbral configurable (>30 min "Alerta", >60 min o fuera de convenio "Confirmado"), dejar ambos de solo lectura, y si se necesita override humano agregar un campo separado `overtime_override` con motivo obligatorio — nunca reemplazar el cálculo por default.
+- **Tratamiento**: es un fix sobre una herramienta ya Consolidada y ya en `main` real, no una herramienta nueva — entra directo a `desarrollador` (sin dossier nuevo), con reverificación de `qa` contra `cinepack-dev` y paso corto por `comite-calidad` (checklist de regresión, no de dossier completo) antes de pedir Corte a Nico para el fix. Candidato a primer ítem de los 3 del ciclo 27/11, 7:00 Madrid.
+
+## Pendiente de reconfirmar — no es bug confirmado todavía (QA nocturno 26/11/2026)
+**[Tareas admin] Persistencia del campo título** — la prueba de esta noche se rompió por un error del propio script de QA (navegación directa a `/hoy` sin pasar por la selección de proyecto, rompiendo el `localStorage` del proyecto activo), no por un fallo de la app. Categoría y prioridad sí persistieron correctamente en la misma prueba. Se deja para la próxima noche de QA (27/11), con flujo de login normal — no se abre como bug ni se asigna a desarrollador hasta reconfirmar.
+
+## Ideas de QA 26/11 (sin asignar, candidatas de backlog bajo, no urgentes)
+- 1AD: resumen agregado de overtime por departamento al pie del Gantt (reporte semanal al productor ejecutivo) — natural extensión del fix de arriba, evaluar cuando se construya el cálculo automático.
+- Tareas administrativas: extender el patrón "Cambios recientes + Deshacer" a otras herramientas con edición frecuente (ej. checklist de vehículos) — solo si Nico lo pide explícitamente.
+- Vehículos: filtro rápido "solo con alertas" en el mapa de tarjetas, si se suman más matrículas reales.
+
 ## Bug transversal pendiente de decisión de Nico (25/11/2026)
 `/perfil` no escribe `profiles.cargo` al cambiar de cargo — escribe a `user_roles` en su lugar. El gating real de qué herramientas ve un cargo en Exclusivas/Departamentos lee `profiles.cargo` (`app/hoy/page.tsx`), así que cualquier usuario que cambie de cargo vía la UI de autoservicio no ve efecto real, sin error visible. Encontrado por QA al intentar destrabar la cuenta de 1er asistente de dirección el 25/11. No se toca hasta que Nico decida prioridad (afecta onboarding/autoservicio de cualquier cargo, no solo el de hoy).
 
