@@ -50,3 +50,6 @@ El resto de los 16 vacíos (`dir-decisiones-visionado`, `dir-control-horarios` d
 3. ¿`@anthropic-ai/sdk` está en uso en producción o reservado para una migración futura? Solo se confirmó `@google/genai` en las rutas de IA revisadas (`app/api/asistente`, `app/api/guion/desglose/generar`).
 4. Confirmar el radio de borde estándar de tarjetas/paneles del sistema de diseño real (en el repo de muestreo no hay un token único, se declara por componente).
 5. ¿Qué librería de hoja de cálculo/editor enriquecido prefiere evaluar primero el arquitecto, o se le da total libertad? (sin respuesta asumida todavía).
+
+## Expediente transversal nuevo — Escena 3D (26/11/2026, prioridad máxima de Nico)
+Carrusel 3D por escena (10 caras: Guion, Guion técnico, Storyboard, Plan de rodaje, Horarios 1AD, Reparto, Vestuario/Maquillaje/Peluquería, Fotografía, Continuidad, Sonido), lectura agregada de lo que cada departamento ya tiene cargado para esa escena. Mapeo de arquitectura completo — ver `oficina/expedientes/2026-11-26_transversal_escena-3d/arquitectura.md`. 3 decisiones abiertas para Nico (storyboard por escena, fusión o no de caras Guion técnico/Fotografía, confirmar campo escena en Sonido) antes de que el desarrollador arranque. 7 de las 10 caras ya tienen fuente de datos 100% confirmada y lista. Rama: `oficina/2026-11-26-escena-3d`.
