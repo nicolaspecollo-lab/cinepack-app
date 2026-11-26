@@ -2,6 +2,11 @@
 
 Tercera oficina, separada de Desarrollo (`/oficina/`) y Marketing (`/oficina-marketing/`). No diseña ni investiga mercado: **usa la app real como la usaría cada cargo de un rodaje**, contra el proyecto de prueba `[PROYECTO TEST]` definido en `/oficina-qa/proyecto-test/`, y reporta bugs.
 
+## Orquestación real — causa raíz corregida (26/11/2026, no delegar en un solo "director-qa")
+Un subagente invocado con el tool Agent **no tiene acceso al tool Agent para invocar a otros subagentes** — es una restricción estructural de la plataforma, no un bug de estos archivos. La noche del 26/11 solo trabajaron 3 de 52 cargos porque la sesión orquestadora delegó la repartición de cargos a un único agente intermedio ("director-qa"/"general-purpose" actuando ese rol), esperando que ÉL lanzara los ~50 subagentes de cargo — y eso no puede funcionar nunca, en ningún ciclo futuro.
+
+**Regla permanente**: la sesión de nivel superior (la que recibe el disparador nocturno) es quien llama al tool Agent directamente, en paralelo, una vez por cada cargo de la tanda de esa noche — nunca a través de un agente "director" intermedio que reparta más trabajo. El rol de `director-qa` (elegir qué cargos corren, consolidar bugs/ideas/informe, entregar al director-oficina) lo asume la propia sesión orquestadora, leyendo `director-qa.md` para el criterio, no delegándolo como una invocación separada que luego intente repartir cargos. Entregar el consolidado final al `director-oficina` (una sola invocación, sin pedirle que reparta nada) sí es una delegación válida — la diferencia es que ahí no se le pide que orqueste más subagentes.
+
 ## Inviolables
 1. Nunca merge a `main`. Nunca se toca el proyecto/base real de Supabase — todo corre contra **`cinepack-dev`** (`https://axkroilebfnfpqzhmhgo.supabase.co`, credenciales en `.env.local`).
 2. Cada noche de trabajo va en su propia rama `oficina-qa/AAAA-MM-DD-<lo que corresponda>`, siempre creada desde `claude/oficina-agentes-cinepack-jv179i`. Sin PR a `main` jamás; si una noche genera un cambio de código (poco común — QA prueba, no programa), el PR va contra la rama de oficina igual que las otras dos oficinas.
