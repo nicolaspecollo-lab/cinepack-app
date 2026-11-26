@@ -6662,6 +6662,8 @@
 .cp-dash .hp-tad-nueva:hover{ border-color:var(--acc); transform:translateY(-1px); }
 @media (max-width:640px){
   .cp-dash .hp-tad-grid{ grid-template-columns:1fr; }
+}
+
 /* Checklist de wrap (General, transversal): tarjetas por departamento+jornada
    con checklist categorizado (Equipo/Espacio/Documentación), progreso y
    badge de "Set liberado" — mismo lenguaje visual que hp-mezcla-*. */
