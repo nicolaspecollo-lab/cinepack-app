@@ -25,6 +25,10 @@ El `director-qa` pasa este mandato completo (no solo un link a este archivo) en 
 ## Panel en vivo
 Mismo criterio que las otras dos oficinas: cada agente se marca `estado:"busy"` en el panel (ArtifactData, colección `agentes`, url `https://claude.ai/artifact/S99rUHDdJbz5u1amLjtdLK`) **al empezar** un paso real, con `tarea_actual` describiendo lo que está haciendo, y vuelve a `idle` al terminar.
 
+**Vista de resumen obligatoria al abrir la Oficina de QA (regla de Nico, 26/11/2026, no negociable):** lo primero que Nico tiene que ver al abrir esta oficina en el panel es un cuadro vertical, cargo de tester por cargo de tester (una fila por cargo), con una columna por día, y dentro de cada celda día×cargo la lista de herramientas en las que ese cargo trabajó esa noche. Esto es además del informe de 5 partes diario (`oficina-qa/informes/AAAA-MM-DD.md`), no en su lugar — el cuadro es la vista rápida, el informe es el detalle. Cada noche que corre el ciclo, además de escribir el informe, hay que actualizar esta vista con los cargos y herramientas reales de esa noche.
+
+**Acceso de Nico al proyecto de prueba (regla de Nico, 26/11/2026):** Nico quiere poder entrar él mismo al proyecto de prueba (`cinepack-dev`) para ver con sus propios ojos qué hizo cada integrante de la Oficina de QA — no solo leer el resumen que escribe esta sesión. Mantener documentado y actualizado cómo entrar (credenciales/URL del dashboard de Supabase de `cinepack-dev`, y/o una URL estable de la app corriendo contra ese proyecto si existe) en un lugar que Nico pueda consultar cuando quiera, no solo cuando lo pide.
+
 ## Horario
 Ciclo nocturno automático, todas las noches, **1:00–3:00 hora de Madrid** (2 horas, regla de Nico 20/11/2026 para cuidar el límite de uso — antes era una ventana más larga). Ver trigger "Ciclo nocturno Oficina de QA CINEPACK". Con menos tiempo disponible, priorizar calidad real de la prueba (pocos cargos bien probados) sobre cubrir muchos cargos superficialmente.
 
