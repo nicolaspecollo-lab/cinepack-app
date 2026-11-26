@@ -6664,6 +6664,98 @@
   .cp-dash .hp-tad-grid{ grid-template-columns:1fr; }
 }
 
+/* Checklist de wrap (General, transversal): tarjetas por departamento+jornada
+   con checklist categorizado (Equipo/Espacio/Documentación), progreso y
+   badge de "Set liberado" — mismo lenguaje visual que hp-mezcla-*. */
+.cp-dash .hp-wrap-wrap{ padding:var(--sp-3) var(--gutter) var(--sp-4); }
+.cp-dash .hp-wrap-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:var(--sp-3);
+}
+.cp-dash .hp-wrap-resumen{
+  display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-3); padding:var(--sp-2) var(--sp-3);
+  background:var(--bg-2); border:1px solid var(--line); flex-wrap:wrap;
+}
+.cp-dash .hp-wrap-resumen-stat{ display:flex; flex-direction:column; gap:1px; flex-shrink:0; }
+.cp-dash .hp-wrap-resumen-n{ font-family:'Poppins',sans-serif; font-weight:800; font-size:var(--fs-lg); color:var(--lime); line-height:1; }
+.cp-dash .hp-wrap-resumen-l{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-wrap-resumen-bar{ flex:1; min-width:80px; height:8px; background:var(--hl2); }
+.cp-dash .hp-wrap-resumen-bar-fill{ height:100%; background:linear-gradient(90deg, var(--lime), var(--cyan)); transition:width 0.3s ease; }
+.cp-dash .hp-wrap-resumen-pct{ font-size:var(--fs-xs); color:var(--muted); white-space:nowrap; font-weight:600; }
+.cp-dash .hp-wrap-card{
+  background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--wrap-accent, var(--line));
+  padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2);
+  transition:border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cp-dash .hp-wrap-card:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.18); }
+.cp-dash .hp-wrap-card.on{ border-color:var(--lime); border-left-color:var(--lime); }
+.cp-dash .hp-wrap-head{ display:flex; align-items:center; gap:8px; }
+.cp-dash .hp-wrap-head .hp-del{ margin-left:auto; }
+.cp-dash .hp-wrap-icono{ flex-shrink:0; display:flex; width:18px; height:18px; }
+.cp-dash .hp-wrap-icono svg{ width:100%; height:100%; }
+.cp-dash .hp-wrap-depto{ font-family:'Poppins',sans-serif; font-weight:700; font-size:var(--fs-base); color:var(--text); }
+.cp-dash .hp-wrap-badge{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.03em;
+  color:var(--bg); background:var(--lime); padding:2px 6px;
+}
+.cp-dash .hp-wrap-fecha{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:5px 6px; align-self:flex-start;
+}
+.cp-dash .hp-wrap-fecha:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-wrap-progreso{ display:flex; align-items:center; gap:var(--sp-2); }
+.cp-dash .hp-wrap-bar{ flex:1; height:6px; background:var(--hl2); }
+.cp-dash .hp-wrap-bar-fill{ height:100%; background:var(--wrap-accent, var(--lime)); transition:width 0.3s ease; }
+.cp-dash .hp-wrap-card.on .hp-wrap-bar-fill{ background:var(--lime); }
+.cp-dash .hp-wrap-progreso-txt{ font-size:var(--fs-xs); color:var(--muted); white-space:nowrap; font-weight:600; }
+.cp-dash .hp-wrap-cat{ display:flex; flex-direction:column; gap:4px; }
+.cp-dash .hp-wrap-cat-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px; }
+.cp-dash .hp-wrap-item{ display:flex; align-items:center; gap:6px; }
+.cp-dash .hp-wrap-check{
+  flex-shrink:0; width:18px; height:18px; border:1px solid var(--line); background:var(--hl1); color:var(--bg);
+  font-size:12px; line-height:1; cursor:pointer; padding:0; transition:transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.cp-dash .hp-wrap-item.on .hp-wrap-check{ background:var(--lime); border-color:var(--lime); color:var(--bg); animation:hp-mezcla-check-pop 0.2s ease; }
+.cp-dash .hp-wrap-item-text{
+  flex:1; min-width:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  background:none; border:none; padding:2px 0; color:var(--text);
+}
+.cp-dash .hp-wrap-item.on .hp-wrap-item-text{ color:var(--muted); text-decoration:line-through; }
+.cp-dash .hp-wrap-item-text:focus{ outline:none; }
+.cp-dash .hp-wrap-item-del{ flex-shrink:0; background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; }
+.cp-dash .hp-wrap-item-del:hover{ color:var(--rose); }
+.cp-dash .hp-wrap-item-add{
+  align-self:flex-start; margin-top:2px; font-size:11px; font-family:'Poppins',sans-serif; color:var(--muted);
+  background:none; border:1px solid var(--line); padding:3px 7px; cursor:pointer;
+}
+.cp-dash .hp-wrap-item-add:hover{ border-color:var(--acc); color:var(--text); }
+.cp-dash .hp-wrap-field, .cp-dash .hp-wrap-responsable{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; font-size:var(--fs-sm);
+  color:var(--text); background:var(--hl1); border:1px solid var(--line); padding:6px; resize:vertical;
+}
+.cp-dash .hp-wrap-field:focus, .cp-dash .hp-wrap-responsable:focus{ outline:none; border-color:var(--acc); }
+.cp-dash .hp-wrap-estado-row{ display:flex; align-items:center; gap:var(--sp-2); flex-wrap:wrap; margin-top:2px; }
+.cp-dash .hp-wrap-liberar{
+  font-family:'Poppins',sans-serif; font-weight:700; font-size:11px; color:var(--bg); background:var(--lime);
+  border:none; padding:6px 10px; cursor:pointer; transition:transform 0.1s ease;
+}
+.cp-dash .hp-wrap-liberar:hover{ transform:translateY(-1px); }
+.cp-dash .hp-wrap-agregar{
+  margin-top:var(--sp-3); padding-top:var(--sp-3); border-top:1px dashed var(--line);
+  display:flex; flex-direction:column; gap:var(--sp-2);
+}
+.cp-dash .hp-wrap-agregar-label{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+.cp-dash .hp-wrap-agregar-row{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.cp-dash .hp-wrap-agregar-btn{
+  display:inline-flex; align-items:center; gap:6px; font-family:'Poppins',sans-serif; font-size:var(--fs-sm); font-weight:600;
+  color:var(--text); background:var(--bg-2); border:1px solid var(--line); border-left:3px solid var(--wrap-accent, var(--acc));
+  padding:7px 12px; cursor:pointer; transition:border-color 0.15s ease, transform 0.1s ease;
+}
+.cp-dash .hp-wrap-agregar-btn svg{ width:14px; height:14px; color:var(--wrap-accent, var(--acc)); }
+.cp-dash .hp-wrap-agregar-btn:hover{ border-color:var(--wrap-accent, var(--acc)); transform:translateY(-1px); }
+@media (max-width:640px){
+  .cp-dash .hp-wrap-grid{ grid-template-columns:1fr; }
+}
+
 /* ===========================================================================
    NOTAS DE ENSAYO POR ACTOR/PERSONAJE — Dirección de actores
    Acento propio: --coral (ningún otro panel lo usa como acento fijo hoy,

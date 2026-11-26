@@ -264,7 +264,8 @@ function tablaTieneVistaBespoke(id: string): boolean {
     id === "dist-festivales" ||
     id === "mo-cal-publicaciones" ||
     id === "mo-memoria" ||
-    id === "prod-tareas-admin"
+    id === "prod-tareas-admin" ||
+    id === "gen-checklist-wrap"
   );
 }
 
@@ -1540,6 +1541,17 @@ function HerramientaData({
           editable={editable}
           departamento={departamento}
           herramientaId={herramienta.id}
+          onCrear={(datos) => crearFila(datos ?? {})}
+          onGuardar={guardarFila}
+          onBorrar={borrarFila}
+        />
+      )}
+
+      {herramienta.tipo === "tabla" && herramienta.id === "gen-checklist-wrap" && (
+        <WrapBoard
+          columnas={[...(herramienta.columnas ?? []), ...extraCols]}
+          filas={filas}
+          editable={editable}
           onCrear={(datos) => crearFila(datos ?? {})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
