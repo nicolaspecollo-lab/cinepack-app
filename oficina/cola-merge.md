@@ -27,3 +27,5 @@ Expedientes validados por Nico ("Cumple" o "Supera las expectativas"), con su es
 | ej-gestion-documental (Gestión documental administrativa) | — | Cumple (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `7793068` a main + deploy confirmado por Nico. **En producción real.** |
 | prod-checklist-vehiculos (Checklist de vehículos) | PR #20 | Cumple (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `0e8b29b` a main + deploy confirmado por Nico. **En producción real.** |
 | prod-tareas-admin (Tareas administrativas diarias) | PR #19 | Supera (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `7ff58ae` a main + deploy confirmado por Nico. **En producción real.** |
+
+| gen-checklist-wrap (Checklist de wrap, General) | PR #21 | Cumple (26/11) | **Mergeado** a jv179i (`dadb5e7`) | Pendiente — requiere su Corte explícito. Sin migración (motor genérico `herramienta_filas`). |
