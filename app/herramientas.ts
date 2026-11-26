@@ -3589,7 +3589,24 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     },
     "Figuración": {
       departamento: [calendarioCitaciones, vestMaqAsignado],
-      cargo: [{ id: "rep-instrucciones-figuracion", nombre: "Instrucciones de figuración por jornada", tipo: "checklist" }],
+      cargo: [
+        {
+          id: "rep-instrucciones-figuracion", nombre: "Instrucciones de figuración por jornada", tipo: "tabla",
+          hint: "Qué necesita saber cada grupo de figurantes antes de entrar a rodar: punto de encuentro, vestuario, qué hacer en la escena y a quién llamar si algo falla.",
+          columnas: [
+            { key: "jornada", label: "Jornada", tipo: "fecha" },
+            { key: "escena", label: "Escena(s)" },
+            { key: "grupo", label: "Grupo de figuración" },
+            { key: "cantidad", label: "Cantidad de figurantes" },
+            { key: "punto_encuentro", label: "Punto de encuentro" },
+            { key: "hora_citacion", label: "Hora de citación" },
+            { key: "vestuario_requerido", label: "Vestuario/atrezzo requerido", tipo: "largo" },
+            { key: "instrucciones_escena", label: "Qué hacen en la escena", tipo: "largo" },
+            { key: "contacto_responsable", label: "Contacto responsable" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Pendiente", "Confirmado", "Cancelado", "Completado"] },
+          ],
+        },
+      ],
     },
   },
 
