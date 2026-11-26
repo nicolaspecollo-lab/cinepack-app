@@ -29,3 +29,13 @@ Nico dio Corte explícito (main=true, migraciones=true, deploy=true) para las 4 
 - prod-tareas-admin → main commit `7ff58ae`
 
 Las 4 verificadas con `tsc --noEmit`/`next build --webpack` limpios antes de pushear, patch aislado a los archivos de producto (nunca la rama de oficina completa). Ninguna necesita migración SQL. Diffs completos entregados a Nico por SendUserFile. `corte_ejecutado:false`, `corte_estado_final:"pendiente_de_corte_final"` en las 4 — falta solo la confirmación explícita de Nico de que el deploy quedó hecho.
+
+## 26/11/2026 16:30 — Corte final confirmado por Nico (5 herramientas)
+Nico confirmó explícitamente en el chat que ya hizo el deploy de `main` a producción. Se marca `corte_ejecutado:true` en el panel para las 5 entregas que estaban en `pendiente_de_corte_final`, ninguna con migración pendiente:
+- Continuidad fotográfica (commit `d4c81c6`)
+- Control de horarios y avisos 1AD (commit `4e15f6c`)
+- Gestión documental administrativa (commit `7793068`)
+- Checklist de vehículos (commit `0e8b29b`)
+- Tareas administrativas diarias (commit `7ff58ae`)
+
+Todas pasan a la columna "App" del panel. Autorizado por Nico vía confirmación directa en el chat — alcance: deploy confirmado, Corte en dos tiempos completo.

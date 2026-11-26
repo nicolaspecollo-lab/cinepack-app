@@ -21,3 +21,9 @@ Expedientes validados por Nico ("Cumple" o "Supera las expectativas"), con su es
 **Resultado del Corte del 20/11 (commit `ff84628` → confirmación de Nico en `65ea43c`, 21/11 00:01 Madrid):** 4 de las 6 entregas quedaron confirmadas y en producción real (3 herramientas vacías + itemsPrecargados, rrhh-plan-bienestar, dir-decisiones-visionado, post-checklist-mezcla — todas sobre el motor genérico `herramienta_filas`, sin migración). Las 2 restantes (hoja-calculo, documento-blanco) quedaron explícitamente excluidas por Nico: su persistencia real depende de una migración con un bug (`projects` vs `proyectos`) y de que `docsBlanco.ts` deje de usar `localStorage` — en curso, ver expediente.
 
 - dir-control-horarios-1ad — "Cumple" — PR #18 mergeado a jv179i (58084e1) — 25/11/2026
+
+| dir-continuidad-foto (Continuidad fotográfica, Script) | PR #17 | Supera (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `d4c81c6` a main + deploy confirmado por Nico. **En producción real.** |
+| dir-control-horarios-1ad (Control de horarios 1AD) | PR #18 | Cumple (25/11) | **Mergeado** a jv179i (`58084e1`) | **Hecho vía Corte** (26/11) — merge `4e15f6c` a main + deploy confirmado por Nico. **En producción real.** |
+| ej-gestion-documental (Gestión documental administrativa) | — | Cumple (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `7793068` a main + deploy confirmado por Nico. **En producción real.** |
+| prod-checklist-vehiculos (Checklist de vehículos) | PR #20 | Cumple (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `0e8b29b` a main + deploy confirmado por Nico. **En producción real.** |
+| prod-tareas-admin (Tareas administrativas diarias) | PR #19 | Supera (25/11) | **Mergeado** a jv179i | **Hecho vía Corte** (26/11) — merge `7ff58ae` a main + deploy confirmado por Nico. **En producción real.** |
