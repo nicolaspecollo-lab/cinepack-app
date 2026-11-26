@@ -37,6 +37,40 @@ type Propuesta = {
   datos: Record<string, string>;
 };
 
+type SetupHorario1AD = {
+  id: string;
+  escena_setup?: string;
+  cargo?: string;
+  hora_prevista_wrap?: string;
+  hora_real_wrap?: string;
+  overtime?: string;
+};
+type DeptoHorario1AD = { nombre?: string; setups?: SetupHorario1AD[] };
+
+// dir-control-horarios-1ad (RONDA 2, 25/11) no tiene un campo "escena" plano
+// — es panel bespoke con datos.departamentos (JSON) → setups[].escena_setup
+// por cita. El matching genérico de 3 claves (CAMPOS_ESCENA) no lo alcanza
+// sin falsos positivos, así que esta cara busca directo en esa estructura
+// real en vez de adivinar o inventar un campo nuevo.
+function setupsDeEscena(datos: Record<string, unknown>, numero: number): SetupHorario1AD[] {
+  let deptos: DeptoHorario1AD[] = [];
+  try {
+    const raw = (datos as { departamentos?: unknown }).departamentos;
+    deptos = typeof raw === "string" ? JSON.parse(raw) : Array.isArray(raw) ? (raw as DeptoHorario1AD[]) : [];
+  } catch {
+    deptos = [];
+  }
+  const match: SetupHorario1AD[] = [];
+  for (const d of deptos) {
+    for (const s of d.setups ?? []) {
+      if (tokensNumericos(s.escena_setup ?? "").includes(String(numero))) {
+        match.push({ ...s, cargo: s.cargo ? (d.nombre ? `${s.cargo} (${d.nombre})` : s.cargo) : d.nombre });
+      }
+    }
+  }
+  return match;
+}
+
 const CAMPOS_ESCENA = ["escena", "escenas", "secuencia"];
 
 function tokensNumericos(s: string): string[] {
@@ -66,16 +100,16 @@ type CaraDef = {
   id: string;
   label: string;
   depto: string;
-  kind: "guion" | "fotografia" | "reparto" | "generica";
+  kind: "guion" | "fotografia" | "reparto" | "horarios1ad" | "generica";
   herramientaIds?: string[];
 };
 
 const CARAS: CaraDef[] = [
   { id: "guion", label: "Guion", depto: "Guion", kind: "guion" },
   { id: "fotografia", label: "Fotografía", depto: "Fotografía", kind: "fotografia" },
-  { id: "storyboard", label: "Storyboard", depto: "Dirección", kind: "generica", herramientaIds: [] },
+  { id: "storyboard", label: "Storyboard", depto: "Fotografía", kind: "generica", herramientaIds: ["foto-guion-tecnico"] },
   { id: "plan-rodaje", label: "Plan de rodaje", depto: "Producción", kind: "generica", herramientaIds: ["gen-plan-rodaje"] },
-  { id: "horarios-1ad", label: "Horarios del día", depto: "Dirección", kind: "generica", herramientaIds: ["dir-control-horarios-1ad"] },
+  { id: "horarios-1ad", label: "Horarios del día", depto: "Dirección", kind: "horarios1ad", herramientaIds: ["dir-control-horarios-1ad"] },
   { id: "reparto", label: "Reparto", depto: "Reparto", kind: "reparto" },
   { id: "vestuario", label: "Vestuario / Maquillaje", depto: "Arte", kind: "generica", herramientaIds: ["vest-desglose-escenas", "maq-desglose-escenas"] },
   { id: "continuidad", label: "Continuidad", depto: "Dirección", kind: "generica", herramientaIds: ["dir-continuidad-foto"] },
@@ -146,6 +180,12 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
     () => (escena ? planos.filter((p) => p.escena === String(escena.numero)) : []),
     [planos, escena]
   );
+
+  const setupsHorarios1ad = useMemo(() => {
+    if (!escena) return [];
+    const filas = propuestas.filter((p) => p.herramienta_id === "dir-control-horarios-1ad");
+    return filas.flatMap((f) => setupsDeEscena(f.datos, escena.numero));
+  }, [propuestas, escena]);
 
   const irA = (idx: number) => {
     if (idx === activo) return;
@@ -224,20 +264,36 @@ export default function Escena3DPanel({ departamento }: { departamento: string }
             transition: `transform ${duracionMs}ms cubic-bezier(.22,.9,.25,1)`,
           }}
         >
-          {CARAS.map((c, i) => (
+          {CARAS.map((c, i) => {
+            // Con 10 caras (36° entre sí), más de una queda "de frente" a la
+            // vez dentro de los ±90° que backface-visibility no oculta —
+            // un cubo de 4 caras no tiene este problema, el de 10 sí. Sin
+            // atenuar las no-activas, el texto de la cara vecina se superpone
+            // y se vuelve ilegible (bug real encontrado en QA, 820px). Las
+            // caras no activas quedan como insinuación tenue, nunca legibles
+            // ni clicables.
+            const esActiva = i === activo;
+            return (
             <div
               key={c.id}
               className="e3d-face"
-              style={{ transform: `rotateY(${i * ANGULO}deg) translateZ(${radio}px)` }}
+              style={{
+                transform: `rotateY(${i * ANGULO}deg) translateZ(${radio}px)`,
+                opacity: esActiva ? 1 : 0.08,
+                pointerEvents: esActiva ? "auto" : "none",
+                transition: `opacity ${duracionMs}ms ease`,
+              }}
             >
               <CaraContenido
                 cara={c}
                 escena={escena}
                 planosEscena={planosEscena}
                 propuestasEscena={propuestasEscena}
+                setupsHorarios1ad={setupsHorarios1ad}
               />
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -255,11 +311,13 @@ function CaraContenido({
   escena,
   planosEscena,
   propuestasEscena,
+  setupsHorarios1ad,
 }: {
   cara: CaraDef;
   escena: Escena | null;
   planosEscena: Plano[];
   propuestasEscena: Propuesta[];
+  setupsHorarios1ad: SetupHorario1AD[];
 }) {
   if (!escena) return <p className="e3d-vacio">Elegí una escena arriba.</p>;
 
@@ -299,6 +357,22 @@ function CaraContenido({
     );
   }
 
+  if (cara.kind === "horarios1ad") {
+    if (setupsHorarios1ad.length === 0) {
+      return <p className="e3d-vacio">Sin horarios del día cargados todavía para esta escena.</p>;
+    }
+    return (
+      <ul className="e3d-horarios1ad">
+        {setupsHorarios1ad.map((s) => (
+          <li key={s.id}>
+            <b>{s.cargo ?? "Sin cargo"}</b> — previsto {s.hora_prevista_wrap || "?"} · real {s.hora_real_wrap || "?"}
+            {s.overtime ? ` · overtime: ${s.overtime}` : ""}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   if (cara.kind === "reparto") {
     if (!escena.personajes || escena.personajes.length === 0) {
       return <p className="e3d-vacio">Sin personajes asignados a esta escena todavía.</p>;
@@ -315,10 +389,6 @@ function CaraContenido({
   const filas = (cara.herramientaIds ?? []).length
     ? propuestasEscena.filter((p) => cara.herramientaIds!.includes(p.herramienta_id))
     : [];
-
-  if (cara.id === "storyboard") {
-    return <p className="e3d-vacio">Storyboard: pendiente de decisión de alcance con Nico (ver dossier) — todavía no filtra por escena.</p>;
-  }
 
   if (filas.length === 0) {
     return <p className="e3d-vacio">Sin {cara.label.toLowerCase()} cargado todavía para esta escena.</p>;
