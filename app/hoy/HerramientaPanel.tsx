@@ -2869,7 +2869,47 @@ function AvisoCitacionBoard({
   const colCanal = columnas.find((c) => c.key === "canal")!;
 
   function set(f: Fila, key: string, v: string) {
+    const yaConfirmado = (f.datos?.estado_confirmacion ?? "Pendiente") === "Confirmado";
     onGuardar(f.id, { ...f.datos, [key]: v }, f);
+    if (key === "estado_confirmacion" && v === "Confirmado" && !yaConfirmado) {
+      registrarEnAgenda(f);
+    }
+  }
+
+  // Pedido de Nico (26/11): al confirmarse un aviso de citación, el evento
+  // queda registrado solo, con fecha/hora y explicación, en la agenda
+  // general del destinatario — sin que nadie tenga que anotarlo a mano.
+  // No bloquea ni revierte el guardado del aviso si falla (es un registro
+  // derivado, nunca la fuente de verdad del aviso en sí).
+  async function registrarEnAgenda(f: Fila) {
+    const projectId = localStorage.getItem("cinepack-proyecto-id");
+    if (!projectId) return;
+    const d = f.datos ?? {};
+    const ahora = new Date();
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("herramienta_filas").insert({
+        project_id: projectId,
+        departamento: "General",
+        herramienta_id: "gen-agenda-confirmaciones",
+        datos: {
+          fecha: ahora.toISOString().slice(0, 10),
+          hora: ahora.toTimeString().slice(0, 5),
+          origen_herramienta: "Aviso de citación (Asistencia de dirección)",
+          destinatario: d.destinatario || "Sin destinatario",
+          explicacion: d.mensaje ? `Confirmó: "${d.mensaje}"` : "Confirmó el aviso de citación.",
+        },
+        orden: Math.floor(Date.now() / 1000),
+        registro: [],
+        visionado_por: [],
+        created_by: user?.id ?? null,
+        autor_nombre: "Sistema",
+        editor_nombre: "Sistema",
+      });
+    } catch (e) {
+      console.error("[agenda debug catch]", e);
+    }
   }
 
   function fechaHora(iso: string): string {

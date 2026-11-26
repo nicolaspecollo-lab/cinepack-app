@@ -136,7 +136,11 @@
       "desc": "Fulls i documents en blanc compartits amb tot el projecte."
     },
     "all": "Tots",
-    "back": "Torna"
+    "back": "Torna",
+    "agenda": {
+      "label": "Agenda de confirmacions",
+      "desc": "Registre automàtic de citacions confirmades, amb data, hora i explicació."
+    }
   },
   "espacio": {
     "title": "Espai de treball",

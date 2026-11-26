@@ -4061,6 +4061,23 @@ export const GENERAL_CHECKLIST_WRAP: Herramienta = {
   hint: "Puntos que todo el equipo debe confirmar antes de dar por finalizado el rodaje.",
 };
 
+// Registro automático de eventos confirmados desde otras herramientas
+// (hoy: avisos de citación de Asistencia de dirección). Nunca se edita a
+// mano desde acá — cada fila la crea la herramienta de origen cuando el
+// destinatario confirma, con fecha/hora y la explicación del evento.
+export const GENERAL_AGENDA_CONFIRMACIONES: Herramienta = {
+  id: "gen-agenda-confirmaciones",
+  nombre: "Agenda de confirmaciones",
+  tipo: "tabla",
+  columnas: [
+    { key: "fecha", label: "Fecha", tipo: "fecha" },
+    { key: "hora", label: "Hora" },
+    { key: "origen_herramienta", label: "Origen" },
+    { key: "destinatario", label: "Para" },
+    { key: "explicacion", label: "Explicación", tipo: "largo" },
+  ],
+};
+
 // Unión deduplicada de TODAS las herramientas de departamento del depto.
 export function deptTools(departamento: string): Herramienta[] {
   const dep = HERRAMIENTAS[departamento];
@@ -4107,7 +4124,7 @@ export const HERRAMIENTA_POR_ID: Record<string, Herramienta> = (() => {
       for (const h of [...ct.departamento, ...ct.cargo]) map[h.id] = h;
     }
   }
-  for (const h of [GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_ORDEN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP]) map[h.id] = h;
+  for (const h of [GENERAL_CALENDARIO, GENERAL_PLAN_RODAJE, GENERAL_ORDEN_RODAJE, GENERAL_CONTACTOS_EMERGENCIA, GENERAL_CHECKLIST_WRAP, GENERAL_AGENDA_CONFIRMACIONES]) map[h.id] = h;
   return map;
 })();
 

@@ -136,7 +136,11 @@
       "desc": "Hojas y documentos en blanco compartidos con todo el proyecto."
     },
     "all": "Todos",
-    "back": "Volver"
+    "back": "Volver",
+    "agenda": {
+      "label": "Agenda de confirmaciones",
+      "desc": "Registro automático de citaciones confirmadas, con fecha, hora y explicación."
+    }
   },
   "espacio": {
     "title": "Espacio de trabajo",
@@ -1121,7 +1125,8 @@
     "tipoPlaceholder": "Ej. Petaca, micro de mano, walkie",
     "asignadoPlaceholder": "Ej. Personaje o persona",
     "reservaPlaceholder": "Ej. 655.30",
-    "petacaPlaceholder": "Solo si es una petaca. Ej. Espalda, cintura",    "saveEquipment": "Guardar equipo",
+    "petacaPlaceholder": "Solo si es una petaca. Ej. Espalda, cintura",
+    "saveEquipment": "Guardar equipo",
     "saveAndAdd": "Guardar y añadir otro",
     "seeDetail": "Ver con qué choca",
     "reasonIntermod": "Intermodulación de 3er orden",

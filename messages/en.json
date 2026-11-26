@@ -136,7 +136,11 @@
       "desc": "Blank sheets and documents shared with the whole project."
     },
     "all": "All",
-    "back": "Back"
+    "back": "Back",
+    "agenda": {
+      "label": "Confirmation agenda",
+      "desc": "Automatic log of confirmed call times, with date, time and explanation."
+    }
   },
   "espacio": {
     "title": "Workspace",
