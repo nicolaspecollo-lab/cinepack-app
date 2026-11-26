@@ -52,3 +52,6 @@ El resto de los 16 vacíos (`dir-decisiones-visionado`, `dir-control-horarios` d
 3. ¿`@anthropic-ai/sdk` está en uso en producción o reservado para una migración futura? Solo se confirmó `@google/genai` en las rutas de IA revisadas (`app/api/asistente`, `app/api/guion/desglose/generar`).
 4. Confirmar el radio de borde estándar de tarjetas/paneles del sistema de diseño real (en el repo de muestreo no hay un token único, se declara por componente).
 5. ¿Qué librería de hoja de cálculo/editor enriquecido prefiere evaluar primero el arquitecto, o se le da total libertad? (sin respuesta asumida todavía).
+
+## Excepción puntual 27/11 — horario y alcance confirmados por Nico
+Ciclo del 27/11 arranca a las 8:30 Madrid (no 7:00) por el reseteo de uso de tokens. Alcance confirmado: fix bug overtime 1AD (no cuenta como herramienta nueva) + terminar citación-equipo si no cierra hoy (tampoco cuenta) + Memoria de RRHH (1ª herramienta nueva) + 2 herramientas nuevas más a elegir por proceso normal. Trigger puntual creado: `trig_01K5GDKb2w55TcW1hb1NQooo`.
