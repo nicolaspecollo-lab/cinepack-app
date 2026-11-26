@@ -2,6 +2,9 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Actualizado 26/11/2026 — `rep-notas-preparacion` entregado
+Código ya existía de una pasada del 25/11 sin dossier/QA; hoy se completó el proceso (dossier de 11 secciones, tsc/build limpios, wiring verificado por código) — ver `oficina/expedientes/2026-11-25_reparto_notas-preparacion/`. **Bloqueo real documentado, no fabricado**: no hay cuenta de prueba con cargo "Reparto principal" en `oficina-qa/cargos.md`, y el registro público de la app está cerrado — QA de interacción real queda pendiente hasta que se cree esa cuenta (recomendado para la próxima noche de QA). Pendiente de tu calificación en el panel con esta limitación explícita.
+
 ## Bug transversal pendiente de decisión de Nico (25/11/2026)
 `/perfil` no escribe `profiles.cargo` al cambiar de cargo — escribe a `user_roles` en su lugar. El gating real de qué herramientas ve un cargo en Exclusivas/Departamentos lee `profiles.cargo` (`app/hoy/page.tsx`), así que cualquier usuario que cambie de cargo vía la UI de autoservicio no ve efecto real, sin error visible. Encontrado por QA al intentar destrabar la cuenta de 1er asistente de dirección el 25/11. No se toca hasta que Nico decida prioridad (afecta onboarding/autoservicio de cualquier cargo, no solo el de hoy).
 
