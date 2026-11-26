@@ -46,6 +46,41 @@ Verificado sin scroll horizontal ni errores de consola en los 3 anchos.
 ![captura 820px](capturas/820px.png)
 ![captura 1440px](capturas/1440px.png)
 
+**Ronda 3bis (pedido de Nico, "quiero ver una visualización de cómo se vería cada previsualización, cada cara del cubo, en el informe"):** las 11 caras (Resumen + las 10 de departamento) capturadas individualmente con contenido real de la Escena 12 ("EXT. Almendral — ladera sur"), entrando a cada una por su pestaña de acceso directo.
+
+#### Resumen
+![Resumen](capturas/caras/01-resumen.png)
+
+#### Guion
+![Guion](capturas/caras/02-guion.png)
+
+#### Fotografía
+![Fotografía](capturas/caras/03-fotograf-a.png)
+
+#### Storyboard
+![Storyboard](capturas/caras/04-storyboard.png)
+
+#### Plan de rodaje
+![Plan de rodaje](capturas/caras/05-plan-de-rodaje.png)
+
+#### Horarios del día
+![Horarios del día](capturas/caras/06-horarios-del-d-a.png)
+
+#### Reparto
+![Reparto](capturas/caras/07-reparto.png)
+
+#### Vestuario / Maquillaje
+![Vestuario / Maquillaje](capturas/caras/08-vestuario-maquillaje.png)
+
+#### Continuidad
+![Continuidad](capturas/caras/09-continuidad.png)
+
+#### Sonido
+![Sonido](capturas/caras/10-sonido.png)
+
+#### Planta de luces
+![Planta de luces](capturas/caras/11-planta-de-luces.png)
+
 ## 9. Especificación técnica (componentes, modelo de datos, librerías y licencias)
 - **Componente**: `app/hoy/Escena3DPanel.tsx` (nuevo), montado en `app/hoy/GeneralesPanel.tsx` (sub-pestaña "Escena 3D", reemplaza el placeholder `EscenasPanel` en esa ruta).
 - **Librerías**: ninguna nueva. Carrusel en CSS 3D puro (`transform-style: preserve-3d`, `rotateY`, `translateZ`), sin WebGL ni three.js — mismo criterio de "no sobre-ingeniería" que propuso el arquitecto.
