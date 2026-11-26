@@ -2,6 +2,9 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Ciclo 26/11/2026 — entregado
+`gen-checklist-wrap` ("Checklist de wrap", scope General) entregada hoy — ver `oficina/expedientes/2026-11-25_general_checklist-wrap/` (necesidad ya existía del desarrollador del 25/11; se terminó de rebasar sobre jv179i actual, QA real en 390/820/1440px, dossier de 11 secciones + PDF, PR en borrador). Única herramienta General que faltaba del inventario. Pendiente de calificación de Nico. Por restricción de tiempo de esta corrida, no se completaron los otros 2 expedientes del cupo de 3/día de hoy — candidatos para mañana: `rep-notas-preparacion` (fue archivado antes por bloqueo de permisos de QA, revisar si ya se puede retomar) y `rep-instrucciones-figuracion`.
+
 ## Idea de Nico para un ciclo futuro (25/11/2026)
 Propuesta en rebote de "Avisos y confirmaciones de citación al equipo" (Asistencia de dirección): construir una herramienta en paralelo, estilo agenda personal por cargo, donde cada citación confirmada (y potencialmente otras confirmaciones de otras herramientas) dispare automáticamente un registro del evento confirmado (hora, fecha, explicación) en la agenda de la persona. Requiere: definir qué herramientas disparan el registro, el modelo de datos de la agenda por cargo, y el mecanismo de disparo (¿trigger en backend al cambiar estado_confirmacion a "Confirmado"? ¿solo lectura agregada?). Investigar y arquitecturar en un ciclo propio, no como extensión menor — es un expediente nuevo.
 
