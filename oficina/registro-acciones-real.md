@@ -17,3 +17,14 @@ Nico dio Corte (main=true, migraciones=true, deploy=true) para "Continuidad foto
 
 ## Hallazgo real y corrección: PR #16 nunca se había mergeado (25/11/2026)
 El comité de calidad, al revisar "Avisos y confirmaciones de citación al equipo" (dir-control-horarios), encontró que el código real en `app/herramientas.ts` seguía siendo el placeholder vacío original ("Control de horarios y avisos al equipo", checklist) y no la tabla de 6 columnas que el dossier describía. Investigado: PR #16 (ciclo 22/11, incluye también prod-tareas-admin y prod-checklist-vehiculos) seguía abierto en borrador desde el 22/11, nunca mergeado a jv179i — un paso que debí haber verificado yo mismo hace días. Actualizada la rama contra el jv179i actual (merge `e5270a1`, 2 conflictos menores resueltos: backlog.md por concatenación, HerramientaPanel.tsx por el fix global de hint que ya reemplaza la exclusión puntual), `tsc`/`next build` limpios, pusheado y mergeado a `jv179i` (commit `460e708`).
+
+## Escena 3D — revisión independiente de comité, ronda 2 (26/11/2026)
+Una pasada anterior había corregido las 4 objeciones de la ronda 1 del comité (bug de superposición de caras, ejecución visual pobre en 6 de 10 caras, falta de indicador de contenido en pestañas, espacio muerto), pero la verificación la había hecho el mismo fork que corrigió — insuficiente, mismo patrón que ya se había señalado como problema una vez (autoevaluación en lugar de comité independiente). Se relanzó la revisión con acceso real a git/shell (el agente `comite-calidad` no tiene Bash, por eso el primer intento falló sin poder siquiera llegar al contenido).
+
+Verificación independiente real contra el worktree `/tmp/claude-0/escena-3d` (commit `5f89b9b`) y el dev server ya corriendo en el puerto 3713:
+- Bug de superposición: confirmado en código (`opacity: esActiva ? 1 : 0`) y reproducido en vivo con Playwright (login real, salto a cara lejana) en 390/820/1440px — medición de `getComputedStyle` de las 10 caras confirma solo la activa visible, captura visual sin residuo de texto de otra cara.
+- Tarjetas con acento de color real (`DEPTO_HEX`, mismo mapa que `EquipoPanel.tsx`) e íconos de `Icon.tsx`: confirmado en código y en pantalla.
+- Punto de contenido en pestañas: confirmado en código (`e3d-shortcut-dot`) y visible en captura.
+- Reducción de espacio muerto: confirmado por medición de DOM que `.e3d-stage` bajó de 280px a 220px; el espacio vacío remanente en la captura se comparó contra la pestaña "Guion" (ya aprobada) y resultó ser comportamiento transversal del shell de la app, no un defecto propio de esta herramienta.
+
+Veredicto: **aprobado ("cumple")**. Panel actualizado (`entregas/escena-3d`, versión 5). PR #24 queda listo para calificación/Corte de Nico.
