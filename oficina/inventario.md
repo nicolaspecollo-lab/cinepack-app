@@ -42,7 +42,7 @@ Herramientas de departamento: Plan técnico de cámara/Shot list, Inventario y h
 - **Dirección de fotografía**, **Operación de cámara**, **Foquista**, **Auxiliar de cámara**, **Maquinista**, **Eléctricos/Gaffer**, **DIT (Imagen Digital)**.
 - **Operación de cámara**: herramientas exclusivas detectadas con columnas propias (**Consolidada**, no detalladas línea a línea aquí).
 - **Auxiliar de cámara**: Checklist de descarga, backup y etiquetado de tarjetas (**Vacía** — sin hint).
-- **DIT**: Backup y verificación de material/checksum (**Vacía** — sin hint).
+- **DIT**: Backup y verificación de material/checksum (~~**Vacía**~~ → **Consolidada** 27/11 — tabla real con checksum de origen, copias verificadas repetibles, log MHL. Ver `oficina/expedientes/2026-11-27_fotografia_dit-backup/`).
 
 ## 5. Arte
 Herramientas de departamento: Moodboard de arte, Planos de decorado, Desglose de atrezzo por escena, Desglose de vestuario por personaje, Presupuesto y proveedores de arte — todas con columnas propias (**Consolidadas**, a confirmar nivel de detalle real con el agente del departamento).
