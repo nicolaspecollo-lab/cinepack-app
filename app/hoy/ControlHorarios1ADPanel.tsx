@@ -30,6 +30,7 @@ import {
   CONTROL_HORARIOS_1AD_DEPARTAMENTO,
   DEPARTAMENTOS_SET,
   OVERTIME_OPCIONES,
+  calcularDeltaOvertime,
   agruparPorCargo,
   cantidadSetups,
   ejeDelDia,
@@ -514,6 +515,18 @@ function SetupFila({
   onBorrar: () => void;
 }) {
   const [check, setCheck] = useState<"ok" | "alerta" | null>(null);
+  const [horaPrevista, setHoraPrevista] = useState(setup.hora_prevista_wrap);
+  const [horaReal, setHoraReal] = useState(setup.hora_real_wrap);
+
+  function onCambiarHora(campo: "hora_prevista_wrap" | "hora_real_wrap", valor: string) {
+    const prevista = campo === "hora_prevista_wrap" ? valor : horaPrevista;
+    const real = campo === "hora_real_wrap" ? valor : horaReal;
+    if (campo === "hora_prevista_wrap") setHoraPrevista(valor); else setHoraReal(valor);
+    onCambiar(campo, valor);
+    const { delta_minutos, overtime } = calcularDeltaOvertime(prevista, real);
+    onCambiar("delta_minutos", delta_minutos);
+    onCambiar("overtime", overtime);
+  }
 
   // Validación liviana (no bloquea el guardado) contra GENERAL_PLAN_RODAJE
   // .escenas, por subcadena — mismo mecanismo y criterio que la ronda 2 ya
@@ -563,20 +576,20 @@ function SetupFila({
           <div className="ch1-horas-row">
             <label className="ch1-field">
               <span>Wrap previsto</span>
-              <input type="time" defaultValue={setup.hora_prevista_wrap} onBlur={(e) => onCambiar("hora_prevista_wrap", e.target.value)} />
+              <input type="time" defaultValue={setup.hora_prevista_wrap} onBlur={(e) => onCambiarHora("hora_prevista_wrap", e.target.value)} />
             </label>
             <label className="ch1-field">
               <span>Wrap real</span>
-              <input type="time" defaultValue={setup.hora_real_wrap} onBlur={(e) => onCambiar("hora_real_wrap", e.target.value)} />
+              <input type="time" defaultValue={setup.hora_real_wrap} onBlur={(e) => onCambiarHora("hora_real_wrap", e.target.value)} />
             </label>
             <label className="ch1-field">
-              <span>Delta (min.)</span>
-              <input defaultValue={setup.delta_minutos} inputMode="numeric" onBlur={(e) => onCambiar("delta_minutos", e.target.value)} />
+              <span>Delta (min.), calculado</span>
+              <input value={setup.delta_minutos} readOnly tabIndex={-1} />
             </label>
           </div>
           <div className="ch1-horas-row">
             <label className="ch1-field ch1-field-select">
-              <span>Overtime</span>
+              <span>Overtime, calculado — override manual si hace falta</span>
               <CpSelect value={setup.overtime} options={OVERTIME_OPCIONES.map((o) => ({ value: o, label: o }))} placeholder="Overtime" onChange={(v) => onCambiar("overtime", v as Overtime)} />
             </label>
             <label className="ch1-field ch1-field-select">

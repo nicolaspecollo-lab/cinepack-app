@@ -44,6 +44,23 @@ export type Overtime = (typeof OVERTIME_OPCIONES)[number];
 export const AVISO_OPCIONES = ["Pendiente", "Enviado", "No aplica"] as const;
 export type AvisoEnviado = (typeof AVISO_OPCIONES)[number];
 
+// Umbral real (bug QA 26/11): delta/overtime no se calculaban solos, el
+// cronometrador tenía que completarlos a mano. >30' = Alerta, >60' = Confirmado.
+export function calcularDeltaOvertime(
+  horaPrevista: string,
+  horaReal: string
+): { delta_minutos: string; overtime: Overtime | "" } {
+  if (!horaPrevista || !horaReal) return { delta_minutos: "", overtime: "" };
+  const [hp, mp] = horaPrevista.split(":").map(Number);
+  const [hr, mr] = horaReal.split(":").map(Number);
+  if ([hp, mp, hr, mr].some((n) => Number.isNaN(n))) return { delta_minutos: "", overtime: "" };
+  let delta = hr * 60 + mr - (hp * 60 + mp);
+  if (delta < -720) delta += 1440; // cruzó medianoche
+  if (delta > 720) delta -= 1440;
+  const overtime: Overtime = delta > 60 ? "Confirmado" : delta > 30 ? "Alerta" : "No";
+  return { delta_minutos: String(delta), overtime };
+}
+
 export type SetupHorario = {
   id: string; // id local (uuid cliente), nunca viaja a `herramienta_filas.id`
   // Cargo/puesto de la persona citada (ej. "Operador de cámara", "Jefe de
