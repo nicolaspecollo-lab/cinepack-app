@@ -3843,7 +3843,19 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "Dirección de RRHH": {
       departamento: [listadoEquipo, altasBajas, controlHoras, descansosLegales, protocoloRiesgos, canalIncidencias],
       cargo: [
-        { id: "rrhh-memoria", nombre: "Memoria de RRHH", tipo: "nota", hint: "Políticas y decisiones." },
+        {
+          id: "rrhh-memoria",
+          nombre: "Memoria de RRHH",
+          tipo: "tabla",
+          columnas: [
+            { key: "decision", label: "Decisión / política" },
+            { key: "fecha_decision", label: "Fecha de la decisión", tipo: "fecha" },
+            { key: "normativa", label: "Normativa referenciada" },
+            { key: "cargo_departamento", label: "Cargo/departamento afectado" },
+            { key: "contexto", label: "Contexto y justificación", tipo: "largo" },
+            { key: "estado", label: "Estado", tipo: "estado", opciones: ["Vigente", "En revisión", "Derogada"] },
+          ],
+        },
         ACCESOS,
       ],
     },
