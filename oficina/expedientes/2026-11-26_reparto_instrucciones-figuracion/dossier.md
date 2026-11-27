@@ -99,27 +99,40 @@ figurantes), `cantidad` (número de personas), `punto_encuentro`,
 
 ## 8. Diseño visual
 
-**Bug real encontrado y corregido (26/11/2026)**: pese a que esta columna
-ya tenía su definición de columnas lista, nunca se pudo ver en runtime —
-`"Reparto"` no estaba en `MODULOS_BETA_ACTIVOS` (`app/constants.ts`), así
-que el gate `bloqueado = !esModuloBeta && !isAdmin` interceptaba el click
-de abrir la herramienta antes de llegar a renderizarla, y la UI caía al
-tablero Kanban genérico de "Tareas". Corregido agregando `"Reparto"` a
-`MODULOS_BETA_ACTIVOS` — consistente con que otras herramientas de Reparto
-(`rep-notas-escenas`) ya están en producción real.
+**2 bugs reales encontrados y corregidos (26/11/2026), en 2 rondas de comité:**
 
-Verificado en vivo (login real, cuenta de prueba con cargo cambiado
-temporalmente a "Figuración" y revertido al terminar): el tablero real
-agrupado por jornada (grupos de figuración, escena, hora, estado,
-confirmaciones) se ve de verdad — no el Kanban genérico. Captura real a
-1440px:
+**Ronda 1 — bloqueo de acceso**: pese a que esta herramienta ya tenía su
+definición de columnas y su componente `InstruccionesFiguracionBoard`
+listos, nunca se pudo ver en runtime — `"Reparto"` no estaba en
+`MODULOS_BETA_ACTIVOS` (`app/constants.ts`), así que el gate `bloqueado =
+!esModuloBeta && !isAdmin` interceptaba el click de abrir la herramienta
+antes de llegar a renderizarla, y la UI caía al tablero Kanban genérico de
+"Tareas". Corregido agregando `"Reparto"` a `MODULOS_BETA_ACTIVOS` —
+consistente con que otras herramientas de Reparto (`rep-notas-escenas`) ya
+están en producción real.
 
+**Ronda 2 — sin ejecución visual real**: una vez destrabado el acceso, el
+comité independiente objetó que el tablero se renderizaba como texto
+plano sin ningún estilo — el componente ya usaba las clases
+`hp-figu-*` correctas en el JSX, pero **esas clases nunca tuvieron reglas
+CSS definidas en `dashboard.css`** (confirmado por grep: 0 coincidencias
+antes de esta corrección). Se agregó el bloque CSS completo para
+`.hp-figu-*` en `dashboard.css`, siguiendo el mismo patrón visual ya
+aprobado de `.hp-tad-*` (tareas administrativas): tarjetas con acento de
+color por tono de estado (verde/ámbar/rojo/cian según `tono-ok/warn/bad/info`),
+badge de estado con el mismo color, barra de progreso de confirmaciones,
+agrupado por jornada con encabezado (fecha, cantidad de grupos, total
+confirmados), sin tipografía ni paleta fuera de `cp-theme.css`.
+
+Verificado en vivo (login real, cuenta de prueba de Dirección de casting
+con cargo cambiado temporalmente a "Figuración" y revertido al terminar
+— confirmado): el tablero real agrupado por jornada se ve con el estilo
+correcto, cero elementos `<table>`, sin scroll horizontal ni errores de
+consola en los 3 anchos.
+
+![captura 390px](capturas/390.png)
+![captura 820px](capturas/820.png)
 ![captura 1440px](capturas/1440.png)
-
-Usa el motor genérico de tabla (`HerramientaPanel.tsx`), con el sistema de
-diseño real (`cp-theme.css`) y el componente `EstadoSeg`/badges ya
-existentes para la columna `estado` — sin estilos nuevos ni colores
-inventados.
 
 ## 9. Especificación técnica
 
