@@ -6774,6 +6774,7 @@ const DOC_STATUS_IDS = new Set([
   "post-cal-maestro",
   "rrhh-altas-bajas",
   "rrhh-incidencias",
+  "rrhh-memoria",
   "sost-huella",
   "sost-residuos",
   "sost-registro-residuos",
@@ -12136,6 +12137,32 @@ export const EJEMPLOS_POR_ID: Record<string, Ejemplo[]> = {
   "rrhh-incidencias": [
     { fecha: "2026-07-15", tipo: "Seguridad", desc: "Suelo resbaladizo en el muelle durante el rodaje.", estado: "En gestión" },
     { fecha: "2026-07-12", tipo: "Laboral", desc: "Reclamación de horas extra del día 10.", estado: "Resuelta" },
+  ],
+  "rrhh-memoria": [
+    {
+      decision: "Turnos de la figurante menor (12 años) limitados a horario escolar",
+      fecha_decision: "2026-11-10",
+      normativa: "Estatuto de los Trabajadores (RDL 2/2015), art. 6 y 34 — trabajo de menores",
+      cargo_departamento: "Reparto (figuración) / Producción",
+      contexto: "Autorización de trabajo de la menor exige compatibilizar el rodaje con el calendario escolar; se acordó con la familia y el centro educativo un bloque fijo de rodaje de 10:00 a 15:00.",
+      estado: "Vigente",
+    },
+    {
+      decision: "Protocolo de calor extremo en exteriores (>35°C)",
+      fecha_decision: "2026-07-18",
+      normativa: "Ley 31/1995 de Prevención de Riesgos Laborales, art. 14-15",
+      cargo_departamento: "Todo el equipo de rodaje en exteriores",
+      contexto: "Tras 2 incidencias de insolación leve en el rodaje del embalse, se instauró pausa obligatoria de 15 min/hora entre las 13:00 y 17:00 y punto de hidratación fijo por departamento.",
+      estado: "Vigente",
+    },
+    {
+      decision: "Revisión del canal de incidencias anónimo",
+      fecha_decision: "2026-06-02",
+      normativa: "Ley 2/2023 de protección a los informantes",
+      cargo_departamento: "Dirección de RRHH",
+      contexto: "Propuesta de habilitar un canal anónimo adicional al actual — en evaluación junto con Legal antes de implementarlo.",
+      estado: "En revisión",
+    },
   ],
   // --- Sostenibilidad ---
   "sost-huella": [

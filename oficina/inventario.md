@@ -81,7 +81,7 @@ Herramientas de departamento: Plan de montaje, Versiones de corte (EDL), Notas d
 
 ## 12. RRHH
 Herramientas de departamento: Listado de equipo y contactos, Altas y bajas, Control de horas, Registro de descansos legales, Protocolo de prevención de riesgos, Canal de incidencias — **Consolidadas** (cumplimiento legal explícito: PRL, descansos).
-- **Dirección de RRHH**: Memoria de RRHH (**Vacía** — `nota` sin hint).
+- **Dirección de RRHH**: Memoria de RRHH (~~Vacía~~ → **Consolidada** 27/11 — tablero de decisiones/políticas agrupado por estado, reusando `DocStatusBoard`. Ver `oficina/expedientes/2026-11-27_rrhh_memoria/`, pendiente de calificación de Nico).
 - **Gestión de personal**, **Coordinación de bienestar**.
 - **Coordinación de bienestar**: Plan de bienestar y actividades del equipo (**Vacía** — `checklist` sin hint).
 
