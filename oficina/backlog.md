@@ -2,6 +2,9 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Ciclo 27/11/2026 (excepción 8:30) — Memoria de RRHH entregada
+**Memoria de RRHH** (Dirección de RRHH) completada: de nota vacía a tablero real de decisiones/políticas agrupado por estado, reusando `DocStatusBoard`. Ver `oficina/expedientes/2026-11-27_rrhh_memoria/`, PR pendiente de abrir, panel en `pendiente` esperando calificación de Nico. **Limitación honesta de este pase**: por el alcance de un solo fork sin delegación, no se corrió una ronda de investigación de competencia externa ni una revisión de comité independiente separada (solo autoverificación real con Playwright/tsc) — recomendado que una próxima pasada corra esa revisión independiente antes de dar esto por definitivamente cerrado. La segunda herramienta nueva del cupo del día no se llegó a arrancar en este pase.
+
 ## Ciclo 26/11/2026 — entregado
 `gen-checklist-wrap` ("Checklist de wrap", scope General) entregada hoy — ver `oficina/expedientes/2026-11-25_general_checklist-wrap/` (necesidad ya existía del desarrollador del 25/11; se terminó de rebasar sobre jv179i actual, QA real en 390/820/1440px, dossier de 11 secciones + PDF, PR en borrador). Única herramienta General que faltaba del inventario. Pendiente de calificación de Nico. Por restricción de tiempo de esta corrida, no se completaron los otros 2 expedientes del cupo de 3/día de hoy — candidatos para mañana: `rep-notas-preparacion` (fue archivado antes por bloqueo de permisos de QA, revisar si ya se puede retomar) y `rep-instrucciones-figuracion`.
 
