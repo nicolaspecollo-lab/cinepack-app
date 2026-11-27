@@ -3064,22 +3064,28 @@
 .cp-dash .avc-col-vacia{ font-size:var(--fs-sm); color:var(--muted); margin:var(--sp-2); text-align:center; }
 
 .cp-dash .avc-card{
-  background:var(--bg); border:1px solid var(--line); border-left:3px solid var(--line);
+  background:linear-gradient(165deg, color-mix(in srgb, var(--line-tono,var(--line)) 7%, var(--bg)), var(--bg));
+  border:1px solid var(--line); border-left:3px solid var(--line);
   padding:var(--sp-2) var(--sp-3); display:flex; flex-direction:column; gap:6px;
-  transition:border-color var(--dur) ease, transform var(--dur) ease;
+  transition:border-color var(--dur) ease, transform var(--dur) ease, box-shadow var(--dur) ease;
 }
-.cp-dash .avc-card:hover{ border-left-color:var(--acc); transform:translateY(-1px); }
-.cp-dash .avc-card.tono-warn{ border-left-color:var(--amber); }
-.cp-dash .avc-card.tono-bad{ border-left-color:var(--rose); }
-.cp-dash .avc-card.tono-ok{ border-left-color:var(--lime); }
+.cp-dash .avc-card:hover{ border-left-color:var(--acc); transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.28); }
+.cp-dash .avc-card.tono-warn{ border-left-color:var(--amber); --line-tono:var(--amber); }
+.cp-dash .avc-card.tono-bad{ border-left-color:var(--rose); --line-tono:var(--rose); }
+.cp-dash .avc-card.tono-ok{ border-left-color:var(--lime); --line-tono:var(--lime); }
 
 .cp-dash .avc-card-head{
   display:flex; align-items:center; gap:8px; background:none; border:none; padding:0;
   cursor:pointer; width:100%; text-align:left; color:var(--text);
 }
+.cp-dash .avc-avatar-ring{
+  flex-shrink:0; width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; background:color-mix(in srgb, var(--line-tono,var(--line)) 45%, transparent);
+  padding:2px;
+}
 .cp-dash .avc-avatar{
-  flex-shrink:0; width:28px; height:28px; border-radius:50%; display:flex; align-items:center;
-  justify-content:center; font-family:'Poppins',sans-serif; font-weight:700; font-size:11px;
+  width:100%; height:100%; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-family:'Poppins',sans-serif; font-weight:700; font-size:12px;
 }
 .cp-dash .avc-card-id{ display:flex; flex-direction:column; gap:1px; flex:1; min-width:0; }
 .cp-dash .avc-card-dest{
@@ -3104,6 +3110,18 @@
 }
 .cp-dash .avc-pop{ animation:avc-check-pop var(--dur) ease-out; }
 @keyframes avc-check-pop{ 0%{ transform:scale(0.6); opacity:0.4; } 60%{ transform:scale(1.12); } 100%{ transform:scale(1); opacity:1; } }
+
+.cp-dash .avc-urgencia-pill{
+  align-self:flex-start; display:flex; align-items:center; gap:4px; font-size:10.5px;
+  font-weight:600; color:var(--amber); background:color-mix(in srgb, var(--amber) 16%, transparent);
+  border:1px solid color-mix(in srgb, var(--amber) 40%, transparent); border-radius:20px; padding:2px 8px;
+}
+.cp-dash .avc-urgencia-pill.avc-urgencia-alta{
+  color:var(--rose); background:color-mix(in srgb, var(--rose) 18%, transparent);
+  border-color:color-mix(in srgb, var(--rose) 45%, transparent);
+  animation:avc-urgencia-pulso 2.4s ease-in-out infinite;
+}
+@keyframes avc-urgencia-pulso{ 0%,100%{ opacity:1; } 50%{ opacity:.6; } }
 
 .cp-dash .avc-body{ display:flex; flex-direction:column; gap:8px; padding-top:4px; border-top:1px dashed var(--line); }
 .cp-dash .avc-field{ display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--muted); }

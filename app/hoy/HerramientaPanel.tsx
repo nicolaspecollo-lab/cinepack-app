@@ -960,7 +960,7 @@ function HerramientaData({
         <AgendaDia
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={filas}
-          editable={editable}
+          editable={herramienta.id === "gen-agenda-confirmaciones" ? false : editable}
           departamento={departamento}
           herramientaId={herramienta.id}
           ejemplos={EJEMPLOS_POR_ID[herramienta.id]}
@@ -2919,6 +2919,17 @@ function AvisoCitacionBoard({
     return d.toLocaleString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
   }
 
+  // Rebote de Nico (26/11, ronda 2): "mejorá el diseño de las tarjetas de
+  // citación" — agrega una señal de urgencia real (horas sin confirmar),
+  // no solo cosmética: es justo la información que la 1ª asistencia de
+  // dirección necesita para decidir a quién reclamarle primero.
+  function horasSinConfirmar(iso: string): number | null {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return (Date.now() - d.getTime()) / 3_600_000;
+  }
+
   function Tarjeta(f: Fila) {
     const d = f.datos ?? {};
     const destinatario = d.destinatario || "Sin destinatario";
@@ -2929,8 +2940,10 @@ function AvisoCitacionBoard({
     return (
       <div className={`avc-card tono-${estadoTono(estado)}`} key={f.id}>
         <button className="avc-card-head" onClick={() => setAbiertaId(abierta ? null : f.id)}>
-          <span className="avc-avatar" style={{ background: `hsl(${h % 360},46%,32%)`, color: `hsl(${h % 360},70%,86%)` }}>
-            {inicialesDe(destinatario)}
+          <span className="avc-avatar-ring">
+            <span className="avc-avatar" style={{ background: `hsl(${h % 360},46%,32%)`, color: `hsl(${h % 360},70%,86%)` }}>
+              {inicialesDe(destinatario)}
+            </span>
           </span>
           <span className="avc-card-id">
             <span className="avc-card-dest">{destinatario}</span>
@@ -2948,11 +2961,21 @@ function AvisoCitacionBoard({
           {d.mensaje ? d.mensaje.replace(/<[^>]*>/g, "") : "Sin mensaje"}
         </p>
 
-        {estado === "Confirmado" && d.confirmado_por && (
+        {estado === "Confirmado" && d.confirmado_por ? (
           <span key={`${f.id}-${estado}`} className="avc-confirmado-pill avc-pop">
             <Icon name="check" size={12} /> Confirmó {d.confirmado_por}
           </span>
-        )}
+        ) : (() => {
+          const horas = horasSinConfirmar(d.fecha_envio);
+          if (horas === null || horas < 2) return null;
+          const dias = horas / 24;
+          const texto = dias >= 1 ? `${Math.floor(dias)}d sin confirmar` : `${Math.floor(horas)}h sin confirmar`;
+          return (
+            <span className={`avc-urgencia-pill ${horas >= 24 ? "avc-urgencia-alta" : ""}`}>
+              <Icon name="alert-triangle" size={12} /> {texto}
+            </span>
+          );
+        })()}
 
         {abierta && (
           <div className="avc-body">
@@ -3566,7 +3589,7 @@ function FichaEquipo({
 // vestuario son lo mismo en el fondo: "quién viene, a qué hora, para qué".
 // Se lee como una agenda por día, no como filas sueltas — quién es la
 // próxima cita importa más que cualquier otro dato.
-const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "prod-agenda-coord", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts"]);
+const AGENDA_DIA_IDS = new Set(["maq-calendario-preparacion", "vest-calendario-pruebas", "prod-agenda-coord", "dir-calendario-ensayos", "dir-control-llamadas", "cast-cal-audiciones", "cast-agentes", "rep-citaciones", "rep-agenda-personal", "rep-agenda-personal-principal", "rrhh-control-horas", "sost-energia", "mkt-cal-redes", "mkt-publicaciones-metricas", "mo-cal-editorial", "mo-cobertura-bts", "mo-hoja-rodaje-bts", "mo-redes-metricas", "mo-plan-rodaje-bts", "gen-agenda-confirmaciones"]);
 
 export function AgendaDia({
   columnas,

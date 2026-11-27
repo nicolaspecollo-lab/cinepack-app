@@ -4065,6 +4065,12 @@ export const GENERAL_CHECKLIST_WRAP: Herramienta = {
 // (hoy: avisos de citación de Asistencia de dirección). Nunca se edita a
 // mano desde acá — cada fila la crea la herramienta de origen cuando el
 // destinatario confirma, con fecha/hora y la explicación del evento.
+// Rebote de Nico (26/11, ronda 2): nada de tabla genérica — reusa el
+// patrón de agenda agrupada por día (AgendaDia, mismo componente que
+// dir-calendario-ensayos/rep-citaciones) en vez del TablaTool por defecto.
+// Orden de columnas pensado para esa vista: "destinatario" primero (así
+// queda como titular de la tarjeta, es el dato que más importa de un
+// vistazo), "origen_herramienta" como chip secundario.
 export const GENERAL_AGENDA_CONFIRMACIONES: Herramienta = {
   id: "gen-agenda-confirmaciones",
   nombre: "Agenda de confirmaciones",
@@ -4072,8 +4078,8 @@ export const GENERAL_AGENDA_CONFIRMACIONES: Herramienta = {
   columnas: [
     { key: "fecha", label: "Fecha", tipo: "fecha" },
     { key: "hora", label: "Hora" },
-    { key: "origen_herramienta", label: "Origen" },
     { key: "destinatario", label: "Para" },
+    { key: "origen_herramienta", label: "Origen" },
     { key: "explicacion", label: "Explicación", tipo: "largo" },
   ],
 };
