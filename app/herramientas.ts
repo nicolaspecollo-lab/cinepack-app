@@ -3107,7 +3107,26 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
     "DIT (Imagen Digital)": {
       departamento: [paletaColor],
       cargo: [
-        { id: "foto-dit-backup", nombre: "Backup y verificación de material (checksum)", tipo: "checklist" },
+        {
+          id: "foto-dit-backup", nombre: "Backup y verificación de material (checksum)", tipo: "tabla",
+          hint: "Cada soporte de cámara descargado, con checksum de origen y al menos 2 copias verificadas antes de formatear la tarjeta.",
+          columnas: [
+            { key: "soporte", label: "Soporte / Tarjeta" },
+            { key: "fecha_descarga", label: "Fecha de descarga", tipo: "fecha" },
+            { key: "escenas", label: "Escenas / Tomas", tipo: "largo" },
+            { key: "tamano_gb", label: "Tamaño (GB)", tipo: "num" },
+            { key: "checksum_origen", label: "Checksum de origen" },
+            {
+              key: "copias", label: "Copias verificadas", tipo: "repetible", sub: [
+                { key: "destino", label: "Destino (disco/LTO/nube)" },
+                { key: "checksum_copia", label: "Checksum de la copia" },
+                { key: "coincide", label: "Coincide con origen", tipo: "estado", opciones: ["Sí", "No", "Pendiente"] },
+              ],
+            },
+            { key: "tarjeta_formateada", label: "Tarjeta formateada", tipo: "estado", opciones: ["No", "Sí — tras 2+ copias OK"] },
+            { key: "mhl", label: "Reporte MHL / log de verificación", tipo: "archivo" as const },
+          ],
+        },
         {
           id: "foto-dit-color", nombre: "Reporte de color y LUTs aplicados por escena", tipo: "tabla",
           columnas: [
