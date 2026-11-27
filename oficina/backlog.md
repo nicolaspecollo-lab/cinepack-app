@@ -55,3 +55,18 @@ El resto de los 16 vacíos (`dir-decisiones-visionado`, `dir-control-horarios` d
 
 ## Excepción puntual 27/11 — horario y alcance confirmados por Nico
 Ciclo del 27/11 arranca a las 8:30 Madrid (no 7:00) por el reseteo de uso de tokens. Alcance confirmado: fix bug overtime 1AD (no cuenta como herramienta nueva) + terminar citación-equipo si no cierra hoy (tampoco cuenta) + Memoria de RRHH (1ª herramienta nueva) + 2 herramientas nuevas más a elegir por proceso normal. Trigger puntual creado: `trig_01K5GDKb2w55TcW1hb1NQooo`.
+
+## BUG CRÍTICO, YA EN PRODUCCIÓN — MODULOS_BETA_ACTIVOS bloquea departamentos con herramientas ya en main real (27/11/2026)
+`app/constants.ts` en **`main` real** (confirmado con `git show origin/main:app/constants.ts`, no solo en una rama de oficina) tiene `MODULOS_BETA_ACTIVOS = ["Ejecutivo", "Dirección", "Guion", "Producción"]`. El gate `bloqueado = !esModuloBeta && !isAdmin` (encontrado al investigar por qué `rep-notas-preparacion`/`rep-instrucciones-figuracion` caían al Kanban genérico) bloquea TODAS las herramientas de cualquier departamento que no esté en esa lista, para cualquier usuario real no-admin — sin importar si el panel a medida está bien construido.
+
+**Departamentos con herramientas YA con `corte_ejecutado:true` (en producción real) pero FUERA de la lista — inaccesibles hoy para usuarios reales no-admin de esos departamentos:**
+- **Fotografía** (`foto-checklist-descarga`, Corte 20/11)
+- **Arte** (`arte-checklist-tareas`, Corte 20/11)
+- **Reparto** (`rep-diario-personaje` Corte 20/11, `rep-notas-escenas` Corte 21/11)
+- **Making of** (`mo-memoria`, Corte 21/11)
+- **RRHH** (`rrhh-plan-bienestar`, Corte 20/11)
+- **Postproducción** (`post-checklist-mezcla`, Corte 20/11)
+
+Es decir: **6 departamentos completos** tienen cargos reales que, desde que esas herramientas se desplegaron, no pueden verlas ni usarlas — el Corte se ejecutó, el deploy se hizo, pero el gate de beta las esconde igual. No se tocó `main` para corregir esto en esta pasada (regla de Corte: `main` solo se toca con autorización explícita de Nico) — queda como la decisión más urgente que necesita su palabra, porque ya está afectando producción real, no es un bug de una rama en desarrollo.
+
+**Recomendación**: agregar los 6 departamentos (o directamente sacar el gate de beta si ya no tiene sentido mantenerlo — habría que preguntarle a Nico por qué se creó en primer lugar) a `MODULOS_BETA_ACTIVOS` vía un Corte puntual, lo antes posible.
