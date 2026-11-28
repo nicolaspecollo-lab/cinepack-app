@@ -483,6 +483,11 @@ const transporteLogistica: Herramienta = {
     { key: "destino", label: "Hasta" },
     { key: "hora_salida", label: "Hora de salida" },
     { key: "hora_llegada", label: "Hora estimada llegada" },
+    { key: "paradas", label: "Paradas intermedias (transporte descentralizado)", tipo: "repetible", sub: [
+      { key: "lugar", label: "Lugar" },
+      { key: "hora", label: "Hora" },
+      { key: "motivo", label: "Motivo (carga/descarga, cambio de pasajeros, etc.)" },
+    ]},
     { key: "estado", label: "Estado", tipo: "estado", opciones: ["Programado", "En ruta", "Llegó", "Cancelado"] },
     { key: "notas", label: "Notas", tipo: "largo" },
   ],
