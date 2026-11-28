@@ -104,3 +104,14 @@ Es decir: **6 departamentos completos** tienen cargos reales que, desde que esas
 - El fork que implementó el PR reportó "persiste correctamente" sin esta evidencia de red — probablemente confundió la navegación de vuelta a `/hoy` (que no es la URL de la herramienta, es estado de pestaña cliente) con una prueba real de persistencia.
 
 **Acción**: PR #31 vuelve a desarrollador con esta evidencia concreta — investigar la policy RLS real de `herramienta_filas` para `ej-cesion-nda`/Legal antes de reintentar un fix de UI. No se mergea a `jv179i` hasta corregir la causa real.
+
+## Corrección del veredicto de comité sobre PR #31 (28/11/2026, tercera verificación)
+
+**Rectificación**: el rechazo anterior de PR #31 (Legal/NDA) fue un **falso positivo propio**, no un bug real. Al reproducir por tercera vez con tracking riguroso por ID real de fila (no por posición en la lista), el bug no reproduce:
+- Fila creada con `POST` → id real `7408391d-9332-49e8-9e4a-3720217e6198`.
+- `PATCH .../herramienta_filas?id=eq.7408391d-9332-49e8-9e4a-3720217e6198` con `{"datos":{"contraparte":"BYID-1795884169473"}}` → 204.
+- `GET` tras reload completo + renavegación real a la herramienta, filtrando por ese mismo id exacto → `datos:{"contraparte":"BYID-1795884169473"}` — **persiste correctamente**.
+
+Causa real del falso positivo anterior: mi script de verificación llenaba "el último `<input>` de la lista" por posición del DOM, no por ID de fila capturado de la respuesta real del servidor — con la lista reordenándose entre acciones, eso pudo apuntar a una fila distinta de la que creía estar editando. Mea culpa del verificador, no de la app.
+
+**Veredicto final: PR #31 — APROBADO** tal como está (el fix de `tipo: "fecha"` en `vigencia` del autor original). Los 3 PRs (#30, #31, #32) quedan aprobados por comité y listos para mergear a `claude/oficina-agentes-cinepack-jv179i`.
