@@ -2942,6 +2942,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
             { key: "nombre", label: "Localización" },
             { key: "direccion", label: "Dirección", tipo: "largo" },
             { key: "contacto", label: "Contacto propietario" },
+            { key: "organismo", label: "Organismo que otorga el permiso", tipo: "estado", opciones: ["Ayuntamiento", "Confederación Hidrográfica / organismo de cuenca", "Propietario privado", "Otro"] },
             { key: "permiso", label: "Permiso", tipo: "estado", opciones: ["Pendiente", "Solicitado", "Concedido"] },
             { key: "coste", label: "Coste" },
             { key: "notas", label: "Notas (accesos, ruido, luz)", tipo: "largo" },
