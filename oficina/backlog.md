@@ -89,3 +89,18 @@ Ciclo del 27/11 arranca a las 8:30 Madrid (no 7:00) por el reseteo de uso de tok
 Es decir: **6 departamentos completos** tienen cargos reales que, desde que esas herramientas se desplegaron, no pueden verlas ni usarlas — el Corte se ejecutó, el deploy se hizo, pero el gate de beta las esconde igual. No se tocó `main` para corregir esto en esta pasada (regla de Corte: `main` solo se toca con autorización explícita de Nico) — queda como la decisión más urgente que necesita su palabra, porque ya está afectando producción real, no es un bug de una rama en desarrollo.
 
 **Recomendación**: agregar los 6 departamentos (o directamente sacar el gate de beta si ya no tiene sentido mantenerlo — habría que preguntarle a Nico por qué se creó en primer lugar) a `MODULOS_BETA_ACTIVOS` vía un Corte puntual, lo antes posible.
+
+## Comité de calidad — veredicto real 3 PRs de bugs (28/11/2026)
+
+**PR #30 — Jefatura de locaciones, campo "Organismo"**: APROBADO. Verificación independiente en vivo (login real `qa.prod-locaciones2@mailinator.com`, servidor dedicado): el campo aparece con las 4 opciones correctas (Ayuntamiento/Confederación Hidrográfica/Propietario privado/Otro). `tsc --noEmit` limpio. Diff aislado de 1 línea en `app/herramientas.ts`.
+
+**PR #32 — Jefatura de producción, paradas intermedias en transporte**: APROBADO. Verificación independiente en vivo (login real `qa.prod-jefatura2@mailinator.com`): columna "Paradas intermedias" visible y conectada al componente genérico `EntidadRepetible`. `tsc --noEmit` limpio.
+
+**PR #31 — Legal, NDA que no persiste**: **RECHAZADO — el bug original sigue sin corregir.** El diff solo agrega `tipo: "fecha"` a la columna `vigencia` (título del propio PR: "NDA vigencia sin tipo fecha") — nunca tocó la causa real de "no persiste". Reproducción independiente con evidencia de red concreta:
+- Crear una fila nueva: `POST .../herramienta_filas` → 201, fila creada con `datos:{}`.
+- Editar un campo (ej. Contraparte): `PATCH .../herramienta_filas?id=eq.<id>` con body correcto `{"datos":{"contraparte":"..."}}` → **204 (éxito reportado)**.
+- Releer la misma fila después (reload completo + re-login fresco): `datos` sigue **vacío (`{}`)** — el valor nunca llegó a persistir, pese al 204.
+- Esto es la firma típica de una política RLS de Supabase que bloquea el UPDATE en silencio (coincide con el patrón ya documentado el 21/11 en `dir-notas-ensayo`, donde Nico tuvo que aplicar una migración de RLS: `20261121010000_fix_privacidad_notas_ensayo.sql`). Hipótesis a confirmar por quien tenga acceso a las políticas reales de `cinepack-dev`: la policy de UPDATE sobre `herramienta_filas` probablemente exige una condición (ej. `created_by = auth.uid()` o rol específico) que no se cumple para `ej-cesion-nda`/cargo Legal, mientras que el INSERT sí la cumple.
+- El fork que implementó el PR reportó "persiste correctamente" sin esta evidencia de red — probablemente confundió la navegación de vuelta a `/hoy` (que no es la URL de la herramienta, es estado de pestaña cliente) con una prueba real de persistencia.
+
+**Acción**: PR #31 vuelve a desarrollador con esta evidencia concreta — investigar la policy RLS real de `herramienta_filas` para `ej-cesion-nda`/Legal antes de reintentar un fix de UI. No se mergea a `jv179i` hasta corregir la causa real.
