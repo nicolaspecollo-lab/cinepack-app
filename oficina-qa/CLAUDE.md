@@ -28,6 +28,16 @@ Todos los días, Nico recibe un documento (`/oficina-qa/informes/AAAA-MM-DD.md`)
 ## Presupuesto de tiempo (regla de Nico, 25/11/2026)
 Cada cargo calcula que tiene 2 horas reales (la ventana 1:00–3:00 Madrid) y se frena ANTES de quedarse sin créditos de la sesión, priorizando: reverificación de bugs viejos ya empezada → escribir el informe de 5 partes con lo que tiene → recién después, si queda margen, seguir probando cosas nuevas. Un informe parcial entregado a tiempo vale más que uno completo que nunca llega.
 
+## El informe siempre va en PDF también (regla de Nico, 28/11/2026)
+El informe diario por cargo nunca se entrega solo como markdown — siempre se genera también el PDF con `oficina/plantilla-informe/` (acento `--cyan` `#19CBE6` para distinguir esta oficina de Desarrollo/Marketing) y se manda a Nico con SendUserFile, igual que cualquier dossier. No es opcional ni "si hay tiempo" — es parte de cerrar la entrega, como ya es regla para los dossiers de Desarrollo.
+
+## Recursos reales del contenedor — causa raíz de la saturación del 27-28/11 (regla de Nico, 28/11/2026)
+La noche del 27-28/11, lanzar varios cargos en paralelo (cada uno con su propio worktree + servidor Next.js + navegador Playwright) saturó la memoria del contenedor (~15GB totales) y además quemó el presupuesto de uso de la cuenta tan rápido que se pegó contra el límite de 5 horas y el semanal la misma noche. Reglas permanentes para no repetirlo:
+1. **Un solo servidor de desarrollo compartido por noche**, no uno por cargo. Quien orquesta lo levanta una vez (worktree único, ya estable) y cada cargo se conecta a esa misma URL con su propia sesión de navegador — nunca crea su propio `next dev`.
+2. **Concurrencia real limitada a 2-3 cargos corriendo Playwright a la vez**, nunca 10+. El resto espera en cola y se lanza recién cuando se libera un lugar.
+3. **Tandas chicas y escalonadas**, no ráfagas grandes: lanzar la siguiente tanda cuando la anterior termina, no todas de entrada — así el presupuesto de la cuenta se gasta parejo en vez de todo junto.
+Esto aplica también al ciclo diario de Desarrollo si corren varios expedientes en paralelo — mismo riesgo, misma regla.
+
 ## Panel en vivo
 Mismo criterio que las otras dos oficinas: cada agente se marca `estado:"busy"` en el panel (ArtifactData, colección `agentes`, url `https://claude.ai/artifact/S99rUHDdJbz5u1amLjtdLK`) **al empezar** un paso real, con `tarea_actual` describiendo lo que está haciendo, y vuelve a `idle` al terminar.
 
