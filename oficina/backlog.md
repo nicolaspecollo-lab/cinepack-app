@@ -2,6 +2,24 @@
 
 Orden de trabajo. Objetivo: 2 expedientes completos al día; si no alcanzan el nivel exigido, 1 o ninguno (sección 1.4 de las reglas).
 
+## Bugs de alta prioridad — triage QA cobertura extendida 27-28/11/2026 (pendiente de confirmación de Nico para arrancar)
+Informe recibido en rama `oficina-qa/2026-11-27-28-cobertura-extendida` (commit `0dbdca6`, pusheada), 20 de 52 cargos cubiertos (cobertura interrumpida por saturación de recursos del contenedor y límites de uso de cuenta — no por fallo de la app). 3 bugs confirmados con evidencia real; triage de prioridad:
+
+1. **[Legal] NDAs de ejemplo vacíos + "✓ Guardado" que no persiste — ALTA, prioridad 1.** Un NDA nuevo muestra confirmación de guardado pero no escribe en base; al recargar, desaparece. Es el más urgente de los tres porque el indicador de guardado le está mintiendo al usuario (no es solo falta de contenido, es un bug de integridad de datos), y porque el mismo patrón de guardado podría repetirse en otras herramientas de tabla/formulario — a confirmar si es un bug puntual de la herramienta de Legal o un problema del motor genérico (comparar con la condición de carrera de "stale response" ya corregida el 25/11 en `HerramientaPanel.tsx`; podría ser la misma familia de causa, falta investigar antes de asumirlo). Suma además el defecto ya conocido de "cuadro vacío genérico" (los 3 NDA de ejemplo sin fecha de vencimiento), que viola la regla 6 de las inviolables.
+2. **[Jefatura de locaciones] Falta campo "Organismo" en permisos de localización — ALTA, prioridad 2.** No distingue ayuntamiento de Confederación Hidrográfica/organismo de cuenca — relevante para la localización del embalse del proyecto de prueba. Bug de modelo de datos incompleto, no de persistencia; menos urgente que el de Legal pero de alta severidad igual.
+3. **[Jefatura de producción] Control de transporte sin soporte de tramos con escalas — MEDIA-ALTA, prioridad 3.** `origen`/`destino` modela un único trayecto; falta una lista `repetible` de paradas intermedias del mismo recorrido (ver idea de QA abajo).
+
+**Nota aparte, sin acción requerida**: una "regresión" reportada en Secretaría de rodaje (Actas de reuniones) fue descartada — el cargo de QA usó un worktree desactualizado (congelado en un commit viejo, previo al merge real de esa herramienta). La herramienta en `jv179i` está correcta. Se deja documentado para no reusar ese worktree en próximas noches de QA.
+
+**Siguiente paso**: antes de poner a trabajar al agente de departamento de Legal (y, en cadena, investigador/arquitecto/desarrollador/QA/comité) sobre el fix de NDA — regla de confirmación previa del 26/11 — se necesita el visto bueno explícito de Nico para arrancar este trabajo fuera del cupo normal de 3 herramientas nuevas/día, dado que es una corrección sobre una herramienta ya Consolidada, no una herramienta nueva del inventario. Mismo criterio aplica a los otros dos bugs.
+
+## Ideas de QA 27-28/11 (sin asignar, candidatas de backlog bajo)
+- Lista `repetible` de paradas en Control de transporte (Jefatura de producción) — resuelve directamente el bug #3 de arriba.
+- Campo "Organismo" tipado (ayuntamiento/confederación hidrográfica/privado) en Localizaciones, con reglas de plazo distintas por tipo — resuelve directamente el bug #2 de arriba.
+- Integración Catering↔RRHH para descansos legales del rodaje de 22 días (Coordinación de producción).
+- Indicador visual "editado a mano" cuando el overtime de 1AD se overridea manualmente, para distinguirlo del calculado.
+- Buscador de texto en Memoria de RRHH (hoy no existe).
+
 ## Bug de alta prioridad — triage QA nocturno 26/11/2026 — ✅ RESUELTO (27/11)
 **[1AD] Overtime y delta de horario no se calculan automáticamente** (`dir-control-horarios-1ad`, ya Consolidada/mergeada a `main` el 25/11). Fix real aplicado 27/11: `calcularDeltaOvertime()` deriva `delta_minutos`/`overtime` automáticamente desde `hora_prevista_wrap`/`hora_real_wrap`, umbral >30' Alerta / >60' Confirmado, override manual disponible. QA de regresión real contra `cinepack-dev` (3 casos: 90/40/0 min, todos correctos) + comité abreviado aprobado. PR #26 en borrador contra `jv179i`, pendiente de calificación de Nico y de Corte explícito (entrada `dir-control-horarios-1ad-fix-overtime` en el panel).
 
@@ -50,6 +68,9 @@ El resto de los 16 vacíos (`dir-decisiones-visionado`, `dir-control-horarios` d
 3. ¿`@anthropic-ai/sdk` está en uso en producción o reservado para una migración futura? Solo se confirmó `@google/genai` en las rutas de IA revisadas (`app/api/asistente`, `app/api/guion/desglose/generar`).
 4. Confirmar el radio de borde estándar de tarjetas/paneles del sistema de diseño real (en el repo de muestreo no hay un token único, se declara por componente).
 5. ¿Qué librería de hoja de cálculo/editor enriquecido prefiere evaluar primero el arquitecto, o se le da total libertad? (sin respuesta asumida todavía).
+6. **Confirmación para arrancar el fix de los 3 bugs del triage QA 27-28/11** (NDA de Legal que no persiste — prioridad 1 — , falta de campo "Organismo" en Localizaciones, y tramos con escalas en Control de transporte): los tres son correcciones sobre herramientas ya Consolidadas, no herramientas nuevas del cupo diario — por la regla de confirmación previa del 26/11, no se lanza el ciclo de agentes sobre ellos sin el visto bueno explícito de Nico. ¿Arrancamos los tres en el próximo ciclo, empezando por Legal, o prefiere priorizar distinto?
+7. Al investigar el bug de Legal, hay que confirmar si es un caso puntual de esa herramienta o si comparte causa con la condición de carrera de "stale response" ya corregida el 25/11 en `HerramientaPanel.tsx` — si el patrón se repite, podría afectar a más herramientas de tabla/formulario. Esto se investiga antes de tocar código, no se asume la causa.
+8. La próxima noche de QA debería cubrir los 32 cargos restantes (de 52) sin terminar por saturación de recursos — candidatos prioritarios según el informe: Producción ejecutiva, Dirección financiera, Tesorería, Financiación y Seguros, 2ª Asistencia de dirección, Script/Continuidad, Dirección de actores, Dirección de producción (parcial). Recomendación del propio QA: escalonar con menos paralelismo simultáneo para no repetir la saturación — a confirmar con Nico si se autoriza otra ventana nocturna extendida.
 
 ## Excepción puntual 27/11 — horario y alcance confirmados por Nico
 Ciclo del 27/11 arranca a las 8:30 Madrid (no 7:00) por el reseteo de uso de tokens. Alcance confirmado: fix bug overtime 1AD (no cuenta como herramienta nueva) + terminar citación-equipo si no cierra hoy (tampoco cuenta) + Memoria de RRHH (1ª herramienta nueva) + 2 herramientas nuevas más a elegir por proceso normal. Trigger puntual creado: `trig_01K5GDKb2w55TcW1hb1NQooo`.
