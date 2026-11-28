@@ -484,6 +484,13 @@ const transporteLogistica: Herramienta = {
     { key: "hora_salida", label: "Hora de salida" },
     { key: "hora_llegada", label: "Hora estimada llegada" },
     { key: "estado", label: "Estado", tipo: "estado", opciones: ["Programado", "En ruta", "Llegó", "Cancelado"] },
+    // Paradas intermedias del mismo recorrido (tramos con escalas) — bug QA
+    // 27-28/11: origen/destino solo modelaba un trayecto directo, sin forma
+    // de encadenar paradas del mismo viaje (ej. hotel → aeropuerto → set).
+    { key: "paradas", label: "Paradas intermedias", tipo: "repetible", sub: [
+      { key: "lugar", label: "Lugar" },
+      { key: "hora", label: "Hora" },
+    ]},
     { key: "notas", label: "Notas", tipo: "largo" },
   ],
 };

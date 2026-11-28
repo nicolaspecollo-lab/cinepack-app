@@ -1172,6 +1172,8 @@ function HerramientaData({
           columnas={[...(herramienta.columnas ?? []), ...extraCols]}
           filas={fs}
           editable={ed}
+          departamento={departamento}
+          herramientaId={herramienta.id}
           onCrear={() => crearFila({})}
           onGuardar={guardarFila}
           onBorrar={borrarFila}
@@ -9297,6 +9299,8 @@ function TransporteBoard({
   columnas,
   filas,
   editable,
+  departamento,
+  herramientaId,
   onCrear,
   onGuardar,
   onBorrar,
@@ -9304,6 +9308,8 @@ function TransporteBoard({
   columnas: Columna[];
   filas: Fila[];
   editable: boolean;
+  departamento: string;
+  herramientaId: string;
   onCrear: () => void;
   onGuardar: (id: string, datos: Record<string, string>, filaActual?: Fila) => void;
   onBorrar: (id: string) => void;
@@ -9311,6 +9317,7 @@ function TransporteBoard({
   const t = useTranslations("hp");
   const label = (k: string) => columnas.find((c) => c.key === k)?.label ?? k;
   const colEstado = columnas.find((c) => c.tipo === "estado");
+  const colParadas = columnas.find((c) => c.tipo === "repetible" && c.key === "paradas");
   const colNotas = columnas.find((c) => c.tipo === "largo" && c.key !== "pasajeros");
   const kSalida = columnas.find((c) => c.key === "hora_salida" || c.key === "salida")?.key ?? "hora_salida";
   const kLlegada = columnas.find((c) => c.key === "hora_llegada" || c.key === "llegada")?.key ?? "hora_llegada";
@@ -9337,6 +9344,20 @@ function TransporteBoard({
         <div className="tr-meta">
           <span className="tr-time"><Icon name="clock" size={13} /><input defaultValue={f.datos?.[kSalida] ?? ""} placeholder={label(kSalida)} readOnly={!editable} onBlur={(e) => set(f, kSalida, e.target.value)} /><span className="tr-time-arrow">→</span><input defaultValue={f.datos?.[kLlegada] ?? ""} placeholder={label(kLlegada)} readOnly={!editable} onBlur={(e) => set(f, kLlegada, e.target.value)} /></span>
         </div>
+        {colParadas && (
+          <div className="tr-paradas">
+            <span className="hp-etb-rep-label">{colParadas.label}</span>
+            <EntidadRepetible
+              col={colParadas}
+              valor={f.datos?.[colParadas.key] ?? ""}
+              editable={editable}
+              departamento={departamento}
+              herramientaId={herramientaId}
+              filaId={f.id}
+              onChange={(v) => set(f, colParadas.key, v)}
+            />
+          </div>
+        )}
         <div className="tr-people">
           {hasConductor && <label className="tr-field"><span>{label("conductor")}</span><input defaultValue={f.datos?.conductor ?? ""} readOnly={!editable} onBlur={(e) => set(f, "conductor", e.target.value)} /></label>}
           <label className="tr-field"><span>{label("pasajeros")}</span><input defaultValue={f.datos?.pasajeros ?? ""} readOnly={!editable} onBlur={(e) => set(f, "pasajeros", e.target.value)} /></label>
