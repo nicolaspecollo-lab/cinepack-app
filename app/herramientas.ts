@@ -2638,7 +2638,7 @@ export const HERRAMIENTAS: Record<string, Record<string, CargoTools>> = {
           columnas: [
             { key: "doc", label: "Documento" },
             { key: "contraparte", label: "Contraparte" },
-            { key: "vigencia", label: "Vigencia" },
+            { key: "vigencia", label: "Vigencia", tipo: "fecha" },
             { key: "estado", label: "Firma", tipo: "estado", opciones: ["Pendiente", "Enviado", "Firmado"] },
           ],
         },
